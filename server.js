@@ -10,6 +10,10 @@ app.use(bodyParser.urlencoded({
     extended: false
 }))
 
+app.get('/', (req, res) => {
+    res.send({ message: 'This is the mampfalot-api! Please authenticate yourself for data access.'})
+})
+
 // Router
 const authenticationRouter = require('./router/authenticationRouter')
 const placesRouter = require('./router/placesRouter')
