@@ -27,7 +27,7 @@ router.route('/').get((req, res) => {
     })
     .then(user => {
         if (!user) {
-            res.status(400).send({ success: false, error: 'Invalid Credentials'})
+            res.status(401).send({ success: false, error: 'Invalid Credentials'})
         } else {
             // Ein User wurde gefunden, vergleiche das Passwort
             if (bcrypt.compareSync(password, user.password)) {
@@ -41,12 +41,12 @@ router.route('/').get((req, res) => {
                 res.send({success: true, token})
             } else {
                 // Password inkorrekt
-                res.send({success: false, error: 'Invalid Credentials'})
+                res.status(401).send({success: false, error: 'Invalid Credentials'})
             }
         }
     })
     .catch(error => {
-        res.send(error)
+        res.status(500).send(error)
     })
 });
 
