@@ -3,8 +3,11 @@ const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const jwt = require('jsonwebtoken')
+const cors = require('cors')
 const PORT = process.env.PORT || 5000
 process.env.SECRET_KEY = config.jwt.SECRET_KEY
+
+app.use(cors())
 
 app.use(bodyParser.urlencoded({
     extended: false
