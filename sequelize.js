@@ -1,9 +1,8 @@
 const Sequelize = require('sequelize')
-const config = require('./config')
 
-module.exports = new Sequelize(config.database.name, config.database.user, config.database.password, {
-    host: config.database.host,
-    port: config.database.port,
-    dialect: config.database.dialect,
+module.exports = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    dialect: process.env.DB_DIALECT,
     operatorsAliases: Sequelize.Op // Vermeide Deprecation-Warnung
 });
