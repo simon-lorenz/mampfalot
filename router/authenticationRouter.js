@@ -36,7 +36,7 @@ router.route('/').get((req, res) => {
                 tokenData.password = undefined // Das Passwort bleibt schön hier
 
                 let token = jwt.sign(tokenData, process.env.SECRET_KEY, {
-                    expiresIn: 4000
+                    expiresIn: '10h'
                 })
                 res.send({success: true, token})
             } else {
