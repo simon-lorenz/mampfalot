@@ -108,4 +108,48 @@ router.route('/today').post((req, res) => {
     })    
 })
 
+router.route('/today').delete((req, res) => {
+    let voteId = req.body.voteId
+
+    // Pflichtangaben überprüfen
+    if (!voteId) {
+        res.status(400).send({ success: false, missingValues: 'voteId' })
+        return
+    }
+
+    Vote.findOne({
+        where: {
+            id: voteId
+        }
+    })
+    .then(result => {
+        if (!result) {
+            res.status(400).send({ success: false, error: 'Invalid voteId'})
+            return
+        } 
+        
+        // Admins dürfen alles löschen, User nur ihre eigenen Votes
+        if (!req.user.isAdmin && (result.userId !== req.user.id)) {
+            res.status(401).send({ success: false, error: 'Unauthorized'})
+            return
+        } 
+
+        Vote.destroy({
+            where: {
+                id: voteId
+            }
+        })
+        .then(() => {
+            res.status(200).send({success: true})
+        })
+        .catch(err => {
+            res.status(500).send({success: false})
+        })     
+    })
+    .catch(error => {
+        res.status(500).send(error)
+    })
+    
+})
+
 module.exports = router
