@@ -8,4 +8,20 @@ Util.isAdmin = function (req, res, next) {
     }
 }
 
+Util.addKeyIfExists = function (from, to, key) {
+    if (key in from) {
+        to[key] = from[key]
+    }
+}
+
+Util.missingValues = function (obj) {
+    let undefinedKeys = []
+    for (key in obj) {
+        if (!obj[key]) {
+            undefinedKeys.push(key)
+        }
+    }
+    return undefinedKeys
+}
+
 module.exports = Util
