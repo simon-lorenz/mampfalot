@@ -3,6 +3,7 @@ const router = express.Router()
 const Vote = require('./../models/vote')
 const User = require('./../models/user')
 const Place = require('./../models/place')
+const Util = require('./../util/util')
 
 router.route('/').get((req, res) => {
     Vote.findAll({
@@ -64,48 +65,68 @@ router.route('/today').get((req, res) => {
 }) 
 
 router.route('/today').post((req, res) => {
-    let placeId = req.body.placeId
+    let votes = req.body.votes
 
-    if(!req.body.placeId) {
-        res.status(400).send({success: false, error: { missingValues: ['placeId'] }})
-        return;
+    if (!votes || !votes.length) {
+        res.status(400).send({ success: false, error: 'votes-array undefined or zero length'})
+        return
+    } 
+
+    let allPoints = 0
+    let placeIds = []
+    let err
+
+    for(let i = 0; i < votes.length; i++) {
+        element = votes[i]
+        if (!element.placeId || !element.points) {
+            err = { success: false, error: 'vote-object misformed'}
+            break
+        }
+        allPoints += element.points
+        placeIds.push(element.placeId)
+    }   
+
+    if(err) {
+        res.status(400).send(err)
+        return
     }
 
-    // Checke zuerst, ob der User heute schon gevoted hat
-    Vote.findOne({
+    // Überprüfe, ob mehrfach die gleiche placeId angegeben wurde
+    let duplicates = Util.findDuplicates(placeIds)
+    if(duplicates.length > 0) {
+        res.status(400).send({success: false, error: { duplicatePlaceIds: duplicates}})
+        return
+    }
+
+    // Prüfe ob die Gesamtsumme der Punkte im zulässigen Bereich liegt
+    if(allPoints > 100 || allPoints === 0) {
+        res.status(400).send({success: false, error: 'sum of points should be between 1-100 but was ' + allPoints})
+        return
+    }
+
+    // Lösche alle heutigen Votes des Users
+    Vote.destroy({
         where: {
             userId: req.user.id,
             date: new Date()
         }
     })
     .then(result => {
-        if(result) {
-            // Der User hat schon einmal gevoted, updaten
-            Vote.update(
-                { placeId: req.body.placeId },
-                { where: { id: result.id } }
-            )
-            .then(result => {
-                res.send({success: true, type: 'updated'})
-            })
-            .catch(error => {
-                res.status(400).send({ success: false, error })
-            })
-        } else {
-            // Der User hat noch nicht gevoted
-            Vote.insertOrUpdate({
-                placeId: req.body.placeId,
-                userId: req.user.id,
-                date: new Date()
-            })
-            .then(result => {
-                res.send({ success: true, type: 'inserted' })
-            })
-            .catch(error => {
-                res.status(500).send({ success: false, error })
-            })
-        }
-    })    
+        // Votes um notwendige Daten ergänzen
+        votes.forEach((element) => {
+            element.userId = req.user.id,
+            element.date = new Date()
+        })
+
+        // Speichere die neuen Votes
+        Vote.bulkCreate(votes)
+        .then(result => {
+            res.send({success: true, result})
+        })
+        .catch(err => {
+            res.status(500).send({success: false, error})
+        })
+    })
 })
 
 router.route('/today').delete((req, res) => {
