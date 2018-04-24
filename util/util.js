@@ -24,4 +24,15 @@ Util.missingValues = function (obj) {
     return undefinedKeys
 }
 
+Util.findDuplicates = function (arr) {
+    let duplicates = []
+    let sorted = arr.slice().sort()
+    for(let i = 0; i < sorted.length; i++) {
+        if(sorted[i] == sorted[i + 1]){
+            duplicates.push(sorted[i])
+        }
+    }
+    return duplicates
+}
+
 module.exports = Util
