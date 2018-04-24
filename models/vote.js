@@ -13,6 +13,10 @@ const Vote = sequelize.define('votes',
             type: Sequelize.INTEGER,
             foreignKey: true
         },
+        points: {
+            type: Sequelize.INTEGER,
+            require: true,
+        },
         userId: {
             type: Sequelize.INTEGER,
             foreignKey: true
