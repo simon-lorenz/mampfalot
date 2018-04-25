@@ -99,7 +99,7 @@ router.route('/today').post((req, res) => {
     }
 
     // Prüfe ob die Gesamtsumme der Punkte im zulässigen Bereich liegt
-    if(allPoints > 100 || allPoints === 0) {
+    if(!(allPoints >= 1 && allPoints <= 100)) {
         res.status(400).send({success: false, error: 'sum of points should be between 1-100 but was ' + allPoints})
         return
     }
