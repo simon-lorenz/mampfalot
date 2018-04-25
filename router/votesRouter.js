@@ -81,6 +81,8 @@ router.route('/today').post((req, res) => {
         if (!element.placeId || !element.points) {
             err = { success: false, error: 'vote-object misformed'}
             break
+        } else if (!(element.points >= 1 && element.points <= 100)) {
+            err = { success: false, error: 'points out of range'}
         }
         allPoints += element.points
         placeIds.push(element.placeId)
