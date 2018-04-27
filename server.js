@@ -51,6 +51,15 @@ app.use('/api/foodTypes', foodTypesRouter)
 app.use('/api/users', userRouter)
 app.use('/api/votes', votesRouter)
 
+// Globaler Exception-Handler
+app.use((err, req, res, next) => {
+    if (!err) {
+        return next();
+    } else {
+        res.status(500).send('500: Internal server error')
+    }
+});
+
 app.listen(PORT, () => {    
     console.log('Listening to port ' + PORT);
 });
