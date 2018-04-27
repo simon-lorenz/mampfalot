@@ -62,7 +62,46 @@ router.route('/today').get((req, res) => {
     .catch(error => {
         res.status(400).send('Ein Fehler ist aufgetreten' + error)
     })
-}) 
+})
+
+router.route('/today/:userId').get((req, res) => {
+    let userId = req.params.userId
+
+    if (isNaN(userId)) {
+        res.status(400).send({ error: 'Numeric value expected' })
+        return
+    }
+
+    Vote.findAll({
+        attributes: {
+            exclude: ['placeId', 'userId']
+        },
+        where: {
+            date: new Date(),
+            userId: req.params.userId
+        },
+        order: [
+            ['id', 'ASC']
+        ],
+        include: [
+            {
+                model: User,
+                attributes: {
+                    exclude: ['isAdmin', 'password']
+                }
+            },
+            {
+                model: Place
+            }
+        ]
+    })
+    .then(result => {
+        res.send(result)
+    })
+    .catch(error => {
+        res.status(500).send(error)
+    }) 
+})
 
 router.route('/today').post((req, res) => {
     let votes = req.body.votes
