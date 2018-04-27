@@ -170,8 +170,8 @@ router.route('/today').post((req, res) => {
     })
 })
 
-router.route('/today').delete((req, res) => {
-    let voteId = req.body.voteId
+router.route('/:voteId').delete((req, res) => {
+    let voteId = req.params.voteId
 
     // Pflichtangaben überprüfen
     if (!voteId) {
