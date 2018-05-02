@@ -2,8 +2,8 @@ require('dotenv').config()
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
-const jwt = require('jsonwebtoken')
 const cors = require('cors')
+const auth = require('./util/auth')
 const PORT = process.env.PORT || 5000
 
 app.use(cors())
@@ -27,24 +27,7 @@ const votesRouter = require('./router/votesRouter')
 app.use('/api/auth', authenticationRouter)
 
 // Token-Validation
-app.use((req, res, next) => {
-    let bearerHeader = req.headers['authorization']
-
-    if (bearerHeader) {
-        const bearerToken = bearerHeader.split(' ')[1];
-
-        jwt.verify(bearerToken, process.env.SECRET_KEY, (err, decoded) => {
-          if (err) {
-            res.status(401).send('Invalid token');
-          } else {
-            req.user = decoded // Speichere Userdaten im Request-Objekt
-            next()
-          }
-        })
-    } else {
-        res.status(401).send('Invalid token')
-    }
-})
+app.use(auth.validateToken)
 
 app.use('/api/places', placesRouter)
 app.use('/api/foodTypes', foodTypesRouter)
@@ -56,6 +39,7 @@ app.use((err, req, res, next) => {
     if (!err) {
         return next();
     } else {
+        console.log(err)
         res.status(500).send('500: Internal server error')
     }
 });
