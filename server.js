@@ -26,13 +26,10 @@ const votesRouter = require('./router/votesRouter')
 
 app.use('/api/auth', authenticationRouter)
 
-// Token-Validation
-app.use(auth.validateToken)
-
-app.use('/api/places', placesRouter)
-app.use('/api/foodTypes', foodTypesRouter)
-app.use('/api/users', userRouter)
-app.use('/api/votes', votesRouter)
+app.use('/api/places', auth.validateToken, placesRouter)
+app.use('/api/foodTypes', auth.validateToken, foodTypesRouter)
+app.use('/api/users', auth.validateToken,userRouter)
+app.use('/api/votes', auth.validateToken, votesRouter)
 
 // Globaler Exception-Handler
 app.use((err, req, res, next) => {
