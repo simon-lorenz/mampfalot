@@ -19,11 +19,11 @@ app.get('/', (req, res) => {
 
 // Router
 const router = {
-    auth: require('./router/authenticationRouter'),
-    places: require('./router/placesRouter'),
-    foodTypes: require('./router/foodTypesRouter'),
-    users: require('./router/userRouter'),
-    votes: require('./router/votesRouter')
+    auth: require('./router/auth'),
+    places: require('./router/places'),
+    foodTypes: require('./router/foodTypes'),
+    users: require('./router/users'),
+    votes: require('./router/votes')
 }
 
 app.use('/api/auth', router.auth)
