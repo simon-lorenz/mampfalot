@@ -22,22 +22,23 @@ router.route('/').get((req, res) => {
     })
     .then(user => {
         if (!user) {
-            res.status(401).send({ success: false, error: 'Invalid Credentials'})
-        } else {
-            // Ein User wurde gefunden, vergleiche das Passwort
-            if (bcrypt.compareSync(credentials.password, user.password)) {
-                // Passwort korrekt - generiere Token
-                tokenData = user
-                tokenData.password = undefined // Das Passwort bleibt schön hier
+            res.status(401).send({ error: 'Invalid Credentials' })
+            return
+        } 
+        
+        // Ein User wurde gefunden, vergleiche das Passwort
+        if (bcrypt.compareSync(credentials.password, user.password)) {
+            // Passwort korrekt - generiere Token
+            tokenData = user
+            tokenData.password = undefined // Das Passwort bleibt schön hier
 
-                let token = jwt.sign(tokenData, process.env.SECRET_KEY, {
-                    expiresIn: '10h'
-                })
-                res.send({success: true, token})
-            } else {
-                // Password inkorrekt
-                res.status(401).send({success: false, error: 'Invalid Credentials'})
-            }
+            let token = jwt.sign(tokenData, process.env.SECRET_KEY, {
+                expiresIn: '10h'
+            })
+            res.send({ token })
+        } else {
+            // Password inkorrekt
+            res.status(401).send({ error: 'Invalid Credentials' })
         }
     })
     .catch(error => {
