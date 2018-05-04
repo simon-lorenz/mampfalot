@@ -3,25 +3,20 @@ const router = express.Router()
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const User = require('./../models/user')
+const auth = require('./../util/auth')
 
 router.route('/').get((req, res) => {
-    let authHeader = req.headers['authorization']
-
-    if (!authHeader) {
-        res.status(400).send({ success: false, error: 'Missing Authorization-Header'})
+    let credentials
+    try {
+        credentials = auth.decodeBasicAuthorizationHeader(req)
+    } catch (error) {
+        res.status(400).send({ error })
         return
-    } 
-    
-    // Header-Aufbau: 'Basic <base64String>'
-    // Wir wollen nur den b64-String und splitten deshalb beim Leerzeichen
-    let credentialsB64 = authHeader.split(' ')[1]
-    let credentials = new Buffer(credentialsB64, 'base64').toString('ascii') // Enthält nun username:password
-    let username = credentials.split(':')[0]
-    let password = credentials.split(':')[1]
+    }
 
     User.findOne({
         where: {
-            name: username
+            name: credentials.username
         },
         raw: true
     })
@@ -30,7 +25,7 @@ router.route('/').get((req, res) => {
             res.status(401).send({ success: false, error: 'Invalid Credentials'})
         } else {
             // Ein User wurde gefunden, vergleiche das Passwort
-            if (bcrypt.compareSync(password, user.password)) {
+            if (bcrypt.compareSync(credentials.password, user.password)) {
                 // Passwort korrekt - generiere Token
                 tokenData = user
                 tokenData.password = undefined // Das Passwort bleibt schön hier
