@@ -26,6 +26,28 @@ router.route('/').get((req, res) => {
     })
 })
 
+router.route('/').post(util.isAdmin, (req, res) => {
+    let place = {
+        name: req.body.name,
+        foodTypeId: req.body.foodTypeId
+    }
+
+    let missingValues = util.missingValues(place)
+    if (missingValues.length > 0) {
+        res.status(400).send({ missingValues })
+        return
+    }
+
+    Place.create(place)
+    .then(result => {
+        res.send(result)
+    })
+    .catch(error => {
+        console.log(error)
+        res.status(500).send('Something went wrong.')
+    })
+})
+
 router.route('/:placeId').get((req, res) => {
     Place.findOne({
         where: {
