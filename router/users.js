@@ -21,6 +21,29 @@ router.route('/').get((req, res) => {
     })
 });
 
+router.route('/').post(Util.isAdmin, (req, res) => {
+    if (!(req.body.username && req.body.email && req.body.password)) {
+        res.status(400).send({ success: false, error: 'Missing Values' })
+        return
+    }
+
+    let username = req.body.username
+    let email = req.body.email
+    let password = req.body.password
+    
+    User.create({
+        name: username, 
+        email: email,
+        password: password
+    })
+    .then(result => {
+        res.send({success: true})
+    })
+    .catch(error => {
+        res.send({success: false, error})
+    })
+})
+
 router.route('/:userId').get((req, res) => {
     User.findOne({
         attributes: {
@@ -102,29 +125,6 @@ router.route('/:userId').delete(Util.isAdmin, (req, res) => {
     .catch(error => {
         console.log(error)
         res.status(500).send('Something went wrong.')
-    })
-})
-
-router.route('/').post(Util.isAdmin, (req, res) => {
-    if (!(req.body.username && req.body.email && req.body.password)) {
-        res.status(400).send({ success: false, error: 'Missing Values' })
-        return
-    }
-
-    let username = req.body.username
-    let email = req.body.email
-    let password = req.body.password
-    
-    User.create({
-        name: username, 
-        email: email,
-        password: password
-    })
-    .then(result => {
-        res.send({success: true})
-    })
-    .catch(error => {
-        res.send({success: false, error})
     })
 })
 
