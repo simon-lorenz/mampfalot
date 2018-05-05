@@ -38,4 +38,19 @@ router.route('/').post(util.isAdmin, (req, res) => {
     })
 })
 
+router.route('/:foodTypeId').get((req, res) => {
+    FoodType.findOne({
+        where: {
+            id: req.params.foodTypeId
+        }
+    })
+    .then(result => {
+        if (!result) {
+            res.status(404).send()
+        } else {
+            res.send(result)
+        }
+    })
+})
+
 module.exports = router
