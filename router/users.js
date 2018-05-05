@@ -113,10 +113,4 @@ router.route('/').post(Util.isAdmin, (req, res) => {
     })
 })
 
-function addKeyIfExists(from, to, key) {
-    if (key in from) {
-        to[key] = from[key]
-    }
-}
-
 module.exports = router
