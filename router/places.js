@@ -51,4 +51,23 @@ router.route('/:placeId').put(util.isAdmin, (req, res) => {
     })
 })
 
+router.route('/:placeId').delete(util.isAdmin, (req,  res) => {
+    Place.destroy({
+        where: {
+            id: req.params.placeId
+        }
+    })
+    .then(result => {
+        if (result == 0) {
+            res.status(404).send()
+        } else {
+            res.send()
+        }
+    })
+    .catch(error => {
+        console.log(error)
+        res.status(500).send('Something went wrong.')
+    })
+})
+
 module.exports = router
