@@ -38,34 +38,38 @@ router.route('/:userId').get((req, res) => {
     })
 })
 
-router.route('/edit').post(async function(req, res) {
-    let updatedData = {}
+router.route('/:userId').put((req, res) => {
+    let userId = req.params.userId
 
-    await addKeyIfExists(req.body, updatedData, 'name')
-    await addKeyIfExists(req.body, updatedData, 'email')
-    await addKeyIfExists(req.body, updatedData, 'password')
-
-    // Trim Name und EMail
-    if(updatedData.name) {
-        updatedData.name = updatedData.name.trim()
+    // Will der User nicht sich selbst updaten, muss er
+    // Administrator-Rechte besitzen.
+    if (req.user.id != userId && !req.user.isAdmin) {
+        res.status(403).send('403: Forbidden')
+        return
     }
 
-    if(updatedData.email)  {
-        updatedData.email = updatedData.email.trim()
+    let updatedData = {}
+    if (req.body.name) { updatedData.name = req.body.name.trim() }
+    if (req.body.email) { updatedData.email = req.body.email.trim() }
+    if (req.body.password) { updatedData.password = req.body.password }
+
+    if (Object.keys(updatedData).length === 0) {
+        res.status(400).send({ error: 'Request needs to have at least one of the following parameters: name, email or password' })
+        return
     }
 
     User.update(
         updatedData,
     { 
         where: {
-            id: req.user.id
+            id: userId
         }
     })
     .then(result => {
         // Unser User hat seine Daten geändert, jetzt braucht er ein neues JWT
         User.findOne({
             where: {
-                id: req.user.id
+                id: userId
             },
             raw: true
         })
