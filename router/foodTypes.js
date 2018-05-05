@@ -53,4 +53,23 @@ router.route('/:foodTypeId').get((req, res) => {
     })
 })
 
+router.route('/:foodTypeId').delete(util.isAdmin, (req, res) => {
+    FoodType.destroy({
+        where: {
+            id: req.params.foodTypeId
+        }
+    })
+    .then(result => {
+        if (result === 0) {
+            res.status(404).send()
+        } else {
+            res.send()
+        }
+    })
+    .catch(error => {
+        console.log(error)
+        res.status(500).send('Something went wrong.')
+    })
+})
+
 module.exports = router
