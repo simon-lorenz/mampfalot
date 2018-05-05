@@ -90,6 +90,21 @@ router.route('/:userId').put((req, res) => {
     })
 })
 
+router.route('/:userId').delete(Util.isAdmin, (req, res) => {
+    User.destroy({
+        where: {
+            id: req.params.userId
+        }
+    })
+    .then(result => {
+        res.send()
+    })
+    .catch(error => {
+        console.log(error)
+        res.status(500).send('Something went wrong.')
+    })
+})
+
 router.route('/').post(Util.isAdmin, (req, res) => {
     if (!(req.body.username && req.body.email && req.body.password)) {
         res.status(400).send({ success: false, error: 'Missing Values' })
