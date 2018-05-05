@@ -21,6 +21,23 @@ router.route('/').get((req, res) => {
     })
 });
 
+router.route('/:userId').get((req, res) => {
+    User.findOne({
+        attributes: {
+            exclude: ['password']
+        },
+        where: {
+            id: req.params.userId
+        }
+    })
+    .then(result => {
+        res.send(result)
+    })
+    .catch(error => {
+        res.status(500).send(error)
+    })
+})
+
 router.route('/edit').post(async function(req, res) {
     let updatedData = {}
 
