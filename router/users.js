@@ -69,8 +69,7 @@ router.route('/edit').post(async function(req, res) {
     })
 })
 
-router.use('/register', Util.isAdmin)
-router.route('/register').post((req, res) => {
+router.route('/').post(Util.isAdmin, (req, res) => {
     if (!(req.body.username && req.body.email && req.body.password)) {
         res.status(400).send({ success: false, error: 'Missing Values' })
         return
