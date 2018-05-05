@@ -26,22 +26,21 @@ router.route('/').get((req, res) => {
     })
 })
 
-router.use('/', util.isAdmin)
-router.route('/').post((req, res) => {
-    let place = {
-        id: req.body.id,
-        name: req.body.name,
-        foodTypeId: req.body.foodTypeId
-    }
+router.route('/:placeId').put(util.isAdmin, (req, res) => {
+    let placeId = req.params.placeId
 
-    if (util.missingValues(place).length > 0) {
-        res.status(400).send({ error: { missingValues: util.missingValues(place)}})
+    let updateData = {}
+    if (req.body.name) { updateData.name = req.body.name.trim() }
+    if (req.body.foodTypeId) { updateData.foodTypeId = req.body.foodTypeId }
+
+    if (Object.keys(updateData).length === 0) {
+        res.status(400).send({ error: 'Request needs to have at least one of the following parameters: name or foodTypeId' })
         return
     }
 
-    Place.update(place, {
+    Place.update(updateData, {
         where: {
-            id: place.id
+            id: placeId
         }
     })
     .then(result => {
