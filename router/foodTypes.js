@@ -53,6 +53,31 @@ router.route('/:foodTypeId').get((req, res) => {
     })
 })
 
+router.route('/:foodTypeId').put(util.isAdmin, (req, res) => {
+    let foodTypeId = req.params.foodTypeId
+    let updateData = {
+        type: req.body.type
+    }
+
+    if (Object.keys(updateData).length === 0) {
+        res.status(400).send()
+        return
+    }
+
+    FoodType.update(updateData, {
+        where: {
+            id: foodTypeId
+        }
+    })
+    .then(result => {
+        res.send()
+    })
+    .catch(error => {
+        console.log(error)
+        res.status(500).send('Something went wrong.')
+    })
+})
+
 router.route('/:foodTypeId').delete(util.isAdmin, (req, res) => {
     FoodType.destroy({
         where: {
