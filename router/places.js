@@ -26,6 +26,25 @@ router.route('/').get((req, res) => {
     })
 })
 
+router.route('/:placeId').get((req, res) => {
+    Place.findOne({
+        where: {
+            id: req.params.placeId
+        }
+    })
+    .then(result => {
+        if (!result) {
+            res.status(404).send()
+        } else {
+            res.send(result)
+        }
+    })
+    .catch(error => {
+        console.log(error)
+        res.status(500).send('Something went wrong.')
+    })
+})
+
 router.route('/:placeId').put(util.isAdmin, (req, res) => {
     let placeId = req.params.placeId
 
