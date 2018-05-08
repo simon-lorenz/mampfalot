@@ -6,10 +6,21 @@ const Place = require('./../models/place')
 const Util = require('./../util/util')
 
 router.route('/').get((req, res) => {
+    let where = {}
+
+    if (req.query.date) {
+        where.date = req.query.date
+    }
+
+    if (req.query.userId) {
+        where.userId = req.query.userId
+    }
+
     Vote.findAll({
         attributes: {
             exclude: ['placeId', 'userId']
         },
+        where,
         order: [
             ['id', 'ASC']
         ],
