@@ -159,6 +159,25 @@ router.route('/today').post((req, res) => {
     })
 })
 
+router.route('/:voteId').get((req, res) => {
+    Vote.findOne({
+        where: {
+            id: req.params.voteId
+        }
+    })
+    .then(result => {
+        if (result) {
+            res.send(result)
+        } else {
+            res.status(404).send()
+        }
+    })
+    .catch(error => {
+        console.log(error)
+        res.status(500).send('Something went wrong.')
+    })
+})
+
 router.route('/:voteId').delete((req, res) => {
     let voteId = req.params.voteId
 
