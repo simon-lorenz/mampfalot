@@ -159,6 +159,35 @@ router.route('/:voteId').get((req, res) => {
     })
 })
 
+router.route('/:voteId').put((req, res) => {
+    let updateData = {}
+
+    if (req.body.placeId) { updateData.placeId = req.body.placeId }
+    if (req.body.points) { updateData.points = req.body.points }
+    if (req.body.date) { updateData.date = req.body.date }
+
+    if (Object.keys(updateData).length === 0) {
+        res.send(400).send('Request needs to have at least one of the following parameters: placeId, points or date')
+        return
+    }
+
+    Vote.update(
+        updateData,
+        {
+            where: {
+                id: req.params.voteId,
+                userId: req.user.id
+            }
+        })
+    .then(result => {
+        res.send()
+    })
+    .catch(error => {
+        console.log(error)
+        res.status(500).send('Something went wrong.')
+    })
+})
+
 router.route('/:voteId').delete((req, res) => {
     let voteId = req.params.voteId
 
