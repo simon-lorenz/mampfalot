@@ -52,43 +52,24 @@ router.route('/').post(async function(req, res) {
         points: parseInt(req.body.points)
     }
 
-    let missingValues = Util.missingValues(vote)
-    if (missingValues.length > 0) {
-        res.status(400).send({ missingValues })
-        return
-    }
-    
-    if (!Util.pointsInRange(vote.points)) {
-        res.status(400).send('Points not in range (1-100)')
-        return
-    }
-
-    let pointsToday = await getPointsToday(vote.userId)
-    if ((pointsToday + vote.points) > 100) {
-        res.status(400).send('Sum of all points should be between 1 and 100 but was ' + (pointsToday + vote.points))
-        return
-    }
-
-    let placesToday = await getPlacesToday(vote.userId)
-    if (placesToday.includes(vote.placeId)) {
-        res.status(400).send('User has already voted for this placeId!')
-        return
-    }
-    
     if (vote.userId != req.user.id) {
         res.status(403).send()
         return
     }
 
-    Vote.create(
-        vote
-    )
+    Vote.create(vote)
     .then(result => {
         res.send()
     })
     .catch(error => {
-        console.log(error)
-        res.status(500).send('Something went wrong.')
+        if (error.name === 'SequelizeValidationError') {
+            res.status(400).send(error.errors)
+        } else if (error.name === 'SequelizeForeignKeyConstraintError') {
+            res.status(400).send('Foreign Key Error: ' + error.fields)
+        } else {
+            console.log(error)
+            res.status(500).send(error)
+        }
     })
 })
 
@@ -220,45 +201,5 @@ router.route('/:voteId').delete((req, res) => {
         res.status(500).send(error)
     })  
 })
-
-getPlacesToday = function (userId) {
-    return Vote.findAll({
-        where: {
-            userId,
-            date: new Date()
-        },
-        raw: true
-    })
-    .then(votes => {
-        let places = []
-        votes.forEach((vote) => {
-            places.push(vote.placeId)
-        })
-        return places
-    })
-    .catch(error => {
-        return error
-    })
-}
-
-getPointsToday = function (userId) {
-    return Vote.findAll({
-        where: {
-            userId,
-            date: new Date()
-        },
-        raw: true
-    })
-    .then(votes => {
-        let sum = 0
-        votes.forEach((vote) => {
-            sum += vote.points
-        })
-        return sum
-    })
-    .catch(error => {
-        return error
-    })
-}
 
 module.exports = router

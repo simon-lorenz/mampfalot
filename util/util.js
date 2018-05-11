@@ -35,15 +35,4 @@ Util.findDuplicates = function (arr) {
     return duplicates
 }
 
-Util.numberInRange = function (x, min, max) {
-    return x >= min && x <= max
-}
-
-Util.pointsInRange = function (points) {
-    const MAX_POINTS_PER_VOTE = 100
-    const MIN_POINTS_PER_VOTE = 1
-
-    return this.numberInRange(points, MIN_POINTS_PER_VOTE, MAX_POINTS_PER_VOTE)
-}
-
 module.exports = Util
