@@ -28,7 +28,7 @@ const Vote = sequelize.define('votes',
                 min: 1, 
                 max: 100,
                 sumOfPointsInRange: async function (value) {
-                    let pointsToday = await getPointsToday(this.userId)
+                    let pointsToday = await getPointsAtDate(this.userId, this.date)
                     if ((pointsToday + value) > 100) {
                         throw new Error ('Sum of all points should be between 1 and 100 but was ' + (pointsToday + value))
                     }
@@ -53,11 +53,11 @@ const Vote = sequelize.define('votes',
 Vote.belongsTo(Place, { foreignKey: 'placeId' })
 Vote.belongsTo(User, { foreignKey: 'userId' })
 
-getPointsToday = function (userId) {
+getPointsAtDate = function (userId, date) {
     return Vote.findAll({
         where: {
             userId,
-            date: new Date()
+            date
         },
         raw: true
     })
