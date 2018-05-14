@@ -40,7 +40,7 @@ router.route('/').post(util.isAdmin, (req, res) => {
 
     Place.create(place)
     .then(result => {
-        res.send(result)
+        res.status(204).send()
     })
     .catch(error => {
         console.log(error)
@@ -85,7 +85,7 @@ router.route('/:placeId').put(util.isAdmin, (req, res) => {
         }
     })
     .then(result => {
-        res.send({ success: true })
+        res.status(204).send()
     })
     .catch(err => {
         res.status(500).send(err)
@@ -102,7 +102,7 @@ router.route('/:placeId').delete(util.isAdmin, (req,  res) => {
         if (result == 0) {
             res.status(404).send()
         } else {
-            res.send()
+            res.status(204).send()
         }
     })
     .catch(error => {

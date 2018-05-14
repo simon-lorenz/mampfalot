@@ -59,7 +59,7 @@ router.route('/').post((req, res) => {
 
     Vote.create(vote)
     .then(result => {
-        res.send()
+        res.status(204).send()
     })
     .catch(error => {
         if (error.name === 'SequelizeValidationError') {
@@ -113,7 +113,7 @@ router.route('/:voteId').put((req, res) => {
             }
         })
     .then(result => {
-        res.send()
+        res.send(result)
     })
     .catch(error => {
         console.log(error)
@@ -153,7 +153,7 @@ router.route('/:voteId').delete((req, res) => {
             }
         })
         .then(() => {
-            res.status(200).send({success: true})
+            res.status(204).send()
         })
         .catch(err => {
             res.status(500).send({success: false})

@@ -30,7 +30,7 @@ router.route('/').post(util.isAdmin, (req, res) => {
 
     FoodType.create(foodType)
     .then(result => {
-        res.send(result)
+        res.status(204).send()
     })
     .catch(error => {
         console.log(error)
@@ -70,7 +70,7 @@ router.route('/:foodTypeId').put(util.isAdmin, (req, res) => {
         }
     })
     .then(result => {
-        res.send()
+        res.status(204).send()
     })
     .catch(error => {
         console.log(error)
@@ -88,7 +88,7 @@ router.route('/:foodTypeId').delete(util.isAdmin, (req, res) => {
         if (result === 0) {
             res.status(404).send()
         } else {
-            res.send()
+            res.status(204).send()
         }
     })
     .catch(error => {

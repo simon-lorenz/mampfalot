@@ -37,7 +37,7 @@ router.route('/').post(Util.isAdmin, (req, res) => {
         password: password
     })
     .then(result => {
-        res.send({success: true})
+        res.status(204).send()
     })
     .catch(error => {
         res.send({success: false, error})
@@ -120,7 +120,7 @@ router.route('/:userId').delete(Util.isAdmin, (req, res) => {
         }
     })
     .then(result => {
-        res.send()
+        res.status(204).send()
     })
     .catch(error => {
         console.log(error)
