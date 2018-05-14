@@ -12,7 +12,6 @@ const Vote = sequelize.define('votes',
         placeId: {
             type: Sequelize.INTEGER,
             foreignKey: true,
-            required: true,
             validate: {
                 noDuplicates: async function (value) {
                     let placesToday = await getPlacesAtDay(this.userId, new Date())
@@ -24,7 +23,7 @@ const Vote = sequelize.define('votes',
         },
         points: {
             type: Sequelize.INTEGER,
-            require: true,
+            allowNull: false,
             validate: {
                 min: 1, 
                 max: 100,
@@ -38,12 +37,11 @@ const Vote = sequelize.define('votes',
         },
         userId: {
             type: Sequelize.INTEGER,
-            foreignKey: true,
-            required: true
+            foreignKey: true
         },
         date: {
             type: Sequelize.DATEONLY,
-            required: true
+            allowNull: false
         }
     }, 
     {
