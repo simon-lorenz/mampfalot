@@ -18,21 +18,19 @@ app.get('/', (req, res) => {
 })
 
 // Router
-const authenticationRouter = require('./router/authenticationRouter')
-const placesRouter = require('./router/placesRouter')
-const foodTypesRouter = require('./router/foodTypesRouter')
-const userRouter = require('./router/userRouter')
-const votesRouter = require('./router/votesRouter')
+const router = {
+    auth: require('./router/auth'),
+    places: require('./router/places'),
+    foodTypes: require('./router/foodTypes'),
+    users: require('./router/users'),
+    votes: require('./router/votes')
+}
 
-app.use('/api/auth', authenticationRouter)
-
-// Token-Validation
-app.use(auth.validateToken)
-
-app.use('/api/places', placesRouter)
-app.use('/api/foodTypes', foodTypesRouter)
-app.use('/api/users', userRouter)
-app.use('/api/votes', votesRouter)
+app.use('/api/auth', router.auth)
+app.use('/api/places', auth.validateToken, router.places)
+app.use('/api/foodTypes', auth.validateToken, router.foodTypes)
+app.use('/api/users', auth.validateToken, router.users)
+app.use('/api/votes', auth.validateToken, router.votes)
 
 // Globaler Exception-Handler
 app.use((err, req, res, next) => {
