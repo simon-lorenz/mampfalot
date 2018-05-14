@@ -44,7 +44,7 @@ router.route('/').get((req, res) => {
     })
 })
 
-router.route('/').post(async function(req, res) {
+router.route('/').post((req, res) => {
     let vote = {
         userId: parseInt(req.body.userId),
         placeId: parseInt(req.body.placeId),
