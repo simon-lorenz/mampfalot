@@ -26,22 +26,62 @@ router.route('/').get((req, res) => {
     })
 })
 
-router.use('/', util.isAdmin)
-router.route('/').post((req, res) => {
+router.route('/').post(util.isAdmin, (req, res) => {
     let place = {
-        id: req.body.id,
         name: req.body.name,
         foodTypeId: req.body.foodTypeId
     }
 
-    if (util.missingValues(place).length > 0) {
-        res.status(400).send({ error: { missingValues: util.missingValues(place)}})
+    let missingValues = util.missingValues(place)
+    if (missingValues.length > 0) {
+        res.status(400).send({ missingValues })
         return
     }
 
-    Place.update(place, {
+    Place.create(place)
+    .then(result => {
+        res.send(result)
+    })
+    .catch(error => {
+        console.log(error)
+        res.status(500).send('Something went wrong.')
+    })
+})
+
+router.route('/:placeId').get((req, res) => {
+    Place.findOne({
         where: {
-            id: place.id
+            id: req.params.placeId
+        }
+    })
+    .then(result => {
+        if (!result) {
+            res.status(404).send()
+        } else {
+            res.send(result)
+        }
+    })
+    .catch(error => {
+        console.log(error)
+        res.status(500).send('Something went wrong.')
+    })
+})
+
+router.route('/:placeId').put(util.isAdmin, (req, res) => {
+    let placeId = req.params.placeId
+
+    let updateData = {}
+    if (req.body.name) { updateData.name = req.body.name.trim() }
+    if (req.body.foodTypeId) { updateData.foodTypeId = req.body.foodTypeId }
+
+    if (Object.keys(updateData).length === 0) {
+        res.status(400).send({ error: 'Request needs to have at least one of the following parameters: name or foodTypeId' })
+        return
+    }
+
+    Place.update(updateData, {
+        where: {
+            id: placeId
         }
     })
     .then(result => {
@@ -49,6 +89,25 @@ router.route('/').post((req, res) => {
     })
     .catch(err => {
         res.status(500).send(err)
+    })
+})
+
+router.route('/:placeId').delete(util.isAdmin, (req,  res) => {
+    Place.destroy({
+        where: {
+            id: req.params.placeId
+        }
+    })
+    .then(result => {
+        if (result == 0) {
+            res.status(404).send()
+        } else {
+            res.send()
+        }
+    })
+    .catch(error => {
+        console.log(error)
+        res.status(500).send('Something went wrong.')
     })
 })
 
