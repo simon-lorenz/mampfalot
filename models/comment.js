@@ -1,34 +1,34 @@
 const Sequelize = require('sequelize');
 const sequelize = require('./../sequelize')
-const Place = require('./place')
-const Participant = require('./participant')
+const User = require('./user')
+const Lunchbreak = require('./lunchbreak')
 
-const Vote = sequelize.define('votes', {
+const Comment = sequelize.define('comments', {
 	id: {
 		type: Sequelize.INTEGER,
 		primaryKey: true
 	},
-	participantId: {
+	lunchbreakId: {
 		type: Sequelize.INTEGER,
 		references: {
-			model: Participant,
+			model: Lunchbreak,
 			key: 'id'
 		}
 	},
-	placeId: {
+	userId: {
 		type: Sequelize.INTEGER,
 		references: {
-			model: Place,
+			model: User,
 			key: 'id'
 		}
 	},
-	points: {
-		type: Sequelize.INTEGER,
+	comment: {
+		type: Sequelize.TEXT,
 		allowNull: false
 	}
 }, {
-	timestamps: false,
+	timestamps: true,
 	freezeTableName: true
 })
 
-module.exports = Vote
+module.exports = Comment

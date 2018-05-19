@@ -1,29 +1,37 @@
-const Sequelize = require('sequelize');
+const Sequelize = require('sequelize')
 const sequelize = require('./../sequelize')
+const Group = require('./group')
 const Place = require('./place')
-const Participant = require('./participant')
 
-const Vote = sequelize.define('votes', {
+const Lunchbreak = sequelize.define('lunchbreaks', {
 	id: {
 		type: Sequelize.INTEGER,
 		primaryKey: true
 	},
-	participantId: {
+	groupId: {
 		type: Sequelize.INTEGER,
 		references: {
-			model: Participant,
+			model: Group,
 			key: 'id'
 		}
 	},
-	placeId: {
+	result: {
 		type: Sequelize.INTEGER,
 		references: {
 			model: Place,
 			key: 'id'
 		}
 	},
-	points: {
-		type: Sequelize.INTEGER,
+	date: {
+		type: Sequelize.DATE,
+		allowNull: false,
+	},
+	lunchTime: {
+		type: Sequelize.TIME,
+		allowNull: false
+	},
+	voteEndingTime: {
+		type: Sequelize.TIME,
 		allowNull: false
 	}
 }, {
@@ -31,4 +39,4 @@ const Vote = sequelize.define('votes', {
 	freezeTableName: true
 })
 
-module.exports = Vote
+module.exports = Lunchbreak

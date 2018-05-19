@@ -1,11 +1,15 @@
 const Sequelize = require('sequelize')
 const sequelize = require('./../sequelize')
 const Group = require('./group')
+const User = require('./user')
 
-const FoodType = sequelize.define('foodTypes', {
-	id: {
+const GroupMembers = sequelize.define('group_members', {
+	userId: {
 		type: Sequelize.INTEGER,
-		primaryKey: true
+		references: {
+			model: User,
+			key: 'id'
+		}
 	},
 	groupId: {
 		type: Sequelize.INTEGER,
@@ -14,13 +18,14 @@ const FoodType = sequelize.define('foodTypes', {
 			key: 'id'
 		}
 	},
-	type: {
-		type: Sequelize.STRING,
-		allowNull: false
+	authorizationLevel: {
+		type: Sequelize.SMALLINT,
+		allowNull: false,
+		defaultValue: 0
 	}
 }, {
 	timestamps: false,
 	freezeTableName: true
 })
 
-module.exports = FoodType
+module.exports = GroupMembers
