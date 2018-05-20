@@ -1,4 +1,4 @@
-const Sequelize = require('sequelize');
+const Sequelize = require('sequelize')
 const sequelize = require('./../sequelize')
 const Place = require('./place')
 const Participant = require('./participant')

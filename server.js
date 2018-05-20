@@ -8,22 +8,24 @@ const PORT = process.env.PORT || 5000
 
 app.use(cors())
 
-app.use(bodyParser.json()); 
+app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({
-    extended: false
+	extended: false
 }))
 
 app.get('/', (req, res) => {
-    res.send({ message: 'This is the mampfalot-api! Please authenticate yourself for data access.'})
+	res.send({
+		message: 'This is the mampfalot-api! Please authenticate yourself for data access.'
+	})
 })
 
 // Router
 const router = {
-    auth: require('./router/auth'),
-    places: require('./router/places'),
-    foodTypes: require('./router/foodTypes'),
-    users: require('./router/users'),
-    votes: require('./router/votes')
+	auth: require('./router/auth'),
+	places: require('./router/places'),
+	foodTypes: require('./router/foodTypes'),
+	users: require('./router/users'),
+	votes: require('./router/votes')
 }
 
 app.use('/api/auth', router.auth)
@@ -34,14 +36,14 @@ app.use('/api/votes', auth.validateToken, router.votes)
 
 // Globaler Exception-Handler
 app.use((err, req, res, next) => {
-    if (!err) {
-        return next();
-    } else {
-        console.log(err)
-        res.status(500).send('500: Internal server error')
-    }
-});
+	if (!err) {
+		return next()
+	} else {
+		console.log(err)
+		res.status(500).send('500: Internal server error')
+	}
+})
 
-app.listen(PORT, () => {    
-    console.log('Listening to port ' + PORT);
-});
+app.listen(PORT, () => {
+	console.log('Listening to port ' + PORT)
+})

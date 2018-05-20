@@ -1,4 +1,4 @@
-const Sequelize = require('sequelize');
+const Sequelize = require('sequelize')
 const sequelize = require('./../sequelize')
 const bcrypt = require('bcrypt')
 
@@ -27,7 +27,7 @@ const User = sequelize.define('users', {
 }, {
 	timestamps: true,
 	freezeTableName: true
-});
+})
 
 User.beforeCreate((user, options) => {
 	user.password = bcrypt.hashSync(user.password, 12)
