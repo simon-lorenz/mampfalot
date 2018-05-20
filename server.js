@@ -22,6 +22,7 @@ app.get('/', (req, res) => {
 // Router
 const router = {
 	auth: require('./router/auth'),
+	groups: require('./router/groups'),
 	places: require('./router/places'),
 	foodTypes: require('./router/foodTypes'),
 	users: require('./router/users'),
@@ -29,6 +30,7 @@ const router = {
 }
 
 app.use('/api/auth', router.auth)
+app.use('/api/groups', auth.validateToken, router.groups)
 app.use('/api/places', auth.validateToken, router.places)
 app.use('/api/foodTypes', auth.validateToken, router.foodTypes)
 app.use('/api/users', auth.validateToken, router.users)
