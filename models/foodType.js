@@ -2,7 +2,7 @@ const Sequelize = require('sequelize')
 const sequelize = require('./../sequelize')
 const Group = require('./group')
 
-const FoodType = sequelize.define('foodTypes', {
+const FoodType = sequelize.define('food_types', {
 	id: {
 		type: Sequelize.INTEGER,
 		primaryKey: true
