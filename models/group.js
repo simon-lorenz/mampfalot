@@ -1,5 +1,6 @@
 const Sequelize = require('sequelize')
 const sequelize = require('./../sequelize')
+const GroupMembers = require('./groupMembers')
 
 const Group = sequelize.define('groups', {
 	id: {
@@ -39,5 +40,7 @@ const Group = sequelize.define('groups', {
 	timestamps: false,
 	freezeTableName: true
 })
+
+Group.hasMany(GroupMembers)
 
 module.exports = Group
