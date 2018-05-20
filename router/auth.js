@@ -18,13 +18,13 @@ router.route('/').get((req, res) => {
 
 	User.findOne({
 			where: {
-				name: credentials.username
+				email: credentials.email
 			},
 			raw: true
 		})
 		.then(user => {
 			if (!user) {
-				res.status(401).send({
+				res.status(400).send({
 					error: 'Invalid Credentials'
 				})
 				return
@@ -34,7 +34,11 @@ router.route('/').get((req, res) => {
 			if (bcrypt.compareSync(credentials.password, user.password)) {
 				// Passwort korrekt - generiere Token
 				tokenData = user
-				tokenData.password = undefined // Das Passwort bleibt schön hier
+
+				// Nicht benötigte User-Daten entfernen
+				tokenData.password = undefined
+				tokenData.createdAt = undefined
+				tokenData.updatedAt = undefined
 
 				let token = jwt.sign(tokenData, process.env.SECRET_KEY, {
 					expiresIn: '10h'
