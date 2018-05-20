@@ -1,6 +1,8 @@
 const Sequelize = require('sequelize')
 const sequelize = require('./../sequelize')
 const GroupMembers = require('./groupMembers')
+const FoodType = require('./foodType')
+const Place = require('./place')
 
 const Group = sequelize.define('groups', {
 	id: {
@@ -42,5 +44,7 @@ const Group = sequelize.define('groups', {
 })
 
 Group.hasMany(GroupMembers)
+Group.hasMany(FoodType)
+Group.hasMany(Place)
 
 module.exports = Group
