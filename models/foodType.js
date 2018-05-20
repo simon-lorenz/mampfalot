@@ -16,7 +16,10 @@ const FoodType = sequelize.define('food_types', {
 	},
 	type: {
 		type: Sequelize.STRING,
-		allowNull: false
+		allowNull: false,
+		validate: {
+			notEmpty: true
+		}
 	}
 }, {
 	timestamps: false,

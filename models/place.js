@@ -24,7 +24,10 @@ const Place = sequelize.define('places', {
 	},
 	name: {
 		type: Sequelize.STRING,
-		allowNull: false
+		allowNull: false,
+		validate: {
+			notEmpty: true
+		}
 	}
 }, {
 	timestamps: false,

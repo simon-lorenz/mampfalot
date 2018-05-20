@@ -24,7 +24,10 @@ const Comment = sequelize.define('comments', {
 	},
 	comment: {
 		type: Sequelize.TEXT,
-		allowNull: false
+		allowNull: false,
+		validate: {
+			notEmpty: true
+		}
 	}
 }, {
 	timestamps: true,
