@@ -30,4 +30,6 @@ const GroupMembers = sequelize.define('group_members', {
 	freezeTableName: true
 })
 
+GroupMembers.hasOne(User, { foreignKey: 'id' })
+
 module.exports = GroupMembers
