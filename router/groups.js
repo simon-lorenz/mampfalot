@@ -69,6 +69,31 @@ router.route('/:groupId/foodTypes').get((req, res) => {
 	})
 })
 
+router.route('/:groupId/foodTypes').post((req, res) => {
+	Group.findOne({
+		where: {
+			id: req.params.groupId
+		}
+	})
+	.then(group => {
+		if (!group) {
+			res.status(404).send()
+			return
+		}
+
+		FoodType.create({
+			groupId: req.params.groupId,
+			type: req.body.type
+		})
+		.then(result => {
+			res.status(204).send()
+		})
+		.catch(err => {
+			res.status(400).send()
+		})
+	})
+})
+
 router.route('/:groupId/places').get((req, res) => {
 	Place.findAll({
 		where: {
@@ -81,6 +106,20 @@ router.route('/:groupId/places').get((req, res) => {
 		} else {
 			res.status(404).send()
 		}
+	})
+})
+
+router.route('/:groupId/places').post((req, res) => {
+	Place.create({
+		groupId: req.params.groupId,
+		foodTypeId: req.body.foodTypeId,
+		name: req.body.name
+	})
+	.then(result => {
+		res.status(204).send()
+	})
+	.catch(err => {
+		res.status(400).send(err)
 	})
 })
 
