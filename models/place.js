@@ -34,4 +34,6 @@ const Place = sequelize.define('places', {
 	freezeTableName: true
 })
 
+Place.belongsTo(FoodType, { foreignKey: 'foodTypeId', as: 'foodType' })
+
 module.exports = Place
