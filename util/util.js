@@ -60,4 +60,18 @@ Util.findDuplicates = function (arr) {
 	return duplicates
 }
 
+Util.getGroupMembershipIds = function (user, adminOnly = false) {
+	let groupIds = []
+	for (group of user.groupMemberships) {
+		if (adminOnly) {
+			if (group.authorizationLevel === 1) {
+				groupIds.push(group.groupId)
+			}
+		} else {
+			groupIds.push(group.groupId)
+		}
+	}
+	return groupIds
+}
+
 module.exports = Util

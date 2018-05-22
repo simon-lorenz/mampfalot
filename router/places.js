@@ -4,30 +4,36 @@ const Place = require('./../models/place')
 const FoodType = require('./../models/foodType')
 const util = require('./../util/util')
 
-router.route('/').get((req, res) => {
+router.route('/').get(util.loadUserGroupMemberships, (req, res) => {
 	Place.findAll({
-			attributes: {
-				exclude: ['foodTypeId']
+			where: {
+				groupId: util.getGroupMembershipIds(req.user)
 			},
 			order: [
 				['id', 'ASC']
 			],
 			include: [{
-				model: FoodType
+				model: FoodType,
+				as: 'foodType',
+				attributes: {
+					exclude: ['groupId']
+				}
 			}]
 		})
 		.then(result => {
 			res.send(result)
 		})
 		.catch(error => {
-			res.status(400).send('Ein Fehler ist aufgetreten' + error)
+			console.log('GET /places: ' + error)
+			res.status(500).send()
 		})
 })
 
-router.route('/').post(util.isAdmin, (req, res) => {
+router.route('/').post(util.loadUserGroupMemberships, (req, res) => {
 	let place = {
 		name: req.body.name,
-		foodTypeId: req.body.foodTypeId
+		foodTypeId: req.body.foodTypeId,
+		groupId: req.body.groupId ? parseInt(req.body.groupId) : undefined
 	}
 
 	let missingValues = util.missingValues(place)
@@ -35,6 +41,12 @@ router.route('/').post(util.isAdmin, (req, res) => {
 		res.status(400).send({
 			missingValues
 		})
+		return
+	}
+
+	// Ist der User Mitglied der angegebenen Gruppe und hat er Adminrechte auf die Gruppe?
+	if (util.getGroupMembershipIds(req.user, true).indexOf(place.groupId) === -1) {
+		res.status(401).send()
 		return
 	}
 
@@ -58,7 +70,11 @@ router.route('/:placeId').get((req, res) => {
 			if (!result) {
 				res.status(404).send()
 			} else {
+				if (util.getGroupMembershipIds(req.user).indexOf(result.groupId) === -1) {
+					res.status(401).send()
+				} else {
 				res.send(result)
+			}
 			}
 		})
 		.catch(error => {
@@ -67,7 +83,7 @@ router.route('/:placeId').get((req, res) => {
 		})
 })
 
-router.route('/:placeId').put(util.isAdmin, (req, res) => {
+router.route('/:placeId').put(util.loadUserGroupMemberships, (req, res) => {
 	let placeId = req.params.placeId
 
 	let updateData = {}
@@ -87,7 +103,8 @@ router.route('/:placeId').put(util.isAdmin, (req, res) => {
 
 	Place.update(updateData, {
 			where: {
-				id: placeId
+				id: placeId,
+				groupId: util.getGroupMembershipIds(req.user, true)
 			}
 		})
 		.then(result => {
@@ -98,10 +115,11 @@ router.route('/:placeId').put(util.isAdmin, (req, res) => {
 		})
 })
 
-router.route('/:placeId').delete(util.isAdmin, (req, res) => {
+router.route('/:placeId').delete(util.loadUserGroupMemberships, (req, res) => {
 	Place.destroy({
 			where: {
-				id: req.params.placeId
+				id: req.params.placeId,
+				groupId: util.getGroupMembershipIds(req.user, true)
 			}
 		})
 		.then(result => {
