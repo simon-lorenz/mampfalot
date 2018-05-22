@@ -22,7 +22,7 @@ router.route('/').get((req, res) => {
 })
 
 router.route('/').post(Util.isAdmin, (req, res) => {
-	if (!(req.body.username && req.body.email && req.body.password)) {
+	if (!(req.body.name && req.body.email && req.body.password)) {
 		res.status(400).send({
 			success: false,
 			error: 'Missing Values'
@@ -30,12 +30,12 @@ router.route('/').post(Util.isAdmin, (req, res) => {
 		return
 	}
 
-	let username = req.body.username
+	let name = req.body.name
 	let email = req.body.email
 	let password = req.body.password
 
 	User.create({
-			name: username,
+			name: name,
 			email: email,
 			password: password
 		})
