@@ -71,7 +71,7 @@ router.route('/:groupId/members').get((req, res) => {
 			include: [{
 				model: User,
 				attributes: {
-					exclude: ['id', 'password', 'createdAt', 'updatedAt']
+					exclude: ['id', 'createdAt', 'updatedAt']
 				}
 			}]
 		})

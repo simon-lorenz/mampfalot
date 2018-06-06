@@ -6,9 +6,6 @@ const Util = require('./../util/util')
 
 router.route('/').get((req, res) => {
 	User.findAll({
-			attributes: {
-				exclude: ['password']
-			},
 			order: [
 				['id', 'ASC']
 			]
@@ -52,9 +49,6 @@ router.route('/').post(Util.isAdmin, (req, res) => {
 
 router.route('/:userId').get((req, res) => {
 	User.findOne({
-			attributes: {
-				exclude: ['password']
-			},
 			where: {
 				id: req.params.userId
 			}
@@ -111,7 +105,11 @@ router.route('/:userId').put((req, res) => {
 				})
 				.then(user => {
 					tokenData = user
-					tokenData.password = undefined // Das Passwort bleibt schön hier
+
+					// Nicht benötigte User-Daten entfernen
+					tokenData.createdAt = undefined
+					tokeData.updatedAt = undefined
+
 					let token = jwt.sign(tokenData, process.env.SECRET_KEY, {
 						expiresIn: 4000
 					})

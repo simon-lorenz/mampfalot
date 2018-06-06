@@ -27,7 +27,7 @@ router.route('/').get((req, res) => {
 			include: [{
 					model: User,
 					attributes: {
-						exclude: ['isAdmin', 'password']
+						exclude: ['isAdmin']
 					}
 				},
 				{

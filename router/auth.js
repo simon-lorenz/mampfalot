@@ -36,7 +36,6 @@ router.route('/').get((req, res) => {
 				tokenData = user
 
 				// Nicht benötigte User-Daten entfernen
-				tokenData.password = undefined
 				tokenData.createdAt = undefined
 				tokenData.updatedAt = undefined
 

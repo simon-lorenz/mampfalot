@@ -32,7 +32,12 @@ const User = sequelize.define('users', {
 	}
 }, {
 	timestamps: true,
-	freezeTableName: true
+	freezeTableName: true,
+	defaultScope: {
+		attributes: {
+			exclude: ['password']
+		}
+	}
 })
 
 User.beforeCreate((user, options) => {
