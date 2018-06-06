@@ -4,6 +4,8 @@ const GroupMembers = require('./../models/groupMembers')
 const FoodType = require('./../models/foodType')
 const Place = require('./../models/place')
 const User = require('./../models/user')
+const Lunchbreak = require('./../models/lunchbreak')
+const Util = require('./../util/util')
 
 router.route('/').get((req, res) => {
 	Group.findAll()
@@ -25,6 +27,37 @@ router.route('/:groupId').get((req, res) => {
 				res.status(404).send()
 			}
 		})
+})
+
+router.route('/:groupId/lunchbreaks').get(Util.loadUserGroupMemberships, (req, res) => {
+	Group.findOne({
+		where: {
+			id: req.params.groupId
+		}
+	})
+	.then(group => {
+		if (!group) {
+			res.status(404).send()
+			return
+		}
+
+		if (!Util.getGroupMembershipIds(req.user, false).includes(group.id)) {
+			res.status(401).send()
+			return
+		}
+
+		Lunchbreak.findAll({
+			where: {
+				groupId: req.params.groupId
+			}
+		})
+		.then(lunchbreaks => {
+			res.send(lunchbreaks)
+		})
+		.catch(err => {
+			res.send(err)
+		})
+	})
 })
 
 router.route('/:groupId/members').get((req, res) => {
