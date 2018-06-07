@@ -30,7 +30,14 @@ const Participant = sequelize.define('participants', {
 	}
 }, {
 	timestamps: false,
-	freezeTableName: true
+	freezeTableName: true,
+	defaultScope: {
+		attributes: {
+			exclude: ['amountSpent']
+		}
+	}
 })
+
+Participant.belongsTo(User)
 
 module.exports = Participant
