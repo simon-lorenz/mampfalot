@@ -31,4 +31,6 @@ const Vote = sequelize.define('votes', {
 	freezeTableName: true
 })
 
+Vote.belongsTo(Participant)
+
 module.exports = Vote
