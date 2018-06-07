@@ -7,8 +7,10 @@ const User = require('./../models/user')
 const Lunchbreak = require('./../models/lunchbreak')
 const Util = require('./../util/util')
 
-router.route('/').get((req, res) => {
-	Group.findAll()
+router.route('/').get(Util.loadUserGroupMemberships, (req, res) => {
+	Group.scope({
+			method: ['userIsMember', req.user]
+		}).findAll()
 		.then(result => {
 			res.send(result)
 		})
