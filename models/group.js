@@ -3,6 +3,7 @@ const sequelize = require('./../sequelize')
 const GroupMembers = require('./groupMembers')
 const FoodType = require('./foodType')
 const Place = require('./place')
+const Util = require('./../util/util')
 
 const Group = sequelize.define('groups', {
 	id: {
@@ -40,7 +41,18 @@ const Group = sequelize.define('groups', {
 	}
 }, {
 	timestamps: false,
-	freezeTableName: true
+	freezeTableName: true,
+	scopes: {
+		userIsMember: function (user) {
+			return {
+				where: {
+					id: {
+						in: Util.getGroupMembershipIds(user, false)
+					}
+				}
+			}
+		}
+	}
 })
 
 Group.hasMany(GroupMembers)
