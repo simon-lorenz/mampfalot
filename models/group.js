@@ -41,22 +41,7 @@ const Group = sequelize.define('groups', {
 	}
 }, {
 	timestamps: false,
-	freezeTableName: true,
-	scopes: {
-		userIsMember: function (user) {
-			return {
-				where: {
-					id: {
-						in: Util.getGroupMembershipIds(user, false)
-					}
-				}
-			}
-		}
-	}
+	freezeTableName: true
 })
-
-Group.hasMany(GroupMembers)
-Group.hasMany(FoodType)
-Group.hasMany(Place)
 
 module.exports = Group
