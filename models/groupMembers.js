@@ -24,6 +24,11 @@ const GroupMembers = sequelize.define('group_members', {
 		type: Sequelize.SMALLINT,
 		allowNull: false,
 		defaultValue: 0
+	},
+	color: {
+		type: Sequelize.STRING,
+		allowNull: true,
+		default: '80D8FF'
 	}
 }, {
 	timestamps: false,
