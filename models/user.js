@@ -35,7 +35,7 @@ const User = sequelize.define('users', {
 	freezeTableName: true,
 	defaultScope: {
 		attributes: {
-			exclude: ['password']
+			exclude: ['password', 'createdAt', 'updatedAt']
 		}
 	}
 })
