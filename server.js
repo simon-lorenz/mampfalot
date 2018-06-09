@@ -4,6 +4,7 @@ const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const auth = require('./util/auth')
+const util = require('./util/util')
 const PORT = process.env.PORT || 5000
 
 app.use(cors())
@@ -30,11 +31,15 @@ const router = {
 }
 
 app.use('/api/auth', router.auth)
-app.use('/api/groups', auth.validateToken, router.groups)
-app.use('/api/places', auth.validateToken, router.places)
-app.use('/api/foodTypes', auth.validateToken, router.foodTypes)
-app.use('/api/users', auth.validateToken, router.users)
-app.use('/api/votes', auth.validateToken, router.votes)
+
+app.use('/api/*', [auth.validateToken, util.loadUserGroups])
+
+app.use('/api/groups', router.groups)
+app.use('/api/places', router.places)
+app.use('/api/foodTypes', router.foodTypes)
+app.use('/api/users', router.users)
+app.use('/api/votes', router.votes)
+app.use('/api/lunchbreaks', router.lunchbreaks)
 
 // Globaler Exception-Handler
 app.use((err, req, res, next) => {

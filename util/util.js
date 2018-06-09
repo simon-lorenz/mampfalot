@@ -1,4 +1,5 @@
 const GroupMembers = require('./../models/groupMembers')
+const User = require('./../models/user')
 
 let Util = {}
 
@@ -13,8 +14,8 @@ Util.isAdmin = function (req, res, next) {
 	}
 }
 
-Util.loadUserGroupMemberships = function (req, res, next) {		
-	req.user.groupMemberships = []
+Util.loadUserGroups = function (req, res, next) {		
+	req.user.groups = []
 
 	GroupMembers.findAll({
 		attributes: {
@@ -27,7 +28,7 @@ Util.loadUserGroupMemberships = function (req, res, next) {
 	})
 	.then(result => {
 		for (group of result) {
-			req.user.groupMemberships.push(group)
+			req.user.groups.push(group)
 		}
 		next()
 	})
@@ -60,9 +61,9 @@ Util.findDuplicates = function (arr) {
 	return duplicates
 }
 
-Util.getGroupMembershipIds = function (user, adminOnly = false) {
+Util.getGroupIds = function (user, adminOnly = false) {
 	let groupIds = []
-	for (group of user.groupMemberships) {
+	for (group of user.groups) {
 		if (adminOnly) {
 			if (group.authorizationLevel === 1) {
 				groupIds.push(group.groupId)
