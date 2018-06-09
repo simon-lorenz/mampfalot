@@ -27,7 +27,8 @@ const router = {
 	places: require('./router/places'),
 	foodTypes: require('./router/foodTypes'),
 	users: require('./router/users'),
-	votes: require('./router/votes')
+	votes: require('./router/votes'),
+	lunchbreaks: require('./router/lunchbreaks')
 }
 
 app.use('/api/auth', router.auth)
