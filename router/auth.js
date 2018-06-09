@@ -16,7 +16,7 @@ router.route('/').get((req, res) => {
 		return
 	}
 
-	User.findOne({
+	User.unscoped().findOne({
 			where: {
 				email: credentials.email
 			},
