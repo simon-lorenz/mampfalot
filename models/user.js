@@ -1,53 +1,58 @@
-const Sequelize = require('sequelize')
-const sequelize = require('./../sequelize')
 const bcrypt = require('bcrypt')
 
-const User = sequelize.define('users', {
-	id: {
-		type: Sequelize.INTEGER,
-		primaryKey: true
-	},
-	name: {
-		type: Sequelize.STRING,
-		allowNull: false,
-		unique: true,
-		validate: {
-			notEmpty: true
+module.exports = (sequelize, DataTypes) => {
+	const User = sequelize.define('User', {
+		id: {
+			type: DataTypes.INTEGER,
+			primaryKey: true
+		},
+		name: {
+			type: DataTypes.STRING,
+			allowNull: false,
+			unique: true,
+			validate: {
+				notEmpty: true
+			}
+		},
+		email: {
+			type: DataTypes.STRING,
+			allowNull: false,
+			unique: true,
+			validate: {
+				isEmail: true
+			}
+		},
+		password: {
+			type: DataTypes.STRING,
+			allowNull: false,
+			validate: {
+				notEmpty: true
+			}
 		}
-	},
-	email: {
-		type: Sequelize.STRING,
-		allowNull: false,
-		unique: true,
-		validate: {
-			isEmail: true
+	}, {
+		tableName: 'users',
+		timestamps: true,
+		defaultScope: {
+			attributes: {
+				exclude: ['password', 'createdAt', 'updatedAt']
+			}
 		}
-	},
-	password: {
-		type: Sequelize.STRING,
-		allowNull: false,
-		validate: {
-			notEmpty: true
-		}
-	}
-}, {
-	timestamps: true,
-	freezeTableName: true,
-	defaultScope: {
-		attributes: {
-			exclude: ['password', 'createdAt', 'updatedAt']
-		}
-	}
-})
+	})
 
-User.beforeCreate((user, options) => {
-	user.password = bcrypt.hashSync(user.password, 12)
-})
-
-User.beforeBulkUpdate((user, options) => {
-	if (user.attributes.password) {
-		user.attributes.password = bcrypt.hashSync(user.attributes.password, 12)
+	User.associate = function (models) {
+		models.User.hasMany(models.Comment)
+		models.User.hasMany(models.Participant)
 	}
-})
+	
+	User.beforeCreate((user, options) => {
+		user.password = bcrypt.hashSync(user.password, 12)
+	})
+	
+	User.beforeBulkUpdate((user, options) => {
+		if (user.attributes.password) {
+			user.attributes.password = bcrypt.hashSync(user.attributes.password, 12)
+		}
+	})
 
-module.exports = User
+	return User
+}

@@ -1,39 +1,30 @@
-const Sequelize = require('sequelize')
-const sequelize = require('./../sequelize')
-const FoodType = require('./foodType')
-const Group = require('./group')
+module.exports = (sequelize, DataTypes) => {
+	const Place = sequelize.define('Place', {
+		id: {
+			type: DataTypes.INTEGER,
+			primaryKey: true
+		},
+		groupId: {
+			type: DataTypes.INTEGER
+		},
+		foodTypeId: {
+			type: DataTypes.STRING
+		},
+		name: {
+			type: DataTypes.STRING,
+			allowNull: false,
+			validate: {
+				notEmpty: true
+			}
+		}
+	}, {
+		tableName: 'places',
+		timestamps: false
+	})
 
-const Place = sequelize.define('places', {
-	id: {
-		type: Sequelize.INTEGER,
-		primaryKey: true
-	},
-	groupId: {
-		type: Sequelize.INTEGER,
-		references: {
-			model: Group,
-			key: 'id'
-		}
-	},
-	foodTypeId: {
-		type: Sequelize.STRING,
-		references: {
-			model: FoodType,
-			key: 'id'
-		}
-	},
-	name: {
-		type: Sequelize.STRING,
-		allowNull: false,
-		validate: {
-			notEmpty: true
-		}
+	Place.associate = function (models) {
+		models.Place.belongsTo(models.Group)
 	}
-}, {
-	timestamps: false,
-	freezeTableName: true
-})
-
-Place.belongsTo(FoodType, { foreignKey: 'foodTypeId', as: 'foodType' })
-
-module.exports = Place
+	
+	return Place
+}

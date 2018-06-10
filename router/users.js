@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const jwt = require('jsonwebtoken')
-const User = require('./../models/user')
+const User = require('./../models').User
 const Util = require('./../util/util')
 
 router.route('/').get((req, res) => {

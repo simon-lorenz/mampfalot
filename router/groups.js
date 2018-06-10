@@ -1,10 +1,10 @@
-const Group = require('./../models/group')
+const Group = require('./../models').Group
 const router = require('express').Router()
-const GroupMembers = require('./../models/groupMembers')
-const FoodType = require('./../models/foodType')
-const Place = require('./../models/place')
-const User = require('./../models/user')
-const Lunchbreak = require('./../models/lunchbreak')
+const GroupMembers = require('./../models').GroupMembers
+const FoodType = require('./../models').FoodType
+const Place = require('./../models').Place
+const User = require('./../models').User
+const Lunchbreak = require('./../models').Lunchbreak
 const Util = require('./../util/util')
 
 router.route('/').get((req, res) => {

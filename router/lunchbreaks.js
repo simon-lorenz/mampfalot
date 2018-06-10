@@ -1,8 +1,7 @@
 const express = require('express')
 const router = express.Router()
-const Lunchbreak = require('./../models/lunchbreak')
-const Participant = require('./../models/participant')
-const User = require('./../models/user')
+const Lunchbreak = require('./../models').Lunchbreak
+const Comment = require('./../models').Comment
 const Util = require('./../util/util')
 
 // Liefert alle Lunchbreaks der Gruppen des Users

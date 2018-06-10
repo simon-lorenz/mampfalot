@@ -1,42 +1,38 @@
-const Sequelize = require('sequelize')
-const sequelize = require('./../sequelize')
-const Group = require('./group')
-const Place = require('./place')
+module.exports = (sequelize, DataTypes) => {	
+	const Lunchbreak = sequelize.define('Lunchbreak', {
+		id: {
+			type: DataTypes.INTEGER,
+			primaryKey: true
+		},
+		groupId: {
+			type: DataTypes.INTEGER
+		},
+		result: {
+			type: DataTypes.INTEGER
+		},
+		date: {
+			type: DataTypes.DATE,
+			allowNull: false,
+		},
+		lunchTime: {
+			type: DataTypes.TIME,
+			allowNull: false
+		},
+		voteEndingTime: {
+			type: DataTypes.TIME,
+			allowNull: false
+		}
+	}, {
+		tableName: 'lunchbreaks',
+		timestamps: false
+	})
 
-const Lunchbreak = sequelize.define('lunchbreaks', {
-	id: {
-		type: Sequelize.INTEGER,
-		primaryKey: true
-	},
-	groupId: {
-		type: Sequelize.INTEGER,
-		references: {
-			model: Group,
-			key: 'id'
-		}
-	},
-	result: {
-		type: Sequelize.INTEGER,
-		references: {
-			model: Place,
-			key: 'id'
-		}
-	},
-	date: {
-		type: Sequelize.DATE,
-		allowNull: false,
-	},
-	lunchTime: {
-		type: Sequelize.TIME,
-		allowNull: false
-	},
-	voteEndingTime: {
-		type: Sequelize.TIME,
-		allowNull: false
+	Lunchbreak.associate = function (models) {
+		models.Lunchbreak.belongsTo(models.Group)
+		models.Lunchbreak.hasMany(models.Comment)
+		models.Lunchbreak.hasMany(models.Participant)
+		models.Lunchbreak.hasOne(models.Place)
 	}
-}, {
-	timestamps: false,
-	freezeTableName: true
-})
 
-module.exports = Lunchbreak
+	return Lunchbreak
+}

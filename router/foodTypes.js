@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const FoodType = require('./../models/foodType')
+const FoodType = require('./../models').FoodType
 const util = require('./../util/util')
 
 router.route('/').get((req, res) => {

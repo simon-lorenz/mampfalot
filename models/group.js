@@ -1,47 +1,49 @@
-const Sequelize = require('sequelize')
-const sequelize = require('./../sequelize')
-const GroupMembers = require('./groupMembers')
-const FoodType = require('./foodType')
-const Place = require('./place')
-const Util = require('./../util/util')
+module.exports = (sequelize, DataTypes) => {
+	const Group = sequelize.define('Group', {
+		id: {
+			type: DataTypes.INTEGER,
+			primaryKey: true
+		},
+		name: {
+			type: DataTypes.STRING,
+			allowNull: false
+		},
+		defaultLunchTime: {
+			type: DataTypes.TIME,
+			allowNull: false,
+			defaultValue: '12:30:00'
+		},
+		defaultVoteEndingTime: {
+			type: DataTypes.TIME,
+			allowNull: false,
+			defaultValue: '12:20:00'
+		},
+		pointsPerDay: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			defaultValue: 100
+		},
+		maxPointsPerVote: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			defaultValue: 100
+		},
+		minPointsPerVote: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			defaultValue: 10
+		}
+	}, {
+		tableName: 'groups',
+		timestamps: false
+	})
 
-const Group = sequelize.define('groups', {
-	id: {
-		type: Sequelize.INTEGER,
-		primaryKey: true
-	},
-	name: {
-		type: Sequelize.STRING,
-		allowNull: false
-	},
-	defaultLunchTime: {
-		type: Sequelize.TIME,
-		allowNull: false,
-		defaultValue: '12:30:00'
-	},
-	defaultVoteEndingTime: {
-		type: Sequelize.TIME,
-		allowNull: false,
-		defaultValue: '12:20:00'
-	},
-	pointsPerDay: {
-		type: Sequelize.INTEGER,
-		allowNull: false,
-		defaultValue: 100
-	},
-	maxPointsPerVote: {
-		type: Sequelize.INTEGER,
-		allowNull: false,
-		defaultValue: 100
-	},
-	minPointsPerVote: {
-		type: Sequelize.INTEGER,
-		allowNull: false,
-		defaultValue: 10
+	Group.associate = function (models) {
+		models.Group.hasMany(models.Place)
+		models.Group.hasMany(models.FoodType)
+		models.Group.hasMany(models.Lunchbreak)
+		models.Group.hasMany(models.GroupMembers)
 	}
-}, {
-	timestamps: false,
-	freezeTableName: true
-})
 
-module.exports = Group
+	return Group
+}

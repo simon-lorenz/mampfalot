@@ -1,43 +1,35 @@
-const Sequelize = require('sequelize')
-const sequelize = require('./../sequelize')
-const Lunchbreak = require('./lunchbreak')
-const User = require('./user')
+module.exports = (sequelize, DataTypes) => {
+	const Participant = sequelize.define('Participant', {
+		id: {
+			type: DataTypes.INTEGER,
+			primaryKey: true
+		},
+		lunchbreakId: {
+			type: DataTypes.INTEGER
+		},
+		userId: {
+			type: DataTypes.INTEGER
+		},
+		amountSpent: {
+			type: DataTypes.DECIMAL
+		},
+		lunchTimeSuggestion: {
+			type: DataTypes.TIME
+		}
+	}, {
+		tableName: 'participants',
+		timestamps: false,
+		defaultScope: {
+			attributes: {
+				exclude: ['amountSpent']
+			}
+		}
+	})
 
-const Participant = sequelize.define('participants', {
-	id: {
-		type: Sequelize.INTEGER,
-		primaryKey: true
-	},
-	lunchbreakId: {
-		type: Sequelize.INTEGER,
-		references: {
-			model: Lunchbreak,
-			key: 'id'
-		}
-	},
-	userId: {
-		type: Sequelize.INTEGER,
-		references: {
-			model: User,
-			key: 'id'
-		}
-	},
-	amountSpent: {
-		type: Sequelize.DECIMAL
-	},
-	lunchTimeSuggestion: {
-		type: Sequelize.TIME
+	Participant.associate = function (models) {
+		models.Participant.belongsTo(models.Lunchbreak)
+		models.Participant.hasMany(models.Vote)
 	}
-}, {
-	timestamps: false,
-	freezeTableName: true,
-	defaultScope: {
-		attributes: {
-			exclude: ['amountSpent']
-		}
-	}
-})
 
-Participant.belongsTo(User)
-
-module.exports = Participant
+	return Participant
+}

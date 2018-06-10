@@ -1,37 +1,31 @@
-const Sequelize = require('sequelize')
-const sequelize = require('./../sequelize')
-const User = require('./user')
-const Lunchbreak = require('./lunchbreak')
+module.exports = (sequelize, DataTypes) => {
+	const Comment = sequelize.define('Comment', {
+		id: {
+			type: DataTypes.INTEGER,
+			primaryKey: true
+		},
+		lunchbreakId: {
+			type: DataTypes.INTEGER
+		},
+		userId: {
+			type: DataTypes.INTEGER
+		},
+		comment: {
+			type: DataTypes.TEXT,
+			allowNull: false,
+			validate: {
+				notEmpty: true
+			}
+		}
+	}, {
+		tableName: 'comments',
+		timestamps: true
+	})
 
-const Comment = sequelize.define('comments', {
-	id: {
-		type: Sequelize.INTEGER,
-		primaryKey: true
-	},
-	lunchbreakId: {
-		type: Sequelize.INTEGER,
-		references: {
-			model: Lunchbreak,
-			key: 'id'
-		}
-	},
-	userId: {
-		type: Sequelize.INTEGER,
-		references: {
-			model: User,
-			key: 'id'
-		}
-	},
-	comment: {
-		type: Sequelize.TEXT,
-		allowNull: false,
-		validate: {
-			notEmpty: true
-		}
+	Comment.associate = function (models) {
+		models.Comment.belongsTo(models.Lunchbreak)
+		models.Comment.belongsTo(models.User)
 	}
-}, {
-	timestamps: true,
-	freezeTableName: true
-})
 
-module.exports = Comment
+	return Comment
+}

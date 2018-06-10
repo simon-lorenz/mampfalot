@@ -1,5 +1,5 @@
-const GroupMembers = require('./../models/groupMembers')
-const User = require('./../models/user')
+const GroupMembers = require('./../models').GroupMembers
+const User = require('./../models').User
 
 let Util = {}
 

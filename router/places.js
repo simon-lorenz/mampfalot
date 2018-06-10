@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
-const Place = require('./../models/place')
-const FoodType = require('./../models/foodType')
+const Place = require('./../models').Place
+const FoodType = require('./../models').FoodType
 const util = require('./../util/util')
 
 router.route('/').get(util.loadUserGroupMemberships, (req, res) => {
