@@ -6,6 +6,7 @@ const Place = require('./../models').Place
 const User = require('./../models').User
 const Lunchbreak = require('./../models').Lunchbreak
 const Util = require('./../util/util')
+const sec = require('./../util/sec')
 
 router.route('/').get((req, res) => {
 	Group.findAll({
@@ -19,7 +20,7 @@ router.route('/').get((req, res) => {
 		})
 })
 
-router.all('/:groupId*', [groupExists, userIsGroupMember])
+router.all('/:groupId*', [groupExists, sec.userIsGroupMember])
 
 router.route('/:groupId').get((req, res) => {
 	Group.findOne({
@@ -69,7 +70,7 @@ router.route('/:groupId/foodTypes').get((req, res) => {
 		})
 })
 
-router.route('/:groupId/foodTypes').post(userIsGroupAdmin, (req, res) => {
+router.route('/:groupId/foodTypes').post(sec.userIsGroupAdmin, (req, res) => {
 	FoodType.create({
 			groupId: req.params.groupId,
 			type: req.body.type
@@ -93,7 +94,7 @@ router.route('/:groupId/places').get((req, res) => {
 		})
 })
 
-router.route('/:groupId/places').post(userIsGroupAdmin, (req, res) => {
+router.route('/:groupId/places').post(sec.userIsGroupAdmin, (req, res) => {
 	Place.create({
 			groupId: req.params.groupId,
 			foodTypeId: req.body.foodTypeId,
@@ -121,22 +122,6 @@ async function groupExists(req, res, next) {
 				res.status(404).send()
 			}
 		})
-}
-
-function userIsGroupMember(req, res, next) {
-	if (Util.getGroupIds(req.user, false).includes(parseInt(req.params.groupId))) {
-		next()
-	} else {
-		res.status(403).send()
-	}
-}
-
-function userIsGroupAdmin(req, res, next) {
-	if (Util.getGroupIds(req.user, true).includes(parseInt(req.params.groupId))) {
-		next()
-	} else {
-		res.status(403).send()
-	}
 }
 
 module.exports = router
