@@ -4,12 +4,6 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.INTEGER,
 			primaryKey: true
 		},
-		groupId: {
-			type: DataTypes.INTEGER
-		},
-		foodTypeId: {
-			type: DataTypes.STRING
-		},
 		name: {
 			type: DataTypes.STRING,
 			allowNull: false,
@@ -24,6 +18,7 @@ module.exports = (sequelize, DataTypes) => {
 
 	Place.associate = function (models) {
 		models.Place.belongsTo(models.Group)
+		models.Place.hasOne(models.FoodType)
 	}
 	
 	return Place

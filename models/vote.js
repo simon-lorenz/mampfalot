@@ -4,12 +4,6 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.INTEGER,
 			primaryKey: true
 		},
-		participantId: {
-			type: DataTypes.INTEGER
-		},
-		placeId: {
-			type: DataTypes.INTEGER
-		},
 		points: {
 			type: DataTypes.INTEGER,
 			allowNull: false
@@ -18,6 +12,10 @@ module.exports = (sequelize, DataTypes) => {
 		tableName: 'votes',
 		timestamps: false
 	})
+
+	Vote.associate = function(models) {
+		models.Vote.belongsTo(models.Participant)
+	}
 
 	return Vote
 }

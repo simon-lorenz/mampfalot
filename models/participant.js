@@ -4,12 +4,6 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.INTEGER,
 			primaryKey: true
 		},
-		lunchbreakId: {
-			type: DataTypes.INTEGER
-		},
-		userId: {
-			type: DataTypes.INTEGER
-		},
 		amountSpent: {
 			type: DataTypes.DECIMAL
 		},

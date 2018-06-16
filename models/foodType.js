@@ -4,9 +4,6 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.INTEGER,
 			primaryKey: true
 		},
-		groupId: {
-			type: DataTypes.INTEGER
-		},
 		type: {
 			type: DataTypes.STRING,
 			allowNull: false,
