@@ -2,7 +2,10 @@ const express = require('express')
 const router = express.Router()
 const Lunchbreak = require('./../models').Lunchbreak
 const Comment = require('./../models').Comment
+const Participant = require('./../models').Participant
+const Vote = require('./../models').Vote
 const Util = require('./../util/util')
+const Sec = require('./../util/sec')
 
 // Liefert alle Lunchbreaks der Gruppen des Users
 router.route('/').get((req, res) => {
@@ -20,6 +23,8 @@ router.route('/').get((req, res) => {
 		res.status(500).send(err)
 	})
 })
+
+router.use('/:lunchbreakId*', [Sec.userHasAccessToLunchbreak])
 
 router.route('/:lunchbreakId').get((req, res) => {
 	Lunchbreak.findOne({
@@ -40,6 +45,7 @@ router.route('/:lunchbreakId').get((req, res) => {
 		}
 	})
 	.catch(err => {
+		console.log(err)
 		res.status(500).send(err)
 	})
 })
@@ -59,6 +65,43 @@ router.route('/:lunchbreakId/participants').get((req, res) => {
 	})
 	.catch(err => {
 		res.status(500).send(err)
+	})
+})
+
+router.route('/:lunchbreakId/votes').get((req, res) => {
+	Vote.findAll({
+		include: [
+			{
+				model: Participant,
+				where: {
+					lunchbreakId: req.params.lunchbreakId
+				},
+				attributes: []
+			}
+		]
+	})
+	.then(votes => {
+		res.send(votes)
+	})
+	.catch(err => {
+		console.log(err)
+		res.status(400).send(err)
+	})
+	
+})
+
+router.route('/:lunchbreakId/comments').get((req, res) => {
+	Comment.findAll({
+		where: {
+			lunchbreakId: req.params.lunchbreakId
+		},
+		include: [{ all: true }]
+	})
+	.then(comments => {
+		res.send(comments)
+	})
+	.catch(err => {
+		res.send(err)
 	})
 })
 
