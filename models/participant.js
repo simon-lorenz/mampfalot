@@ -13,6 +13,10 @@ module.exports = (sequelize, DataTypes) => {
 	}, {
 		tableName: 'participants',
 		timestamps: false,
+		name: {
+			singular: 'participant',
+			plural: 'participants'
+		},
 		defaultScope: {
 			attributes: {
 				exclude: ['amountSpent']

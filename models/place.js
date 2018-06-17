@@ -13,7 +13,11 @@ module.exports = (sequelize, DataTypes) => {
 		}
 	}, {
 		tableName: 'places',
-		timestamps: false
+		timestamps: false,
+		name: {
+			singular: 'place',
+			plural: 'places'
+		}
 	})
 
 	Place.associate = function (models) {

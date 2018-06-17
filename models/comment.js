@@ -13,7 +13,11 @@ module.exports = (sequelize, DataTypes) => {
 		}
 	}, {
 		tableName: 'comments',
-		timestamps: true
+		timestamps: true,
+		name: {
+			singular: 'comment',
+			plural: 'comments'
+		}
 	})
 
 	Comment.associate = function (models) {

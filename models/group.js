@@ -35,7 +35,11 @@ module.exports = (sequelize, DataTypes) => {
 		}
 	}, {
 		tableName: 'groups',
-		timestamps: false
+		timestamps: false,
+		name: {
+			singular: 'group',
+			plural: 'groups'
+		}
 	})
 
 	Group.associate = function (models) {

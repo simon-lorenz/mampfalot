@@ -10,7 +10,11 @@ module.exports = (sequelize, DataTypes) => {
 		}
 	}, {
 		tableName: 'votes',
-		timestamps: false
+		timestamps: false,
+		name: {
+			singular: 'vote',
+			plural: 'votes'
+		}
 	})
 
 	Vote.associate = function(models) {
