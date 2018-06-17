@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	FoodType.associate = function (models) {
-		models.FoodType.belongsTo(models.Group)
+		// models.FoodType.belongsTo(models.Group)
 	}
 
 	return FoodType
