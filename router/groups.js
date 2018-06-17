@@ -17,6 +17,7 @@ router.route('/').get((req, res) => {
 			include: [
 				Place,
 				FoodType,
+				Lunchbreak,
 				{
 					model: User,
 					as: 'members',
@@ -43,6 +44,10 @@ router.route('/:groupId').get((req, res) => {
 				Place,
 				FoodType,
 				{
+					model: Lunchbreak,
+					limit: parseInt(req.query.lunchbreakLimit) || 10
+				},
+				{
 					model: User,
 					as: 'members',
 					through: {
@@ -54,20 +59,6 @@ router.route('/:groupId').get((req, res) => {
 		})
 		.then(group => {
 			res.send(group)
-		})
-})
-
-router.route('/:groupId/lunchbreaks').get((req, res) => {
-	Lunchbreak.findAll({
-			where: {
-				groupId: req.params.groupId
-			}
-		})
-		.then(lunchbreaks => {
-			res.send(lunchbreaks)
-		})
-		.catch(err => {
-			res.send(err)
 		})
 })
 
@@ -92,15 +83,28 @@ router.route('/:groupId/members').get((req, res) => {
 	})
 })
 
+router.route('/:groupId/lunchbreaks').get((req, res) => {
+	Lunchbreak.findAll({
+			where: {
+				groupId: req.params.groupId
+			}
+		})
+		.then(lunchbreaks => {
+			res.send(lunchbreaks)
+		})
+		.catch(err => {
+			res.send(err)
+		})
+})
+
 router.route('/:groupId/foodTypes').get((req, res) => {
-	Group.findOne({
+	FoodType.findAll({
 		where: {
-			id: req.params.groupId
-		},
-		include: [ FoodType ]
+			groupId: req.params.groupId
+		}
 	})
-	.then(group => {
-		res.send(group.foodTypes)
+	.then(foodTypes => {
+		res.send(foodTypes)
 	})
 })
 
@@ -118,14 +122,13 @@ router.route('/:groupId/foodTypes').post(sec.userIsGroupAdmin, (req, res) => {
 })
 
 router.route('/:groupId/places').get((req, res) => {
-	Group.findOne({
+	Place.findAll({
 		where: {
-			id: req.params.groupId
-		},
-		include: [ Place ]
+			groupId: req.params.groupId
+		}
 	})
-	.then(group => {
-		res.send(group.places)
+	.then(places => {
+		res.send(places)
 	})
 })
 
