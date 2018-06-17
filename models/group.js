@@ -43,10 +43,15 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	Group.associate = function (models) {
-		// models.Group.hasMany(models.Place)
-		// models.Group.hasMany(models.FoodType)
-		// models.Group.hasMany(models.Lunchbreak)
-		// models.Group.hasMany(models.GroupMembers)
+		models.Group.hasMany(models.Place)
+		models.Group.hasMany(models.FoodType)
+		models.Group.hasMany(models.Lunchbreak)
+		models.Group.belongsToMany(models.User, {
+			through: models.GroupMembers,
+			as: 'members',
+			foreignKey: 'groupId',
+			otherKey: 'userId'
+		})
 	}
 
 	return Group

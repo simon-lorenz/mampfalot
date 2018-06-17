@@ -3,24 +3,22 @@ let Lunchbreak = require('./../models').Lunchbreak
 
 let sec = {}
 
-sec.userIsGroupMember = function (user, groupId) {
-	return Util.getGroupIds(user, false).includes(groupId)
-}
+sec.userIsGroupMember = function (req, res, next) {
+	let user = req.user
+	let groupId = parseInt(req.params.groupId)
 
-sec.userIsGroupAdmin = function (user, groupId) {
-	return Util.getGroupIds(user, true).includes(groupId)
-}
-
-sec.checkIfUserIsGroupMember = function (req, res, next) {
-	if (this.userIsGroupMember(req.user, req.params.groupId)) {
+	if (Util.getGroupIds(user, false).includes(groupId)) {
 		next()
 	} else {
 		res.status(403).send()
 	}
 }
 
-sec.checkIfUserIsGroupAdmin = function (req, res, next) {
-	if (this.userIsGroupAdmin(req.user, req.params.groupId)) {
+sec.userIsGroupAdmin = function (req, res, next) {
+	let user = req.user
+	let groupId = parseInt(req.params.groupId)
+
+	if (Util.getGroupIds(user, true).includes(groupId)) {
 		next()
 	} else {
 		res.status(403).send()

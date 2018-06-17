@@ -13,7 +13,19 @@ router.route('/').get((req, res) => {
 			where: {
 				id: { in: Util.getGroupIds(req.user, false)
 				}
-			}
+			},
+			include: [
+				Place,
+				FoodType,
+				{
+					model: User,
+					as: 'members',
+					through: {
+						as: 'config',
+						attributes: ['color', 'authorizationLevel']
+					}
+				}
+			]
 		})
 		.then(groups => {
 			res.send(groups)
@@ -26,7 +38,19 @@ router.route('/:groupId').get((req, res) => {
 	Group.findOne({
 			where: {
 				id: req.params.groupId
-			}
+			},
+			include: [
+				Place,
+				FoodType,
+				{
+					model: User,
+					as: 'members',
+					through: {
+						as: 'config',
+						attributes: ['color', 'authorizationLevel']
+					}
+				}
+			]
 		})
 		.then(group => {
 			res.send(group)
@@ -48,26 +72,36 @@ router.route('/:groupId/lunchbreaks').get((req, res) => {
 })
 
 router.route('/:groupId/members').get((req, res) => {
-	GroupMembers.findAll({
-			where: {
-				groupId: req.params.groupId
-			},
-			include: [User]
-		})
-		.then(result => {
-			res.send(result)
-		})
+	Group.findOne({
+		where: {
+			id: req.params.groupId
+		},
+		include: [
+			{
+				model: User,
+				as: 'members',
+				through: {
+					as: 'config',
+					attributes: ['color', 'authorizationLevel']
+				}
+			}
+		]
+	})
+	.then(group => {
+		res.send(group.members)
+	})
 })
 
 router.route('/:groupId/foodTypes').get((req, res) => {
-	FoodType.findAll({
-			where: {
-				groupId: req.params.groupId
-			}
-		})
-		.then(result => {
-			res.send(result)
-		})
+	Group.findOne({
+		where: {
+			id: req.params.groupId
+		},
+		include: [ FoodType ]
+	})
+	.then(group => {
+		res.send(group.foodTypes)
+	})
 })
 
 router.route('/:groupId/foodTypes').post(sec.userIsGroupAdmin, (req, res) => {
@@ -84,14 +118,15 @@ router.route('/:groupId/foodTypes').post(sec.userIsGroupAdmin, (req, res) => {
 })
 
 router.route('/:groupId/places').get((req, res) => {
-	Place.findAll({
-			where: {
-				groupId: req.params.groupId
-			}
-		})
-		.then(result => {
-			res.send(result)
-		})
+	Group.findOne({
+		where: {
+			id: req.params.groupId
+		},
+		include: [ Place ]
+	})
+	.then(group => {
+		res.send(group.places)
+	})
 })
 
 router.route('/:groupId/places').post(sec.userIsGroupAdmin, (req, res) => {
