@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	Lunchbreak.associate = function (models) {
-		// models.Lunchbreak.belongsTo(models.Group)
+		models.Lunchbreak.belongsTo(models.Group)
 		// models.Lunchbreak.hasMany(models.Comment)
 		// models.Lunchbreak.hasMany(models.Participant)
 		// models.Lunchbreak.hasOne(models.Place)
