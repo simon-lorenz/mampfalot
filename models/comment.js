@@ -21,8 +21,8 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	Comment.associate = function (models) {
-		// models.Comment.belongsTo(models.Lunchbreak)
-		// models.Comment.belongsTo(models.User)
+		models.Comment.belongsTo(models.Lunchbreak)
+		models.Comment.belongsTo(models.User)
 	}
 
 	return Comment

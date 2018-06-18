@@ -4,6 +4,8 @@ const Lunchbreak = require('./../models').Lunchbreak
 const Comment = require('./../models').Comment
 const Participant = require('./../models').Participant
 const Vote = require('./../models').Vote
+const Place = require('./../models').Place
+const User = require('./../models').User
 const Util = require('./../util/util')
 const Sec = require('./../util/sec')
 
@@ -56,9 +58,27 @@ router.route('/:lunchbreakId/participants').get((req, res) => {
 			lunchbreakId: req.params.lunchbreakId
 		},
 		attributes: {
-			exclude: ['amountSpent']
+			exclude: ['amountSpent', 'userId']
 		},
-		include: [ User ]
+		include: [ 
+			{
+				model: User
+			},
+			{
+				model: Vote,
+				attributes: {
+					exclude: ['id', 'participantId', 'placeId']
+				},
+				include: [ 
+					{
+						model: Place,
+						attributes: {
+							exclude: ['id', 'groupId']
+						}
+					} 
+				]
+			} 
+		]
 	})
 	.then(participants => {
 		res.send(participants)
@@ -68,34 +88,15 @@ router.route('/:lunchbreakId/participants').get((req, res) => {
 	})
 })
 
-router.route('/:lunchbreakId/votes').get((req, res) => {
-	Vote.findAll({
-		include: [
-			{
-				model: Participant,
-				where: {
-					lunchbreakId: req.params.lunchbreakId
-				},
-				attributes: []
-			}
-		]
-	})
-	.then(votes => {
-		res.send(votes)
-	})
-	.catch(err => {
-		console.log(err)
-		res.status(400).send(err)
-	})
-	
-})
-
 router.route('/:lunchbreakId/comments').get((req, res) => {
 	Comment.findAll({
 		where: {
 			lunchbreakId: req.params.lunchbreakId
 		},
-		include: [{ all: true }]
+		attributes: {
+			exclude: ['lunchbreakId', 'groupId', 'userId']
+		},
+		include: [ User ]
 	})
 	.then(comments => {
 		res.send(comments)
