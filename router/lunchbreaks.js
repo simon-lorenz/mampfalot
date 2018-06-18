@@ -88,6 +88,58 @@ router.route('/:lunchbreakId/participants').get((req, res) => {
 	})
 })
 
+router.route('/:lunchbreakId/participants/:participantId').get((req, res) => {
+	Participant.findOne({
+		where: {
+			id: req.params.participantId
+		},
+		include: [ 
+			{
+				model: User
+			},
+			{
+				model: Vote,
+				attributes: {
+					exclude: ['id', 'participantId', 'placeId']
+				},
+				include: [ 
+					{
+						model: Place,
+						attributes: {
+							exclude: ['id', 'groupId']
+						}
+					} 
+				]
+			}
+		]
+	})
+	.then(participant => {
+		res.send(participant)
+	})
+})
+
+router.route('/:lunchbreakId/participants/:participantId/votes').get((req, res) => {
+	Vote.findAll({
+		where: {
+			participantId: req.params.participantId
+		},
+		attributes: {
+			exclude: ['id', 'participantId', 'placeId']
+		},
+		include: [ 
+			{
+				model: Place,
+				attributes: {
+					exclude: ['id', 'groupId']
+				}
+			} 
+		]
+	})
+	.then(votes => {
+		res.send(votes)
+	})
+})
+
 router.route('/:lunchbreakId/comments').get((req, res) => {
 	Comment.findAll({
 		where: {
