@@ -58,7 +58,6 @@ module.exports = {
 			})
 	
 			res.locals.groupInfo = group
-			console.log(res.locals.groupInfo)
 			next()
 		} catch (error) {
 			console.log('loadGroupConfiguration() failed: ' + error)
