@@ -39,12 +39,12 @@ sec.userHasAccessToLunchbreak = function (req, res, next) {
 			return
 		}
 
-		if (!sec.userIsGroupMember(req.user, lunchbreak.groupId)) {
+		if (Util.getGroupIds(req.user, false).includes(lunchbreak.groupId)) {
+			next()
+		} else {
 			res.status(403).send()			
 			return
 		}
-
-		next()
 	})
 }
 
