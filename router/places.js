@@ -1,24 +1,12 @@
 const express = require('express')
 const router = express.Router()
 const Place = require('./../models').Place
-const FoodType = require('./../models').FoodType
 const util = require('./../util/util')
 
-router.route('/').get(util.loadUserGroupMemberships, (req, res) => {
+router.route('/').get((req, res) => {
+	let test
+
 	Place.findAll({
-			where: {
-				groupId: util.getGroupMembershipIds(req.user)
-			},
-			order: [
-				['id', 'ASC']
-			],
-			include: [{
-				model: FoodType,
-				as: 'foodType',
-				attributes: {
-					exclude: ['groupId']
-				}
-			}]
 		})
 		.then(result => {
 			res.send(result)
@@ -29,7 +17,7 @@ router.route('/').get(util.loadUserGroupMemberships, (req, res) => {
 		})
 })
 
-router.route('/').post(util.loadUserGroupMemberships, (req, res) => {
+router.route('/').post((req, res) => {
 	let place = {
 		name: req.body.name,
 		foodTypeId: req.body.foodTypeId,
@@ -45,7 +33,7 @@ router.route('/').post(util.loadUserGroupMemberships, (req, res) => {
 	}
 
 	// Ist der User Mitglied der angegebenen Gruppe und hat er Adminrechte auf die Gruppe?
-	if (util.getGroupMembershipIds(req.user, true).indexOf(place.groupId) === -1) {
+	if (util.getGroupIds(req.user, true).indexOf(place.groupId) === -1) {
 		res.status(401).send()
 		return
 	}
@@ -70,7 +58,7 @@ router.route('/:placeId').get((req, res) => {
 			if (!result) {
 				res.status(404).send()
 			} else {
-				if (util.getGroupMembershipIds(req.user).indexOf(result.groupId) === -1) {
+				if (util.getGroupIds(req.user).indexOf(result.groupId) === -1) {
 					res.status(401).send()
 				} else {
 				res.send(result)
@@ -83,7 +71,7 @@ router.route('/:placeId').get((req, res) => {
 		})
 })
 
-router.route('/:placeId').put(util.loadUserGroupMemberships, (req, res) => {
+router.route('/:placeId').put((req, res) => {
 	let placeId = req.params.placeId
 
 	let updateData = {}
@@ -104,7 +92,7 @@ router.route('/:placeId').put(util.loadUserGroupMemberships, (req, res) => {
 	Place.update(updateData, {
 			where: {
 				id: placeId,
-				groupId: util.getGroupMembershipIds(req.user, true)
+				groupId: util.getGroupIds(req.user, true)
 			}
 		})
 		.then(result => {
@@ -115,11 +103,11 @@ router.route('/:placeId').put(util.loadUserGroupMemberships, (req, res) => {
 		})
 })
 
-router.route('/:placeId').delete(util.loadUserGroupMemberships, (req, res) => {
+router.route('/:placeId').delete((req, res) => {
 	Place.destroy({
 			where: {
 				id: req.params.placeId,
-				groupId: util.getGroupMembershipIds(req.user, true)
+				groupId: util.getGroupIds(req.user, true)
 			}
 		})
 		.then(result => {
