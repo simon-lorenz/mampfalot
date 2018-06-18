@@ -27,7 +27,7 @@ router.route('/').get((req, res) => {
 	})
 })
 
-router.use('/:lunchbreakId*', [Sec.userHasAccessToLunchbreak, LunchbreakMiddleware.loadGroupConfigurationByLunchbreakId])
+router.use('/:lunchbreakId*', [Sec.userHasAccessToLunchbreak, LunchbreakMiddleware.loadGroupInfoByLunchbreakId])
 
 router.route('/:lunchbreakId').get((req, res) => {
 	Lunchbreak.findOne({
@@ -142,9 +142,8 @@ router.route('/:lunchbreakId/participants/:participantId/votes').get((req, res) 
 })
 
 router.route('/:lunchbreakId/participants/:participantId/votes').post(LunchbreakMiddleware.checkVotes, async function (req, res) {
-	// TODO: Check foreign key constraints (placeId)
-
 	let votes = req.body.votes
+	
 	try {
 		// 1. Delete all votes of this participant
 		await Vote.destroy({
