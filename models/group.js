@@ -21,17 +21,26 @@ module.exports = (sequelize, DataTypes) => {
 		pointsPerDay: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
-			defaultValue: 100
+			defaultValue: 100,
+			validate: {
+				min: 1
+			}
 		},
 		maxPointsPerVote: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
-			defaultValue: 100
+			defaultValue: 100,
+			validate: {
+				min: 1
+			}
 		},
 		minPointsPerVote: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
-			defaultValue: 10
+			defaultValue: 10,
+			validate: {
+				min: 1
+			}
 		}
 	}, {
 		tableName: 'groups',
