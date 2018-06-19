@@ -4,6 +4,7 @@ const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const authMiddleware = require('./middleware/auth')
+const commonMiddleware = require('./middleware/common')
 const util = require('./util/util')
 const PORT = process.env.PORT || 5000
 
@@ -33,7 +34,7 @@ const router = {
 
 app.use('/api/auth', router.auth)
 
-app.use('/api/*', [authMiddleware.verifyToken, util.loadUserGroups])
+app.use('/api/*', [authMiddleware.verifyToken, commonMiddleware.loadUser])
 
 app.use('/api/groups', router.groups)
 app.use('/api/places', router.places)

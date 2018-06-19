@@ -1,6 +1,3 @@
-const GroupMembers = require('./../models').GroupMembers
-const User = require('./../models').User
-
 let Util = {}
 
 Util.isAdmin = function (req, res, next) {
@@ -12,26 +9,6 @@ Util.isAdmin = function (req, res, next) {
 			error: 'admin-privileges required'
 		})
 	}
-}
-
-Util.loadUserGroups = function (req, res, next) {		
-	res.locals.user.groups = []
-
-	GroupMembers.findAll({
-		attributes: {
-			exclude: ['userId']
-		},
-		where: {
-			userId: res.locals.user.id
-		},
-		raw: true
-	})
-	.then(result => {
-		for (group of result) {
-			res.locals.user.groups.push(group)
-		}
-		next()
-	})
 }
 
 Util.addKeyIfExists = function (from, to, key) {
@@ -65,11 +42,11 @@ Util.getGroupIds = function (user, adminOnly = false) {
 	let groupIds = []
 	for (group of user.groups) {
 		if (adminOnly) {
-			if (group.authorizationLevel === 1) {
-				groupIds.push(group.groupId)
+			if (group.config.authorizationLevel === 1) {
+				groupIds.push(group.id)
 			}
 		} else {
-			groupIds.push(group.groupId)
+			groupIds.push(group.id)
 		}
 	}
 	return groupIds
