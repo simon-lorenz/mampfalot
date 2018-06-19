@@ -3,17 +3,10 @@ const router = express.Router()
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const User = require('./../models').User
-const auth = require('./../util/auth')
+const middleware = require('./../middleware/auth')
 
-router.route('/').get(async (req, res) => {
-	let basicAuthorizationHeader = req.headers['authorization']
-
-	if (!basicAuthorizationHeader) {
-		res.status(401).send('Basic authorization header required!')
-		return
-	}
-
-	let credentials = auth.decodeBasicAuthorizationHeader(basicAuthorizationHeader)
+router.route('/').get(middleware.basicAuth, async (req, res) => {
+	let credentials = res.locals.credentials
 
 	try {
 		let user = await User.unscoped().findOne({ 
