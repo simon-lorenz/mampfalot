@@ -4,7 +4,7 @@ const User = require('./../models').User
 let Util = {}
 
 Util.isAdmin = function (req, res, next) {
-	if (req.user.isAdmin) {
+	if (res.locals.user.isAdmin) {
 		next()
 	} else {
 		res.status(403).send({
@@ -15,20 +15,20 @@ Util.isAdmin = function (req, res, next) {
 }
 
 Util.loadUserGroups = function (req, res, next) {		
-	req.user.groups = []
+	res.locals.user.groups = []
 
 	GroupMembers.findAll({
 		attributes: {
 			exclude: ['userId']
 		},
 		where: {
-			userId: req.user.id
+			userId: res.locals.user.id
 		},
 		raw: true
 	})
 	.then(result => {
 		for (group of result) {
-			req.user.groups.push(group)
+			res.locals.user.groups.push(group)
 		}
 		next()
 	})

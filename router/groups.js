@@ -11,7 +11,7 @@ const sec = require('./../util/sec')
 router.route('/').get((req, res) => {
 	Group.findAll({
 			where: {
-				id: { in: Util.getGroupIds(req.user, false)
+				id: { in: Util.getGroupIds(res.locals.user, false)
 				}
 			},
 			include: [

@@ -66,7 +66,7 @@ router.route('/:userId').put((req, res) => {
 
 	// Will der User nicht sich selbst updaten, muss er
 	// Administrator-Rechte besitzen.
-	if (req.user.id != userId && !req.user.isAdmin) {
+	if (res.locals.user.id != userId && !res.locals.user.isAdmin) {
 		res.status(403).send('403: Forbidden')
 		return
 	}

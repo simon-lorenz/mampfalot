@@ -15,7 +15,7 @@ module.exports = {
 			if (err) {
 				res.status(401).send('Invalid token')
 			} else {
-				req.user = decoded // Speichere Userdaten im Request-Objekt
+				res.locals.user = decoded // Speichere Userdaten im Request-Objekt
 				next()
 			}
 		})

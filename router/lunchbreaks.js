@@ -15,7 +15,7 @@ router.route('/').get((req, res) => {
 	Lunchbreak.findAll({
 		where: {
 			groupId: {
-				in: Util.getGroupIds(req.user, false)
+				in: Util.getGroupIds(res.locals.user, false)
 			}
 		}
 	})
@@ -35,7 +35,7 @@ router.route('/:lunchbreakId').get((req, res) => {
 			groupId: {
 				and: {
 					eq: req.params.lunchbreakId,
-					in: Util.getGroupIds(req.user, false)
+					in: Util.getGroupIds(res.locals.user, false)
 				}
 			}
 		}

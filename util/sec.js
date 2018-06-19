@@ -4,7 +4,7 @@ let Lunchbreak = require('./../models').Lunchbreak
 let sec = {}
 
 sec.userIsGroupMember = function (req, res, next) {
-	let user = req.user
+	let user = res.locals.user
 	let groupId = parseInt(req.params.groupId)
 
 	if (Util.getGroupIds(user, false).includes(groupId)) {
@@ -15,7 +15,7 @@ sec.userIsGroupMember = function (req, res, next) {
 }
 
 sec.userIsGroupAdmin = function (req, res, next) {
-	let user = req.user
+	let user = res.locals.user
 	let groupId = parseInt(req.params.groupId)
 
 	if (Util.getGroupIds(user, true).includes(groupId)) {
@@ -39,7 +39,7 @@ sec.userHasAccessToLunchbreak = function (req, res, next) {
 			return
 		}
 
-		if (Util.getGroupIds(req.user, false).includes(lunchbreak.groupId)) {
+		if (Util.getGroupIds(res.locals.user, false).includes(lunchbreak.groupId)) {
 			next()
 		} else {
 			res.status(403).send()			

@@ -51,7 +51,7 @@ router.route('/').post((req, res) => {
 		points: parseInt(req.body.points)
 	}
 
-	if (vote.userId != req.user.id) {
+	if (vote.userId != res.locals.user.id) {
 		res.status(403).send()
 		return
 	}
@@ -113,7 +113,7 @@ router.route('/:voteId').put((req, res) => {
 			updateData, {
 				where: {
 					id: req.params.voteId,
-					userId: req.user.id
+					userId: res.locals.user.id
 				}
 			})
 		.then(result => {
@@ -152,7 +152,7 @@ router.route('/:voteId').delete((req, res) => {
 			}
 
 			// Admins dürfen alles löschen, User nur ihre eigenen Votes
-			if (!req.user.isAdmin && (result.userId !== req.user.id)) {
+			if (!res.locals.user.isAdmin && (result.userId !== res.locals.user.id)) {
 				res.status(401).send({
 					success: false,
 					error: 'Unauthorized'

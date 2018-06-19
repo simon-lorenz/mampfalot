@@ -33,7 +33,7 @@ router.route('/').post((req, res) => {
 	}
 
 	// Ist der User Mitglied der angegebenen Gruppe und hat er Adminrechte auf die Gruppe?
-	if (util.getGroupIds(req.user, true).indexOf(place.groupId) === -1) {
+	if (util.getGroupIds(res.locals.user, true).indexOf(place.groupId) === -1) {
 		res.status(401).send()
 		return
 	}
@@ -58,7 +58,7 @@ router.route('/:placeId').get((req, res) => {
 			if (!result) {
 				res.status(404).send()
 			} else {
-				if (util.getGroupIds(req.user).indexOf(result.groupId) === -1) {
+				if (util.getGroupIds(res.locals.user).indexOf(result.groupId) === -1) {
 					res.status(401).send()
 				} else {
 				res.send(result)
@@ -92,7 +92,7 @@ router.route('/:placeId').put((req, res) => {
 	Place.update(updateData, {
 			where: {
 				id: placeId,
-				groupId: util.getGroupIds(req.user, true)
+				groupId: util.getGroupIds(res.locals.user, true)
 			}
 		})
 		.then(result => {
@@ -107,7 +107,7 @@ router.route('/:placeId').delete((req, res) => {
 	Place.destroy({
 			where: {
 				id: req.params.placeId,
-				groupId: util.getGroupIds(req.user, true)
+				groupId: util.getGroupIds(res.locals.user, true)
 			}
 		})
 		.then(result => {
