@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt')
 const User = require('./../models').User
 const auth = require('./../util/auth')
 
-router.route('/').get((req, res) => {
+router.route('/').get(async (req, res) => {
 	let credentials
 	try {
 		credentials = auth.decodeBasicAuthorizationHeader(req)
@@ -16,46 +16,34 @@ router.route('/').get((req, res) => {
 		return
 	}
 
-	User.unscoped().findOne({
-			where: {
-				email: credentials.email
+	try {
+		let user = await User.unscoped().findOne({ 
+			where: { 
+				email: credentials.email 
 			},
-			raw: true
+			attributes: ['id', 'name', 'email', 'password'],
+			raw: true 
 		})
-		.then(user => {
-			if (!user) {
-				res.status(400).send({
-					error: 'Invalid Credentials'
-				})
-				return
-			}
 
-			// Ein User wurde gefunden, vergleiche das Passwort
-			if (bcrypt.compareSync(credentials.password, user.password)) {
-				// Passwort korrekt - generiere Token
-				tokenData = user
+		// Prüfe, ob der User vorhanden ist und ob sein Passwort übereinstimmt
+		if (!user || !bcrypt.compareSync(credentials.password, user.password)) {
+			res.status(401).send('Invalid credentials.')
+			return
+		}
 
-				// Nicht benötigte User-Daten entfernen
-				tokenData.password = undefined
-				tokenData.createdAt = undefined
-				tokenData.updatedAt = undefined
+		// Passwort entfernen, damit es nicht im token landet
+		user.password = undefined
 
-				let token = jwt.sign(tokenData, process.env.SECRET_KEY, {
-					expiresIn: '10h'
-				})
-				res.send({
-					token
-				})
-			} else {
-				// Password inkorrekt
-				res.status(401).send({
-					error: 'Invalid Credentials'
-				})
-			}
+		// Generiere Token
+		let token = jwt.sign(user, process.env.SECRET_KEY, {
+			expiresIn: '10h'
 		})
-		.catch(error => {
-			res.status(500).send(error)
-		})
+
+		res.send({ token })
+	} catch (error) {
+		console.log(error)
+		res.status(500).send()
+	}
 })
 
 module.exports = router
