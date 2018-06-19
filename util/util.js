@@ -1,16 +1,5 @@
 let Util = {}
 
-Util.isAdmin = function (req, res, next) {
-	if (res.locals.user.isAdmin) {
-		next()
-	} else {
-		res.status(403).send({
-			success: false,
-			error: 'admin-privileges required'
-		})
-	}
-}
-
 Util.addKeyIfExists = function (from, to, key) {
 	if (key in from) {
 		to[key] = from[key]

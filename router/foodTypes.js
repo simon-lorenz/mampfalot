@@ -17,7 +17,7 @@ router.route('/').get((req, res) => {
 		})
 })
 
-router.route('/').post(util.isAdmin, (req, res) => {
+router.route('/').post((req, res) => {
 	let foodType = {
 		type: req.body.type
 	}
@@ -55,7 +55,7 @@ router.route('/:foodTypeId').get((req, res) => {
 		})
 })
 
-router.route('/:foodTypeId').put(util.isAdmin, (req, res) => {
+router.route('/:foodTypeId').put((req, res) => {
 	let foodTypeId = req.params.foodTypeId
 	let updateData = {
 		type: req.body.type
@@ -80,7 +80,7 @@ router.route('/:foodTypeId').put(util.isAdmin, (req, res) => {
 		})
 })
 
-router.route('/:foodTypeId').delete(util.isAdmin, (req, res) => {
+router.route('/:foodTypeId').delete((req, res) => {
 	FoodType.destroy({
 			where: {
 				id: req.params.foodTypeId

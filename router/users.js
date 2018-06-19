@@ -18,7 +18,7 @@ router.route('/').get((req, res) => {
 		})
 })
 
-router.route('/').post(Util.isAdmin, (req, res) => {
+router.route('/').post((req, res) => {
 	if (!(req.body.name && req.body.email && req.body.password)) {
 		res.status(400).send({
 			success: false,
@@ -133,7 +133,7 @@ router.route('/:userId').put((req, res) => {
 		})
 })
 
-router.route('/:userId').delete(Util.isAdmin, (req, res) => {
+router.route('/:userId').delete((req, res) => {
 	User.destroy({
 			where: {
 				id: req.params.userId
