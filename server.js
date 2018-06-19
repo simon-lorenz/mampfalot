@@ -33,7 +33,7 @@ const router = {
 
 app.use('/api/auth', router.auth)
 
-app.use('/api/*', [auth.validateToken, util.loadUserGroups])
+app.use('/api/*', [auth.verifyToken, util.loadUserGroups])
 
 app.use('/api/groups', router.groups)
 app.use('/api/places', router.places)

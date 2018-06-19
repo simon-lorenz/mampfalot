@@ -1,23 +1,24 @@
 const jwt = require('jsonwebtoken')
 
 module.exports = {
-	validateToken: function (req, res, next) {
-		let bearerHeader = req.headers['authorization']
+	verifyToken: function (req, res, next) {
+		let authorizationHeader = req.headers['authorization']
 
-		if (bearerHeader) {
-			const bearerToken = bearerHeader.split(' ')[1]
-
-			jwt.verify(bearerToken, process.env.SECRET_KEY, (err, decoded) => {
-				if (err) {
-					res.status(401).send('Invalid token')
-				} else {
-					req.user = decoded // Speichere Userdaten im Request-Objekt
-					next()
-				}
-			})
-		} else {
-			res.status(401).send('Invalid token')
+		if (!authorizationHeader) {
+			res.status(401).send('Missing authorization header.')
+			return
 		}
+		
+		const token = authorizationHeader.split(' ')[1]
+
+		jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+			if (err) {
+				res.status(401).send('Invalid token')
+			} else {
+				req.user = decoded // Speichere Userdaten im Request-Objekt
+				next()
+			}
+		})
 	},
 	decodeBasicAuthorizationHeader: function (request) {
 		let header = request.headers['authorization']
