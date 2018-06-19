@@ -6,15 +6,14 @@ const User = require('./../models').User
 const auth = require('./../util/auth')
 
 router.route('/').get(async (req, res) => {
-	let credentials
-	try {
-		credentials = auth.decodeBasicAuthorizationHeader(req)
-	} catch (error) {
-		res.status(400).send({
-			error
-		})
+	let basicAuthorizationHeader = req.headers['authorization']
+
+	if (!basicAuthorizationHeader) {
+		res.status(401).send('Basic authorization header required!')
 		return
 	}
+
+	let credentials = auth.decodeBasicAuthorizationHeader(basicAuthorizationHeader)
 
 	try {
 		let user = await User.unscoped().findOne({ 
