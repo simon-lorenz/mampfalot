@@ -21,8 +21,8 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	Place.associate = function (models) {
-		// models.Place.belongsTo(models.Group, { foreignKey: 'placeId' })
-		// models.Place.hasOne(models.FoodType)
+		models.Place.belongsTo(models.FoodType, { foreignKey: 'foodTypeId' })
+		models.Place.belongsTo(models.Group, { foreignKey: 'groupId' })
 	}
 	
 	return Place
