@@ -7,6 +7,7 @@ const User = require('./../models').User
 const Lunchbreak = require('./../models').Lunchbreak
 const Util = require('./../util/util')
 const sec = require('./../util/sec')
+const commonMiddleware = require('./../middleware/common')
 
 router.route('/').get((req, res) => {
 	Group.findAll({
@@ -33,33 +34,61 @@ router.route('/').get((req, res) => {
 		})
 })
 
-router.all('/:groupId*', [groupExists, sec.userIsGroupMember])
+router.param('groupId', (req, res, next) => {
+	// 1. Lade die angefragte Gruppe
+	Group.findOne({
+		where: {
+			id: req.params.groupId
+		},
+		include: [
+			{
+				model: Place,
+				attributes: {
+					exclude: ['foodTypeId', 'groupId']
+				},
+				include: [ FoodType ]
+			},
+			{
+				model: FoodType,
+				attributes: {
+					exclude: ['groupId']
+				}
+			},
+			{
+				model: Lunchbreak,
+				limit: parseInt(req.query.lunchbreakLimit) || 25
+			},
+			{
+				model: User,
+				as: 'members',
+				through: {
+					as: 'config',
+					attributes: ['color', 'authorizationLevel']
+				}
+			}
+		]
+	})
+	.then(group => {
+		res.locals.group = group
+		next()
+	})
+	.catch(err => {
+		console.log(err)
+		res.status(500).send()
+	})
+})
+
+// 2. Existiert die Gruppe (war 1. erfolgreich)?
+router.param('groupId', groupExists)
+
+// 3. Ist der User Mitglied der Gruppe?´
+router.param('groupId', (req, res, next) => {
+	commonMiddleware.userIsGroupMember(res.locals.group.id)(req, res, next)
+	// x(req, res, next)
+})
 
 router.route('/:groupId').get((req, res) => {
-	Group.findOne({
-			where: {
-				id: req.params.groupId
-			},
-			include: [
-				Place,
-				FoodType,
-				{
-					model: Lunchbreak,
-					limit: parseInt(req.query.lunchbreakLimit) || 10
-				},
-				{
-					model: User,
-					as: 'members',
-					through: {
-						as: 'config',
-						attributes: ['color', 'authorizationLevel']
-					}
-				}
-			]
-		})
-		.then(group => {
-			res.send(group)
-		})
+	res.send(res.locals.group)
 })
 
 router.route('/:groupId/members').get((req, res) => {
@@ -108,7 +137,7 @@ router.route('/:groupId/foodTypes').get((req, res) => {
 	})
 })
 
-router.route('/:groupId/foodTypes').post(sec.userIsGroupAdmin, (req, res) => {
+router.route('/:groupId/foodTypes').post(commonMiddleware.userIsGroupAdmin, (req, res) => {
 	FoodType.create({
 			groupId: req.params.groupId,
 			type: req.body.type
@@ -132,7 +161,7 @@ router.route('/:groupId/places').get((req, res) => {
 	})
 })
 
-router.route('/:groupId/places').post(sec.userIsGroupAdmin, (req, res) => {
+router.route('/:groupId/places').post(commonMiddleware.userIsGroupAdmin, (req, res) => {
 	Place.create({
 			groupId: req.params.groupId,
 			foodTypeId: req.body.foodTypeId,
