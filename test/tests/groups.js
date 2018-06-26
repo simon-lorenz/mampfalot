@@ -1,3 +1,5 @@
+const setup = require('./../data/setup')
+
 module.exports = (request, token) => {
 	return describe('/groups', () => {
 		describe('GET', () => {
@@ -51,6 +53,76 @@ module.exports = (request, token) => {
 							Authorization: 'Bearer ' + token[1]
 						})
 						.expect(404, done)
+				})
+			})
+
+			describe.skip('POST', () => {
+				beforeEach(async () => {
+					await setup.setupDatabase()
+				})
+
+				after(async () => {
+					await setup.setupDatabase()
+				})
+
+				it('requires authentication', (done) => {
+					request
+						.post('/groups/1')
+						.expect(401, done)
+				})
+
+				it('fails with 404 if group doesn\'t exist', (done) => {
+					request
+						.post('/groups/99')
+						.expect(404, done)
+				})
+
+				it('fails with 403 if the user is no group admin', (done) => {
+					request
+						.post('/groups/1')
+						.set({
+							Authorization: 'Bearer ' + token[2]
+						})
+						.send({
+							name: 'New name'
+						})
+						.expect(403, done)
+				})
+
+				it('requires at least one parameter', (done) => {
+					request
+						.post('/groups/1')
+						.set({
+							Authorization: 'Bearer ' + token[1]
+						})
+						.send({})
+						.expect(400, done)
+				})
+
+				it('updates a group successfully', (done) => {
+					request
+						.post('/groups/1')
+						.set( { Authorization: 'Bearer' + token[1]})
+						.send({
+							name: 'New name',
+							defaultLunchTime: '14:00:00',
+							defaultVoteEndingTime: '13:30:00',
+							pointsPerDay: 300,
+							maxPointsPerVote: 100,
+							minPointsPerVote: 50
+						})
+						.expect(200, (err, res) => {
+							let group = res.body
+							group.should.have.property('id').equal(1)
+							group.should.have.property('name').equal('New name')
+							group.should.have.property('defaultLunchTime').equal('14:00:00')
+							group.should.have.property('defaultVoteEndingTime').equal('13:30:00')
+							group.should.have.property('pointsPerDay').equal(300)
+							group.should.have.property('maxPointsPerVote').equal(100)
+							group.should.have.property('minPointsPerVote').equal(50)
+							
+							done()
+						})
 				})
 			})
 
