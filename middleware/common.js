@@ -20,6 +20,12 @@ module.exports = {
 					}
 				 ]
 			})
+
+			if (!user) {
+				res.status(400).send('Invalid token - user does not exists anymore.')
+				return
+			}
+
 			res.locals.user = user.toJSON()
 			next()
 		} catch (error) {
