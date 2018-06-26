@@ -3,6 +3,7 @@ process.env.NODE_ENV = 'test'
 let request = require('supertest')('http://localhost:5001/api')
 const app = require('./../app')
 const setup = require('./data/setup')
+const users = require('./data/users')
 const chai = require('chai')
 chai.should()
 
@@ -16,16 +17,13 @@ describe('The mampfalot api', function () {
     server = app.listen(5001)
 
     let res
-    res = await request
-      .get('/auth')
-      .auth('mustermann@gmail.com', '123456')
-    token['Mustermann'] = res.body.token
-
-    res = await request
-      .get('/auth')
-      .auth('philipp.loten@company.com', 'password')
-    token['Loten'] = res.body.token
-
+    for (user of users) {
+      res = await request
+        .get('/auth')
+        .auth(user.email, user.password)
+      token[user.id] = res.body.token
+    }
+    
     server.close()
   })
 

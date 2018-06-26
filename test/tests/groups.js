@@ -14,7 +14,7 @@ module.exports = (request, token) => {
 					request
 						.get('/groups/1')
 						.set({
-							Authorization: 'Bearer ' + token['Mustermann']
+							Authorization: 'Bearer ' + token[1]
 						})
 						.expect(200, (err, res) => {
 							let group = res.body
@@ -39,7 +39,7 @@ module.exports = (request, token) => {
 					request
 						.get('/groups/2')
 						.set({
-							Authorization: 'Bearer ' + token['Mustermann']
+							Authorization: 'Bearer ' + token[1]
 						})
 						.expect(403, done)
 				})
@@ -48,7 +48,7 @@ module.exports = (request, token) => {
 					request
 						.get('/groups/99')
 						.set({
-							Authorization: 'Bearer ' + token['Mustermann']
+							Authorization: 'Bearer ' + token[1]
 						})
 						.expect(404, done)
 				})
@@ -60,7 +60,7 @@ module.exports = (request, token) => {
 						request
 							.get('/groups/1/lunchbreaks')
 							.set({
-								Authorization: 'Bearer ' + token['Mustermann']
+								Authorization: 'Bearer ' + token[1]
 							})
 							.expect(200, (err, res) => {
 								let data = res.body
@@ -85,7 +85,7 @@ module.exports = (request, token) => {
 						request
 							.get('/groups/1/members')
 							.set({
-								Authorization: 'Bearer ' + token['Mustermann']
+								Authorization: 'Bearer ' + token[1]
 							})
 							.expect(200, (err, res) => {
 								let data = res.body
