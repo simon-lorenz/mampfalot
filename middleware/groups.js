@@ -64,19 +64,16 @@ module.exports = {
       ]
     })
     .then(group => {
-      res.locals.group = group
-      next()
+      if (group) {
+        res.locals.group = group
+        next()
+      } else {  
+        res.status(404).send()
+      }   
     })
     .catch(err => {
       console.log(err)
       res.status(500).send()
     })
-  },
-  groupExists: function (req, res, next) {
-    if (res.locals.group) {
-      next()
-    } else {
-      res.status(404).send()
-    }
   }
 }

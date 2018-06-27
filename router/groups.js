@@ -9,10 +9,7 @@ router.route('/').get(middleware.findAllGroups)
 // 1. Lade die angefragte Gruppe
 router.param('groupId', middleware.loadGroup)
 
-// 2. Existiert die Gruppe (war 1. erfolgreich)?
-router.param('groupId', middleware.groupExists)
-
-// 3. Ist der User Mitglied der Gruppe?´
+// 2. Ist der User Mitglied der Gruppe?´
 router.param('groupId', (req, res, next) => {
 	commonMiddleware.userIsGroupMember(res.locals.group.id)(req, res, next)
 })
