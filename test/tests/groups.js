@@ -149,6 +149,90 @@ module.exports = (request, token) => {
 							})
 					})
 				})
+
+				describe.skip('POST', () => {
+					beforeEach(() => {
+						setup.setupDatabase()
+					})
+
+					it('fails if user is not member of the group', (done) => {
+						request
+							.post('/groups/1/lunchbreaks')
+							.set({ Authorization: 'Bearer ' + token[3]})
+							.send({
+								date: '2018-06-30',
+								lunchTime: '13:00:00',
+								voteEndingTime: '12:59:00'
+							})
+							.expect(403, done)
+					})
+					
+					it('creates a new lunchbreak successfully', (done) => {
+						request
+							.post('/groups/1/lunchbreaks')
+							.set({ Authorization: 'Bearer ' + token[2]})
+							.send({
+								date: '2018-06-30',
+								lunchTime: '12:00:00',
+								voteEndingTime: '11:59:00'
+							})
+							.expect(200, (err, res) => {
+								let newLunchbreak = res.body
+								newLunchbreak.should.have.property('id')
+								newLunchbreak.should.have.property('date').equal('2018-06-30')
+								newLunchbreak.should.have.property('lunchTime').equal('12:00:00')
+								newLunchbreak.should.have.property('voteEndingTime').equal('11:59:00')
+								done()
+							})
+					})
+
+					it('creates a new lunchbreak with default values if none are provided', (done) => {
+						request
+							.post('groups/1/lunchbreaks')
+							.set({ Authorization: 'Bearer ' + token[2]})
+							.send({
+								date: '2018-06-30'
+							})
+							.expect(200, (err, res) => {
+								let newLunchbreak = res.body
+								newLunchbreak.should.have.property('id')
+								newLunchbreak.should.have.property('date').equal('2018-06-30')
+								newLunchbreak.should.have.property('lunchTime').equal('13:00:00')
+								newLunchbreak.should.have.property('voteEndingTime').equal('12:59:00')
+								done()
+							})
+					})
+
+					it('fails if no date is provided', (done) => {
+						request	
+							.post('groups/1/lunchbreaks')
+							.set({ Authorization: 'Bearer ' + token[2]})
+							.send({})
+							.expect(400, done)
+					})
+
+					it('fails if voteEndingTime is greater than lunchTime', (done) => {{
+						request
+							.post('groups/1/lunchbreaks')
+							.set({ Authorization: 'Bearer ' + token[2]})
+							.send({
+								date: '2018-06-30',
+								lunchTime: '12:30:00',
+								voteEndingTime: '12:31:00'
+							})
+							.expect(400, done)
+					}})
+
+					it('fails if a lunchbreak at this date exists', (done) => {
+						request
+							.post('groups/1/lunchbreaks')
+							.set({ Authorization: 'Bearer ' + token[2]})
+							.send({
+								date: '2018-06-25'
+							})
+							.expect(400, done)
+					})
+				})
 			})
 
 			describe('/members', () => {
