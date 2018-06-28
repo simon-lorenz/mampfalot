@@ -21,9 +21,6 @@ node server.js
 3. Modify the test section in config.js to match with your local username, password, port, etc.
 
 ``` bash
-# make sure you have mocha installed
-npm i -g mocha
-
 # fire up the tests
 npm test
 ```
