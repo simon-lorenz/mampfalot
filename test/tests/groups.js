@@ -100,20 +100,48 @@ module.exports = (request, token) => {
 						.expect(400, done)
 				})
 
-				it.skip('fails if defaultVoteEndingTime is greater than defaultLunchTime', (done) => {
-					// TODO
+				it('fails if defaultVoteEndingTime is greater than defaultLunchTime', (done) => {
+					request
+						.post('/groups/1')
+						.set({ Authorization: 'Bearer ' + token[1]})
+						.send({
+							defaultVoteEndingTime: '13:00:00',
+							defaultLunchTime: '12:30:ßß'
+						})
+						.expect(400, done)
 				})
 
-				it.skip('fails if minPointsPerVote is greater than maxPointsPerVote'), (done) => {
-					// TODO					
-				}
-
-				it.skip('fails if maxPointsPerVote is greater than pointsPerDay', (done) => {
-					// TODO
+				it('fails if minPointsPerVote is greater than maxPointsPerVote', (done) => {
+					request
+						.post('/groups/1')
+						.set({ Authorization: 'Bearer ' + token[1]})
+						.send({
+							minPointsPerVote: 50,
+							maxPointsPerVote: 40
+						})
+						.expect(400, done)
 				})
 
-				it.skip('fails if minPointsPerVote is greater than pointsPerDay', (done) => {
-					// TODO
+				it('fails if maxPointsPerVote is greater than pointsPerDay', (done) => {
+					request
+						.post('/groups/1')
+						.set({ Authorization: 'Bearer ' + token[1]})
+						.send({
+							pointsPerDay: 30,
+							maxPointsPerVote: 100
+						})
+						.expect(400, done)
+				})
+
+				it('fails if minPointsPerVote is greater than pointsPerDay', (done) => {
+					request
+						.post('/groups/1')
+						.set({ Authorization: 'Bearer ' + token[1]})
+						.send({
+							minPointsPerVote: 1000,
+							pointsPerDay: 100
+						})
+						.expect(400, done)
 				})				
 
 				it('updates a group successfully', (done) => {
