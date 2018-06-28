@@ -13,7 +13,7 @@ describe('The mampfalot api', function () {
   this.timeout(10000)
 
   before(async () =>{
-    await setup.setupDatabase()
+    await setup.resetData()
     server = app.listen(5001)
 
     let res

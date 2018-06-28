@@ -13,7 +13,7 @@ let data = {
 }
 
 module.exports = {
-	async setupDatabase() {
+	async resetData() {
 		let tables = ['comments', 'food_types', 'group_members', 'groups', 'lunchbreaks', 'participants', 'places', 'users', 'votes']
 		let queries = []
 		queries.push('SET FOREIGN_KEY_CHECKS = 0;')		

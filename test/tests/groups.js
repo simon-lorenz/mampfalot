@@ -58,11 +58,11 @@ module.exports = (request, token) => {
 
 			describe('POST', () => {
 				beforeEach(async () => {
-					await setup.setupDatabase()
+					await setup.resetData()
 				})
 
 				after(async () => {
-					await setup.setupDatabase()
+					await setup.resetData()
 				})
 
 				it('requires authentication', (done) => {
@@ -196,7 +196,7 @@ module.exports = (request, token) => {
 
 				describe.skip('POST', () => {
 					beforeEach(() => {
-						setup.setupDatabase()
+						setup.resetData()
 					})
 
 					it('fails if user is not member of the group', (done) => {

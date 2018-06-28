@@ -6,7 +6,7 @@ module.exports = (request, token) => {
       let newUser
 
       before(async () => {
-        await setup.setupDatabase()
+        await setup.resetData()
       })
 
       beforeEach(() => {
@@ -18,7 +18,7 @@ module.exports = (request, token) => {
       })
 
       afterEach(async () => {
-        await setup.setupDatabase()
+        await setup.resetData()
       })
 
       it('inserts a user correctly', (done) => {
@@ -115,11 +115,11 @@ module.exports = (request, token) => {
 
       describe('POST', () => {
         beforeEach(async() => {
-          await setup.setupDatabase()
+          await setup.resetData()
         })
 
         afterEach(async() => {
-          await setup.setupDatabase()
+          await setup.resetData()
         })
 
         it('requires authentication', (done) => {
@@ -169,11 +169,11 @@ module.exports = (request, token) => {
       describe('DELETE', () => {
         beforeEach(async () => {
           {
-            await setup.setupDatabase()
+            await setup.resetData()
           }
         })
         after(async () => {
-          await setup.setupDatabase()
+          await setup.resetData()
         })
 
         it('fails with 403 if user tries to delete another user', (done) => {
