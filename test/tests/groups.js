@@ -100,6 +100,22 @@ module.exports = (request, token) => {
 						.expect(400, done)
 				})
 
+				it.skip('fails if defaultVoteEndingTime is greater than defaultLunchTime', (done) => {
+					// TODO
+				})
+
+				it.skip('fails if minPointsPerVote is greater than maxPointsPerVote'), (done) => {
+					// TODO					
+				}
+
+				it.skip('fails if maxPointsPerVote is greater than pointsPerDay', (done) => {
+					// TODO
+				})
+
+				it.skip('fails if minPointsPerVote is greater than pointsPerDay', (done) => {
+					// TODO
+				})				
+
 				it('updates a group successfully', (done) => {
 					request
 						.post('/groups/1')
