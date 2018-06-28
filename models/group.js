@@ -74,9 +74,7 @@ module.exports = (sequelize, DataTypes) => {
 		models.Group.hasMany(models.Lunchbreak)
 		models.Group.belongsToMany(models.User, {
 			through: models.GroupMembers,
-			as: 'members',
-			foreignKey: 'groupId',
-			otherKey: 'userId'
+			as: 'members'
 		})
 	}
 

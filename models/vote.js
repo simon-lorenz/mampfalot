@@ -18,7 +18,6 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	Vote.associate = function(models) {
-		models.Vote.belongsTo(models.Participant)
 		models.Vote.belongsTo(models.Place)
 	}
 

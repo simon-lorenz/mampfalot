@@ -25,8 +25,7 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	Participant.associate = function (models) {
-		// models.Participant.belongsTo(models.Lunchbreak)
-		models.Participant.hasMany(models.Vote)
+		models.Participant.belongsTo(models.Lunchbreak)
 		models.Participant.belongsTo(models.User)
 	}
 
