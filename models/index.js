@@ -10,6 +10,9 @@ let sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.
 	port: process.env.DB_PORT,
   dialect: process.env.DB_DIALECT,
   logging: false,
+  dialectOptions: {
+    multipleStatements: true
+  },
   operatorsAliases: Sequelize.Op // Vermeide Deprecation-Warnung
 })
 
