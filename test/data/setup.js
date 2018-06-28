@@ -27,5 +27,8 @@ module.exports = {
 		await Group.bulkCreate(data.groups)
 		await GroupMembers.bulkCreate(data.groupMembers)
 		await Lunchbreak.bulkCreate(data.lunchbreaks)
+	},
+	async initialize() {
+		await db.sync({ force: true })
 	}
 }
