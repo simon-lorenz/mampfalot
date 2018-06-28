@@ -48,6 +48,23 @@ module.exports = (sequelize, DataTypes) => {
 		name: {
 			singular: 'group',
 			plural: 'groups'
+		},
+		validate: {
+			minPointsPerVoteValid() {
+				if (this.minPointsPerVote > this.maxPointsPerVote || this.minPointsPerVote > this.pointsPerDay) {
+					throw ''
+				}
+			},
+			maxPointsPerVoteValid() {
+				if (this.maxPointsPerVote < this.minPointsPerVote || this.maxPointsPerVote > this.pointsPerDay) {
+					throw ''
+				}
+			},
+			times() {
+				if (this.defaultLunchTime < this.defaultVoteEndingTime) {
+					throw 'DefaultLunchTime has to be greater or equal to defaultVoteEndingTime'
+				}
+			}
 		}
 	})
 
