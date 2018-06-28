@@ -4,6 +4,7 @@ const Place = require('./../models').Place
 const Group = require('./../models').Group
 const middleware = require('./../middleware/groups')
 const commonMiddleware = require('./../middleware/common')
+const Sequelize = require('sequelize')
 
 router.route('/').get(middleware.findAllGroups)
 
@@ -34,11 +35,15 @@ router.route('/:groupId').post(commonMiddleware.userIsGroupAdmin, async (req, re
 
 	group
 		.save()
-		.then(test => {
-			res.send(test)
+		.then(updated => {
+			return res.send(updated)
 		})
 		.catch(err => {
-			res.status(500).send(err)
+			if (err instanceof Sequelize.ValidationError) {
+				return res.status(400).send(err)
+			} else {
+				return res.status(500).send()
+			}
 		})
 })
 
