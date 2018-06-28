@@ -56,7 +56,7 @@ module.exports = (request, token) => {
 				})
 			})
 
-			describe.skip('POST', () => {
+			describe('POST', () => {
 				beforeEach(async () => {
 					await setup.setupDatabase()
 				})
@@ -74,6 +74,7 @@ module.exports = (request, token) => {
 				it('fails with 404 if group doesn\'t exist', (done) => {
 					request
 						.post('/groups/99')
+						.set({ Authorization: 'Bearer ' +  token[1] })
 						.expect(404, done)
 				})
 
@@ -102,7 +103,7 @@ module.exports = (request, token) => {
 				it('updates a group successfully', (done) => {
 					request
 						.post('/groups/1')
-						.set( { Authorization: 'Bearer' + token[1]})
+						.set( { Authorization: 'Bearer ' + token[1]})
 						.send({
 							name: 'New name',
 							defaultLunchTime: '14:00:00',
@@ -120,7 +121,6 @@ module.exports = (request, token) => {
 							group.should.have.property('pointsPerDay').equal(300)
 							group.should.have.property('maxPointsPerVote').equal(100)
 							group.should.have.property('minPointsPerVote').equal(50)
-							
 							done()
 						})
 				})

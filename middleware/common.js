@@ -33,22 +33,18 @@ module.exports = {
 			res.status(500).send(error)
 		}
 	},
-	userIsGroupMember: function (groupId) {
-		return function (req, res, next) {
-			if (Util.getGroupIds(res.locals.user, false).includes(groupId)) {
-				next()
-			} else {
-				res.status(403).send()
-			}
+	userIsGroupMember: function (req, res, next) {
+		if (Util.getGroupIds(res.locals.user, false).includes(res.locals.group.id)) {
+			next()
+		} else {
+			res.status(403).send()
 		}
 	},
-	userIsGroupAdmin: function (groupId) {
-		return function (req, res, next) {		
-			if (Util.getGroupIds(res.locals.user, true).includes(groupId)) {
-				next()
-			} else {
-				res.status(403).send()
-			}
+	userIsGroupAdmin: function (req, res, next) {
+		if (Util.getGroupIds(res.locals.user, true).includes(res.locals.group.id)) {
+			next()
+		} else {
+			res.status(403).send()
 		}
 	}
 }
