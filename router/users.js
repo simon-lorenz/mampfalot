@@ -19,7 +19,8 @@ router.route('/').post((req, res) => {
 		if (err instanceof Sequelize.ValidationError) {
 			res.status(400).send(err)
 		} else {
-			res.status(500).send(err)
+			console.log(err)
+			res.status(500).send()
 		}
 	})
 })
