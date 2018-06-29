@@ -3,7 +3,6 @@ const router = express.Router()
 const Vote = require('./../models').Vote
 const User = require('./../models').User
 const Place = require('./../models').Place
-const Util = require('./../util/util')
 
 router.route('/').get((req, res) => {
 	let where = {}

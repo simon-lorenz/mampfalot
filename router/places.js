@@ -4,8 +4,6 @@ const Place = require('./../models').Place
 const util = require('./../util/util')
 
 router.route('/').get((req, res) => {
-	let test
-
 	Place.findAll({
 		})
 		.then(result => {

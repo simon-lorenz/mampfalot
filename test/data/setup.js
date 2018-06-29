@@ -3,7 +3,6 @@ const Group = require('./../../models').Group
 const GroupMembers = require('./../../models').GroupMembers
 const Lunchbreak = require('./../../models').Lunchbreak
 const db = require('./../../models').sequelize
-const Comment = require('./../../models').Comment
 
 let data = {
 	users: require('./users'),
