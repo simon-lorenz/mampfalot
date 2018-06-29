@@ -10,6 +10,51 @@ module.exports = (request, token) => {
 			})
 		})
 
+		describe('POST', () => {
+			let newGroup = {
+				name: 'My cool group',
+				defaultLunchTime: '12:30:00',
+				defaultVoteEndingTime: '12:00:00',
+				pointsPerDay: '20',
+				maxPointsPerVote: '10',
+				minPointsPerVote: '5'
+			}
+
+			before(async () => {
+				await setup.resetData()
+			})
+
+			afterEach(async () => {
+				await setup.resetData()
+			})
+
+			it('requires authentication', (done) => {
+				request
+					.post('/groups')
+					.send(newGroup)
+					.expect(401, done)
+			})
+
+			it('sucessfully creates a group', (done) => {
+				request
+					.post('/groups')
+					.set({ Authorization: 'Bearer ' + token[1]})
+					.send(newGroup)
+					.expect(200)
+					.expect(res => {
+						let group = res.body
+						group.should.have.property('id')
+						group.should.have.property('name').equal(newGroup.name)
+						group.should.have.property('defaultLunchTime').equal(newGroup.defaultLunchTime)
+						group.should.have.property('defaultVoteEndingTime').equal(newGroup.defaultVoteEndingTime)
+						group.should.have.property('pointsPerDay').equal(newGroup.pointsPerDay)
+						group.should.have.property('maxPointsPerVote').equal(newGroup.maxPointsPerVote)
+						group.should.have.property('minPointsPerVote').equal(newGroup.minPointsPerVote)
+					})
+					.end(done)	
+			})
+		})
+
 		describe('/:groupId', () => {
 			describe('GET', () => {
 				it('sends a valid group-resource', (done) => {
