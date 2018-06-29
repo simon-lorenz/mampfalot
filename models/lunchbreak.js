@@ -26,6 +26,13 @@ module.exports = (sequelize, DataTypes) => {
 		name: {
 			singular: 'lunchbreak',
 			plural: 'lunchbreaks'
+		},
+		validate: {
+			voteEndingTimeValid() {
+				if (this.voteEndingTime > this.lunchTime) {
+					throw 'voteEndingTime cannot be greater than lunchTime'
+				}
+			}
 		}
 	})
 

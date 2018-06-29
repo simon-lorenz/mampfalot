@@ -2,6 +2,7 @@ const router = require('express').Router()
 const FoodType = require('./../models').FoodType
 const Place = require('./../models').Place
 const Group = require('./../models').Group
+const Lunchbreak = require('./../models').Lunchbreak
 const middleware = require('./../middleware/groups')
 const commonMiddleware = require('./../middleware/common')
 const Sequelize = require('sequelize')
@@ -53,6 +54,37 @@ router.route('/:groupId/members').get((req, res) => {
 
 router.route('/:groupId/lunchbreaks').get((req, res) => {
 	res.send(res.locals.group.lunchbreaks)
+})
+
+router.route('/:groupId/lunchbreaks').post(async (req, res) => {
+	let lb = await Lunchbreak.findOne({
+		where: {
+			groupId: req.params.groupId,
+			date: req.body.date
+		}
+	})
+
+	if (lb) {
+		res.status(400).send('This group already has a lunchbreak planned at this date')
+		return
+	}
+
+	Lunchbreak.create({
+		groupId: parseInt(req.params.groupId),
+		date: req.body.date,
+		lunchTime: req.body.lunchTime || res.locals.group.defaultLunchTime,
+		voteEndingTime: req.body.voteEndingTime || res.locals.group.defaultVoteEndingTime
+	})
+	.then(result => {
+		res.send(result)
+	})
+	.catch(err => {
+		if (err instanceof Sequelize.ValidationError) {
+			res.status(400).send(err)
+		} else {
+			res.status(500).send(err)
+		}
+	})
 })
 
 router.route('/:groupId/foodTypes').get((req, res) => {
