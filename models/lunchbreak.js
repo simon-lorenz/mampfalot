@@ -2,7 +2,8 @@ module.exports = (sequelize, DataTypes) => {
 	const Lunchbreak = sequelize.define('Lunchbreak', {
 		id: {
 			type: DataTypes.INTEGER,
-			primaryKey: true
+			primaryKey: true,
+			autoIncrement: true
 		},
 		result: {
 			type: DataTypes.INTEGER

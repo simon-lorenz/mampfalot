@@ -2,7 +2,8 @@ module.exports = (sequelize, DataTypes) => {
 	const Comment = sequelize.define('Comment', {
 		id: {
 			type: DataTypes.INTEGER,
-			primaryKey: true
+			primaryKey: true,
+			autoIncrement: true
 		},
 		comment: {
 			type: DataTypes.TEXT,
