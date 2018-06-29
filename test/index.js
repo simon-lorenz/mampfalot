@@ -9,7 +9,7 @@ chai.should()
 
 describe('The mampfalot api', function () {
   let server
-  let token = []
+  let bearerToken = []
   this.timeout(10000)
 
   before(async () =>{
@@ -22,7 +22,7 @@ describe('The mampfalot api', function () {
       res = await request
         .get('/auth')
         .auth(user.email, user.password)
-      token[user.id] = res.body.token
+      bearerToken[user.id] = 'Bearer ' + res.body.token
     }
     
     server.close()
@@ -49,7 +49,7 @@ describe('The mampfalot api', function () {
       .expect(404, done)
   })
 
-  require('./tests/users')(request, token)
-  require('./tests/auth')(request, token)
-  require('./tests/groups')(request, token)
+  require('./tests/users')(request, bearerToken)
+  require('./tests/auth')(request, bearerToken)
+  require('./tests/groups')(request, bearerToken)
 })

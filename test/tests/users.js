@@ -1,6 +1,6 @@
 const setup = require('./../data/setup')
 
-module.exports = (request, token) => {
+module.exports = (request, bearerToken) => {
   return describe('/users', () => {
     describe('POST', () => {
       let newUser
@@ -84,7 +84,7 @@ module.exports = (request, token) => {
           request
             .get('/users/1')
             .set({
-              Authorization: 'Bearer ' + token[1]
+              Authorization: bearerToken[1]
             })
             .expect(200, (err, res) => {
               let user = res.body
@@ -100,7 +100,7 @@ module.exports = (request, token) => {
           request
             .get('/users/3')
             .set({
-              Authorization: 'Bearer ' + token[3]
+              Authorization: bearerToken[3]
             })
             .expect(200, (err, res) => {
               let user = res.body
@@ -116,7 +116,7 @@ module.exports = (request, token) => {
           request
             .get('/users/3')
             .set({
-              Authorization: 'Bearer ' + token[1]
+              Authorization: bearerToken[1]
             })
             .expect(403, done)
         })
@@ -140,21 +140,21 @@ module.exports = (request, token) => {
         it('fails with 404 if user doesn\'t exist', (done) => {
           request
             .post('/users/99')
-            .set({ Authorization: 'Bearer ' + token[1]})
+            .set({ Authorization: bearerToken[1]})
             .expect(404, done)
         })
 
         it('fails with 403 if user tries to update another user', (done) => {
           request
             .post('/users/3')
-            .set({ Authorization: 'Bearer ' + token[1]})
+            .set({ Authorization: bearerToken[1]})
             .expect(403, done)
         })
 
         it('fails with 400 if not at least one parameter is provided', (done) => {
           request
             .post('/users/1')
-            .set({ Authorization: 'Bearer ' + token[1]})
+            .set({ Authorization: bearerToken[1]})
             .send({})
             .expect(400, done)
         })
@@ -162,7 +162,7 @@ module.exports = (request, token) => {
         it('updates a user correctly', (done) => {
           request
             .post('/users/1')
-            .set({ Authorization: 'Bearer ' + token[1]})
+            .set({ Authorization: bearerToken[1]})
             .send({ name: 'Neuer Name', email: 'neu@mail.com', password: 'hurdur'})
             .expect(200, (err, res) => {
               let newUser = res.body
@@ -189,7 +189,7 @@ module.exports = (request, token) => {
           request
             .delete('/users/5')
             .set({
-              Authorization: 'Bearer ' + token[1]
+              Authorization: bearerToken[1]
             })
             .expect(403, done)
         })
@@ -198,7 +198,7 @@ module.exports = (request, token) => {
           request
             .delete('/users/99')
             .set({
-              Authorization: 'Bearer ' + token[1]
+              Authorization: bearerToken[1]
             })
             .expect(404, done)
         })
@@ -207,7 +207,7 @@ module.exports = (request, token) => {
           request
             .delete('/users/3')
             .set({
-              Authorization: 'Bearer ' + token[3]
+              Authorization: bearerToken[3]
             })
             .expect(204, done())
           // TODO: Prüfen, dass der Server uns auch nicht anlügt.

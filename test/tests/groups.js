@@ -1,6 +1,6 @@
 const setup = require('./../data/setup')
 
-module.exports = (request, token) => {
+module.exports = (request, bearerToken) => {
 	return describe('/groups', () => {
 		describe('GET', () => {
 			it('requires authentication', (done) => {
@@ -38,7 +38,7 @@ module.exports = (request, token) => {
 			it('sucessfully creates a group', (done) => {
 				request
 					.post('/groups')
-					.set({ Authorization: 'Bearer ' + token[1]})
+					.set({ Authorization: bearerToken[1]})
 					.send(newGroup)
 					.expect(200)
 					.expect(res => {
@@ -61,7 +61,7 @@ module.exports = (request, token) => {
 					request
 						.get('/groups/1')
 						.set({
-							Authorization: 'Bearer ' + token[1]
+							Authorization: bearerToken[1]
 						})
 						.expect(200, (err, res) => {
 							let group = res.body
@@ -86,7 +86,7 @@ module.exports = (request, token) => {
 					request
 						.get('/groups/2')
 						.set({
-							Authorization: 'Bearer ' + token[1]
+							Authorization: bearerToken[1]
 						})
 						.expect(403, done)
 				})
@@ -95,7 +95,7 @@ module.exports = (request, token) => {
 					request
 						.get('/groups/99')
 						.set({
-							Authorization: 'Bearer ' + token[1]
+							Authorization: bearerToken[1]
 						})
 						.expect(404, done)
 				})
@@ -119,7 +119,7 @@ module.exports = (request, token) => {
 				it('fails with 404 if group doesn\'t exist', (done) => {
 					request
 						.post('/groups/99')
-						.set({ Authorization: 'Bearer ' +  token[1] })
+						.set({ Authorization:  bearerToken[1] })
 						.expect(404, done)
 				})
 
@@ -127,7 +127,7 @@ module.exports = (request, token) => {
 					request
 						.post('/groups/1')
 						.set({
-							Authorization: 'Bearer ' + token[2]
+							Authorization: bearerToken[2]
 						})
 						.send({
 							name: 'New name'
@@ -139,7 +139,7 @@ module.exports = (request, token) => {
 					request
 						.post('/groups/1')
 						.set({
-							Authorization: 'Bearer ' + token[1]
+							Authorization: bearerToken[1]
 						})
 						.send({})
 						.expect(400, done)
@@ -148,7 +148,7 @@ module.exports = (request, token) => {
 				it('fails if defaultVoteEndingTime is greater than defaultLunchTime', (done) => {
 					request
 						.post('/groups/1')
-						.set({ Authorization: 'Bearer ' + token[1]})
+						.set({ Authorization: bearerToken[1]})
 						.send({
 							defaultVoteEndingTime: '13:00:00',
 							defaultLunchTime: '12:30:ßß'
@@ -159,7 +159,7 @@ module.exports = (request, token) => {
 				it('fails if minPointsPerVote is greater than maxPointsPerVote', (done) => {
 					request
 						.post('/groups/1')
-						.set({ Authorization: 'Bearer ' + token[1]})
+						.set({ Authorization: bearerToken[1]})
 						.send({
 							minPointsPerVote: 50,
 							maxPointsPerVote: 40
@@ -170,7 +170,7 @@ module.exports = (request, token) => {
 				it('fails if maxPointsPerVote is greater than pointsPerDay', (done) => {
 					request
 						.post('/groups/1')
-						.set({ Authorization: 'Bearer ' + token[1]})
+						.set({ Authorization: bearerToken[1]})
 						.send({
 							pointsPerDay: 30,
 							maxPointsPerVote: 100
@@ -181,7 +181,7 @@ module.exports = (request, token) => {
 				it('fails if minPointsPerVote is greater than pointsPerDay', (done) => {
 					request
 						.post('/groups/1')
-						.set({ Authorization: 'Bearer ' + token[1]})
+						.set({ Authorization: bearerToken[1]})
 						.send({
 							minPointsPerVote: 1000,
 							pointsPerDay: 100
@@ -192,7 +192,7 @@ module.exports = (request, token) => {
 				it('updates a group successfully', (done) => {
 					request
 						.post('/groups/1')
-						.set( { Authorization: 'Bearer ' + token[1]})
+						.set( { Authorization: bearerToken[1]})
 						.send({
 							name: 'New name',
 							defaultLunchTime: '14:00:00',
@@ -221,7 +221,7 @@ module.exports = (request, token) => {
 						request
 							.get('/groups/1/lunchbreaks')
 							.set({
-								Authorization: 'Bearer ' + token[1]
+								Authorization: bearerToken[1]
 							})
 							.expect(200, (err, res) => {
 								let data = res.body
@@ -247,7 +247,7 @@ module.exports = (request, token) => {
 					it('fails if user is not member of the group', (done) => {
 						request
 							.post('/groups/1/lunchbreaks')
-							.set({ Authorization: 'Bearer ' + token[3]})
+							.set({ Authorization: bearerToken[3]})
 							.send({
 								date: '2018-06-30',
 								lunchTime: '13:00:00',
@@ -259,7 +259,7 @@ module.exports = (request, token) => {
 					it('creates a new lunchbreak successfully', (done) => {
 						request
 							.post('/groups/1/lunchbreaks')
-							.set({ Authorization: 'Bearer ' + token[2]})
+							.set({ Authorization: bearerToken[2]})
 							.send({
 								date: '2018-06-30',
 								lunchTime: '12:00:00',
@@ -279,7 +279,7 @@ module.exports = (request, token) => {
 					it('creates a new lunchbreak with default values if none are provided', (done) => {
 						request
 							.post('/groups/1/lunchbreaks')
-							.set({ Authorization: 'Bearer ' + token[2]})
+							.set({ Authorization: bearerToken[2]})
 							.send({
 								date: '2018-06-30'
 							})
@@ -296,7 +296,7 @@ module.exports = (request, token) => {
 					it('fails if no date is provided', (done) => {
 						request	
 							.post('/groups/1/lunchbreaks')
-							.set({ Authorization: 'Bearer ' + token[2]})
+							.set({ Authorization: bearerToken[2]})
 							.send({})
 							.expect(400, (err, res) => {
 								done(err)
@@ -306,7 +306,7 @@ module.exports = (request, token) => {
 					it('fails if voteEndingTime is greater than lunchTime', (done) => {{
 						request
 							.post('/groups/1/lunchbreaks')
-							.set({ Authorization: 'Bearer ' + token[2]})
+							.set({ Authorization: bearerToken[2]})
 							.send({
 								date: '2018-06-30',
 								lunchTime: '12:30:00',
@@ -318,7 +318,7 @@ module.exports = (request, token) => {
 					it('fails if a lunchbreak at this date exists', (done) => {
 						request
 							.post('/groups/1/lunchbreaks')
-							.set({ Authorization: 'Bearer ' + token[2]})
+							.set({ Authorization: bearerToken[2]})
 							.send({
 								date: '2018-06-25'
 							})
@@ -333,7 +333,7 @@ module.exports = (request, token) => {
 						request
 							.get('/groups/1/members')
 							.set({
-								Authorization: 'Bearer ' + token[1]
+								Authorization: bearerToken[1]
 							})
 							.expect(200, (err, res) => {
 								let data = res.body
