@@ -194,9 +194,9 @@ module.exports = (request, token) => {
 					})
 				})
 
-				describe.skip('POST', () => {
-					beforeEach(() => {
-						setup.resetData()
+				describe('POST', () => {
+					beforeEach(async () => {
+						await setup.resetData()
 					})
 
 					it('fails if user is not member of the group', (done) => {
@@ -223,6 +223,7 @@ module.exports = (request, token) => {
 							.expect(200, (err, res) => {
 								let newLunchbreak = res.body
 								newLunchbreak.should.have.property('id')
+								newLunchbreak.should.have.property('groupId').equal(1)
 								newLunchbreak.should.have.property('date').equal('2018-06-30')
 								newLunchbreak.should.have.property('lunchTime').equal('12:00:00')
 								newLunchbreak.should.have.property('voteEndingTime').equal('11:59:00')
@@ -232,7 +233,7 @@ module.exports = (request, token) => {
 
 					it('creates a new lunchbreak with default values if none are provided', (done) => {
 						request
-							.post('groups/1/lunchbreaks')
+							.post('/groups/1/lunchbreaks')
 							.set({ Authorization: 'Bearer ' + token[2]})
 							.send({
 								date: '2018-06-30'
@@ -241,23 +242,25 @@ module.exports = (request, token) => {
 								let newLunchbreak = res.body
 								newLunchbreak.should.have.property('id')
 								newLunchbreak.should.have.property('date').equal('2018-06-30')
-								newLunchbreak.should.have.property('lunchTime').equal('13:00:00')
-								newLunchbreak.should.have.property('voteEndingTime').equal('12:59:00')
+								newLunchbreak.should.have.property('lunchTime').equal('12:30:00')
+								newLunchbreak.should.have.property('voteEndingTime').equal('12:25:00')
 								done()
 							})
 					})
 
 					it('fails if no date is provided', (done) => {
 						request	
-							.post('groups/1/lunchbreaks')
+							.post('/groups/1/lunchbreaks')
 							.set({ Authorization: 'Bearer ' + token[2]})
 							.send({})
-							.expect(400, done)
+							.expect(400, (err, res) => {
+								done(err)
+							})
 					})
 
 					it('fails if voteEndingTime is greater than lunchTime', (done) => {{
 						request
-							.post('groups/1/lunchbreaks')
+							.post('/groups/1/lunchbreaks')
 							.set({ Authorization: 'Bearer ' + token[2]})
 							.send({
 								date: '2018-06-30',
@@ -269,7 +272,7 @@ module.exports = (request, token) => {
 
 					it('fails if a lunchbreak at this date exists', (done) => {
 						request
-							.post('groups/1/lunchbreaks')
+							.post('/groups/1/lunchbreaks')
 							.set({ Authorization: 'Bearer ' + token[2]})
 							.send({
 								date: '2018-06-25'
