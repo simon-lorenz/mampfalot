@@ -2,7 +2,7 @@ const setup = require('./../data/setup')
 
 module.exports = (request, token) => {
   return describe('/users', () => {
-    describe.skip('POST', () => {
+    describe('POST', () => {
       let newUser
 
       before(async () => {
@@ -55,6 +55,15 @@ module.exports = (request, token) => {
 
       it('fails with 400 if no email is provided', (done) => {
         newUser.email = undefined
+
+        request
+          .post('/users')
+          .send(newUser)
+          .expect(400, done)
+      })
+
+      it('fails if email is already taken', (done) => {
+        newUser.email = 'mustermann@gmail.com'
 
         request
           .post('/users')

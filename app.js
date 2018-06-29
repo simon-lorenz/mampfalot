@@ -31,11 +31,11 @@ const router = {
 }
 
 app.use('/api/auth', router.auth)
+app.use('/api/users', router.users)
 
 app.use('/api/groups', [authMiddleware.verifyToken, commonMiddleware.loadUser], router.groups)
 app.use('/api/places', [authMiddleware.verifyToken, commonMiddleware.loadUser], router.places)
 app.use('/api/foodTypes', [authMiddleware.verifyToken, commonMiddleware.loadUser], router.foodTypes)
-app.use('/api/users', [authMiddleware.verifyToken, commonMiddleware.loadUser], router.users)
 app.use('/api/votes', [authMiddleware.verifyToken, commonMiddleware.loadUser], router.votes)
 app.use('/api/lunchbreaks', [authMiddleware.verifyToken, commonMiddleware.loadUser], router.lunchbreaks)
 

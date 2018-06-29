@@ -3,6 +3,30 @@ const router = express.Router()
 const jwt = require('jsonwebtoken')
 const User = require('./../models').User
 const Util = require('./../util/util')
+const Sequelize = require('sequelize')
+const authMiddleware = require('./../middleware/auth')
+const commonMiddleware = require('./../middleware/common')
+
+router.route('/').post((req, res) => {
+	User.create({
+		name: req.body.name,
+		email: req.body.email,
+		password: req.body.password
+	})
+	.then(result => {
+		result.password = undefined
+		res.send(result)
+	})
+	.catch(err => {
+		if (err instanceof Sequelize.ValidationError) {
+			res.status(400).send(err)
+		} else {
+			res.status(500).send(err)
+		}
+	})
+})
+
+router.use([authMiddleware.verifyToken, commonMiddleware.loadUser])
 
 router.route('/').get((req, res) => {
 	User.findAll({
@@ -15,35 +39,6 @@ router.route('/').get((req, res) => {
 		})
 		.catch(error => {
 			res.status(400).send('Ein Fehler ist aufgetreten' + error)
-		})
-})
-
-router.route('/').post((req, res) => {
-	if (!(req.body.name && req.body.email && req.body.password)) {
-		res.status(400).send({
-			success: false,
-			error: 'Missing Values'
-		})
-		return
-	}
-
-	let name = req.body.name
-	let email = req.body.email
-	let password = req.body.password
-
-	User.create({
-			name: name,
-			email: email,
-			password: password
-		})
-		.then(result => {
-			res.status(204).send()
-		})
-		.catch(error => {
-			res.send({
-				success: false,
-				error
-			})
 		})
 })
 
