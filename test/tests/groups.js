@@ -15,9 +15,9 @@ module.exports = (request, bearerToken) => {
 				name: 'My cool group',
 				defaultLunchTime: '12:30:00',
 				defaultVoteEndingTime: '12:00:00',
-				pointsPerDay: '20',
-				maxPointsPerVote: '10',
-				minPointsPerVote: '5'
+				pointsPerDay: 20,
+				maxPointsPerVote: 10,
+				minPointsPerVote: 5
 			}
 
 			before(async () => {
@@ -52,6 +52,26 @@ module.exports = (request, bearerToken) => {
 						group.should.have.property('minPointsPerVote').equal(newGroup.minPointsPerVote)
 					})
 					.end(done)	
+			})
+
+			it('adds the creating user as group admin', async () => {
+				let id = await request
+					.post('/groups')
+					.set({ Authorization: bearerToken[1]})
+					.send(newGroup)
+					.then(result => {
+						return result.body.id
+					})
+
+				await request	
+					.get('/groups/' + id + '/members')
+					.set({ Authorization: bearerToken[1]})
+					.expect(200)
+					.expect(res => {
+						let member = res.body[0]
+						member.should.have.property('id').equal(1)
+						member.should.have.property('config').which.has.property('authorizationLevel').equal(1)
+					})
 			})
 		})
 
