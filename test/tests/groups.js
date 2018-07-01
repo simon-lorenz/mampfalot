@@ -370,6 +370,61 @@ module.exports = (request, bearerToken) => {
 					})
 				})
 			})
+
+			describe('/places', () => {
+				describe('GET', () => {
+					it('requires authentication', (done) => {
+						request
+							.get('/groups/1/places')
+							.expect(401, done)
+					})
+
+					it('sends a valid place collection', (done) => {
+						request
+							.get('/groups/1/places')
+							.set({ Authorization: bearerToken[1] })
+							.expect(200)
+							.expect(res => {
+								let collection = res.body
+								collection.should.be.an('array')
+								collection.should.have.length(4)
+								
+								let place = collection[0]
+								place.should.have.property('id').equal(1)
+								place.should.have.property('foodTypeId').equal(2)
+								place.should.have.property('name').equal('VIP-Döner')
+							})
+							.end(done)
+					})
+				})
+			})
+
+			describe('/foodTypes', () => {
+				describe('GET', () => {
+					it('requires authentication', (done) => {
+						request
+							.get('/groups/1/foodTypes')
+							.expect(401, done)
+					})
+
+					it('sends a valid foodType collection', (done) => {
+						request
+							.get('/groups/1/foodTypes')
+							.set({ Authorization: bearerToken[1] })
+							.expect(200)
+							.expect(res => {
+								let collection = res.body
+								collection.should.be.an('array')
+								collection.should.have.length(4)
+
+								let foodType = collection[0]
+								foodType.should.have.property('id').equal(1)
+								foodType.should.have.property('type').equal('Asiatisch')
+							})
+							.end(done)
+					})
+				})
+			})
 		})
 	})
 }
