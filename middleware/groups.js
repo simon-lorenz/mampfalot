@@ -39,19 +39,21 @@ module.exports = {
         {
           model: Place,
           attributes: {
-            exclude: ['foodTypeId', 'groupId']
+            exclude: ['groupId']
           },
-          include: [ FoodType ]
+          order: ['id']
         },
         {
           model: FoodType,
           attributes: {
             exclude: ['groupId']
-          }
+          },
+          order: ['id']
         },
         {
           model: Lunchbreak,
-          limit: parseInt(req.query.lunchbreakLimit) || 25
+          limit: parseInt(req.query.lunchbreakLimit) || 25,
+          order: ['id']
         },
         {
           model: User,
