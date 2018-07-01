@@ -96,7 +96,7 @@ module.exports = (request, bearerToken) => {
 							group.should.have.property('members').which.is.an('array').and.has.length(2)
 							group.should.have.property('lunchbreaks').which.is.an('array').and.has.length(2)
 							group.should.have.property('places').which.is.an('array').and.has.length(0)
-							group.should.have.property('foodTypes').which.is.an('array').and.has.length(0)
+							group.should.have.property('foodTypes').which.is.an('array').and.has.length(4)
 
 							done()
 						})
