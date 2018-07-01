@@ -1,4 +1,4 @@
-const setup = require('./../data/setup')
+const setup = require('../setup')
 
 module.exports = (request, bearerToken) => {
 	return describe('/groups', () => {

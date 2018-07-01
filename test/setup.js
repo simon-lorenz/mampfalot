@@ -1,19 +1,11 @@
-const User = require('./../../models').User
-const Group = require('./../../models').Group
-const GroupMembers = require('./../../models').GroupMembers
-const Lunchbreak = require('./../../models').Lunchbreak
-const FoodType = require('./../../models').FoodType
-const Place = require('./../../models').Place
-const db = require('./../../models').sequelize
-
-let data = {
-	users: require('./users'),
-	groups: require('./groups'),
-	groupMembers: require('./groupMembers'),
-	lunchbreaks: require('./lunchbreaks'),
-	foodTypes: require('./foodTypes'),
-	places: require('./places')
-}
+const User = require('./../models').User
+const Group = require('./../models').Group
+const GroupMembers = require('./../models').GroupMembers
+const Lunchbreak = require('./../models').Lunchbreak
+const FoodType = require('./../models').FoodType
+const Place = require('./../models').Place
+const db = require('./../models').sequelize
+const data = require('./data')
 
 module.exports = {
 	async resetData() {

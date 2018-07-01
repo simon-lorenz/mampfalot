@@ -2,8 +2,8 @@ process.env.NODE_ENV = 'test'
 
 let request = require('supertest')('http://localhost:5001/api')
 const app = require('./../app')
-const setup = require('./data/setup')
-const users = require('./data/users')
+const setup = require('./setup')
+const users = require('./data').users
 const chai = require('chai')
 chai.should()
 
