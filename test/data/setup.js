@@ -3,6 +3,7 @@ const Group = require('./../../models').Group
 const GroupMembers = require('./../../models').GroupMembers
 const Lunchbreak = require('./../../models').Lunchbreak
 const FoodType = require('./../../models').FoodType
+const Place = require('./../../models').Place
 const db = require('./../../models').sequelize
 
 let data = {
@@ -10,7 +11,8 @@ let data = {
 	groups: require('./groups'),
 	groupMembers: require('./groupMembers'),
 	lunchbreaks: require('./lunchbreaks'),
-	foodTypes: require('./foodTypes')
+	foodTypes: require('./foodTypes'),
+	places: require('./places')
 }
 
 module.exports = {
@@ -30,6 +32,7 @@ module.exports = {
 			await GroupMembers.bulkCreate(data.groupMembers)
 			await Lunchbreak.bulkCreate(data.lunchbreaks)
 			await FoodType.bulkCreate(data.foodTypes)
+			await Place.bulkCreate(data.places)
 		} catch (error) {
 			console.log(error)
 			throw error
