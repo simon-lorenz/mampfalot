@@ -19,6 +19,11 @@ module.exports = {
 			id: 4,
 			groupId: 1,
 			type: 'Italienisch'
+		},
+		{
+			id: 5,
+			groupId: 2,
+			type: 'Döööööner'
 		}
 	],
 	groupMembers: [

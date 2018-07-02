@@ -397,6 +397,53 @@ module.exports = (request, bearerToken) => {
 							.end(done)
 					})
 				})
+
+				describe('POST', () => {
+					let newPlace = {
+						name: 'NewPlace',
+						foodTypeId: 2
+					}
+					
+					it('requires group admin rights', (done) => {
+						request	
+							.post('/groups/1/places')
+							.set({ Authorization: bearerToken[2] })
+							.expect(403, done)
+					})
+
+					it('creates a new place correctly', (done) => {
+						request
+							.post('/groups/1/places')
+							.set({ Authorization: bearerToken[1] })
+							.send(newPlace)
+							.expect(200)
+							.expect(place => {
+								place.should.have.property('id')
+								place.should.have.property('name').equal(newPlace.name)
+								place.should.have.property('foodTypeId').equal(newPlace.foodTypeId)
+								place.should.have.property('groupId').equal(1)
+							})
+							.end(done)
+					})
+
+					it('sends 400 on non existent foreign key', (done) => {
+						newPlace.foodTypeId = 99 // non existent foodTypeId
+						request
+							.post('/groups/1/places')
+							.set({ Authorization: bearerToken[1] })
+							.send(newPlace)
+							.expect(400, done)
+					})
+
+					it('sends 400 on non-group foreign key', (done) => {
+						newPlace.foodTypeId = 5 // this id belongs to group 2
+						request
+							.post('/groups/1/places')
+							.set({ Authorization: bearerToken[1] })
+							.send(newPlace)
+							.expect(400, done)
+					})
+				})
 			})
 
 			describe('/foodTypes', () => {
