@@ -399,6 +399,14 @@ module.exports = (request, bearerToken) => {
 				})
 
 				describe('POST', () => {
+					before(async () => {
+						await setup.resetData()
+					})
+
+					afterEach(async () => {
+						await setup.resetData()
+					})
+
 					let newPlace = {
 						name: 'NewPlace',
 						foodTypeId: 2
