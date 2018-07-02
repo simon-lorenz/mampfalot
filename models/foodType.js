@@ -10,7 +10,8 @@ module.exports = (sequelize, DataTypes) => {
 			allowNull: false,
 			validate: {
 				notEmpty: true
-			}
+			},
+			unique: 'compositeIndex'
 		}
 	}, {
 		tableName: 'food_types',
@@ -22,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	FoodType.associate = function (models) {
-		models.FoodType.belongsTo(models.Group)
+		models.FoodType.belongsTo(models.Group, { foreignKey: { unique: 'compositeIndex' }})
 		models.FoodType.hasMany(models.Place)
 	}
 

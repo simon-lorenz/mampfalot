@@ -488,7 +488,64 @@ module.exports = (request, bearerToken) => {
 							.end(done)
 					})
 				})
+
+				describe('POST', () => {
+					let newFoodType
+
+					before(async () => {
+						newFoodType = {
+							type: 'Neu!'
+						}	
+						await setup.resetData()
+					})
+
+					afterEach(async () => {
+						newFoodType = {
+							type: 'Neu!'
+						}
+						await setup.resetData()
+					})
+
+					it('requires admin rights', (done) => {
+						request
+							.post('/groups/1/foodTypes')
+							.set({ Authorization: bearerToken[2] })
+							.expect(403, done)
+					})
+
+					it('sends 400 if no type is specified', (done) => {
+						request
+							.post('/groups/1/foodTypes')
+							.set({ Authorization: bearerToken[1] })
+							.send( { } )
+							.expect(400, done)
+					})
+
+					it('fails if type already exists', (done) => {
+						newFoodType.type = 'Döner'
+
+						request
+							.post('/groups/1/foodTypes')
+							.set({ Authorization: bearerToken[1] })
+							.send(newFoodType)
+							.expect(400, done)							
+					})
+
+					it('inserts a new foodType correctly', (done) => {
+						request
+							.post('/groups/1/foodTypes')
+							.set({ Authorization: bearerToken[1] })
+							.send(newFoodType)
+							.expect(200)
+							.expect(response => {
+								let foodType = response.body
+								foodType.should.have.property('id')
+								foodType.should.have.property('type').equal(newFoodType.type)								
+							})
+							.end(done)
+					})
+				})
 			})
 		})
 	})
-}
+} 

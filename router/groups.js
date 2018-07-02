@@ -121,14 +121,19 @@ router.route('/:groupId/foodTypes').get((req, res) => {
 
 router.route('/:groupId/foodTypes').post(commonMiddleware.userIsGroupAdmin, (req, res) => {
 	FoodType.create({
-			groupId: req.params.groupId,
+			groupId: parseInt(req.params.groupId),
 			type: req.body.type
 		})
 		.then(result => {
-			res.status(204).send()
+			res.status(200).send(result)
 		})
 		.catch(err => {
-			res.status(400).send()
+			if (err instanceof Sequelize.ValidationError) {
+				res.status(400).send(err)
+			} else {
+				console.log(err)
+				res.status(500).send()
+			}
 		})
 })
 
