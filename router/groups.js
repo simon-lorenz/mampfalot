@@ -137,17 +137,35 @@ router.route('/:groupId/places').get((req, res) => {
 })
 
 router.route('/:groupId/places').post(commonMiddleware.userIsGroupAdmin, (req, res) => {
+	let foodTypeBelongsToGroup = false
+	
+	for (let foodType of res.locals.group.foodTypes) {
+		if (foodType.id === parseInt(req.body.foodTypeId)) {
+			foodTypeBelongsToGroup = true
+			break
+		}
+	}
+
+	if (!foodTypeBelongsToGroup) {
+		res.status(400).send()
+		return
+	}
+
 	Place.create({
-			groupId: req.params.groupId,
-			foodTypeId: req.body.foodTypeId,
+			groupId: parseInt(req.params.groupId),
+			foodTypeId: parseInt(req.body.foodTypeId),
 			name: req.body.name
 		})
 		.then(result => {
-			res.status(204).send()
+			res.status(200).send(result)
 		})
 		.catch(err => {
-			res.status(400).send(err)
-		})
+			if (err instanceof Sequelize.ValidationError) {
+				res.status(400).send(err)
+			} else {
+				res.status(400).send(err)
+			}
+	})
 })
 
 module.exports = router

@@ -403,7 +403,7 @@ module.exports = (request, bearerToken) => {
 						name: 'NewPlace',
 						foodTypeId: 2
 					}
-					
+
 					it('requires group admin rights', (done) => {
 						request	
 							.post('/groups/1/places')
@@ -417,7 +417,8 @@ module.exports = (request, bearerToken) => {
 							.set({ Authorization: bearerToken[1] })
 							.send(newPlace)
 							.expect(200)
-							.expect(place => {
+							.expect(response => {
+								let place = response.body
 								place.should.have.property('id')
 								place.should.have.property('name').equal(newPlace.name)
 								place.should.have.property('foodTypeId').equal(newPlace.foodTypeId)
@@ -441,6 +442,14 @@ module.exports = (request, bearerToken) => {
 							.post('/groups/1/places')
 							.set({ Authorization: bearerToken[1] })
 							.send(newPlace)
+							.expect(400, done)
+					})
+
+					it('sends 400 if no name and foodTypeId is provided', (done) => {
+						request
+							.post('/groups/1/places')
+							.set({ Authorization: bearerToken[1] })
+							.send( {} )
 							.expect(400, done)
 					})
 				})
