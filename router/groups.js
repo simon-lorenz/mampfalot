@@ -10,31 +10,31 @@ const Sequelize = require('sequelize')
 
 router.route('/').get(middleware.findAllGroups)
 
-router.route('/').post((req, res) => {
-	Group.create({
-		name: req.body.name,
-		defaultLunchTime: req.body.defaultLunchTime,
-		defaultVoteEndingTime: req.body.defaultVoteEndingTime,
-		pointsPerDay: parseInt(req.body.pointsPerDay),
-		maxPointsPerVote: parseInt(req.body.maxPointsPerVote),
-		minPointsPerVote: parseInt(req.body.minPointsPerVote)
-	})
-	.then(result => {
-		GroupMembers.create({
+router.route('/').post(async (req, res) => {
+	try {
+		let result = await Group.create({
+			name: req.body.name,
+			defaultLunchTime: req.body.defaultLunchTime,
+			defaultVoteEndingTime: req.body.defaultVoteEndingTime,
+			pointsPerDay: parseInt(req.body.pointsPerDay),
+			maxPointsPerVote: parseInt(req.body.maxPointsPerVote),
+			minPointsPerVote: parseInt(req.body.minPointsPerVote)
+		})
+
+		await GroupMembers.create({
 			groupId: result.id,
 			userId: res.locals.user.id,
 			authorizationLevel: 1
 		})
-
-		res.send(result)
-	})
-	.catch(err => {
+		
+		res.send(result)	
+	} catch (err) {
 		if (err instanceof Sequelize.ValidationError) {
 			res.status(400).send(err)
 		} else {
 			res.status(500).send(err)
 		}
-	})
+	}
 })
 
 router.route('/:groupId*').all([middleware.loadGroup, commonMiddleware.userIsGroupMember])
