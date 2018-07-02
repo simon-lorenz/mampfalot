@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	FoodType.associate = function (models) {
-		models.FoodType.belongsTo(models.Group, { foreignKey: { unique: 'compositeIndex' }})
+		models.FoodType.belongsTo(models.Group, { foreignKey: { unique: 'compositeIndex', allowNull: false }})
 		models.FoodType.hasMany(models.Place)
 	}
 

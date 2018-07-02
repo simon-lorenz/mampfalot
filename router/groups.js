@@ -6,6 +6,7 @@ const GroupMembers = require('./../models').GroupMembers
 const Lunchbreak = require('./../models').Lunchbreak
 const middleware = require('./../middleware/groups')
 const commonMiddleware = require('./../middleware/common')
+const foodTypeMiddleware = require('./../middleware/foodTypes')
 const Sequelize = require('sequelize')
 
 router.route('/').get(middleware.findAllGroups)
@@ -120,21 +121,8 @@ router.route('/:groupId/foodTypes').get((req, res) => {
 })
 
 router.route('/:groupId/foodTypes').post(commonMiddleware.userIsGroupAdmin, (req, res) => {
-	FoodType.create({
-			groupId: parseInt(req.params.groupId),
-			type: req.body.type
-		})
-		.then(result => {
-			res.status(200).send(result)
-		})
-		.catch(err => {
-			if (err instanceof Sequelize.ValidationError) {
-				res.status(400).send(err)
-			} else {
-				console.log(err)
-				res.status(500).send()
-			}
-		})
+	req.body.groupId = req.params.groupId
+	foodTypeMiddleware.postFoodType(req, res)
 })
 
 router.route('/:groupId/places').get((req, res) => {

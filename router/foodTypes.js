@@ -2,6 +2,8 @@ const express = require('express')
 const router = express.Router()
 const FoodType = require('./../models').FoodType
 const util = require('./../util/util')
+const middleware = require('../middleware/foodTypes')
+
 
 router.route('/').get((req, res) => {
 	FoodType.findAll({
@@ -17,42 +19,12 @@ router.route('/').get((req, res) => {
 		})
 })
 
-router.route('/').post((req, res) => {
-	let foodType = {
-		type: req.body.type
-	}
+router.route('/').post(middleware.postFoodType)
 
-	let missingValues = util.missingValues(foodType)
-	if (missingValues.length > 0) {
-		res.status(400).send({
-			missingValues
-		})
-		return
-	}
-
-	FoodType.create(foodType)
-		.then(result => {
-			res.status(204).send()
-		})
-		.catch(error => {
-			console.log(error)
-			res.status(500).send('Something went wrong.')
-		})
-})
+router.use('/:foodTypeId*', middleware.loadFoodType)
 
 router.route('/:foodTypeId').get((req, res) => {
-	FoodType.findOne({
-			where: {
-				id: req.params.foodTypeId
-			}
-		})
-		.then(result => {
-			if (!result) {
-				res.status(404).send()
-			} else {
-				res.send(result)
-			}
-		})
+	res.send(res.locals.foodType)
 })
 
 router.route('/:foodTypeId').put((req, res) => {
