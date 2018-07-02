@@ -52,4 +52,5 @@ describe('The mampfalot api', function () {
   require('./tests/users')(request, bearerToken)
   require('./tests/auth')(request, bearerToken)
   require('./tests/groups')(request, bearerToken)
+  require('./tests/foodTypes')(request, bearerToken)
 })
