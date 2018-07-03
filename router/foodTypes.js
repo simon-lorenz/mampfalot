@@ -4,7 +4,12 @@ const FoodType = require('./../models').FoodType
 const middleware = require('../middleware/foodTypes')
 const commonMiddleware = require('../middleware/common')
 
-router.route('/').post(middleware.postFoodType)
+router.route('/').post((req, res, next) => {
+	res.locals.group = { id: req.body.groupId }
+	next()
+})
+
+router.route('/').post([commonMiddleware.userIsGroupAdmin, middleware.postFoodType])
 
 router.use('/:foodTypeId*', [middleware.loadFoodType, commonMiddleware.userIsGroupMember])
 
