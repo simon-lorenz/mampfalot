@@ -2,6 +2,58 @@ const setup = require('../setup')
 
 module.exports = (request, bearerToken) => {
   return describe('/foodTypes', () => {
+    describe('POST', () => {
+      let newFoodType
+
+      beforeEach(async () => {
+        newFoodType = { 
+          groupId: 1,
+          type: 'New food type' 
+        }
+        await setup.resetData()
+      })
+
+      it('requires authentication', (done) => {
+        request
+          .post('/foodTypes')
+          .send(newFoodType)
+          .expect(401, done)
+      })
+
+      it('fails if user is no group admin', (done) => {
+        request
+          .post('/foodTypes')
+          .set({ Authorization: bearerToken[2] })
+          .send(newFoodType)
+          .expect(403, done)
+      })
+
+      it('fails with 400 if foreign key fails', (done) => {
+        newFoodType.groupId = 99
+
+        request
+          .post('/foodTypes')
+          .send(newFoodType)
+          .set({ Authorization: bearerToken[1] })
+          .expect(400, done)
+      })
+
+      it('inserts a new foodType correctly', (done) => {
+        request
+          .post('/foodTypes')
+          .set({ Authorization: bearerToken[1] })
+          .send(newFoodType)
+          .expect(200)
+          .expect(res => {
+            let foodType = res.body
+            foodType.should.have.property('id')
+            foodType.should.have.property('groupId').equal(newFoodType.groupId)
+            foodType.should.have.property('type').equal(newFoodType.type)
+          })
+          .end(done)
+      })
+    })
+
     describe('/:foodTypeId', () => {
       describe('GET', () => {
         it('requires authentication', (done) => {
@@ -53,11 +105,6 @@ module.exports = (request, bearerToken) => {
             .set({ Authorization: bearerToken[1] })
             .expect(204, done)
           })
-
-      })
-  
-      describe('GET', () => {
-        
       })
     })
   })
