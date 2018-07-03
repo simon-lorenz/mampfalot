@@ -91,6 +91,27 @@ module.exports = (request, bearerToken) => {
             .end(done)
         })
       })
+
+      describe('DELETE', () => {
+        beforeEach(async () => {
+          await setup.resetData()
+        })
+
+        it('requires group admin rights', (done) => {
+          request 
+            .delete('/places/1')
+            .set({ Authorization: bearerToken[2] })
+            .expect(403, done)
+        })
+
+        it('deletes a place successfully', (done) => {
+          request
+            .delete('/places/1')
+            .set({ Authorization: bearerToken[1] })
+            .expect(204)
+            .end(done)
+        })
+      })
     })
   })
 }
