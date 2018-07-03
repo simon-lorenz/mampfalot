@@ -56,6 +56,10 @@ module.exports = (request, bearerToken) => {
 
     describe('/:foodTypeId', () => {
       describe('GET', () => {
+        before(async () => {
+          await setup.resetData()
+        })
+
         it('requires authentication', (done) => {
           request
             .get('/foodTypes/1')
