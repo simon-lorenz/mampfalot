@@ -3,19 +3,18 @@ const router = express.Router()
 const Place = require('./../models').Place
 const util = require('./../util/util')
 
-router.route('/').get((req, res) => {
+router.route('/').get((req, res, next) => {
 	Place.findAll({
 		})
 		.then(result => {
 			res.send(result)
 		})
 		.catch(error => {
-			console.log('GET /places: ' + error)
-			res.status(500).send()
+			next(error)
 		})
 })
 
-router.route('/').post((req, res) => {
+router.route('/').post((req, res, next) => {
 	let place = {
 		name: req.body.name,
 		foodTypeId: req.body.foodTypeId,
@@ -41,12 +40,11 @@ router.route('/').post((req, res) => {
 			res.status(204).send()
 		})
 		.catch(error => {
-			console.log(error)
-			res.status(500).send('Something went wrong.')
+			next(error)
 		})
 })
 
-router.route('/:placeId').get((req, res) => {
+router.route('/:placeId').get((req, res, next) => {
 	Place.findOne({
 			where: {
 				id: req.params.placeId
@@ -64,12 +62,11 @@ router.route('/:placeId').get((req, res) => {
 			}
 		})
 		.catch(error => {
-			console.log(error)
-			res.status(500).send('Something went wrong.')
+			next(error)
 		})
 })
 
-router.route('/:placeId').put((req, res) => {
+router.route('/:placeId').put((req, res, next) => {
 	let placeId = req.params.placeId
 
 	let updateData = {}
@@ -97,11 +94,11 @@ router.route('/:placeId').put((req, res) => {
 			res.status(204).send()
 		})
 		.catch(err => {
-			res.status(500).send(err)
+			next(err)	
 		})
 })
 
-router.route('/:placeId').delete((req, res) => {
+router.route('/:placeId').delete((req, res, next) => {
 	Place.destroy({
 			where: {
 				id: req.params.placeId,
@@ -116,8 +113,7 @@ router.route('/:placeId').delete((req, res) => {
 			}
 		})
 		.catch(error => {
-			console.log(error)
-			res.status(500).send('Something went wrong.')
+			next(error)
 		})
 })
 

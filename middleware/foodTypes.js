@@ -25,7 +25,7 @@ module.exports = {
 			res.status(500).send()
 		}
 	},
-	postFoodType(req, res) {
+	postFoodType(req, res, next) {
 		FoodType.create({
 			type: req.body.type,
 			groupId: req.body.groupId
@@ -34,12 +34,7 @@ module.exports = {
 			res.status(200).send(result)
 		})
 		.catch(err => {
-			if (err instanceof Sequelize.ValidationError) {
-				res.status(400).send(err)
-			} else {
-				console.log(err)
-				res.status(500).send()
-			}
+			next(err)
 		})
 	}
 }

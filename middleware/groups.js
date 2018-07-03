@@ -28,7 +28,10 @@ module.exports = {
 		})
 		.then(groups => {
 			res.send(groups)
-		})
+    })
+    .catch(err => {
+      next(err)
+    })
   },
   loadGroup: function (req, res, next) {
     Group.findOne({
@@ -74,8 +77,7 @@ module.exports = {
       }   
     })
     .catch(err => {
-      console.log(err)
-      res.status(500).send()
+      next(err)
     })
   }
 }

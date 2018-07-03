@@ -5,7 +5,7 @@ const Sequelize = require('sequelize')
 const authMiddleware = require('./../middleware/auth')
 const commonMiddleware = require('./../middleware/common')
 
-router.route('/').post((req, res) => {
+router.route('/').post((req, res, next) => {
 	User.create({
 		name: req.body.name,
 		email: req.body.email,
@@ -16,18 +16,13 @@ router.route('/').post((req, res) => {
 		res.send(result)
 	})
 	.catch(err => {
-		if (err instanceof Sequelize.ValidationError) {
-			res.status(400).send(err)
-		} else {
-			console.log(err)
-			res.status(500).send()
-		}
+		next(err)
 	})
 })
 
 router.use([authMiddleware.verifyToken, commonMiddleware.loadUser])
 
-router.route('/').get((req, res) => {
+router.route('/').get((req, res, next) => {
 	User.findAll({
 			order: [
 				['id', 'ASC']
@@ -37,11 +32,11 @@ router.route('/').get((req, res) => {
 			res.send(result)
 		})
 		.catch(error => {
-			res.status(400).send('Ein Fehler ist aufgetreten' + error)
+			next(error)
 		})
 })
 
-router.route('/:userId').get((req, res) => {
+router.route('/:userId').get((req, res, next) => {
 	if (req.params.userId != res.locals.user.id) {
 		res.status(403).send()
 		return
@@ -56,11 +51,11 @@ router.route('/:userId').get((req, res) => {
 			res.send(result)
 		})
 		.catch(error => {
-			res.status(500).send(error)
+			next(error)
 		})
 })
 
-router.route('/:userId').post(async (req, res) => {
+router.route('/:userId').post(async (req, res, next) => {
 	let user = await User.findOne({
 		where: {
 			id: req.params.userId
@@ -91,12 +86,12 @@ router.route('/:userId').post(async (req, res) => {
 		return
 	})
 	.catch(err => {
-		res.status(400).send(err)
+		next(err)
 	})
 
 })
 
-router.route('/:userId').delete(async (req, res) => {	
+router.route('/:userId').delete(async (req, res, next) => {	
 	let user = await User.findOne({
 		where: {
 			id: req.params.userId
@@ -122,8 +117,7 @@ router.route('/:userId').delete(async (req, res) => {
 			res.status(204).send()
 		})
 		.catch(error => {
-			console.log(error)
-			res.status(500).send('Something went wrong.')
+			next(error)
 		})
 })
 

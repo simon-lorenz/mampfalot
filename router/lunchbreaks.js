@@ -11,7 +11,7 @@ const Sec = require('./../util/sec')
 const LunchbreakMiddleware = require('./../middleware/lunchbreaks')
 
 // Liefert alle Lunchbreaks der Gruppen des Users
-router.route('/').get((req, res) => {
+router.route('/').get((req, res, next) => {
 	Lunchbreak.findAll({
 		where: {
 			groupId: {
@@ -23,13 +23,13 @@ router.route('/').get((req, res) => {
 		res.send(lunchbreaks)
 	})
 	.catch(err => {
-		res.status(500).send(err)
+		next(err)
 	})
 })
 
 router.use('/:lunchbreakId*', [Sec.userHasAccessToLunchbreak, LunchbreakMiddleware.loadGroupInfoByLunchbreakId])
 
-router.route('/:lunchbreakId').get((req, res) => {
+router.route('/:lunchbreakId').get((req, res, next) => {
 	Lunchbreak.findOne({
 		where: {
 			groupId: {
@@ -48,12 +48,11 @@ router.route('/:lunchbreakId').get((req, res) => {
 		}
 	})
 	.catch(err => {
-		console.log(err)
-		res.status(500).send(err)
+		next(err)
 	})
 })
 
-router.route('/:lunchbreakId/participants').get((req, res) => {
+router.route('/:lunchbreakId/participants').get((req, res, next) => {
 	Participant.findAll({
 		where: {
 			lunchbreakId: req.params.lunchbreakId
@@ -85,11 +84,11 @@ router.route('/:lunchbreakId/participants').get((req, res) => {
 		res.send(participants)
 	})
 	.catch(err => {
-		res.status(500).send(err)
+		next(err)
 	})
 })
 
-router.route('/:lunchbreakId/participants/:participantId').get((req, res) => {
+router.route('/:lunchbreakId/participants/:participantId').get((req, res, next) => {
 	Participant.findOne({
 		where: {
 			id: req.params.participantId
@@ -117,9 +116,12 @@ router.route('/:lunchbreakId/participants/:participantId').get((req, res) => {
 	.then(participant => {
 		res.send(participant)
 	})
+	.catch(err => {
+		next(err)
+	})
 })
 
-router.route('/:lunchbreakId/participants/:participantId/votes').get((req, res) => {
+router.route('/:lunchbreakId/participants/:participantId/votes').get((req, res, next) => {
 	Vote.findAll({
 		where: {
 			participantId: req.params.participantId
@@ -139,9 +141,12 @@ router.route('/:lunchbreakId/participants/:participantId/votes').get((req, res) 
 	.then(votes => {
 		res.send(votes)
 	})
+	.catch(err => {
+		next(err)
+	})
 })
 
-router.route('/:lunchbreakId/participants/:participantId/votes').post(LunchbreakMiddleware.checkVotes, async function (req, res) {
+router.route('/:lunchbreakId/participants/:participantId/votes').post(LunchbreakMiddleware.checkVotes, async function (req, res, next) {
 	let votes = req.body.votes
 	
 	try {
@@ -163,12 +168,11 @@ router.route('/:lunchbreakId/participants/:participantId/votes').post(Lunchbreak
 		res.status(204).send()
 
 	} catch (error) {
-		console.log(error)
-		res.status(500).send()
+		next(error)
 	}
 })
 
-router.route('/:lunchbreakId/comments').get((req, res) => {
+router.route('/:lunchbreakId/comments').get((req, res, next) => {
 	Comment.findAll({
 		where: {
 			lunchbreakId: req.params.lunchbreakId
@@ -182,10 +186,8 @@ router.route('/:lunchbreakId/comments').get((req, res) => {
 		res.send(comments)
 	})
 	.catch(err => {
-		res.send(err)
+		next(err)
 	})
 })
-
-
 
 module.exports = router

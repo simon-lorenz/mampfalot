@@ -29,8 +29,7 @@ module.exports = {
 			res.locals.user = user.toJSON()
 			next()
 		} catch (error) {
-			console.log(error)
-			res.status(500).send(error)
+			next(error)
 		}
 	},
 	userIsGroupMember: function (req, res, next) {

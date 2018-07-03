@@ -11,7 +11,7 @@ const Sequelize = require('sequelize')
 
 router.route('/').get(middleware.findAllGroups)
 
-router.route('/').post(async (req, res) => {
+router.route('/').post(async (req, res, next) => {
 	try {
 		let result = await Group.create({
 			name: req.body.name,
@@ -30,11 +30,7 @@ router.route('/').post(async (req, res) => {
 		
 		res.send(result)	
 	} catch (err) {
-		if (err instanceof Sequelize.ValidationError) {
-			res.status(400).send(err)
-		} else {
-			res.status(500).send(err)
-		}
+		next(err)
 	}
 })
 
@@ -44,7 +40,7 @@ router.route('/:groupId').get((req, res) => {
 	res.send(res.locals.group)
 })
 
-router.route('/:groupId').post(commonMiddleware.userIsGroupAdmin, async (req, res) => {
+router.route('/:groupId').post(commonMiddleware.userIsGroupAdmin, async (req, res, next) => {
 	if (!(req.body.name || req.body.defaultLunchTime || req.body.defaultVoteEndingTime || req.body.pointsPerDay || req.body.maxPointsPerVote || req.body.minPointsPerVote )) {
 		res.status(400).send()
 		return
@@ -69,11 +65,7 @@ router.route('/:groupId').post(commonMiddleware.userIsGroupAdmin, async (req, re
 			return res.send(updated)
 		})
 		.catch(err => {
-			if (err instanceof Sequelize.ValidationError) {
-				return res.status(400).send(err)
-			} else {
-				return res.status(500).send()
-			}
+			next(err)
 		})
 })
 
@@ -85,7 +77,7 @@ router.route('/:groupId/lunchbreaks').get((req, res) => {
 	res.send(res.locals.group.lunchbreaks)
 })
 
-router.route('/:groupId/lunchbreaks').post(async (req, res) => {
+router.route('/:groupId/lunchbreaks').post(async (req, res, next) => {
 	let lb = await Lunchbreak.findOne({
 		where: {
 			groupId: req.params.groupId,
@@ -108,11 +100,7 @@ router.route('/:groupId/lunchbreaks').post(async (req, res) => {
 		res.send(result)
 	})
 	.catch(err => {
-		if (err instanceof Sequelize.ValidationError) {
-			res.status(400).send(err)
-		} else {
-			res.status(500).send(err)
-		}
+		next(err)
 	})
 })
 
@@ -120,16 +108,16 @@ router.route('/:groupId/foodTypes').get((req, res) => {
 	res.send(res.locals.group.foodTypes)
 })
 
-router.route('/:groupId/foodTypes').post(commonMiddleware.userIsGroupAdmin, (req, res) => {
+router.route('/:groupId/foodTypes').post(commonMiddleware.userIsGroupAdmin, (req, res, next) => {
 	req.body.groupId = req.params.groupId
-	foodTypeMiddleware.postFoodType(req, res)
+	foodTypeMiddleware.postFoodType(req, res, next)
 })
 
 router.route('/:groupId/places').get((req, res) => {
 	res.send(res.locals.group.places)
 })
 
-router.route('/:groupId/places').post(commonMiddleware.userIsGroupAdmin, (req, res) => {
+router.route('/:groupId/places').post(commonMiddleware.userIsGroupAdmin, (req, res, next) => {
 	let foodTypeBelongsToGroup = false
 	
 	for (let foodType of res.locals.group.foodTypes) {
@@ -153,11 +141,7 @@ router.route('/:groupId/places').post(commonMiddleware.userIsGroupAdmin, (req, r
 			res.status(200).send(result)
 		})
 		.catch(err => {
-			if (err instanceof Sequelize.ValidationError) {
-				res.status(400).send(err)
-			} else {
-				res.status(400).send(err)
-			}
+			next(err)
 	})
 })
 
