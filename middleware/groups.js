@@ -33,51 +33,50 @@ module.exports = {
       next(err)
     })
   },
-  loadGroup: function (req, res, next) {
-    Group.findOne({
-      where: {
-        id: req.params.groupId
-      },
-      include: [
-        {
-          model: Place,
-          attributes: {
-            exclude: ['groupId']
+  loadGroup: async function (req, res, next) {
+    try {
+      res.locals.group = await Group.findOne({
+        where: {
+          id: req.params.groupId
+        },
+        include: [
+          {
+            model: Place,
+            attributes: {
+              exclude: ['groupId']
+            },
+            order: ['id']
           },
-          order: ['id']
-        },
-        {
-          model: FoodType,
-          attributes: {
-            exclude: ['groupId']
+          {
+            model: FoodType,
+            attributes: {
+              exclude: ['groupId']
+            },
+            order: ['id']
           },
-          order: ['id']
-        },
-        {
-          model: Lunchbreak,
-          limit: parseInt(req.query.lunchbreakLimit) || 25,
-          order: ['id']
-        },
-        {
-          model: User,
-          as: 'members',
-          through: {
-            as: 'config',
-            attributes: ['color', 'authorizationLevel']
+          {
+            model: Lunchbreak,
+            limit: parseInt(req.query.lunchbreakLimit) || 25,
+            order: ['id']
+          },
+          {
+            model: User,
+            as: 'members',
+            through: {
+              as: 'config',
+              attributes: ['color', 'authorizationLevel']
+            }
           }
-        }
-      ]
-    })
-    .then(group => {
-      if (group) {
-        res.locals.group = group
-        next()
-      } else {  
+        ]
+      })
+  
+      if(!res.locals.group) {
         res.status(404).send()
-      }   
-    })
-    .catch(err => {
-      next(err)
-    })
+      } else {
+        next()
+      }
+    } catch (error) {
+      next(error)
+    }
   }
 }
