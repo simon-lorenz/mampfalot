@@ -40,5 +40,48 @@ module.exports = (request, bearerToken) => {
           .end(done)
       })
     })
+
+    describe('/:placeId', () => {
+      describe('GET', () => {
+        before(async () => {
+          await setup.resetData()
+        })
+
+        it('requires authentication', (done) => {
+          request
+            .get('/places/1')
+            .expect(401, done)
+        })
+
+        it('fails if user is no group member', (done) => {
+          request
+            .get('/places/1')
+            .set({ Authorization: bearerToken[3] })
+            .expect(403, done)
+        })
+
+        it('sends 404 if resource does\'t exist', (done) => {
+          request
+            .get('/places/99')
+            .set({ Authorization: bearerToken[1] })
+            .expect(404, done)
+        })
+
+        it('responds with a correct place resource', (done) => {
+          request
+            .get('/places/1')
+            .set({ Authorization: bearerToken[2] })
+            .expect(200)
+            .expect(res => {
+              let place = res.body
+              place.should.have.property('id').equals(1)
+              place.should.have.property('groupId').equals(1)
+              place.should.have.property('foodTypeId').equals(2)
+              place.should.have.property('name').equals('VIP-Döner')
+            })
+            .end(done)
+        })
+      })
+    })
   })
 }
