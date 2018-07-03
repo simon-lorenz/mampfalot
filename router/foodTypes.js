@@ -1,8 +1,8 @@
 const express = require('express')
 const router = express.Router()
 const FoodType = require('./../models').FoodType
-const util = require('./../util/util')
 const middleware = require('../middleware/foodTypes')
+const commonMiddleware = require('../middleware/common')
 
 
 router.route('/').get((req, res) => {
@@ -26,6 +26,8 @@ router.use('/:foodTypeId*', middleware.loadFoodType)
 router.route('/:foodTypeId').get((req, res) => {
 	res.send(res.locals.foodType)
 })
+
+router.use(commonMiddleware.userIsGroupAdmin)
 
 router.route('/:foodTypeId').put((req, res) => {
 	let foodTypeId = req.params.foodTypeId

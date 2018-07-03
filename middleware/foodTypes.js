@@ -16,6 +16,8 @@ module.exports = {
 				return
 			}
 
+			res.locals.group = { id: res.locals.foodType.groupId }
+
 			next()
 
 		} catch (error) {
