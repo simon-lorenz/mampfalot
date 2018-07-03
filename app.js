@@ -46,6 +46,8 @@ app.use((err, req, res, next) => {
 		res.status(400).send(err)
 	} else if (err instanceof Sequelize.ForeignKeyConstraintError) {
 		res.status(400).send(err)
+	} else if (err instanceof Sequelize.DatabaseError) {
+		res.status(400).send(err)
 	} else {
 		console.log(err)
 		res.status(500).send('500: Internal server error')
