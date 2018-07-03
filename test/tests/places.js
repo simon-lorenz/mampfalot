@@ -24,6 +24,15 @@ module.exports = (request, bearerToken) => {
           .expect(403, done)
       })
 
+      it('fails if the foodTypeId doesn\'t belong to the group', (done) => {
+        newPlace.foodTypeId = 5
+        request
+          .post('/places')
+          .set({ Authorization: bearerToken[1] })
+          .send(newPlace)
+          .expect(400, done)
+      })
+
       it('inserts new place correctly', (done) => {
         request
           .post('/places')

@@ -1,6 +1,8 @@
 const express = require('express')
 const router = express.Router()
 const Place = require('./../models').Place
+const Group = require('../models').Group
+const FoodType = require('../models').FoodType
 const util = require('./../util/util')
 const commonMiddleware = require('../middleware/common')
 const middleware = require('../middleware/places')
@@ -10,7 +12,28 @@ router.route('/').post((req, res, next) => {
 	next()
 })
 
-router.route('/').post(commonMiddleware.userIsGroupAdmin, (req, res, next) => {
+router.route('/').post(commonMiddleware.userIsGroupAdmin, async (req, res, next) => {
+	let group = await Group.findOne({
+		where: {
+			id: res.locals.group.id
+		},
+		include: [ FoodType ]
+	})
+
+	// Ist die angegebene foodTypeId der Gruppe zugeordnet?
+	let typeBelongsToGroup = false
+	for (let foodType of group.foodTypes) {
+		if (foodType.id === parseInt(req.body.foodTypeId)) {
+			typeBelongsToGroup = true
+			break
+		}
+	}
+
+	if(!typeBelongsToGroup) {
+		res.status(400).send('Foreign key foodTypeId doesn\'t belong to group')
+		return
+	}
+
 	Place.create({
 		groupId: parseInt(req.body.groupId),
 		foodTypeId: parseInt(req.body.foodTypeId),
