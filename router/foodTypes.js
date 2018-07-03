@@ -6,7 +6,7 @@ const commonMiddleware = require('../middleware/common')
 
 router.route('/').post(middleware.postFoodType)
 
-router.use('/:foodTypeId*', middleware.loadFoodType)
+router.use('/:foodTypeId*', [middleware.loadFoodType, commonMiddleware.userIsGroupMember])
 
 router.route('/:foodTypeId').get((req, res) => {
 	res.send(res.locals.foodType)
