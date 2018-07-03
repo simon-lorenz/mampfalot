@@ -2,69 +2,35 @@ const express = require('express')
 const router = express.Router()
 const Place = require('./../models').Place
 const util = require('./../util/util')
-
-router.route('/').get((req, res, next) => {
-	Place.findAll({
-		})
-		.then(result => {
-			res.send(result)
-		})
-		.catch(error => {
-			next(error)
-		})
-})
+const commonMiddleware = require('../middleware/common')
+const middleware = require('../middleware/places')
 
 router.route('/').post((req, res, next) => {
-	let place = {
-		name: req.body.name,
-		foodTypeId: req.body.foodTypeId,
-		groupId: req.body.groupId ? parseInt(req.body.groupId) : undefined
-	}
-
-	let missingValues = util.missingValues(place)
-	if (missingValues.length > 0) {
-		res.status(400).send({
-			missingValues
-		})
-		return
-	}
-
-	// Ist der User Mitglied der angegebenen Gruppe und hat er Adminrechte auf die Gruppe?
-	if (util.getGroupIds(res.locals.user, true).indexOf(place.groupId) === -1) {
-		res.status(401).send()
-		return
-	}
-
-	Place.create(place)
-		.then(result => {
-			res.status(204).send()
-		})
-		.catch(error => {
-			next(error)
-		})
+	res.locals.group = { id: req.body.groupId }
+	next()
 })
 
-router.route('/:placeId').get((req, res, next) => {
-	Place.findOne({
-			where: {
-				id: req.params.placeId
-			}
-		})
-		.then(result => {
-			if (!result) {
-				res.status(404).send()
-			} else {
-				if (util.getGroupIds(res.locals.user).indexOf(result.groupId) === -1) {
-					res.status(401).send()
-				} else {
-				res.send(result)
-			}
-			}
-		})
-		.catch(error => {
-			next(error)
-		})
+router.route('/').post(commonMiddleware.userIsGroupAdmin, (req, res, next) => {
+	Place.create({
+		groupId: parseInt(req.body.groupId),
+		foodTypeId: parseInt(req.body.foodTypeId),
+		name: req.body.name
+	})
+	.then(result => {
+		res.status(200).send(result)
+	})
+	.catch(error => {
+		next(error)
+	})
 })
+
+router.param('placeId', middleware.loadPlace)
+
+router.route('/:placeId').get(commonMiddleware.userIsGroupMember, (req, res, next) => {
+	res.send(res.locals.place)	
+})
+
+router.use(commonMiddleware.userIsGroupAdmin)
 
 router.route('/:placeId').put((req, res, next) => {
 	let placeId = req.params.placeId
@@ -99,22 +65,13 @@ router.route('/:placeId').put((req, res, next) => {
 })
 
 router.route('/:placeId').delete((req, res, next) => {
-	Place.destroy({
-			where: {
-				id: req.params.placeId,
-				groupId: util.getGroupIds(res.locals.user, true)
-			}
-		})
-		.then(result => {
-			if (result == 0) {
-				res.status(404).send()
-			} else {
-				res.status(204).send()
-			}
-		})
-		.catch(error => {
-			next(error)
-		})
+	res.locals.place.destroy()
+	.then(() => {
+		res.status(204).send()
+	})
+	.catch(err => {
+		next(err)
+	})
 })
 
 module.exports = router
