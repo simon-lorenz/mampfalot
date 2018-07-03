@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
 		color: {
 			type: DataTypes.STRING,
 			allowNull: true,
-			default: '80D8FF'
+			defaultValue: '80D8FF'
 		}
 	}, {
 		tableName: 'group_members',
