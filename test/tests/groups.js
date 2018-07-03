@@ -369,6 +369,69 @@ module.exports = (request, bearerToken) => {
 							})
 					})
 				})
+
+				describe('POST', () => {
+					let newMember
+
+					beforeEach(async () => {
+						newMember = {
+							userId: 3,
+							color: '18e6a3',
+							authorizationLevel: 0
+						}
+						await setup.resetData()
+					})
+
+					it('requires group admin rights', (done) => {
+						request
+							.post('/groups/1/members')
+							.set({ Authorization: bearerToken[2] })
+							.send(newMember)
+							.expect(403, done)
+					})
+
+					it('successfully adds a group member', (done) => {
+						request
+							.post('/groups/1/members')
+							.set({ Authorization: bearerToken[1] })
+							.send(newMember)
+							.expect(200)
+							.expect(res => {
+								let member = res.body
+								member.should.have.property('groupId').equal(1)
+								member.should.have.property('color').equal(newMember.color)
+								member.should.have.property('authorizationLevel').equal(newMember.authorizationLevel)
+							})
+							.end(done)
+					})
+
+					it('uses default values if only the userId is provided', (done) => {
+						newMember.color = undefined
+						newMember.authorizationLevel = undefined
+
+						request
+							.post('/groups/1/members')
+							.set({ Authorization: bearerToken[1] })
+							.send(newMember)
+							.expect(200)
+							.expect(res => {
+								let member = res.body
+								member.should.have.property('groupId').equal(1)
+								member.should.have.property('color')
+								member.should.have.property('authorizationLevel').equal(0)
+							})
+							.end(done)
+					})
+
+					it('fails if no userId is provided', (done) => {
+						newMember.userId = undefined
+						request
+							.post('/groups/1/members')
+							.set({ Authorization: bearerToken[1] })
+							.send(newMember)
+							.expect(400, done)
+					})
+				})
 			})
 
 			describe('/places', () => {

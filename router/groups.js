@@ -73,6 +73,21 @@ router.route('/:groupId/members').get((req, res) => {
 	res.send(res.locals.group.members)
 })
 
+router.route('/:groupId/members').post(commonMiddleware.userIsGroupAdmin, (req, res, next) => {
+	GroupMembers.create({
+		userId: parseInt(req.body.userId),
+		groupId: parseInt(res.locals.group.id),
+		color: req.body.color,
+		authorizationLevel: req.body.authorizationLevel
+	})	
+	.then(member => {
+		res.send(member)
+	})
+	.catch(err => {
+		next(err)
+	})
+})
+
 router.route('/:groupId/lunchbreaks').get((req, res) => {
 	res.send(res.locals.group.lunchbreaks)
 })
