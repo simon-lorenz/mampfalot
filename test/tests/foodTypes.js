@@ -28,16 +28,6 @@ module.exports = (request, bearerToken) => {
           .expect(403, done)
       })
 
-      it('fails with 400 if foreign key fails', (done) => {
-        newFoodType.groupId = 99
-
-        request
-          .post('/foodTypes')
-          .send(newFoodType)
-          .set({ Authorization: bearerToken[1] })
-          .expect(400, done)
-      })
-
       it('inserts a new foodType correctly', (done) => {
         request
           .post('/foodTypes')
