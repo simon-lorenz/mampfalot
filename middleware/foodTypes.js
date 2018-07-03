@@ -1,5 +1,4 @@
 const FoodType = require('../models').FoodType
-const Sequelize = require('sequelize')
 
 module.exports = {
 	async loadFoodType(req, res, next) {
