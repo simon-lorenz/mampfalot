@@ -5,6 +5,7 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const authMiddleware = require('./middleware/auth')
 const commonMiddleware = require('./middleware/common')
+const Sequelize = require('sequelize')
 
 app.use(cors())
 
@@ -39,14 +40,21 @@ app.use('/api/foodTypes', [authMiddleware.verifyToken, commonMiddleware.loadUser
 app.use('/api/votes', [authMiddleware.verifyToken, commonMiddleware.loadUser], router.votes)
 app.use('/api/lunchbreaks', [authMiddleware.verifyToken, commonMiddleware.loadUser], router.lunchbreaks)
 
+// Handle Sequelize Errors
+app.use((err, req, res, next) => {
+	if (err instanceof Sequelize.ValidationError) {
+		res.status(400).send(err)
+	} else if (err instanceof Sequelize.ForeignKeyConstraintError) {
+		res.status(400).send(err)
+	} else {
+		next()
+	}
+})
+
 // Globaler Exception-Handler
 app.use((err, req, res, next) => {
-	if (!err) {
-		return next()
-	} else {
-		console.log(err)
-		res.status(500).send('500: Internal server error')
-	}
+	console.log(err)
+	res.status(500).send('500: Internal server error')
 })
 
 module.exports = app
