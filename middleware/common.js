@@ -25,8 +25,24 @@ module.exports = {
 				res.status(400).send('Invalid token - user does not exists anymore.')
 				return
 			}
-
 			res.locals.user = user.toJSON()
+			res.locals.user.isGroupAdmin = function (groupId) {
+				for(let group of this.groups) {
+					if (group.id === parseInt(groupId)) {
+						return group.config.authorizationLevel === 1
+					}
+				}
+				return false
+			}
+			res.locals.user.isGroupMember = function (groupId) {
+				for(let group of this.groups) {
+					if (group.id === parseInt(groupId)) {
+						return true
+					}
+				}
+				return false
+			}
+
 			next()
 		} catch (error) {
 			next(error)
