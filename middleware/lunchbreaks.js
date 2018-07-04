@@ -1,9 +1,31 @@
 const Util = require('./../util/util')
 const Lunchbreak = require('./../models').Lunchbreak
 const Group = require('./../models').Group
+const Comment = require('../models').Comment
+const Participant = require('../models').Participant
 const Place = require('./../models').Place
 
 module.exports = {
+	loadLunchbreak: function(req, res, next) {
+		Lunchbreak.findOne({
+			where: {
+				id: req.params.lunchbreakId
+			},
+			include: [ Participant, Comment ]
+		})
+		.then(lunchbreak => {
+			if(!lunchbreak) {
+				res.status(404).send()
+			} else {
+				if(!res.locals.user.isGroupMember(lunchbreak.groupId)) {
+					res.status(403).send()
+					return
+				}
+				res.locals.lunchbreak = lunchbreak
+				next()
+			}
+		})
+	},
 	checkVotes: function (req, res, next) {
 		let votes = req.body.votes
 		
