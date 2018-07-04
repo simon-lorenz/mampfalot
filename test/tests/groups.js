@@ -432,6 +432,87 @@ module.exports = (request, bearerToken) => {
 							.expect(400, done)
 					})
 				})
+
+				describe('/:userId', () => {
+					describe.skip('POST', () => {
+						beforeEach(async () => {
+							await setup.resetData()
+						})
+
+						it('requires auth', (done) => {
+							request
+								.post('/groups/1/members/1')
+								.expect(401, done)
+						})
+
+						it('allows an user to change his color', (done) => {
+							request
+								.post('/groups/1/members/2')
+								.set({ Authorization: bearerToken[2] })
+								.send({ color: 'eeeeee' })
+								.expect(200)
+								.expect(res => {
+									member = res.body
+									member.should.have.property('color').equal('eeeeee')
+								})
+								.end(done)
+						})
+
+						it('allows an admin to change another member', (done) => {
+							request
+								.post('/groups/1/members/2')
+								.set({ Authorization: bearerToken[1] })
+								.send({ color: 'fafafa', authorizationLevel: 1 })
+								.expect(200)
+								.expect(res => {
+									member = res.body
+									member.should.have.property('color').equal('fafafa')
+									member.should.have.property('authorizationLevel').equal(1)									
+								})
+								.end(done)
+						})
+
+						it('fails if a non admin member tries to change another member', (done) => {
+							request
+								.post(('/groups/1/members/1'))
+								.set({ Authorization: bearerToken[2] })
+								.expect(403, done)
+						})
+					})
+
+					describe('DELETE', () => {
+						beforeEach(async () => {
+							await setup.resetData()
+						})
+
+						it('requires auth', (done) => {
+							request
+								.delete('/groups/1/members/1')
+								.expect(401, done)
+							})
+
+						it('requires group admin rights to remove other members', (done) => {
+							request
+								.delete('/groups/1/members/1')
+								.set({ Authorization: bearerToken[2] })
+								.expect(403, done)
+						})
+
+						it('lets the admins remove other group members', (done) => {
+							request
+								.delete('/groups/1/members/2')
+								.set({ Authorization: bearerToken[1] })
+								.expect(204, done)
+						})
+
+						it('allows a user to leave a group', (done) => {
+							request
+								.delete('/groups/1/members/2')
+								.set({ Authorization: bearerToken[2] })
+								.expect(204, done)
+						})
+					})
+				})
 			})
 
 			describe('/places', () => {

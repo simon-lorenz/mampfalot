@@ -88,6 +88,28 @@ router.route('/:groupId/members').post(commonMiddleware.userIsGroupAdmin, (req, 
 	})
 })
 
+router.route('/:groupId/members/:userId').delete(commonMiddleware.userIsGroupMember, (req, res, next) => {
+	if (res.locals.user.id !== parseInt(req.params.userId)) {
+		if(!res.locals.user.isGroupAdmin(parseInt(req.params.groupId))) {
+			res.status(403).send()
+			return
+		}
+	}
+	
+	GroupMembers.destroy({
+		where: {
+			groupId: req.params.groupId,
+			userId: req.params.userId
+		}
+	})
+	.then(() => {
+		res.status(204).send()
+	})
+	.catch(err => {
+		next(err)
+	})
+})
+
 router.route('/:groupId/lunchbreaks').get((req, res) => {
 	res.send(res.locals.group.lunchbreaks)
 })
