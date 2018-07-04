@@ -12,7 +12,17 @@ module.exports = {
 			where: {
 				id: req.params.lunchbreakId
 			},
-			include: [ Participant, Comment ]
+			include: [ 
+				{
+					model:Participant,
+					attributes: {
+						exclude: ['amountSpent']
+					}
+				}, 
+				{
+					model: Comment
+				}
+			]
 		})
 		.then(lunchbreak => {
 			if(!lunchbreak) {
@@ -31,6 +41,9 @@ module.exports = {
 		Participant.findOne({
 			where: {
 				id: req.params.participantId
+			},
+			attributes: {
+				exclude: ['amountSpent']
 			},
 			include: [ Vote ]
 		})
