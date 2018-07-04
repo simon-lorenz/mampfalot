@@ -9,8 +9,16 @@ const data = require('./data')
 
 module.exports = {
 	async resetData() {
+		let tables = ['comments', 'food_types', 'group_members', 'groups', 'lunchbreaks', 'participants', 'places', 'users', 'votes']
+		let queries = []
+		queries.push('SET FOREIGN_KEY_CHECKS = 0;')		
+		for (let table of tables) {
+			queries.push('TRUNCATE `mampfalot_test`.`' + table + '`;')
+		}
+		queries.push('SET FOREIGN_KEY_CHECKS = 1;')
+
 		try {
-			await db.truncate({ cascade: true, force: true })
+			await db.query(queries.join(' '), { raw: true })
 			await User.bulkCreate(data.users)
 			await Group.bulkCreate(data.groups)
 			await GroupMembers.bulkCreate(data.groupMembers)
