@@ -88,6 +88,52 @@ router.route('/:groupId/members').post(commonMiddleware.userIsGroupAdmin, (req, 
 	})
 })
 
+router.route('/:groupId/members/:userId').post(commonMiddleware.userIsGroupMember, (req, res, next) => {
+	let data = {}
+
+	if (res.locals.user.id !== parseInt(req.params.userId)) {
+		if(!res.locals.user.isGroupAdmin(parseInt(req.params.groupId))) {
+			res.status(403).send()
+			return
+		}
+	}
+
+	if (req.body.color) { data.color = req.body.color }
+
+	if (req.body.authorizationLevel) {
+		if (parseInt(req.body.authorizationLevel) === 1 && !res.locals.user.isGroupAdmin(req.params.groupId)) {
+			res.status(403)
+			return
+		} else {
+			data.authorizationLevel = parseInt(req.body.authorizationLevel)
+		}
+	}
+
+	GroupMembers.update(data, {
+		where: {
+			groupId: req.params.groupId,
+			userId: req.params.userId
+		}
+	})
+	.then(() => {
+		GroupMembers.findOne({
+			where: {
+				groupId: req.params.groupId,
+				userId: req.params.userId
+			}
+		})
+		.then(member => {
+			res.send(member)
+		})
+		.catch(err => {
+			throw err
+		})
+	})
+	.catch(err => {
+		next(err)
+	})
+})
+
 router.route('/:groupId/members/:userId').delete(commonMiddleware.userIsGroupMember, (req, res, next) => {
 	if (res.locals.user.id !== parseInt(req.params.userId)) {
 		if(!res.locals.user.isGroupAdmin(parseInt(req.params.groupId))) {

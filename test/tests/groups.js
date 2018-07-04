@@ -434,7 +434,7 @@ module.exports = (request, bearerToken) => {
 				})
 
 				describe('/:userId', () => {
-					describe.skip('POST', () => {
+					describe('POST', () => {
 						beforeEach(async () => {
 							await setup.resetData()
 						})
