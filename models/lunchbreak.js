@@ -41,10 +41,6 @@ module.exports = (sequelize, DataTypes) => {
 		models.Lunchbreak.hasMany(models.Comment)
 		models.Lunchbreak.hasMany(models.Participant)
 		models.Lunchbreak.belongsTo(models.Place)
-		models.Lunchbreak.belongsToMany(models.Vote, {
-			through: models.Participant,
-			as: 'votes'
-		})
 	}
 
 	return Lunchbreak

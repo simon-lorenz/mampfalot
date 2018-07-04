@@ -20,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
 
 	Vote.associate = function(models) {
 		models.Vote.belongsTo(models.Place)
+		models.Vote.belongsTo(models.Participant)
 	}
 
 	return Vote

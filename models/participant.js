@@ -17,17 +17,13 @@ module.exports = (sequelize, DataTypes) => {
 		name: {
 			singular: 'participant',
 			plural: 'participants'
-		},
-		defaultScope: {
-			attributes: {
-				exclude: ['amountSpent']
-			}
 		}
 	})
 
 	Participant.associate = function (models) {
-		models.Participant.belongsTo(models.Lunchbreak)
 		models.Participant.belongsTo(models.User)
+		models.Participant.belongsTo(models.Lunchbreak)
+		models.Participant.hasMany(models.Vote)
 	}
 
 	return Participant
