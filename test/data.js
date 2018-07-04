@@ -104,6 +104,26 @@ module.exports = {
 			lunchbreakId: 1
 		}
 	],
+	votes: [
+		{
+			id: 1,
+			participantId: 1,
+			placeId: 2,
+			points: 30
+		},
+		{
+			id: 2,
+			participantId: 1,
+			placeId: 4,
+			points: 30
+		},
+		{
+			id: 3,
+			participantId: 1,
+			placeId: 3,
+			points: 40
+		}
+	],
 	places: [
 		{
 			id: 1,
