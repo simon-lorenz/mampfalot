@@ -92,6 +92,26 @@ module.exports = {
 			voteEndingTime: '12:25:00'
 		}
 	],
+	comments: [
+		{
+			id: 1,
+			lunchbreakId: 1,
+			userId: 1,
+			comment: 'Dies ist ein erster Kommentar von Max Mustermann',
+		},
+		{
+			id: 2,
+			lunchbreakId: 1,
+			userId: 1,
+			comment: 'Dies ist ein zweiter Kommentar von Max Mustermann'
+		},
+		{
+			id: 3,
+			lunchbreakId: 1,
+			userId: 2,
+			comment: 'Dies der erste Kommentar von John Doe'
+		}
+	],
 	participants: [
 		{
 			id: 1,

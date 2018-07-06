@@ -228,7 +228,113 @@ module.exports = (request, bearerToken) => {
             })
           })
         })
-      }) 
+      })
+
+      describe('/comments', () => {
+        describe('GET', () => {
+          before(async () => {
+            await setup.resetData()
+          })
+          
+          it('requires auth', (done) => {
+            request
+              .get('/lunchbreaks/1/comments')
+              .expect(401, done)
+          })
+
+          it('fails if user is no group member', (done) => {
+            request
+              .get('/lunchbreaks/1/comments')
+              .set({ Authorization: bearerToken[3] })
+              .expect(403, done)
+            })
+
+            it('sends a correct comment collection', (done) => {
+              request
+                .get('/lunchbreaks/1/comments')
+                .set({ Authorization: bearerToken[2] })
+                .expect(200)
+                .expect(res => {
+                  let comments = res.body
+                  comments.should.be.an('array').with.lengthOf(3)
+
+                  let firstComment = comments[0]
+                  firstComment.should.have.property('id').equal(1)
+                  firstComment.should.have.property('userId').equal(1)
+                  firstComment.should.have.property('lunchbreakId').equal(1)
+                  firstComment.should.have.property('comment').equal('Dies ist ein erster Kommentar von Max Mustermann')
+                  firstComment.should.have.property('createdAt')
+                  firstComment.should.have.property('updatedAt')
+                })
+                .end(done)
+            })
+        })
+
+        describe('POST', () =>  {
+          let newComment
+
+          beforeEach(async () => {
+            newComment = {
+              comment: 'Hey ho, let\'s go!'
+            }
+            await setup.resetData()
+          })
+
+          it('requires auth', (done) => {
+            request
+              .post('/lunchbreaks/1/comments')
+              .expect(401, done)
+          })
+
+          it('fails if user is no group member', (done) => {
+            request
+              .post('/lunchbreaks/1/comments')
+              .set({ Authorization: bearerToken[3] })
+              .expect(403, done)
+          })
+
+          it('fails if no comment is provided', (done) => {
+            newComment.comment = ''
+            request
+              .post('/lunchbreaks/1/comments')
+              .set({ Authorization: bearerToken[2] })
+              .send(newComment)
+              .expect(400, done)
+          })
+
+          it('inserts a userId depending on the token, not the body userId', (done) => {
+            newComment.userId = 3
+            request
+              .post('/lunchbreaks/1/comments')
+              .set({ Authorization: bearerToken[2] })
+              .send(newComment)
+              .expect(200)
+              .expect(res => {
+                let comment = res.body
+                comment.should.have.property('userId').equal(2)
+              })
+              .end(done)
+          })
+
+          it('successfully adds a comment', (done) => {
+            request
+              .post('/lunchbreaks/1/comments')
+              .set({ Authorization: bearerToken[2] })
+              .send(newComment)
+              .expect(200)
+              .expect(res => {
+                let comment = res.body
+                comment.should.have.property('id')
+                comment.should.have.property('userId').equal(2)
+                comment.should.have.property('lunchbreakId').equal(1)
+                comment.should.have.property('comment').equal(newComment.comment)
+                comment.should.have.property('createdAt')
+                comment.should.have.property('updatedAt')
+              })
+              .end(done)
+          })
+        })
+      })
     })
   })
 }

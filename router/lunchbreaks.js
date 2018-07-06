@@ -39,6 +39,24 @@ router.route('/:lunchbreakId').post((req, res, next) => {
 		})
 })
 
+router.route('/:lunchbreakId/comments').get((req, res, next) => {
+	res.send(res.locals.lunchbreak.comments)
+})
+
+router.route('/:lunchbreakId/comments').post((req, res, next) => {
+	Comment.create({
+		lunchbreakId: res.locals.lunchbreak.id,
+		userId: res.locals.user.id,
+		comment: req.body.comment
+	})
+	.then(comment => {
+		res.send(comment)
+	})
+	.catch(err => {
+		next(err)
+	})
+})
+
 router.route('/:lunchbreakId/participants').get((req, res, next) => {
 	res.send(res.locals.lunchbreak.participants)
 })

@@ -6,6 +6,7 @@ const FoodType = require('./../models').FoodType
 const Place = require('./../models').Place
 const Participant = require('../models').Participant
 const Vote = require('../models').Vote
+const Comment = require('../models').Comment
 const db = require('./../models').sequelize
 const data = require('./data')
 
@@ -29,6 +30,7 @@ module.exports = {
 			await Place.bulkCreate(data.places)
 			await Participant.bulkCreate(data.participants)
 			await Vote.bulkCreate(data.votes)
+			await Comment.bulkCreate(data.comments)
 		} catch (error) {
 			console.log(error)
 			throw error
