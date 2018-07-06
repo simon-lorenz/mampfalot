@@ -14,6 +14,31 @@ router.route('/:lunchbreakId').get((req, res, next) => {
 	res.send(res.locals.lunchbreak)
 })
 
+router.route('/:lunchbreakId').post((req, res, next) => {
+	if(!res.locals.user.isGroupAdmin(res.locals.lunchbreak.groupId)) {
+		res.status(403).send()
+		return
+	}
+
+	let values = {}
+	if(req.body.voteEndingTime) { values.voteEndingTime = req.body.voteEndingTime }
+	if(req.body.lunchTime) { values.lunchTime = req.body.lunchTime }
+
+	if (Object.keys(values).length === 0) {
+		res.status(400).send('Please provide at least one of the following parameter: voteEndingTime, lunchTime')
+		return
+	}
+
+	res.locals.lunchbreak
+		.update(values)
+		.then((lunchbreak) => {
+			res.send(lunchbreak)
+		})
+		.catch(err => {
+			next(err)
+		})
+})
+
 router.route('/:lunchbreakId/comments').get((req, res, next) => {
 	res.send(res.locals.lunchbreak.comments)
 })

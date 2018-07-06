@@ -39,7 +39,69 @@ module.exports = (request, bearerToken) => {
       })
 
       describe('POST', () => {
-        // Bearbeitung des Lunchbreaks
+        beforeEach(async () => {
+          await setup.resetData()
+        })
+
+        it('requires auth', (done) => {
+          request
+            .post('/lunchbreaks/1')
+            .expect(401, done)
+        })
+
+        it('fails if the user is no group admin', (done) => {
+          request
+            .post('/lunchbreaks/1')
+            .set({ Authorization: bearerToken[2] })
+            .expect(403, done)
+        })
+
+        it('requires at least one parameter', (done) => {
+          request
+            .post('/lunchbreaks/1')
+            .set({ Authorization: bearerToken[1] })
+            .send({ })
+            .expect(400, done)
+        })
+
+        it('fails if voteEndingTime is greater than lunchTime', (done) => {
+          request
+            .post('/lunchbreaks/1')
+            .set({ Authorization: bearerToken[1] })
+            .send({ 
+              voteEndingTime: '13:00:00',
+              lunchTime: '12:59:00'
+            })
+            .expect(400, done)
+        })
+
+        it('doesn\'t update the date', (done) => {
+          request
+            .post('/lunchbreaks/1')
+            .set({ Authorization: bearerToken[1] })
+            .send({ date: '31.12.2019' })
+            .expect(400, done)
+        })
+
+        it('updates a lunchbreak successfully', (done) => {
+          let newTimes = {
+            voteEndingTime: '12:55:00',
+            lunchTime: '13:00:00'
+          }
+          
+          request
+            .post('/lunchbreaks/1')
+            .set({ Authorization: bearerToken[1] })
+            .send(newTimes)
+            .expect(200)
+            .expect(res => {
+              let lunchbreak = res.body
+              lunchbreak.should.have.property('id').equal(1)
+              lunchbreak.should.have.property('voteEndingTime').equal(newTimes.voteEndingTime)
+              lunchbreak.should.have.property('lunchTime').equal(newTimes.lunchTime)
+            })
+            .end(done)
+        })
       })
 
       describe('/participants', () => {
