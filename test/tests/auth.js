@@ -8,6 +8,20 @@ module.exports = (request, token) => {
           .expect(200, done)
       })
 
+      it('authenticates a user with umlauts in his mail address', (done) => {
+        request
+          .get('/auth')
+          .auth('björn.tietgen@gmail.com', 'test')
+          .expect(200, done)
+      })
+
+      it('authenticates a user with owasp special chars in his password', (done) => {
+        request
+          .get('/auth')
+          .auth('l.rogers@university.edu', ' !"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
+          .expect(200, done)
+      })
+
       it('responds with a well formed token', (done) => {
         request
           .get('/auth')

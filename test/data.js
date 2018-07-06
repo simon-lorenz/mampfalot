@@ -191,15 +191,15 @@ module.exports = {
 		},
 		{
 			id: 4,
-			name: 'Todd Adams',
-			email: 'adams11@gmail.com',
+			name: 'Björn Tietgen',
+			email: 'björn.tietgen@gmail.com',
 			password: 'test'
 		},
 		{
 			id: 5,
 			name: 'Luisa Rogers',
 			email: 'l.rogers@university.edu',
-			password: 'access'
+			password: ' !"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
 		},
 		{
 			id: 6,
