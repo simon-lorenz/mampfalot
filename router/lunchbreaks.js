@@ -47,6 +47,34 @@ router.route('/:lunchbreakId/participants').get((req, res, next) => {
 	res.send(res.locals.lunchbreak.participants)
 })
 
+router.route('/:lunchbreakId/participants').post((req, res, next) => {
+	if (!req.body.userId) { 
+		res.status(400).send('Please provide a userId')
+		return
+	}
+
+	if (req.body.userId !== res.locals.user.id) {
+		res.status(403).send()
+		return
+	}
+
+	if (!res.locals.user.isGroupMember(res.locals.lunchbreak.groupId)) {
+		res.status(403).send()
+		return
+	}
+
+	Participant.create({
+		userId: parseInt(req.body.userId),
+		lunchbreakId: parseInt(req.params.lunchbreakId)
+	})
+	.then(participant => {
+		res.send(participant)
+	})
+	.catch(err => {
+		next(err)
+	})
+})
+
 router.param('participantId', middleware.loadParticipant)
 
 router.route('/:lunchbreakId/participants/:participantId').get((req, res, next) => {

@@ -129,6 +129,64 @@ module.exports = (request, bearerToken) => {
           })
         })
 
+        describe('POST', () => {
+          beforeEach(async () => {
+            await setup.resetData()
+          })
+
+          it('requires auth', (done) => {
+            request 
+              .post('/lunchbreaks/3/participants')
+              .expect(401, done)
+          })
+
+          it('fails if no userId is provided', (done) => {
+            request
+              .post('/lunchbreaks/3/participants')
+              .set({ Authorization: bearerToken[2] })
+              .expect(400, done)
+          })
+
+          it('fails if user tries to post another user', (done) => {
+            request
+              .post('/lunchbreaks/3/participants')
+              .set({ Authorization:  bearerToken[1] })
+              .send({ userId: 2 })
+              .expect(403, done)
+          })
+
+          it('fails if user is no group member', (done) => {
+            request
+              .post('/lunchbreaks/3/participants')
+              .set({ Authorization: bearerToken[3] })
+              .send({ userId: 3 })
+              .expect(403, done)
+          })
+
+          it('fails if user already participates', (done) => {
+            request
+              .post('/lunchbreaks/1/participants')
+              .set({ Authorization: bearerToken[1] })
+              .send({ userId: 1 })
+              .expect(400, done)
+          })
+
+          it('successfully adds a participant', (done) => {
+            request
+              .post('/lunchbreaks/3/participants')
+              .set({ Authorization: bearerToken[2] })
+              .send({ userId: 2 })
+              .expect(200)
+              .expect(res => {
+                let participant = res.body
+                participant.should.have.property('id')
+                participant.should.have.property('userId').equal(2)
+                participant.should.have.property('lunchbreakId').equal(3)
+              })
+              .end(done)
+            })
+        })
+
         describe('/:participantId', () => {
           describe('GET', () => {
             it('sends a valid participant resource', (done) => {

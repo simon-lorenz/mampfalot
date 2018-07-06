@@ -21,8 +21,8 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	Participant.associate = function (models) {
-		models.Participant.belongsTo(models.User)
-		models.Participant.belongsTo(models.Lunchbreak)
+		models.Participant.belongsTo(models.User, { foreignKey: { unique: 'compositeIndex', allowNull: false }})
+		models.Participant.belongsTo(models.Lunchbreak, { foreignKey: { unique: 'compositeIndex', allowNull: false }})
 		models.Participant.hasMany(models.Vote)
 	}
 
