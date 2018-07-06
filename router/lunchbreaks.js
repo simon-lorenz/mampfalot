@@ -39,10 +39,6 @@ router.route('/:lunchbreakId').post((req, res, next) => {
 		})
 })
 
-router.route('/:lunchbreakId/comments').get((req, res, next) => {
-	res.send(res.locals.lunchbreak.comments)
-})
-
 router.route('/:lunchbreakId/participants').get((req, res, next) => {
 	res.send(res.locals.lunchbreak.participants)
 })
@@ -84,32 +80,5 @@ router.route('/:lunchbreakId/participants/:participantId').get((req, res, next) 
 router.route('/:lunchbreakId/participants/:participantId/votes').get((req, res, next) => {
 	res.send(res.locals.participant.votes)
 })
-
-router.route('/:lunchbreakId/participants/:participantId/votes').post(middleware.checkVotes, async function (req, res, next) {
-	let votes = req.body.votes
-	
-	try {
-		// 1. Delete all votes of this participant
-		await Vote.destroy({
-			where: {
-				participantId: req.params.participantId
-			}
-		})
-
-		// 2. Add the participantId to all votes
-		for (let vote of votes) {
-			vote.participantId = req.params.participantId
-		}
-
-		// 3. Create all votes
-		await Vote.bulkCreate(votes)
-		
-		res.status(204).send()
-
-	} catch (error) {
-		next(error)
-	}
-})
-
 
 module.exports = router

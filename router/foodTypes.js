@@ -19,31 +19,6 @@ router.route('/:foodTypeId').get((req, res) => {
 
 router.use(commonMiddleware.userIsGroupAdmin)
 
-router.route('/:foodTypeId').put((req, res) => {
-	let foodTypeId = req.params.foodTypeId
-	let updateData = {
-		type: req.body.type
-	}
-
-	if (Object.keys(updateData).length === 0) {
-		res.status(400).send()
-		return
-	}
-
-	FoodType.update(updateData, {
-			where: {
-				id: foodTypeId
-			}
-		})
-		.then(result => {
-			res.status(204).send()
-		})
-		.catch(error => {
-			console.log(error)
-			res.status(500).send('Something went wrong.')
-		})
-})
-
 router.route('/:foodTypeId').delete(async (req, res) => {
 	try {
 		await res.locals.foodType.destroy()

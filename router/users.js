@@ -22,20 +22,6 @@ router.route('/').post((req, res, next) => {
 
 router.use([authMiddleware.verifyToken, commonMiddleware.loadUser])
 
-router.route('/').get((req, res, next) => {
-	User.findAll({
-			order: [
-				['id', 'ASC']
-			]
-		})
-		.then(result => {
-			res.send(result)
-		})
-		.catch(error => {
-			next(error)
-		})
-})
-
 router.route('/:userId').get((req, res, next) => {
 	if (req.params.userId != res.locals.user.id) {
 		res.status(403).send()
