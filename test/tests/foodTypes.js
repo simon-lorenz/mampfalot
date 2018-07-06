@@ -78,11 +78,7 @@ module.exports = (request, bearerToken) => {
       })
   
       describe('DELETE', () => {
-        before(async() => {
-          await setup.resetData()
-        })      
-
-        afterEach(async() => {
+        beforeEach(async() => {
           await setup.resetData()
         })
 

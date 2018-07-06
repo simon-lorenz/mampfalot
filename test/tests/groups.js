@@ -20,11 +20,7 @@ module.exports = (request, bearerToken) => {
 				minPointsPerVote: 5
 			}
 
-			before(async () => {
-				await setup.resetData()
-			})
-
-			afterEach(async () => {
+			beforeEach(async () => {
 				await setup.resetData()
 			})
 
@@ -123,10 +119,6 @@ module.exports = (request, bearerToken) => {
 
 			describe('POST', () => {
 				beforeEach(async () => {
-					await setup.resetData()
-				})
-
-				after(async () => {
 					await setup.resetData()
 				})
 
@@ -543,11 +535,7 @@ module.exports = (request, bearerToken) => {
 				})
 
 				describe('POST', () => {
-					before(async () => {
-						await setup.resetData()
-					})
-
-					afterEach(async () => {
+					beforeEach(async () => {
 						await setup.resetData()
 					})
 
@@ -636,17 +624,10 @@ module.exports = (request, bearerToken) => {
 				describe('POST', () => {
 					let newFoodType
 
-					before(async () => {
+					beforeEach(async () => {
 						newFoodType = {
 							type: 'Neu!'
 						}	
-						await setup.resetData()
-					})
-
-					afterEach(async () => {
-						newFoodType = {
-							type: 'Neu!'
-						}
 						await setup.resetData()
 					})
 

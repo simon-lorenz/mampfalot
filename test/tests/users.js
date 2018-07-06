@@ -5,19 +5,12 @@ module.exports = (request, bearerToken) => {
     describe('POST', () => {
       let newUser
 
-      before(async () => {
-        await setup.resetData()
-      })
-
-      beforeEach(() => {
+      beforeEach(async () => {
         newUser = {
           name: 'Homer Simpson',
           email: 'homer@simpson.com',
           password: "springfield"
         }
-      })
-
-      afterEach(async () => {
         await setup.resetData()
       })
 
@@ -127,10 +120,6 @@ module.exports = (request, bearerToken) => {
           await setup.resetData()
         })
 
-        afterEach(async() => {
-          await setup.resetData()
-        })
-
         it('requires authentication', (done) => {
           request
             .post('/users/1')
@@ -177,11 +166,6 @@ module.exports = (request, bearerToken) => {
 
       describe('DELETE', () => {
         beforeEach(async () => {
-          {
-            await setup.resetData()
-          }
-        })
-        after(async () => {
           await setup.resetData()
         })
 
