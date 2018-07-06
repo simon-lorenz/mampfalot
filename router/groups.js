@@ -173,6 +173,13 @@ router.route('/:groupId/lunchbreaks').post(async (req, res, next) => {
 		return
 	}
 
+	if (req.body.lunchTime || req.body.voteEndingTime) {
+		if(!res.locals.user.isGroupAdmin(res.locals.group.id)) {
+			res.status(403).send()
+			return
+		}
+	}
+
 	Lunchbreak.create({
 		groupId: parseInt(req.params.groupId),
 		date: req.body.date,

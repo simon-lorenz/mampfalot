@@ -267,11 +267,40 @@ module.exports = (request, bearerToken) => {
 							})
 							.expect(403, done)
 					})
-					
-					it('creates a new lunchbreak successfully', (done) => {
+
+					it('fails if the user provides times and is no admin', (done) => {
 						request
 							.post('/groups/1/lunchbreaks')
-							.set({ Authorization: bearerToken[2]})
+							.set({ Authorization: bearerToken[2] })
+							.send({
+								date: '2018-06-30',
+								lunchTime: '12:00:00',
+								voteEndingTime: '11:59:00'
+							})
+							.expect(403, done)
+					})
+					
+					it('creates a new lunchbreak successfully when user is no admin', (done) => {
+						request
+							.post('/groups/1/lunchbreaks')
+							.set({ Authorization: bearerToken[2] })
+							.send({ date: '2018-06-30' })
+							.expect(200)
+							.expect(res => {
+								let lunchbreak = res.body
+								lunchbreak.should.have.property('id')
+								lunchbreak.should.have.property('groupId').equal(1)
+								lunchbreak.should.have.property('date').equal('2018-06-30')
+								lunchbreak.should.have.property('lunchTime').equal('12:30:00')
+								lunchbreak.should.have.property('voteEndingTime').equal('12:25:00')
+							})
+							.end(done)
+					})
+
+					it('creates a new lunchbreak successfully when user is admin', (done) => {
+						request
+							.post('/groups/1/lunchbreaks')
+							.set({ Authorization: bearerToken[1]})
 							.send({
 								date: '2018-06-30',
 								lunchTime: '12:00:00',
@@ -318,7 +347,7 @@ module.exports = (request, bearerToken) => {
 					it('fails if voteEndingTime is greater than lunchTime', (done) => {{
 						request
 							.post('/groups/1/lunchbreaks')
-							.set({ Authorization: bearerToken[2]})
+							.set({ Authorization: bearerToken[1] })
 							.send({
 								date: '2018-06-30',
 								lunchTime: '12:30:00',
