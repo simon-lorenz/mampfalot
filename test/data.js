@@ -141,7 +141,7 @@ module.exports = {
 			id: 3,
 			participantId: 1,
 			placeId: 3,
-			points: 40
+			points: 30
 		}
 	],
 	places: [
@@ -168,6 +168,12 @@ module.exports = {
 			name: 'L\'Osteria',
 			groupId: 1,
 			foodTypeId: 4
+		},
+		{
+			id: 5,
+			name: 'VIP-Döner',
+			groupId: 2,
+			foodTypeId: 5
 		}
 	],
 	users: [
