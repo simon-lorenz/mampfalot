@@ -28,7 +28,8 @@ const router = {
 	foodTypes: require('./router/foodTypes'),
 	users: require('./router/users'),
 	votes: require('./router/votes'),
-	lunchbreaks: require('./router/lunchbreaks')
+	lunchbreaks: require('./router/lunchbreaks'),
+	participants: require('./router/participants')
 }
 
 app.use('/api/auth', router.auth)
@@ -39,6 +40,7 @@ app.use('/api/places', [authMiddleware.verifyToken, commonMiddleware.loadUser], 
 app.use('/api/foodTypes', [authMiddleware.verifyToken, commonMiddleware.loadUser], router.foodTypes)
 app.use('/api/votes', [authMiddleware.verifyToken, commonMiddleware.loadUser], router.votes)
 app.use('/api/lunchbreaks', [authMiddleware.verifyToken, commonMiddleware.loadUser], router.lunchbreaks)
+app.use('/api/participants', [authMiddleware.verifyToken, commonMiddleware.loadUser], router.participants)
 
 // Handle Sequelize Errors
 app.use((err, req, res, next) => {

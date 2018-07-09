@@ -2,7 +2,6 @@ const Util = require('./../util/util')
 const Lunchbreak = require('./../models').Lunchbreak
 const Group = require('./../models').Group
 const Comment = require('../models').Comment
-const Vote = require('../models').Vote
 const Participant = require('../models').Participant
 const Place = require('./../models').Place
 
@@ -33,25 +32,6 @@ module.exports = {
 					return
 				}
 				res.locals.lunchbreak = lunchbreak
-				next()
-			}
-		})
-	},
-	loadParticipant: function(req, res, next) {
-		Participant.findOne({
-			where: {
-				id: req.params.participantId
-			},
-			attributes: {
-				exclude: ['amountSpent']
-			},
-			include: [ Vote ]
-		})
-		.then(participant => {
-			if(!participant) {
-				res.status(404).send()
-			} else {
-				res.locals.participant = participant
 				next()
 			}
 		})

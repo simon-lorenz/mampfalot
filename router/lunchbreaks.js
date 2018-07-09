@@ -1,11 +1,7 @@
 const express = require('express')
 const router = express.Router()
-const Lunchbreak = require('./../models').Lunchbreak
 const Comment = require('./../models').Comment
 const Participant = require('./../models').Participant
-const Vote = require('./../models').Vote
-const Place = require('./../models').Place
-const User = require('./../models').User
 const middleware = require('./../middleware/lunchbreaks')
 
 router.param('lunchbreakId', middleware.loadLunchbreak)
@@ -87,16 +83,6 @@ router.route('/:lunchbreakId/participants').post((req, res, next) => {
 	.catch(err => {
 		next(err)
 	})
-})
-
-router.param('participantId', middleware.loadParticipant)
-
-router.route('/:lunchbreakId/participants/:participantId').get((req, res, next) => {
-	res.send(res.locals.participant)
-})
-
-router.route('/:lunchbreakId/participants/:participantId/votes').get((req, res, next) => {
-	res.send(res.locals.participant.votes)
 })
 
 module.exports = router
