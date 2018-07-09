@@ -120,5 +120,87 @@ module.exports = (request, bearerToken) => {
 					.end(done)		
 			})
 		})
+
+		describe('/:voteId', () => {
+			describe('GET', () => {
+				before(async () => {
+					await setup.resetData()
+				})
+				
+				it('requires auth', (done) => {
+					request
+						.get('/votes/1')
+						.expect(401, done)
+				})
+
+				it('fails if user is not the participant linked to the vote', (done) => {
+					request
+						.get('/votes/1')
+						.set({ Authorization: bearerToken[2] })
+						.expect(403, done)
+				})
+
+				it('fails with 404 if vote does not exist', (done) => {
+					request
+						.get('/votes/99')
+						.set({ Authorization: bearerToken[1] })
+						.expect(404, done)
+				})
+
+				it('sends a correct vote resource', (done) => {
+					request
+						.get('/votes/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(200)
+						.expect(res => {
+							let vote = res.body
+							vote.should.have.property('id').equal(1)
+							vote.should.have.property('participantId').equal(1)
+							vote.should.have.property('placeId').equal(2)
+							vote.should.have.property('points').equal(30)
+						}) 
+						.end(done)
+				})
+			})
+
+			describe('DELETE', () => {
+				beforeEach(async () => {
+					await setup.resetData()
+				})
+
+				it('requires auth', (done) => {
+					request
+						.delete('/votes/1')
+						.expect(401, done)
+				})
+
+				it('fails if user is not the participant linked to the vote', (done) => {
+					request
+						.delete('/votes/1')
+						.set({ Authorization: bearerToken[2] })
+						.expect(403, done)
+				})
+
+				it('fails with 404 if vote does not exist', (done) => {
+					request
+						.delete('/votes/99')
+						.set({ Authorization: bearerToken[1] })
+						.expect(404, done)
+				})
+
+				it('deletes a vote successfully', (done) => {
+					request
+						.delete('/votes/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+						.then(() => {
+							request
+								.get('/votes/1')
+								.set({ Authorization: bearerToken[1] })
+								.expect(404, done)
+						})
+				})
+			})
+		})
 	})
 }
