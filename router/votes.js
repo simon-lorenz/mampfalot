@@ -3,6 +3,20 @@ const router = express.Router()
 const Vote = require('./../models').Vote
 const middleware = require('../middleware/votes')
 
+router.route('/').post((req, res, next) => {
+	Vote.create({
+		participantId: req.body.participantId,
+		placeId: req.body.placeId,
+		points: req.body.points
+	})
+	.then(vote => {
+		res.send(vote)
+	})
+	.catch(err => {
+		next(err)
+	})
+})
+
 router.param('voteId', middleware.loadVote)
 
 router.route('/:voteId').get((req, res) => {
