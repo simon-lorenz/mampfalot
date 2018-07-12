@@ -99,13 +99,45 @@ module.exports = (request, bearerToken) => {
 					.end(done)		
 			})
 
+			it('fails if parameter participantId is missing', (done) => {
+				request
+					.post('/votes')
+					.set({ Authorization: bearerToken[1] })
+					.send({
+						placeId: 1,
+						points: 10
+					})
+					.expect(400, done)
+			})
+
+			it('fails if parameter placeId is missing', (done) => {
+				request
+					.post('/votes')
+					.set({ Authorization: bearerToken[1] })
+					.send({
+						participantId: 1,
+						points: 10
+					})
+					.expect(400, done)
+			})
+
+			it('fails if parameter points is missing', (done) => {
+				request
+					.post('/votes')
+					.set({ Authorization: bearerToken[1] })
+					.send({
+						participantId: 1,
+						placeId: 1,
+					})
+					.expect(400, done)
+			})
+
 			it('successfully adds a single vote', (done) => {
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
 					.send({
 						participantId: 1,
-						lunchbreakId: 1,
 						placeId: 1,
 						points: 10
 					})
@@ -114,7 +146,6 @@ module.exports = (request, bearerToken) => {
 						let vote = res.body
 						vote.should.have.property('id')
 						vote.should.have.property('participantId').equal(1)
-						vote.should.have.property('lunchbreakId').equal(1)
 						vote.should.have.property('placeId').equal(1)
 					})
 					.end(done)		
