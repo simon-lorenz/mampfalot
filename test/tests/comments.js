@@ -43,6 +43,32 @@ module.exports = (request, bearerToken) => {
 						.end(done)
 				})
 			})
+
+			describe('DELETE', () => {
+				beforeEach(async () => {
+					await setup.resetData()
+				})
+
+				it('requires auth', (done) => {
+					request
+						.delete('/comments/1')
+						.expect(401, done)
+				})
+
+				it('fails if user does not own comment', (done) => {
+					request	
+						.delete('/comments/1')
+						.set({ Authorization: bearerToken[2] })
+						.expect(403, done)
+				})
+
+				it('deletes a comment successfully', (done) => {
+					request
+						.delete('/comments/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204, done)
+				})
+			})
 		})
 	})
 }

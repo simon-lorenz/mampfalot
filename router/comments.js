@@ -21,4 +21,14 @@ router.route('/:commentId').post(middleware.userOwnsComment, (req, res, next) =>
 	})
 })
 
+router.route('/:commentId').delete(middleware.userOwnsComment, (req, res, next) => {
+	res.locals.comment.destroy()
+	.then(() => {
+		res.status(204).send()
+	})
+	.catch(err => {
+		next(err)
+	})
+})
+
 module.exports = router
