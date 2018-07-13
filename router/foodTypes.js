@@ -19,6 +19,18 @@ router.route('/:foodTypeId').get((req, res) => {
 
 router.use(commonMiddleware.userIsGroupAdmin)
 
+router.route('/:foodTypeId').post((req, res, next) => {
+	res.locals.foodType.update({
+		type: req.body.type
+	})
+	.then((instance) => {
+		res.send(instance)
+	})
+	.catch(err => {
+		next(err)
+	})
+})
+
 router.route('/:foodTypeId').delete(async (req, res) => {
 	try {
 		await res.locals.foodType.destroy()

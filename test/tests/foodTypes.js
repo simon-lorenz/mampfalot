@@ -76,6 +76,56 @@ module.exports = (request, bearerToken) => {
             .end(done)
         })
       })
+
+      describe('POST', () => {
+        let newFoodType
+
+        beforeEach(async () => {
+          newFoodType = {
+            type: 'Geändert!'
+          }	
+          await setup.resetData()
+        })
+
+        it('requires admin rights', (done) => {
+          request
+            .post('/foodTypes/1')
+            .set({ Authorization: bearerToken[2] })
+            .expect(403, done)
+        })
+
+        it('sends 400 if no type is specified', (done) => {
+          request
+            .post('/foodTypes/1')
+            .set({ Authorization: bearerToken[1] })
+            .send( { } )
+            .expect(400, done)
+        })
+
+        it('fails if type already exists', (done) => {
+          newFoodType.type = 'Döner'
+
+          request
+            .post('/foodTypes/1')
+            .set({ Authorization: bearerToken[1] })
+            .send(newFoodType)
+            .expect(400, done)							
+        })
+
+        it('inserts a new foodType correctly', (done) => {
+          request
+            .post('/foodTypes/1')
+            .set({ Authorization: bearerToken[1] })
+            .send(newFoodType)
+            .expect(200)
+            .expect(response => {
+              let foodType = response.body
+              foodType.should.have.property('id')
+              foodType.should.have.property('type').equal(newFoodType.type)								
+            })
+            .end(done)
+        })
+      })
   
       describe('DELETE', () => {
         beforeEach(async() => {
