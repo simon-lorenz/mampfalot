@@ -69,7 +69,7 @@ module.exports = (request, bearerToken) => {
 						},
 						{
 							participantId: 1,
-							placeId: 1,
+							placeId: 2,
 							points: 70
 						}
 					])
