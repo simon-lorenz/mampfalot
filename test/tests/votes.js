@@ -57,7 +57,7 @@ module.exports = (request, bearerToken) => {
 					.expect(400, done)
 			})
 
-			it('fails sum of points is greater than pointsPerDay', (done) => {
+			it('fails if sum of points is greater than pointsPerDay', (done) => {
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
