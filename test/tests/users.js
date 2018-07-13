@@ -224,19 +224,10 @@ module.exports = (request, bearerToken) => {
             .expect(200)
             .expect(res => {
               let groups = res.body
-              group.should.be.an('array').of.length(2)
+              groups.should.be.an('array').of.length(1)
 
               let group = groups[0]
-              group.should.have.property('name')
-							group.should.have.property('defaultLunchTime')
-							group.should.have.property('defaultVoteEndingTime')
-							group.should.have.property('pointsPerDay')
-							group.should.have.property('maxPointsPerVote')
-							group.should.have.property('minPointsPerVote')
-							group.should.have.property('members').which.is.an('array')
-							group.should.have.property('lunchbreaks').which.is.an('array')
-							group.should.have.property('places').which.is.an('array')
-							group.should.have.property('foodTypes').which.is.an('array')
+              group.should.have.property('id')
             })
             .end(done)
         })

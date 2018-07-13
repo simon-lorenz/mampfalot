@@ -107,4 +107,13 @@ router.route('/:userId').delete(async (req, res, next) => {
 		})
 })
 
+router.route('/:userId/groups').get((req, res, next) => {
+	if (parseInt(req.params.userId) !== res.locals.user.id) {
+		res.status(403).send()
+		return
+	}
+
+	res.send(res.locals.user.groups)
+})
+
 module.exports = router
