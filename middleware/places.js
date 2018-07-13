@@ -1,5 +1,6 @@
 const Place = require('../models').Place
-const Sequelize = require('sequelize')
+const Group = require('../models').Group
+const FoodType = require('../models').FoodType
 
 module.exports = {
   async loadPlace(req, res, next) {
@@ -7,13 +8,19 @@ module.exports = {
       res.locals.place = await Place.findOne({
         where: {
           id: req.params.placeId
-        }
+        },
+        include: [ 
+          {
+            model: Group,
+            include: FoodType
+          } 
+        ]
       })
   
       if (!res.locals.place) {
         res.status(404).send()
       } else {
-        res.locals.group = { id: res.locals.place.groupId } 
+        res.locals.group = res.locals.place.group
         next()
       }
     } catch (error) {

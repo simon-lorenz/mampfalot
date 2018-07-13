@@ -53,6 +53,39 @@ router.route('/:placeId').get(commonMiddleware.userIsGroupMember, (req, res, nex
 	res.send(res.locals.place)	
 })
 
+router.route('/:placeId').post(commonMiddleware.userIsGroupAdmin, (req, res, next) => {
+	let data = {}
+
+	if (req.body.foodTypeId) { data.foodTypeId = req.body.foodTypeId }
+	if (req.body.name) { data.name = req.body.name }
+
+	if (Object.keys(data).length === 0) {
+		res.status(400).send('Please provide at least one parameter')
+		return
+	}
+
+	let foodTypeIdBelongsToGroup = false
+	for (let foodType of res.locals.group.foodTypes) {
+		if (foodType.id === data.foodTypeId) {
+			foodTypeIdBelongsToGroup = true
+			break
+		}
+	}
+
+	if (!foodTypeIdBelongsToGroup) {
+		res.status(400).send('Invalid foodTypeId')
+		return
+	}
+
+	res.locals.place.update(data)
+	.then(instance => {
+		res.send(instance)
+	})
+	.catch(err => {
+		next(err)
+	})
+})
+
 router.route('/:placeId').delete(commonMiddleware.userIsGroupAdmin, (req, res, next) => {
 	res.locals.place.destroy()
 	.then(() => {

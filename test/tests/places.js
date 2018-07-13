@@ -92,6 +92,67 @@ module.exports = (request, bearerToken) => {
         })
       })
 
+      describe('POST', () => {
+        let updatedPlace
+
+        beforeEach(async () => {
+          await setup.resetData()
+          updatedPlace = {
+            name: 'updated',
+            foodTypeId: 2
+          }
+        })
+
+        it('requires group admin rights', (done) => {
+          request	
+            .post('/places/1')
+            .set({ Authorization: bearerToken[2] })
+            .expect(403, done)
+        })
+
+        it('updates a new place correctly', (done) => {
+          request
+            .post('/places/1')
+            .set({ Authorization: bearerToken[1] })
+            .send(updatedPlace)
+            .expect(200)
+            .expect(response => {
+              let place = response.body
+              place.should.have.property('id')
+              place.should.have.property('name').equal(updatedPlace.name)
+              place.should.have.property('foodTypeId').equal(updatedPlace.foodTypeId)
+              place.should.have.property('groupId').equal(1)
+            })
+            .end(done)
+        })
+
+        it('sends 400 on non existent foreign key', (done) => {
+          updatedPlace.foodTypeId = 99 // non existent foodTypeId
+          request
+            .post('/places/1')
+            .set({ Authorization: bearerToken[1] })
+            .send(updatedPlace)
+            .expect(400, done)
+        })
+
+        it('sends 400 on non-group foreign key', (done) => {
+          updatedPlace.foodTypeId = 5 // this id belongs to group 2
+          request
+            .post('/places/1')
+            .set({ Authorization: bearerToken[1] })
+            .send(updatedPlace)
+            .expect(400, done)
+        })
+
+        it('sends 400 if no name and foodTypeId is provided', (done) => {
+          request
+            .post('/places/1')
+            .set({ Authorization: bearerToken[1] })
+            .send( {} )
+            .expect(400, done)
+        })
+      })
+
       describe('DELETE', () => {
         beforeEach(async () => {
           await setup.resetData()
