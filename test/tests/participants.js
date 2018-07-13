@@ -7,7 +7,7 @@ module.exports = (request, bearerToken) => {
 				before(async () => {
 					await setup.resetData()
 				})
-				
+
 				it('fails if userId does not match', (done) => {
 					request
 						.get('/participants/1')
@@ -26,7 +26,7 @@ module.exports = (request, bearerToken) => {
 							participant.should.have.property('lunchbreakId').equal(1)
 							participant.should.have.property('userId').equal(1)
 							participant.should.have.property('lunchTimeSuggestion')
-							participant.should.not.have.property('amountSpent')
+							participant.should.have.property('amountSpent')
 						})
 						.end(done)
 				})

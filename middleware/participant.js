@@ -7,9 +7,6 @@ module.exports = {
 			where: {
 				id: req.params.participantId
 			},
-			attributes: {
-				exclude: ['amountSpent']
-			},
 			include: [ Vote ]
 		})
 		.then(participant => {
