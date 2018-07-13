@@ -57,4 +57,5 @@ describe('The mampfalot api', function () {
   require('./tests/lunchbreaks')(request, bearerToken)
   require('./tests/participants')(request, bearerToken)
   require('./tests/votes')(request, bearerToken)
+  require('./tests/comments')(request, bearerToken)
 })
