@@ -21,8 +21,38 @@ module.exports = (request, bearerToken) => {
 				})
 			})
 
+			describe('DELETE', () => {
+				beforeEach(async () => {
+					await setup.resetData()
+				})
+
+				it('requires auth', (done) => {
+					request
+						.delete('/participants/1')
+						.expect(401, done)
+				})
+
+				it('fails if user is not the participant', (done) => {
+					request
+						.delete('/participants/1')
+						.set({ Authorization: bearerToken[2] })
+						.expect(403, done)
+				})
+
+				it('deletes a participant successfully', (done) => {
+					request
+						.delete('/participants/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204, done)
+				})
+			})
+
 			describe('/votes', () => {
 				describe('GET', () => {
+					before(async () => {
+						await setup.resetData()
+					})
+
 					it('sends a list of votes', (done) => {
 						request 
 						.get('/participants/1/votes')

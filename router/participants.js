@@ -8,6 +8,16 @@ router.route('/:participantId').get((req, res, next) => {
 	res.send(res.locals.participant)
 })
 
+router.route('/:participantId').delete(middleware.userIsParticipant, (req, res, next) => {
+	res.locals.participant.destroy()
+	.then(() => {
+		res.status(204).send()
+	})
+	.catch(err => {
+		next(err)
+	})
+})
+
 router.route('/:participantId/votes').get((req, res, next) => {
 	res.send(res.locals.participant.votes)
 })

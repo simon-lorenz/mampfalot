@@ -20,5 +20,12 @@ module.exports = {
 				next()
 			}
 		})
+	},
+	userIsParticipant: function(req, res, next) {
+		if (res.locals.participant.userId !== res.locals.user.id) {
+			res.status(403).send()
+		} else {
+			next()
+		}
 	}
 }
