@@ -37,8 +37,8 @@ The only exception is the /users route. You may POST a new user without a token.
 | Place        | `/places`                       | `/places/:id`                   | `/places/:id`                 | `/places/:id`                 |
 |              | `/groups/:id/places`            | `/groups/:id/places`            |                               |                               |
 | User         | `/users`                        | `/users/:id`                    | `/users/:id`                  | `/users/:id`                  |
-| Vote         | `/votes`                        | `/votes/:id`                    | `/votes/:id`                  | `/votes/:id`                  |
-|              | `/participants/:id/votes`       | `/participants/:id/votes`       | `/votes/:id`                  | `/votes/:id`                  |
+| Vote         | `/votes`                        | `/votes/:id`                    |                               | `/votes/:id`                  |
+|              |                                 | `/participants/:id/votes`       |                               |                               |
 
 ## Development Setup
 
