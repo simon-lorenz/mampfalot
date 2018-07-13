@@ -73,6 +73,10 @@ module.exports = (request, bearerToken) => {
 
 		describe('/:groupId', () => {
 			describe('GET', () => {
+				before(async () => {
+					await setup.resetData()
+				})
+				
 				it('sends a valid group-resource', (done) => {
 					request
 						.get('/groups/1')
