@@ -564,14 +564,15 @@ module.exports = (request, bearerToken) => {
 				})
 
 				describe('POST', () => {
+					let newPlace
+
 					beforeEach(async () => {
 						await setup.resetData()
+						newPlace = {
+							name: 'NewPlace',
+							foodTypeId: 2
+						}
 					})
-
-					let newPlace = {
-						name: 'NewPlace',
-						foodTypeId: 2
-					}
 
 					it('requires group admin rights', (done) => {
 						request	

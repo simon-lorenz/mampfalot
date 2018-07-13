@@ -3,10 +3,10 @@ const setup = require('../setup')
 module.exports = (request, bearerToken) => {
   return describe('/foodTypes', () => {
     describe('POST', () => {
-      let newFoodType
+      let updatedFoodType
 
       beforeEach(async () => {
-        newFoodType = { 
+        updatedFoodType = { 
           groupId: 1,
           type: 'New food type' 
         }
@@ -16,7 +16,7 @@ module.exports = (request, bearerToken) => {
       it('requires authentication', (done) => {
         request
           .post('/foodTypes')
-          .send(newFoodType)
+          .send(updatedFoodType)
           .expect(401, done)
       })
 
@@ -24,7 +24,7 @@ module.exports = (request, bearerToken) => {
         request
           .post('/foodTypes')
           .set({ Authorization: bearerToken[2] })
-          .send(newFoodType)
+          .send(updatedFoodType)
           .expect(403, done)
       })
 
@@ -32,13 +32,13 @@ module.exports = (request, bearerToken) => {
         request
           .post('/foodTypes')
           .set({ Authorization: bearerToken[1] })
-          .send(newFoodType)
+          .send(updatedFoodType)
           .expect(200)
           .expect(res => {
             let foodType = res.body
             foodType.should.have.property('id')
-            foodType.should.have.property('groupId').equal(newFoodType.groupId)
-            foodType.should.have.property('type').equal(newFoodType.type)
+            foodType.should.have.property('groupId').equal(updatedFoodType.groupId)
+            foodType.should.have.property('type').equal(updatedFoodType.type)
           })
           .end(done)
       })
@@ -78,10 +78,10 @@ module.exports = (request, bearerToken) => {
       })
 
       describe('POST', () => {
-        let newFoodType
+        let updatedFoodType
 
         beforeEach(async () => {
-          newFoodType = {
+          updatedFoodType = {
             type: 'Geändert!'
           }	
           await setup.resetData()
@@ -103,25 +103,25 @@ module.exports = (request, bearerToken) => {
         })
 
         it('fails if type already exists', (done) => {
-          newFoodType.type = 'Döner'
+          updatedFoodType.type = 'Döner'
 
           request
             .post('/foodTypes/1')
             .set({ Authorization: bearerToken[1] })
-            .send(newFoodType)
+            .send(updatedFoodType)
             .expect(400, done)							
         })
 
-        it('inserts a new foodType correctly', (done) => {
+        it('updates a new foodType correctly', (done) => {
           request
             .post('/foodTypes/1')
             .set({ Authorization: bearerToken[1] })
-            .send(newFoodType)
+            .send(updatedFoodType)
             .expect(200)
             .expect(response => {
               let foodType = response.body
               foodType.should.have.property('id')
-              foodType.should.have.property('type').equal(newFoodType.type)								
+              foodType.should.have.property('type').equal(updatedFoodType.type)								
             })
             .end(done)
         })
