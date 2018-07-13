@@ -2,7 +2,7 @@ const setup = require('../setup')
 
 module.exports = (request, bearerToken) => {
 	return describe('/votes', () => {
-		describe.skip('POST', () => {
+		describe('POST', () => {
 			beforeEach(async () => {
 				await setup.resetData()
 			})
@@ -19,30 +19,30 @@ module.exports = (request, bearerToken) => {
 					.set({ Authorization: bearerToken[1] })
 					.send([{
 						participantId: 2,
-						lunchbreakId: 1
+						placeId: 1,
+						points: 40
 					}])
 					.expect(403, done)
 			})
 
-			it('fails with 404 if participantId does not exist', (done) => {
+			it('fails if participantId does not exist', (done) => {
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
 					.send([{
 						participantId: 99
 					}])
-					.expect(404, done)
+					.expect(400, done)
 			})
 
-			it('fails with 404 if lunchbreak does not exist', (done) => {
+			it('fails if placeId does not exist', (done) => {
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
 					.send([{
-						participantId: 1,
-						lunchbreakId: 99
+						placeId: 99
 					}])
-					.expect(404, done)
+					.expect(400, done)
 			})
 
 			it('fails if place id does not belong to group', (done) => {
@@ -51,7 +51,7 @@ module.exports = (request, bearerToken) => {
 					.set({ Authorization: bearerToken[1] })
 					.send([{
 						participantId: 1,
-						lunchbreakId: 1,
+						points: 50,
 						placeId: 5
 					}])
 					.expect(400, done)
@@ -69,6 +69,7 @@ module.exports = (request, bearerToken) => {
 						},
 						{
 							participantId: 1,
+							placeId: 1,
 							points: 70
 						}
 					])
@@ -82,7 +83,6 @@ module.exports = (request, bearerToken) => {
 					.set({ Authorization: bearerToken[1] })
 					.send([{
 						participantId: 1,
-						lunchbreakId: 1,
 						placeId: 1,
 						points: 101
 					}])
@@ -96,7 +96,6 @@ module.exports = (request, bearerToken) => {
 					.set({ Authorization: bearerToken[1] })
 					.send([{
 						participantId: 1,
-						lunchbreakId: 1,
 						placeId: 1,
 						points: 29
 					}])
@@ -144,7 +143,7 @@ module.exports = (request, bearerToken) => {
 					.send([{
 						participantId: 1,
 						placeId: 1,
-						points: 10
+						points: 40
 					}])
 					.expect(200)
 					.expect(res => {
@@ -177,7 +176,7 @@ module.exports = (request, bearerToken) => {
 						{
 							participantId: 1,
 							placeId: 3,
-							points: 40
+							points: 30
 						}
 					])
 					.expect(200)
