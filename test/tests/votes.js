@@ -136,6 +136,25 @@ module.exports = (request, bearerToken) => {
 					.expect(400, done)
 			})
 
+			it('fails if two or more votes have the same placeId', (done) => {
+				request
+					.post('/votes')
+					.set({ Authorization: bearerToken[1] })
+					.send([
+						{
+							participantId: 1,
+							placeId: 1,
+							points: 40
+						},
+						{
+							participantId: 1,
+							placeId: 1,
+							points: 30
+						}
+					])
+					.expect(400, done)
+			})
+
 			it('successfully adds a single vote', (done) => {
 				request
 					.post('/votes')
