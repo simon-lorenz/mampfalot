@@ -17,10 +17,10 @@ module.exports = (request, bearerToken) => {
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send({
+					.send([{
 						participantId: 2,
 						lunchbreakId: 1
-					})
+					}])
 					.expect(403, done)
 			})
 
@@ -28,9 +28,9 @@ module.exports = (request, bearerToken) => {
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send({
+					.send([{
 						participantId: 99
-					})
+					}])
 					.expect(404, done)
 			})
 
@@ -38,10 +38,10 @@ module.exports = (request, bearerToken) => {
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send({
+					.send([{
 						participantId: 1,
 						lunchbreakId: 99
-					})
+					}])
 					.expect(404, done)
 			})
 
@@ -49,11 +49,11 @@ module.exports = (request, bearerToken) => {
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send({
+					.send([{
 						participantId: 1,
 						lunchbreakId: 1,
 						placeId: 5
-					})
+					}])
 					.expect(400, done)
 			})
 
@@ -61,12 +61,17 @@ module.exports = (request, bearerToken) => {
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send({
-						participantId: 1,
-						lunchbreakId: 1,
-						placeId: 1,
-						points: 20
-					})
+					.send([
+						{
+							participantId: 1,
+							placeId: 1,
+							points: 60
+						},
+						{
+							participantId: 1,
+							points: 70
+						}
+					])
 					.expect(400)
 					.end(done)		
 			})
@@ -75,12 +80,12 @@ module.exports = (request, bearerToken) => {
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send({
+					.send([{
 						participantId: 1,
 						lunchbreakId: 1,
 						placeId: 1,
 						points: 101
-					})
+					}])
 					.expect(400)
 					.end(done)		
 			})
@@ -89,12 +94,12 @@ module.exports = (request, bearerToken) => {
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send({
+					.send([{
 						participantId: 1,
 						lunchbreakId: 1,
 						placeId: 1,
 						points: 29
-					})
+					}])
 					.expect(400)
 					.end(done)		
 			})
@@ -103,10 +108,10 @@ module.exports = (request, bearerToken) => {
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send({
+					.send([{
 						placeId: 1,
 						points: 10
-					})
+					}])
 					.expect(400, done)
 			})
 
@@ -114,10 +119,10 @@ module.exports = (request, bearerToken) => {
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send({
+					.send([{
 						participantId: 1,
 						points: 10
-					})
+					}])
 					.expect(400, done)
 			})
 
@@ -125,10 +130,10 @@ module.exports = (request, bearerToken) => {
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send({
+					.send([{
 						participantId: 1,
 						placeId: 1,
-					})
+					}])
 					.expect(400, done)
 			})
 
@@ -136,19 +141,51 @@ module.exports = (request, bearerToken) => {
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send({
+					.send([{
 						participantId: 1,
 						placeId: 1,
 						points: 10
-					})
+					}])
 					.expect(200)
 					.expect(res => {
-						let vote = res.body
+						let votes = res.body
+						votes.should.be.an('array').with.length(1)
+
+						let vote = votes[0]
 						vote.should.have.property('id')
 						vote.should.have.property('participantId').equal(1)
 						vote.should.have.property('placeId').equal(1)
 					})
 					.end(done)		
+			})
+			
+			it('successfully adds a bunch of votes', (done) => {
+				request
+					.post('/votes')
+					.set({ Authorization: bearerToken[1] })
+					.send([
+						{
+							participantId: 1,
+							placeId: 1,
+							points: 40
+						},
+						{
+							participantId: 1,
+							placeId: 2,
+							points: 30
+						},
+						{
+							participantId: 1,
+							placeId: 3,
+							points: 40
+						}
+					])
+					.expect(200)
+					.expect(res => {
+						let votes = res.body
+						votes.should.be.an('array').with.length(3)
+					})
+					.end(done)
 			})
 		})
 
