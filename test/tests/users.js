@@ -198,6 +198,49 @@ module.exports = (request, bearerToken) => {
           // Ist die Resource wirklich gelöscht? Problem: Token!
         })
       })
+
+      describe('/groups', () => {
+        before(async () => {
+          await setup.resetData()
+        })
+
+        it('requires auth', (done) => {
+          request
+            .get('/users/1/groups')
+            .expect(401, done)
+        })
+
+        it('fails if user tries to access another users groups', (done) => {
+          request
+            .get('/users/1/groups')
+            .set({ Authorization: bearerToken[2] })
+            .expect(403, done)
+        })
+
+        it('sends a correct group collection', (done) => {
+          request
+            .get('/users/1/groups')
+            .set({ Authorization: bearerToken[1] })
+            .expect(200)
+            .expect(res => {
+              let groups = res.body
+              group.should.be.an('array').of.length(2)
+
+              let group = groups[0]
+              group.should.have.property('name')
+							group.should.have.property('defaultLunchTime')
+							group.should.have.property('defaultVoteEndingTime')
+							group.should.have.property('pointsPerDay')
+							group.should.have.property('maxPointsPerVote')
+							group.should.have.property('minPointsPerVote')
+							group.should.have.property('members').which.is.an('array')
+							group.should.have.property('lunchbreaks').which.is.an('array')
+							group.should.have.property('places').which.is.an('array')
+							group.should.have.property('foodTypes').which.is.an('array')
+            })
+            .end(done)
+        })
+      })
     })
   })
 }
