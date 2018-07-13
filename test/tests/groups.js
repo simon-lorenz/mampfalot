@@ -231,6 +231,38 @@ module.exports = (request, bearerToken) => {
 				})
 			})
 
+			describe.skip('DELETE', () => {
+				beforeEach(async () => {
+					await setup.resetData()
+				})
+	
+				it('requires auth', (done) => {
+					request
+						.delete('/groups/1')
+						.expect(401, done)
+				})
+	
+				it('requires admin rights', (done) => {
+					request
+						.delete('/groups/1')
+						.set({ Authorization: bearerToken[2] })
+						.expect(403, done)
+				})
+	
+				it('deletes a group successfully', (done) => {
+					request
+						.delete('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+						.then(() => {
+							request
+								.get('/groups/1')
+								.set({ Authorization: bearerToken[1] })
+								.expect(404, done)
+						})
+				})
+			})
+
 			describe('/lunchbreaks', () => {
 				describe('GET', () => {
 					it('sends a valid lunchbreak collection', (done) => {
