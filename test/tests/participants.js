@@ -4,6 +4,17 @@ module.exports = (request, bearerToken) => {
 	return describe('/participants', () => {
 		describe('/:participantId', () => {
 			describe('GET', () => {
+				before(async () => {
+					await setup.resetData()
+				})
+				
+				it('fails if userId does not match', (done) => {
+					request
+						.get('/participants/1')
+						.set({ Authorization: bearerToken[2] })
+						.expect(403, done)
+				})
+
 				it('sends a valid participant resource', (done) => {
 					request
 						.get('/participants/1')
@@ -19,6 +30,7 @@ module.exports = (request, bearerToken) => {
 						})
 						.end(done)
 				})
+
 			})
 
 			describe('DELETE', () => {

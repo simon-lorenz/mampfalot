@@ -4,7 +4,7 @@ const middleware = require('../middleware/participant')
 
 router.param('participantId', middleware.loadParticipant)
 
-router.route('/:participantId').get((req, res, next) => {
+router.route('/:participantId').get(middleware.userIsParticipant, (req, res, next) => {
 	res.send(res.locals.participant)
 })
 
