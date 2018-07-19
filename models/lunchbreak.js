@@ -5,9 +5,6 @@ module.exports = (sequelize, DataTypes) => {
 			primaryKey: true,
 			autoIncrement: true
 		},
-		result: {
-			type: DataTypes.INTEGER
-		},
 		date: {
 			type: DataTypes.DATEONLY,
 			allowNull: false,
@@ -40,7 +37,7 @@ module.exports = (sequelize, DataTypes) => {
 		models.Lunchbreak.belongsTo(models.Group)
 		models.Lunchbreak.hasMany(models.Comment)
 		models.Lunchbreak.hasMany(models.Participant)
-		models.Lunchbreak.belongsTo(models.Place)
+		models.Lunchbreak.belongsTo(models.Place, { foreignKey: { name: 'result', allowNull: true }})
 	}
 
 	return Lunchbreak
