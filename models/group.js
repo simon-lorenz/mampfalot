@@ -1,3 +1,5 @@
+const Util = require('../util/util')
+
 module.exports = (sequelize, DataTypes) => {
 	const Group = sequelize.define('Group', {
 		id: {
@@ -77,6 +79,33 @@ module.exports = (sequelize, DataTypes) => {
 			through: models.GroupMembers,
 			as: 'members'
 		})
+	}
+
+	Group.loadScopes = function (models) {
+
+		Group.addScope('ofUser', function(user) {
+			return {
+				where: {
+					id: { 
+						in: Util.getGroupIds(user, false) 
+					}
+				},
+				include: [
+					models.Place,
+					models.FoodType,
+					models.Lunchbreak,
+					{
+						model: models.User,
+						as: 'members',
+						through: {
+							as: 'config',
+							attributes: ['color', 'authorizationLevel']
+						}
+					}
+				]
+			}
+		})
+		
 	}
 
 	return Group
