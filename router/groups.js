@@ -9,7 +9,15 @@ const commonMiddleware = require('./../middleware/common')
 const foodTypeMiddleware = require('./../middleware/foodTypes')
 const Sequelize = require('sequelize')
 
-router.route('/').get(middleware.findAllGroups)
+router.route('/').get((req, res, next) => {
+	Group.scope({ method: ['ofUser', res.locals.user]}).findAll()
+	.then(groups => {
+		res.send(groups)
+	})
+	.catch(err => {
+		next(err)	
+	})
+})
 
 router.route('/').post(async (req, res, next) => {
 	try {
