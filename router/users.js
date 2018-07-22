@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const User = require('./../models').User
+const Group = require('../models').Group
 const Sequelize = require('sequelize')
 const authMiddleware = require('./../middleware/auth')
 const commonMiddleware = require('./../middleware/common')
@@ -113,7 +114,13 @@ router.route('/:userId/groups').get((req, res, next) => {
 		return
 	}
 
-	res.send(res.locals.user.groups)
+	Group.scope({ method: ['ofUser', res.locals.user]}).findAll()
+	.then(groups => {
+		res.send(groups)
+	})
+	.catch(err => {
+		next(err)	
+	})
 })
 
 module.exports = router

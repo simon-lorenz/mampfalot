@@ -6,33 +6,6 @@ const Lunchbreak = require('./../models').Lunchbreak
 const Util = require('./../util/util')
 
 module.exports = {
-  findAllGroups: function (req, res, next) {
-    Group.findAll({
-			where: {
-				id: { in: Util.getGroupIds(res.locals.user, false)
-				}
-			},
-			include: [
-				Place,
-				FoodType,
-				Lunchbreak,
-				{
-					model: User,
-					as: 'members',
-					through: {
-						as: 'config',
-						attributes: ['color', 'authorizationLevel']
-					}
-				}
-			]
-		})
-		.then(groups => {
-			res.send(groups)
-    })
-    .catch(err => {
-      next(err)
-    })
-  },
   loadGroup: async function (req, res, next) {
     try {
       res.locals.group = await Group.findOne({
