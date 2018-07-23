@@ -33,6 +33,11 @@ module.exports = (request, bearerToken) => {
               lunchbreak.should.have.property('date').equal('2018-06-25')
               lunchbreak.should.have.property('lunchTime').equal('12:30:00')
               lunchbreak.should.have.property('voteEndingTime').equal('12:25:00')
+              lunchbreak.should.have.property('comments')
+              lunchbreak.should.have.property('participants')
+              let firstParticipant = lunchbreak.participants[0]
+              firstParticipant.should.have.property('votes')
+              firstParticipant.should.have.property('user')
             })
             .end(done)
           })

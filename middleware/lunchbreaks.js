@@ -4,6 +4,8 @@ const Group = require('./../models').Group
 const Comment = require('../models').Comment
 const Participant = require('../models').Participant
 const Place = require('./../models').Place
+const Vote = require('../models').Vote
+const User = require('../models').User
 
 module.exports = {
 	loadLunchbreak: function(req, res, next) {
@@ -16,7 +18,8 @@ module.exports = {
 					model:Participant,
 					attributes: {
 						exclude: ['amountSpent']
-					}
+					},
+					include: [ Vote, User ]
 				}, 
 				{
 					model: Comment
