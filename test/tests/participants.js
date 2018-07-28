@@ -23,6 +23,7 @@ module.exports = (request, bearerToken) => {
 						.expect(res => {
 							let participant = res.body
 							participant.should.have.property('id').equal(1)
+							participant.should.have.property('user')
 							participant.should.have.property('lunchbreakId').equal(1)
 							participant.should.have.property('userId').equal(1)
 							participant.should.have.property('lunchTimeSuggestion')
