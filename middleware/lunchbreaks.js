@@ -19,8 +19,15 @@ module.exports = {
 					attributes: {
 						exclude: ['amountSpent']
 					},
-					include: [ Vote, User ]
-				}, 
+					include: [ 
+						{
+							model:Vote,
+							include: [ Place ]
+						},
+						{
+							model: User
+						}]
+				},
 				{
 					model: Comment
 				}

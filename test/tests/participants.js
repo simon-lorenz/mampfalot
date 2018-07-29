@@ -31,6 +31,9 @@ module.exports = (request, bearerToken) => {
 							let participant = res.body
 							participant.should.have.property('id').equal(1)
 							participant.should.have.property('user')
+							participant.should.have.property('votes')
+							let firstVote = participant.votes[0]
+							firstVote.should.have.property('place')
 							participant.should.have.property('lunchbreakId').equal(1)
 							participant.should.have.property('userId').equal(1)
 							participant.should.have.property('lunchTimeSuggestion')

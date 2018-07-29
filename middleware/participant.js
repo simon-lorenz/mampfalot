@@ -2,6 +2,7 @@ const Participant = require('../models').Participant
 const Vote = require('../models').Vote
 const User = require('../models').User
 const Lunchbreak = require('../models').Lunchbreak
+const Place = require('../models').Place
 
 module.exports = {
 	loadParticipant: function(req, res, next) {
@@ -12,7 +13,11 @@ module.exports = {
 			where: {
 				id: req.params.participantId
 			},
-			include: [ Vote, User, Lunchbreak ]
+			include: [ 
+				{
+					model: Vote,
+					include: [Place]
+				}, User, Lunchbreak ]
 		})
 		.then(participant => {
 			if(!participant) {

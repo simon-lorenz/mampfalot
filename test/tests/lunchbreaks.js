@@ -37,6 +37,8 @@ module.exports = (request, bearerToken) => {
               lunchbreak.should.have.property('participants')
               let firstParticipant = lunchbreak.participants[0]
               firstParticipant.should.have.property('votes')
+              let firstVote = firstParticipant.votes[0]
+              firstVote.should.have.property('place')
               firstParticipant.should.have.property('user')
             })
             .end(done)
