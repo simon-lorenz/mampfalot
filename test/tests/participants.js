@@ -8,13 +8,20 @@ module.exports = (request, bearerToken) => {
 					await setup.resetData()
 				})
 
-				it('fails if userId does not match', (done) => {
+				it('fails if user is no group member', (done) => {
 					request
 						.get('/participants/1')
-						.set({ Authorization: bearerToken[2] })
+						.set({ Authorization: bearerToken[3] })
 						.expect(403, done)
 				})
 
+				it('succeeds if user is group member', (done) => {
+					request
+						.get('/participants/1')
+						.set({ Authorization: bearerToken[2] })
+						.expect(200, done)
+				})
+				
 				it('sends a valid participant resource', (done) => {
 					request
 						.get('/participants/1')
@@ -27,7 +34,7 @@ module.exports = (request, bearerToken) => {
 							participant.should.have.property('lunchbreakId').equal(1)
 							participant.should.have.property('userId').equal(1)
 							participant.should.have.property('lunchTimeSuggestion')
-							participant.should.have.property('amountSpent')
+							participant.should.not.have.property('amountSpent')
 						})
 						.end(done)
 				})

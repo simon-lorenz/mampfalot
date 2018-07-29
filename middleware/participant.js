@@ -1,14 +1,18 @@
 const Participant = require('../models').Participant
 const Vote = require('../models').Vote
 const User = require('../models').User
+const Lunchbreak = require('../models').Lunchbreak
 
 module.exports = {
 	loadParticipant: function(req, res, next) {
 		Participant.findOne({
+			attributes: {
+				exclude: ['amountSpent']
+			},
 			where: {
 				id: req.params.participantId
 			},
-			include: [ Vote, User ]
+			include: [ Vote, User, Lunchbreak ]
 		})
 		.then(participant => {
 			if(!participant) {
