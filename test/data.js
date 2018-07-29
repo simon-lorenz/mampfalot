@@ -38,6 +38,12 @@ module.exports = {
 			userId: 2, 
 			authorizationLevel: 0,
 			color: '24c4ee'
+		},
+		{
+			groupId: 2,
+			userId: 3,
+			authorizationLevel: 1,
+			color: '4e48ff'
 		}
 	],
 	groups: [
