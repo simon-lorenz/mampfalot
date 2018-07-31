@@ -1,7 +1,6 @@
 const express = require('express')
 const router = express.Router()
 const middleware = require('../middleware/participant')
-const commonMiddleware = require('../middleware/common')
 
 router.param('participantId', middleware.loadParticipant)
 

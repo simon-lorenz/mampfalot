@@ -2,7 +2,6 @@ const express = require('express')
 const router = express.Router()
 const User = require('./../models').User
 const Group = require('../models').Group
-const Sequelize = require('sequelize')
 const authMiddleware = require('./../middleware/auth')
 const commonMiddleware = require('./../middleware/common')
 const bcrypt = require('bcrypt')

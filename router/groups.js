@@ -1,5 +1,4 @@
 const router = require('express').Router()
-const FoodType = require('./../models').FoodType
 const Place = require('./../models').Place
 const Group = require('./../models').Group
 const GroupMembers = require('./../models').GroupMembers
@@ -7,7 +6,6 @@ const Lunchbreak = require('./../models').Lunchbreak
 const middleware = require('./../middleware/groups')
 const commonMiddleware = require('./../middleware/common')
 const foodTypeMiddleware = require('./../middleware/foodTypes')
-const Sequelize = require('sequelize')
 
 router.route('/').get((req, res, next) => {
 	Group.scope({ method: ['ofUser', res.locals.user]}).findAll()

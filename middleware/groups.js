@@ -3,7 +3,6 @@ const FoodType = require('./../models').FoodType
 const Place = require('./../models').Place
 const User = require('./../models').User
 const Lunchbreak = require('./../models').Lunchbreak
-const Util = require('./../util/util')
 
 module.exports = {
   loadGroup: async function (req, res, next) {

@@ -1,6 +1,5 @@
 const express = require('express')
 const router = express.Router()
-const FoodType = require('./../models').FoodType
 const middleware = require('../middleware/foodTypes')
 const commonMiddleware = require('../middleware/common')
 

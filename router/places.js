@@ -3,7 +3,6 @@ const router = express.Router()
 const Place = require('./../models').Place
 const Group = require('../models').Group
 const FoodType = require('../models').FoodType
-const util = require('./../util/util')
 const commonMiddleware = require('../middleware/common')
 const middleware = require('../middleware/places')
 
