@@ -167,7 +167,34 @@ module.exports = (request, bearerToken) => {
 								.auth('neu@mail.com', 'hurdur')
 								.expect(200, done)
 						})
-        })
+						.catch((err) => {
+							done(err)
+						})
+				})
+				
+				it('does not hash the password again if it has not changed', (done) => {
+					request
+            .post('/users/1')
+            .set({ Authorization: bearerToken[1]})
+            .send({ name: 'Neuer Name', email: 'neu@mail.com'})
+						.expect(200)
+						.expect(res => {
+							let newUser = res.body
+							newUser.should.have.property('id').equal(1)
+							newUser.should.have.property('name').equal('Neuer Name')
+							newUser.should.have.property('email').equal('neu@mail.com')
+							newUser.should.not.have.property('password')
+						})
+						.then(() => {
+							request
+								.get('/auth')
+								.auth('neu@mail.com', '123456')
+								.expect(200, done)
+						})
+						.catch((err) => {
+							done(err)
+						})
+				})
       })
 
       describe('DELETE', () => {
