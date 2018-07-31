@@ -146,13 +146,29 @@ module.exports = (request, bearerToken) => {
             .set({ Authorization: bearerToken[1]})
             .send({})
             .expect(400, done)
-        })
+				})
+				
+				it('fails if request does not contain the current password', (done) => {
+					request
+						.post('/users/1')
+						.set({ Authorization: bearerToken[1] })
+						.send({ password: 'new!' })
+						.expect(400, done)
+				})
+
+				it('fails if the current password does not match', (done) => {
+					request
+						.post('/users/1')
+						.set({ Authorization: bearerToken[1] })
+						.send({ password: 'new!', currentPassword: 'wrongPassword'})
+						.expect(401, done)
+				})
 
         it('updates a user correctly', (done) => {
           request
             .post('/users/1')
             .set({ Authorization: bearerToken[1]})
-            .send({ name: 'Neuer Name', email: 'neu@mail.com', password: 'hurdur'})
+            .send({ name: 'Neuer Name', email: 'neu@mail.com', password: 'hurdur', currentPassword: '123456'})
 						.expect(200)
 						.expect(res => {
 							let newUser = res.body

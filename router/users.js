@@ -5,6 +5,7 @@ const Group = require('../models').Group
 const Sequelize = require('sequelize')
 const authMiddleware = require('./../middleware/auth')
 const commonMiddleware = require('./../middleware/common')
+const bcrypt = require('bcrypt')
 
 router.route('/').post((req, res, next) => {
 	User.create({
@@ -43,25 +44,37 @@ router.route('/:userId').get((req, res, next) => {
 })
 
 router.route('/:userId').post(async (req, res, next) => {
-	let user = await User.findOne({
+	let user = await User.unscoped().findOne({
 		where: {
 			id: req.params.userId
 		}
 	})
-
+	
 	if (!user) {
 		res.status(404).send()
 		return
 	}
-
+	
 	if (user.id !== res.locals.user.id) {
 		res.status(403).send()
 		return
 	}
-
+	
 	if (!(req.body.name || req.body.email || req.body.password)) {
 		res.status(400).send('Please provide at least one of the following parameter: name, email, password')
 		return
+	}
+	
+	if (req.body.password) {
+		if (!(req.body.currentPassword)) {
+			res.status(400).send('Please provide the current password')
+			return
+		}
+
+		if (!bcrypt.compareSync(req.body.currentPassword, user.password)) {
+			res.status(401).send('Current password does not match')
+			return
+		}
 	}
 
 	if (req.body.name) { user.name = req.body.name.trim() } 
