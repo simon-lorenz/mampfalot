@@ -153,14 +153,19 @@ module.exports = (request, bearerToken) => {
             .post('/users/1')
             .set({ Authorization: bearerToken[1]})
             .send({ name: 'Neuer Name', email: 'neu@mail.com', password: 'hurdur'})
-            .expect(200, (err, res) => {
-              let newUser = res.body
-              newUser.should.have.property('id').equal(1)
-              newUser.should.have.property('name').equal('Neuer Name')
-              newUser.should.have.property('email').equal('neu@mail.com')
-              // TODO: Passwort update?
-              done()
-            })
+						.expect(200)
+						.expect(res => {
+							let newUser = res.body
+							newUser.should.have.property('id').equal(1)
+							newUser.should.have.property('name').equal('Neuer Name')
+							newUser.should.have.property('email').equal('neu@mail.com')
+						})
+						.then(() => {
+							request
+								.get('/auth')
+								.auth('neu@mail.com', 'hurdur')
+								.expect(200, done)
+						})
         })
       })
 

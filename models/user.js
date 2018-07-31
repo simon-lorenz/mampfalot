@@ -55,10 +55,10 @@ module.exports = (sequelize, DataTypes) => {
 	User.beforeCreate((user, options) => {
 		user.password = bcrypt.hashSync(user.password, 12)
 	})
-	
-	User.beforeBulkUpdate((user, options) => {
-		if (user.attributes.password) {
-			user.attributes.password = bcrypt.hashSync(user.attributes.password, 12)
+
+	User.beforeSave((user, options) => {
+		if (user.changed('password')) {
+			user.password = bcrypt.hashSync(user.password, 12)
 		}
 	})
 
