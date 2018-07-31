@@ -159,6 +159,7 @@ module.exports = (request, bearerToken) => {
 							newUser.should.have.property('id').equal(1)
 							newUser.should.have.property('name').equal('Neuer Name')
 							newUser.should.have.property('email').equal('neu@mail.com')
+							newUser.should.not.have.property('password')
 						})
 						.then(() => {
 							request

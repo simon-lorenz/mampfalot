@@ -68,8 +68,9 @@ router.route('/:userId').post(async (req, res, next) => {
 	if (req.body.email) { user.email = req.body.email.trim() }
 	if (req.body.password) { user.password = req.body.password }
 
-	user.save().then(test => {
-		res.send(test)
+	user.save().then(newUser => {
+		newUser.password = undefined
+		res.send(newUser)
 		return
 	})
 	.catch(err => {
