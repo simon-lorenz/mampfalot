@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt')
 const User = require('./../models').User
 const middleware = require('./../middleware/auth')
 
-router.route('/').get(middleware.basicAuth, async (req, res) => {
+router.route('/').get(middleware.basicAuth, async (req, res, next) => {
 	try {
 		let user = await User.unscoped().findOne({ 
 			where: { 
@@ -14,9 +14,19 @@ router.route('/').get(middleware.basicAuth, async (req, res) => {
 			attributes: ['id', 'name', 'email', 'password'],
 			raw: true 
 		})
-
+		
 		// Prüfe, ob der User vorhanden ist und ob sein Passwort übereinstimmt
-		if (!user || !bcrypt.compareSync(res.locals.credentials.password, user.password)) {
+		if (user) {
+				try {
+					let passwordMatch = await bcrypt.compare(res.locals.credentials.password, user.password)
+					if (!passwordMatch) {
+						res.status(401).send('Invalid credentials.')
+						return
+					}
+				} catch (error) {
+					next(error)
+				}
+		} else {
 			res.status(401).send('Invalid credentials.')
 			return
 		}
