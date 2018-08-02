@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
+  "engines": {
+    "node": "8.11.3"
+  },
   "scripts": {
     "test": "mocha test/index.js --exit"
   },
