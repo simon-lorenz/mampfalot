@@ -24,7 +24,11 @@ module.exports = (request, bearerToken) => {
 						user.should.have.property('name').equal(newUser.name)
 						user.should.have.property('email').equal(newUser.email)
 						user.should.not.have.property('password')
-						done()
+						
+						request
+							.get('/auth')
+							.auth(newUser.email, newUser.password)
+							.expect(200, done)
 					})
 			})
 
