@@ -53,21 +53,21 @@ module.exports = (sequelize, DataTypes) => {
 	}
 	
 	User.beforeCreate((user, options) => {
-		user.password = bcrypt.hashSync(user.password, 12)
+		let salt = bcrypt.genSaltSync(12, 'a')
+		user.password = bcrypt.hashSync(user.password, salt)
 	})
 
-	User.beforeBulkCreate(async (instances, options) => {
-		let rounds
-		process.env.NODE_ENV === 'test' ? rounds = 1 : rounds = 12
-
+	User.beforeBulkCreate((instances, options) => {
 		for (instance of instances) {
-			instance.password = await bcrypt.hash(instance.password, rounds)
+			let salt = bcrypt.genSaltSync(12, 'a')
+			instance.password = bcrypt.hashSync(instance.password, salt)
 		}
 	})
 	
 	User.beforeUpdate((user, options) => {
 		if (user.changed('password')) {
-			user.password = bcrypt.hashSync(user.password, 12)
+			let salt = bcrypt.genSaltSync(12, 'a')
+			user.password = bcrypt.hashSync(user.password, salt)
 		}
 	})
 
