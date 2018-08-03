@@ -3,25 +3,26 @@ const Participant = require('../models').Participant
 const Place = require('../models').Place
 
 module.exports = {
-	loadVote(req, res, next) {
-		Vote.findOne({
-			where: {
-				id: req.params.voteId
-			},
-			include: [ Participant, Place ]
-		})
-		.then(vote => {
-			if (!vote) {
-				res.status(404).send()
-			} else if (vote.participant.userId !== res.locals.user.id) {
-				res.status(403).send()
-			} else {
-				res.locals.vote = vote
-				next()
+	async loadVote(req, res, next) {
+		try {
+			res.locals.vote = await Vote.findOne({
+				where: {
+					id: req.params.voteId
+				},
+				include: [ Participant, Place ]
+			})
+
+			if (!res.locals.vote) { 
+				res.status(404).send() 
 			}
-		})
-		.catch(err => {
-			next(err)
-		})
+			else if (res.locals.vote.participant.userId !== res.locals.user.id) { 
+				res.status(403).send() 
+			}
+			else { 
+				next() 
+			}
+		} catch (error) {
+			next(error)
+		}
 	}
 }
