@@ -97,19 +97,27 @@ router.route('/').post(async (req, res, next) => {
 		return
 	}
 
-	await Vote.destroy({
-		where: {
-			participantId: participantId
-		}
-	})
+	try {
+		await Vote.destroy({
+			where: {
+				participantId: participantId
+			}
+		})
 
-	Vote.bulkCreate(votes)
-	.then(votes => {
-		res.send(votes)
-	})
-	.catch(err => {
-		next(err)
-	})
+		await Vote.bulkCreate(votes)
+
+		let newVotes = await Vote.findAll({
+			where: {
+				participantId
+			},
+			include: [ Participant, Place ]
+		})
+		
+		res.send(newVotes)
+
+	} catch (error) {
+		next(error)
+	}
 })
 
 router.param('voteId', middleware.loadVote)

@@ -1,5 +1,6 @@
 const Vote = require('../models').Vote
 const Participant = require('../models').Participant
+const Place = require('../models').Place
 
 module.exports = {
 	loadVote(req, res, next) {
@@ -7,7 +8,7 @@ module.exports = {
 			where: {
 				id: req.params.voteId
 			},
-			include: [ Participant ]
+			include: [ Participant, Place ]
 		})
 		.then(vote => {
 			if (!vote) {

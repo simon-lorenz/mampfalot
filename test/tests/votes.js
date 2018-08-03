@@ -173,6 +173,8 @@ module.exports = (request, bearerToken) => {
 						vote.should.have.property('id')
 						vote.should.have.property('participantId').equal(1)
 						vote.should.have.property('placeId').equal(1)
+						vote.should.have.property('place').which.is.an('object')
+						vote.should.have.property('points').equal(40)
 					})
 					.end(done)		
 			})
@@ -202,6 +204,14 @@ module.exports = (request, bearerToken) => {
 					.expect(res => {
 						let votes = res.body
 						votes.should.be.an('array').with.length(3)
+
+						let firstVote = votes[0]
+						firstVote.should.have.property('id')
+						firstVote.should.have.property('participantId').equal(1)
+						firstVote.should.have.property('placeId').equal(1)
+						firstVote.should.have.property('points').equal(40)
+						firstVote.should.have.property('place').which.is.an('object')
+
 					})
 					.end(done)
 			})
@@ -243,6 +253,7 @@ module.exports = (request, bearerToken) => {
 							vote.should.have.property('id').equal(1)
 							vote.should.have.property('participantId').equal(1)
 							vote.should.have.property('placeId').equal(2)
+							vote.should.have.property('place').which.is.an('object')
 							vote.should.have.property('points').equal(30)
 						}) 
 						.end(done)
