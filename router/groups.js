@@ -94,7 +94,7 @@ router.route('/:groupId/members').post(commonMiddleware.userIsGroupAdmin, (req, 
 	})
 })
 
-router.route('/:groupId/members/:userId').post(commonMiddleware.userIsGroupMember, (req, res, next) => {
+router.route('/:groupId/members/:userId').post((req, res, next) => {
 	let data = {}
 
 	if (res.locals.user.id !== parseInt(req.params.userId)) {
@@ -140,7 +140,7 @@ router.route('/:groupId/members/:userId').post(commonMiddleware.userIsGroupMembe
 	})
 })
 
-router.route('/:groupId/members/:userId').delete(commonMiddleware.userIsGroupMember, (req, res, next) => {
+router.route('/:groupId/members/:userId').delete((req, res, next) => {
 	if (res.locals.user.id !== parseInt(req.params.userId)) {
 		if(!res.locals.user.isGroupAdmin(parseInt(req.params.groupId))) {
 			res.status(403).send()

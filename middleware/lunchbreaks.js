@@ -80,30 +80,5 @@ module.exports = {
 		}
 	
 		next()
-	},
-	loadGroupInfoByLunchbreakId: async function (req, res, next) {
-		let group
-		try {
-			group = await Lunchbreak.findOne({
-				where: {
-					id: req.params.lunchbreakId
-				},
-				include: [ 
-					{
-						model: Group,
-						include: [ Place ]
-					}
-				]
-			})
-			.then(lunchbreak => {
-				return lunchbreak.group.toJSON()
-			})
-	
-			res.locals.groupInfo = group
-			next()
-		} catch (error) {
-			console.log('loadGroupConfiguration() failed: ' + error)
-			res.status(500).send()
-		}
 	}
 }
