@@ -162,9 +162,7 @@ router.route('/:groupId/members/:userId').delete((req, res, next) => {
 	})
 })
 
-router.route('/:groupId/lunchbreaks').get((req, res) => {
-	res.send(res.locals.group.lunchbreaks)
-})
+router.route('/:groupId/lunchbreaks').get(middleware.loadLunchbreak)
 
 router.route('/:groupId/lunchbreaks').post(async (req, res, next) => {
 	let lb = await Lunchbreak.findOne({

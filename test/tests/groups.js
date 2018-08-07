@@ -285,6 +285,27 @@ module.exports = (request, bearerToken) => {
 								done()
 							})
 					})
+
+					it('accepts date query', (done) => {
+						request
+							.get('/groups/1/lunchbreaks')
+							.set({
+								Authorization: bearerToken[1]
+							})
+							.query({
+								date: '2018-06-26'
+							})
+							.expect(200)
+							.expect(res => {
+								let lunchbreak = res.body[0]
+								lunchbreak.should.be.an('object')
+								lunchbreak.should.have.property('id').equal(3)
+								lunchbreak.should.have.property('date').equal('2018-06-26')
+								lunchbreak.should.have.property('lunchTime').equal('12:30:00')
+								lunchbreak.should.have.property('voteEndingTime').equal('12:25:00')
+							})
+							.end(done)
+					})
 				})
 
 				describe('POST', () => {

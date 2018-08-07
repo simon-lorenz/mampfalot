@@ -50,5 +50,23 @@ module.exports = {
 		} catch (error) {
 			next(error)
 		}
+	},
+	loadLunchbreak: async function (req, res, next) {
+		let finder = {
+			where: {
+				groupId: req.params.groupId
+			}
+		}
+
+		if (req.query.date) {
+			finder.where.date = req.query.date
+		}
+
+		try {
+			let lunchbreak = await Lunchbreak.findAll(finder)
+			res.send(lunchbreak)
+		} catch (error) {
+			next(error)
+		}
 	}
 }
