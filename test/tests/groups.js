@@ -229,6 +229,32 @@ module.exports = (request, bearerToken) => {
 							done()
 						})
 				})
+
+				it('converts string numbers into integers', (done) => {
+					request
+						.post('/groups/1')
+						.set( { Authorization: bearerToken[1]})
+						.send({
+							name: 'New name',
+							defaultLunchTime: '14:00:00',
+							defaultVoteEndingTime: '13:30:00',
+							pointsPerDay: '300',
+							maxPointsPerVote: '100',
+							minPointsPerVote: '50'
+						})
+						.expect(200)
+						.expect(res => {
+							let group = res.body
+							group.should.have.property('id').equal(1)
+							group.should.have.property('name').equal('New name')
+							group.should.have.property('defaultLunchTime').equal('14:00:00')
+							group.should.have.property('defaultVoteEndingTime').equal('13:30:00')
+							group.should.have.property('pointsPerDay').equal(300)
+							group.should.have.property('maxPointsPerVote').equal(100)
+							group.should.have.property('minPointsPerVote').equal(50)
+						})
+						.end(done)
+				})
 			})
 
 			describe.skip('DELETE', () => {

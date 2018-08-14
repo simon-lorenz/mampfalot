@@ -61,9 +61,9 @@ router.route('/:groupId').post(commonMiddleware.userIsGroupAdmin, async (req, re
 	if (req.body.name) { group.name = req.body.name }
 	if (req.body.defaultLunchTime) { group.defaultLunchTime = req.body.defaultLunchTime }
 	if (req.body.defaultVoteEndingTime) { group.defaultVoteEndingTime = req.body.defaultVoteEndingTime }
-	if (req.body.pointsPerDay) { group.pointsPerDay = req.body.pointsPerDay }
-	if (req.body.maxPointsPerVote) { group.maxPointsPerVote = req.body.maxPointsPerVote }
-	if (req.body.minPointsPerVote) { group.minPointsPerVote = req.body.minPointsPerVote }
+	if (req.body.pointsPerDay) { group.pointsPerDay = parseInt(req.body.pointsPerDay) }
+	if (req.body.maxPointsPerVote) { group.maxPointsPerVote = parseInt(req.body.maxPointsPerVote) }
+	if (req.body.minPointsPerVote) { group.minPointsPerVote = parseInt(req.body.minPointsPerVote) }
 
 	group
 		.save()
