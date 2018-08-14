@@ -34,7 +34,17 @@ module.exports = (sequelize, DataTypes) => {
 			allowNull: false,
 			defaultValue: 100,
 			validate: {
-				min: 1
+				min: 1,
+				equalOrGreaterThanMinPointsPerVote(value) {
+					if (value < this.minPointsPerVote) {
+						throw value + ' is < ' + this.minPointsPerVote
+					}
+				},
+				equalOrLessThanPointsPerDay(value) {
+					if (value > this.pointsPerDay) {
+						throw value + ' is > ' + this.pointsPerDay
+					}
+				},
 			}
 		},
 		minPointsPerVote: {
@@ -42,7 +52,17 @@ module.exports = (sequelize, DataTypes) => {
 			allowNull: false,
 			defaultValue: 10,
 			validate: {
-				min: 1
+				min: 1,
+				equalOrLessThanMaxPointsPerVote(value) {
+					if (value > this.maxPointsPerVote) {
+						throw value + ' is > ' + this.maxPointsPerVote
+					}
+				},
+				equalOrLessThanPointsPerDay(value) {
+					if (value > this.pointsPerDay) {
+						throw value + ' is > ' + this.pointsPerDay
+					}	
+				}
 			}
 		}
 	}, {
@@ -53,16 +73,6 @@ module.exports = (sequelize, DataTypes) => {
 			plural: 'groups'
 		},
 		validate: {
-			minPointsPerVoteValid() {
-				if (this.minPointsPerVote > this.maxPointsPerVote || this.minPointsPerVote > this.pointsPerDay) {
-					throw ''
-				}
-			},
-			maxPointsPerVoteValid() {
-				if (this.maxPointsPerVote < this.minPointsPerVote || this.maxPointsPerVote > this.pointsPerDay) {
-					throw ''
-				}
-			},
 			times() {
 				if (this.defaultLunchTime < this.defaultVoteEndingTime) {
 					throw 'DefaultLunchTime has to be greater or equal to defaultVoteEndingTime'
