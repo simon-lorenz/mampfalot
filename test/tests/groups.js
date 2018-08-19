@@ -502,9 +502,14 @@ module.exports = (request, bearerToken) => {
 							.expect(200)
 							.expect(res => {
 								let member = res.body
-								member.should.have.property('groupId').equal(1)
-								member.should.have.property('color').equal(newMember.color)
-								member.should.have.property('authorizationLevel').equal(newMember.authorizationLevel)
+								member.should.have.property('id').equal(3)
+								member.should.have.property('name').equal('Philipp Loten')
+								member.should.have.property('email').equal('philipp.loten@company.com')
+								member.should.have.property('config').which.is.an('object')
+
+								let config = member.config
+								config.should.have.property('color').equal(newMember.color)
+								config.should.have.property('authorizationLevel').equal(newMember.authorizationLevel)
 							})
 							.end(done)
 					})
@@ -520,9 +525,14 @@ module.exports = (request, bearerToken) => {
 							.expect(200)
 							.expect(res => {
 								let member = res.body
-								member.should.have.property('groupId').equal(1)
-								member.should.have.property('color')
-								member.should.have.property('authorizationLevel').equal(0)
+								member.should.have.property('id').equal(3)
+								member.should.have.property('name').equal('Philipp Loten')
+								member.should.have.property('email').equal('philipp.loten@company.com')
+								member.should.have.property('config').which.is.an('object')
+
+								let config = member.config
+								config.should.have.property('color')
+								config.should.have.property('authorizationLevel')
 							})
 							.end(done)
 					})

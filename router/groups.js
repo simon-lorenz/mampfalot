@@ -1,6 +1,7 @@
 const router = require('express').Router()
 const Place = require('./../models').Place
 const Group = require('./../models').Group
+const User = require('../models').User
 const GroupMembers = require('./../models').GroupMembers
 const Lunchbreak = require('./../models').Lunchbreak
 const middleware = require('./../middleware/groups')
@@ -87,7 +88,31 @@ router.route('/:groupId/members').post(commonMiddleware.userIsGroupAdmin, (req, 
 		authorizationLevel: req.body.authorizationLevel
 	})	
 	.then(member => {
-		res.send(member)
+		return Group.findOne({
+			where: {
+				id: res.locals.group.id
+			},
+			attributes: [],
+			include: [
+				{
+					model: User,
+					as: 'members',
+					through: {
+						as: 'config',
+						attributes: ['color', 'authorizationLevel']
+					},
+					where: {
+						id: member.userId
+					}
+				}
+			]
+		})
+		.then(group => {
+			res.send(group.members[0])
+		})
+		.catch(err => {
+			next(err)
+		})
 	})
 	.catch(err => {
 		next(err)
