@@ -23,6 +23,31 @@ router.route('/').post((req, res, next) => {
 
 router.use([authMiddleware.verifyToken, commonMiddleware.loadUser])
 
+router.route('/').get((req, res, next) => {
+	let email = req.query.email
+
+	if (!email) {
+		res.status(400).send('Please provide an email to search for.')
+		return
+	}
+
+	User.findOne({
+		attributes: {
+			exclude: ['password']
+		},
+		where: {
+			email
+		}
+	})
+	.then(user => {
+		if (!user) {
+			res.status(404).send()
+		} else {
+			res.send(user)
+		}
+	})
+})
+
 router.route('/:userId').get((req, res, next) => {
 	if (req.params.userId != res.locals.user.id) {
 		res.status(403).send()

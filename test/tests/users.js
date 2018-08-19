@@ -2,6 +2,49 @@ const setup = require('../setup')
 
 module.exports = (request, bearerToken) => {
 	return describe('/users', () => {
+		describe('GET', () => {
+			before(async () => {
+				await setup.resetData()
+			})
+
+			it('requires auth', (done) => {
+				request
+					.get('/users')
+					.expect(401, done)
+			})
+
+			it('fails if no email address is provided', (done) => {
+				request
+					.get('/users')
+					.set({ Authorization: bearerToken[1] })
+					.expect(400, done)
+			})
+
+			it('returns 404 if no user with this email exists', (done) => {
+				request
+					.get('/users')
+					.set({ Authorization: bearerToken[1] })
+					.query({ email: 'not.existing@email.com' })
+					.expect(404, done)
+			})
+
+			it('returns a user resource if email exists', (done) => {
+				request
+					.get('/users')
+					.set({ Authorization: bearerToken[1] })
+					.query({ email: 'philipp.loten@company.com' })
+					.expect(200)
+					.expect(res => {
+						let user = res.body
+						user.should.have.property('id').equal(3)
+						user.should.have.property('name').equal('Philipp Loten')
+						user.should.have.property('email').equal('philipp.loten@company.com')
+						user.should.not.have.property('password')
+					})
+					.end(done)
+			})
+		})
+
 		describe('POST', () => {
 			let newUser
 
