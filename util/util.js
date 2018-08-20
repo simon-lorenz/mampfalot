@@ -2,7 +2,7 @@ let Util = {}
 
 Util.getGroupIds = function (user, adminOnly = false) {
 	let groupIds = []
-	for (group of user.groups) {
+	for (let group of user.groups) {
 		if (adminOnly) {
 			if (group.config.isAdmin) {
 				groupIds.push(group.id)
@@ -15,7 +15,7 @@ Util.getGroupIds = function (user, adminOnly = false) {
 }
 
 Util.pointsInRange = function(votes, min, max) {
-	for (vote of votes) {
+	for (let vote of votes) {
 		if (!(vote.points >= min && vote.points <= max)) {
 			return false
 		}
@@ -26,7 +26,7 @@ Util.pointsInRange = function(votes, min, max) {
 
 Util.getPointSum = function (votes) {
 	let sum = 0
-	for (vote of votes) {
+	for (let vote of votes) {
 		sum += vote.points
 	}
 	return sum
