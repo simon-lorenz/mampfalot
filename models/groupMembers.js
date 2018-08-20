@@ -1,9 +1,9 @@
 module.exports = (sequelize, DataTypes) => {
 	const GroupMembers = sequelize.define('GroupMembers', {
-		authorizationLevel: {
-			type: DataTypes.SMALLINT,
+		isAdmin: {
+			type: DataTypes.BOOLEAN,
 			allowNull: false,
-			defaultValue: 0
+			defaultValue: false
 		},
 		color: {
 			type: DataTypes.STRING,

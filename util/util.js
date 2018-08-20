@@ -4,7 +4,7 @@ Util.getGroupIds = function (user, adminOnly = false) {
 	let groupIds = []
 	for (group of user.groups) {
 		if (adminOnly) {
-			if (group.config.authorizationLevel === 1) {
+			if (group.config.isAdmin) {
 				groupIds.push(group.id)
 			}
 		} else {

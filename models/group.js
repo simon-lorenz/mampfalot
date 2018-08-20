@@ -109,7 +109,7 @@ module.exports = (sequelize, DataTypes) => {
 						as: 'members',
 						through: {
 							as: 'config',
-							attributes: ['color', 'authorizationLevel']
+							attributes: ['color', 'isAdmin']
 						}
 					}
 				]

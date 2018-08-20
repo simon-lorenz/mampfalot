@@ -14,7 +14,7 @@ module.exports = {
 						model: Group,
 						attributes: ['id'],
 						through: {
-							attributes: ['authorizationLevel'],
+							attributes: ['isAdmin'],
 							as: 'config'
 						}
 					}
@@ -29,7 +29,7 @@ module.exports = {
 			res.locals.user.isGroupAdmin = function (groupId) {
 				for(let group of this.groups) {
 					if (group.id === parseInt(groupId)) {
-						return group.config.authorizationLevel === 1
+						return group.config.isAdmin
 					}
 				}
 				return false

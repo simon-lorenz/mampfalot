@@ -66,7 +66,7 @@ module.exports = (request, bearerToken) => {
 					.expect(res => {
 						let member = res.body[0]
 						member.should.have.property('id').equal(1)
-						member.should.have.property('config').which.has.property('authorizationLevel').equal(1)
+						member.should.have.property('config').which.has.property('isAdmin').equal(true)
 					})
 			})
 		})
@@ -468,7 +468,7 @@ module.exports = (request, bearerToken) => {
 								firstMember.should.have.property('id').equal(1)
 								firstMember.should.have.property('email').equal('mustermann@gmail.com')
 								firstMember.should.have.property('config').which.has.property('color').equal('90ba3e')
-								firstMember.should.have.property('config').which.has.property('authorizationLevel').equal(1)
+								firstMember.should.have.property('config').which.has.property('isAdmin').equal(true)
 								done()
 							})
 					})
@@ -481,7 +481,7 @@ module.exports = (request, bearerToken) => {
 						newMember = {
 							userId: 3,
 							color: '18e6a3',
-							authorizationLevel: 0
+							isAdmin: false
 						}
 						await setup.resetData()
 					})
@@ -509,14 +509,14 @@ module.exports = (request, bearerToken) => {
 
 								let config = member.config
 								config.should.have.property('color').equal(newMember.color)
-								config.should.have.property('authorizationLevel').equal(newMember.authorizationLevel)
+								config.should.have.property('isAdmin').equal(newMember.isAdmin)
 							})
 							.end(done)
 					})
 
 					it('uses default values if only the userId is provided', (done) => {
 						newMember.color = undefined
-						newMember.authorizationLevel = undefined
+						newMember.isAdmin = undefined
 
 						request
 							.post('/groups/1/members')
@@ -532,7 +532,7 @@ module.exports = (request, bearerToken) => {
 
 								let config = member.config
 								config.should.have.property('color')
-								config.should.have.property('authorizationLevel')
+								config.should.have.property('isAdmin')
 							})
 							.end(done)
 					})
@@ -576,12 +576,12 @@ module.exports = (request, bearerToken) => {
 							request
 								.post('/groups/1/members/2')
 								.set({ Authorization: bearerToken[1] })
-								.send({ color: 'fafafa', authorizationLevel: 1 })
+								.send({ color: 'fafafa', isAdmin: true })
 								.expect(200)
 								.expect(res => {
 									member = res.body
 									member.should.have.property('color').equal('fafafa')
-									member.should.have.property('authorizationLevel').equal(1)									
+									member.should.have.property('isAdmin').equal(true)									
 								})
 								.end(done)
 						})

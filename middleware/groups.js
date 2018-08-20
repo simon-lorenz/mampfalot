@@ -36,7 +36,7 @@ module.exports = {
 						as: 'members',
 						through: {
 							as: 'config',
-							attributes: ['color', 'authorizationLevel']
+							attributes: ['color', 'isAdmin']
 						}
 					}
 				]

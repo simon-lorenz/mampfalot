@@ -30,19 +30,19 @@ module.exports = {
 		{
 			groupId: 1,
 			userId: 1,
-			authorizationLevel: 1,
+			isAdmin: true,
 			color: '90ba3e'
 		},
 		{
 			groupId: 1,
 			userId: 2, 
-			authorizationLevel: 0,
+			isAdmin: false,
 			color: '24c4ee'
 		},
 		{
 			groupId: 2,
 			userId: 3,
-			authorizationLevel: 1,
+			isAdmin: true,
 			color: '4e48ff'
 		}
 	],

@@ -32,7 +32,7 @@ router.route('/').post(async (req, res, next) => {
 		await GroupMembers.create({
 			groupId: result.id,
 			userId: res.locals.user.id,
-			authorizationLevel: 1
+			isAdmin: true
 		})
 		
 		res.send(result)	
@@ -85,7 +85,7 @@ router.route('/:groupId/members').post(commonMiddleware.userIsGroupAdmin, (req, 
 		userId: parseInt(req.body.userId),
 		groupId: parseInt(res.locals.group.id),
 		color: req.body.color,
-		authorizationLevel: req.body.authorizationLevel
+		isAdmin: req.body.isAdmin
 	})	
 	.then(member => {
 		return Group.findOne({
@@ -99,7 +99,7 @@ router.route('/:groupId/members').post(commonMiddleware.userIsGroupAdmin, (req, 
 					as: 'members',
 					through: {
 						as: 'config',
-						attributes: ['color', 'authorizationLevel']
+						attributes: ['color', 'isAdmin']
 					},
 					where: {
 						id: member.userId
@@ -131,12 +131,12 @@ router.route('/:groupId/members/:userId').post((req, res, next) => {
 
 	if (req.body.color) { data.color = req.body.color }
 
-	if (req.body.authorizationLevel) {
-		if (parseInt(req.body.authorizationLevel) === 1 && !res.locals.user.isGroupAdmin(req.params.groupId)) {
+	if (req.body.isAdmin) {
+		if (req.body.isAdmin && !res.locals.user.isGroupAdmin(req.params.groupId)) {
 			res.status(403)
 			return
 		} else {
-			data.authorizationLevel = parseInt(req.body.authorizationLevel)
+			data.isAdmin = req.body.isAdmin
 		}
 	}
 
