@@ -31,19 +31,19 @@ module.exports = {
 			groupId: 1,
 			userId: 1,
 			isAdmin: true,
-			color: '90ba3e'
+			color: '#90ba3e'
 		},
 		{
 			groupId: 1,
 			userId: 2, 
 			isAdmin: false,
-			color: '24c4ee'
+			color: '#24c4ee'
 		},
 		{
 			groupId: 2,
 			userId: 3,
 			isAdmin: true,
-			color: '4e48ff'
+			color: '#4e48ff'
 		}
 	],
 	groups: [

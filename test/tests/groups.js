@@ -479,7 +479,7 @@ module.exports = (request, bearerToken) => {
 								let firstMember = data[0]
 								firstMember.should.have.property('id').equal(1)
 								firstMember.should.have.property('email').equal('mustermann@gmail.com')
-								firstMember.should.have.property('config').which.has.property('color').equal('90ba3e')
+								firstMember.should.have.property('config').which.has.property('color').equal('#90ba3e')
 								firstMember.should.have.property('config').which.has.property('isAdmin').equal(true)
 								done()
 							})
@@ -492,7 +492,7 @@ module.exports = (request, bearerToken) => {
 					beforeEach(async () => {
 						newMember = {
 							userId: 3,
-							color: '18e6a3',
+							color: '#18e6a3',
 							isAdmin: false
 						}
 						await setup.resetData()
@@ -575,11 +575,11 @@ module.exports = (request, bearerToken) => {
 							request
 								.post('/groups/1/members/2')
 								.set({ Authorization: bearerToken[2] })
-								.send({ color: 'eeeeee' })
+								.send({ color: '#eeeeee' })
 								.expect(200)
 								.expect(res => {
 									member = res.body
-									member.should.have.property('color').equal('eeeeee')
+									member.should.have.property('color').equal('#eeeeee')
 								})
 								.end(done)
 						})
@@ -588,11 +588,11 @@ module.exports = (request, bearerToken) => {
 							request
 								.post('/groups/1/members/2')
 								.set({ Authorization: bearerToken[1] })
-								.send({ color: 'fafafa', isAdmin: true })
+								.send({ color: '#fafafa', isAdmin: true })
 								.expect(200)
 								.expect(res => {
 									member = res.body
-									member.should.have.property('color').equal('fafafa')
+									member.should.have.property('color').equal('#fafafa')
 									member.should.have.property('isAdmin').equal(true)									
 								})
 								.end(done)
