@@ -3,6 +3,10 @@ const setup = require('../setup')
 module.exports = (request, bearerToken) => {
 	return describe('/groups', () => {
 		describe('GET', () => {
+			before(async () => {
+				await setup.resetData()
+			})
+			
 			it('requires authentication', (done) => {
 				request
 					.get('/groups')
@@ -291,6 +295,10 @@ module.exports = (request, bearerToken) => {
 
 			describe('/lunchbreaks', () => {
 				describe('GET', () => {
+					before(async () => {
+						await setup.resetData()
+					})
+					
 					it('sends a valid lunchbreak collection', (done) => {
 						request
 							.get('/groups/1/lunchbreaks')
@@ -453,6 +461,10 @@ module.exports = (request, bearerToken) => {
 
 			describe('/members', () => {
 				describe('GET', () => {
+					before(async () => {
+						await setup.resetData()
+					})
+					
 					it('sends a valid member collection', (done) => {
 						request
 							.get('/groups/1/members')
@@ -655,6 +667,10 @@ module.exports = (request, bearerToken) => {
 
 			describe('/places', () => {
 				describe('GET', () => {
+					before(async () => {
+						await setup.resetData()
+					})
+					
 					it('requires authentication', (done) => {
 						request
 							.get('/groups/1/places')
@@ -744,6 +760,10 @@ module.exports = (request, bearerToken) => {
 
 			describe('/foodTypes', () => {
 				describe('GET', () => {
+					before(async () => {
+						await setup.resetData()
+					})
+					
 					it('requires authentication', (done) => {
 						request
 							.get('/groups/1/foodTypes')
