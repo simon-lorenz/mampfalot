@@ -16,7 +16,7 @@ module.exports = {
 		let queries = []
 		queries.push('SET FOREIGN_KEY_CHECKS = 0;')		
 		for (let table of tables) {
-			queries.push('TRUNCATE `mampfalot_test`.`' + table + '`;')
+			queries.push('TRUNCATE `' + process.env.DB_NAME + '`.`' + table + '`;')
 		}
 		queries.push('SET FOREIGN_KEY_CHECKS = 1;')
 
