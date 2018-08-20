@@ -608,6 +608,14 @@ module.exports = (request, bearerToken) => {
 								.set({ Authorization: bearerToken[2] })
 								.expect(403, done)
 						})
+						
+						it('fails if a non admin tries to get admin rights', (done) => {
+							request
+								.post('/groups/1/members/2')
+								.set({ Authorization: bearerToken[2] })
+								.send({ isAdmin: true })
+								.expect(403, done)
+						})
 					})
 
 					describe('DELETE', () => {
