@@ -119,7 +119,7 @@ router.route('/:groupId/members').post(commonMiddleware.userIsGroupAdmin, (req, 
 	})
 })
 
-router.route('/:groupId/members/:userId').post((req, res, next) => {
+router.route('/:groupId/members/:userId').post(async (req, res, next) => {
 	let data = {}
 
 	if (res.locals.user.id !== parseInt(req.params.userId)) {
@@ -135,32 +135,40 @@ router.route('/:groupId/members/:userId').post((req, res, next) => {
 		res.status(403).send()
 		return
 	} else {
-		data.isAdmin = req.body.isAdmin
+		if (req.body.isAdmin !== undefined) {
+			data.isAdmin = req.body.isAdmin	
+		}
 	}
-
-	GroupMembers.update(data, {
+	
+	let memberToUpdate = await GroupMembers.findOne({
 		where: {
 			groupId: req.params.groupId,
 			userId: req.params.userId
 		}
 	})
-	.then(() => {
-		GroupMembers.findOne({
+	
+	if (memberToUpdate.isAdmin && data.isAdmin === false) {
+		// If the user is the groups last admin, we cannot update him to be
+		// a non admin, so we return a 400
+		let admins = await GroupMembers.findAll({
 			where: {
 				groupId: req.params.groupId,
-				userId: req.params.userId
+				isAdmin: true
 			}
 		})
-		.then(member => {
-			res.send(member)
-		})
-		.catch(err => {
-			throw err
-		})
-	})
-	.catch(err => {
-		next(err)
-	})
+		
+		if (admins.length === 1) {
+			res.status(400).send()
+			return
+		}
+	}
+	
+	try {
+		let updated = await memberToUpdate.update(data)
+		res.send(updated)
+	} catch (error) {
+		next(error)
+	}
 })
 
 router.route('/:groupId/members/:userId').delete(async (req, res, next) => {
