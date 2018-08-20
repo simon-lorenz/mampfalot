@@ -585,6 +585,22 @@ module.exports = (request, bearerToken) => {
 								})
 								.end(done)
 						})
+						
+						it('successfully grants and revokes a users admin rights', (done) => {
+							request
+								.post('/groups/1/members/2')
+								.set({ Authorization: bearerToken[1]})
+								.send({ isAdmin: true })
+								.expect(200)
+								.then(() => {
+									request
+										.post('/groups/1/members/2')
+										.set({ Authorization: bearerToken[1] })
+										.send({ isAdmin: false })
+										.expect(200)
+										.end(done)
+								})
+						})
 
 						it('fails if a non admin member tries to change another member', (done) => {
 							request

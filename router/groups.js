@@ -131,13 +131,11 @@ router.route('/:groupId/members/:userId').post((req, res, next) => {
 
 	if (req.body.color) { data.color = req.body.color }
 
-	if (req.body.isAdmin) {
-		if (req.body.isAdmin && !res.locals.user.isGroupAdmin(req.params.groupId)) {
-			res.status(403)
-			return
-		} else {
-			data.isAdmin = req.body.isAdmin
-		}
+	if (req.body.isAdmin && !res.locals.user.isGroupAdmin(req.params.groupId)) {
+		res.status(403)
+		return
+	} else {
+		data.isAdmin = req.body.isAdmin
 	}
 
 	GroupMembers.update(data, {
