@@ -661,6 +661,13 @@ module.exports = (request, bearerToken) => {
 								.set({ Authorization: bearerToken[2] })
 								.expect(204, done)
 						})
+						
+						it('fails if the user is the groups last admin', (done) => {
+							request
+								.delete('/groups/1/members/1')
+								.set({ Authorization: bearerToken[1] })
+								.expect(400, done)
+						})
 					})
 				})
 			})

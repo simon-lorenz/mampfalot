@@ -163,26 +163,42 @@ router.route('/:groupId/members/:userId').post((req, res, next) => {
 	})
 })
 
-router.route('/:groupId/members/:userId').delete((req, res, next) => {
+router.route('/:groupId/members/:userId').delete(async (req, res, next) => {
 	if (res.locals.user.id !== parseInt(req.params.userId)) {
 		if(!res.locals.user.isGroupAdmin(parseInt(req.params.groupId))) {
 			res.status(403).send()
 			return
 		}
 	}
-	
-	GroupMembers.destroy({
+
+	let memberToDelete = await GroupMembers.findOne({
 		where: {
 			groupId: req.params.groupId,
 			userId: req.params.userId
 		}
 	})
-	.then(() => {
+	
+	// If the user is the groups last admin, send a 400
+	if (memberToDelete.isAdmin) {
+		let admins = await GroupMembers.findAll({
+			where: {
+				groupId: req.params.groupId,
+				isAdmin: true
+			}
+		})
+
+		if (admins.length === 1) {
+			res.status(400).send()
+			return
+		}
+	}
+	
+	try {
+		await memberToDelete.destroy()
 		res.status(204).send()
-	})
-	.catch(err => {
-		next(err)
-	})
+	} catch (error) {
+		next(error)
+	}
 })
 
 router.route('/:groupId/lunchbreaks').get(middleware.loadLunchbreak)
