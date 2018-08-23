@@ -7,23 +7,15 @@ module.exports = (request, bearerToken) => {
 				await setup.resetData()
 			})
 
-			it('requires auth', (done) => {
-				request
-					.get('/users')
-					.expect(401, done)
-			})
-
 			it('fails if no email address is provided', (done) => {
 				request
 					.get('/users')
-					.set({ Authorization: bearerToken[1] })
 					.expect(400, done)
 			})
 
 			it('returns 404 if no user with this email exists', (done) => {
 				request
 					.get('/users')
-					.set({ Authorization: bearerToken[1] })
 					.query({ email: 'not.existing@email.com' })
 					.expect(404, done)
 			})
@@ -31,7 +23,6 @@ module.exports = (request, bearerToken) => {
 			it('returns a user resource if email exists', (done) => {
 				request
 					.get('/users')
-					.set({ Authorization: bearerToken[1] })
 					.query({ email: 'philipp.loten@company.com' })
 					.expect(200)
 					.expect(res => {

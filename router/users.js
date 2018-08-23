@@ -21,8 +21,6 @@ router.route('/').post((req, res, next) => {
 	})
 })
 
-router.use([authMiddleware.verifyToken, commonMiddleware.loadUser])
-
 router.route('/').get((req, res, next) => {
 	let email = req.query.email
 
@@ -47,6 +45,8 @@ router.route('/').get((req, res, next) => {
 		}
 	})
 })
+
+router.use([authMiddleware.verifyToken, commonMiddleware.loadUser])
 
 router.route('/:userId').get((req, res, next) => {
 	if (req.params.userId != res.locals.user.id) {
