@@ -49,6 +49,16 @@ describe('The mampfalot api', function () {
 			.expect(404, done)
 	})
 
+	it('does not send the "x-powered-by" header', (done) => {
+		request
+			.get('/')
+			.expect(res => {
+				let headers = res.headers
+				headers.should.not.have.property('x-powered-by')
+			})
+			.end(done)
+	})
+
 	require('./tests/users')(request, bearerToken)
 	require('./tests/auth')(request, bearerToken)
 	require('./tests/groups')(request, bearerToken)
