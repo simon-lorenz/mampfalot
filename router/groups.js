@@ -112,6 +112,20 @@ router.route('/:groupId').post(commonMiddleware.userIsGroupAdmin, async (req, re
 		})
 })
 
+router.route('/:groupId').delete(commonMiddleware.userIsGroupAdmin, async (req, res, next) => {
+	try {
+		await Group.destroy({
+			where: {
+				id: req.params.groupId
+			}
+		})
+		res.status(204).send()
+	}
+	catch (err) {
+		next(err)
+	}
+})
+
 router.route('/:groupId/members').get((req, res) => {
 	res.send(res.locals.group.members)
 })

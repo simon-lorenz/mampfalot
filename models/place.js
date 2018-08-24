@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
 
 	Place.associate = function (models) {
 		models.Place.belongsTo(models.FoodType)
-		models.Place.belongsTo(models.Group)
+		models.Place.belongsTo(models.Group, { onDelete: 'CASCADE' })
 	}
 
 	return Place

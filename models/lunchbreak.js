@@ -34,9 +34,9 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	Lunchbreak.associate = function (models) {
-		models.Lunchbreak.belongsTo(models.Group)
-		models.Lunchbreak.hasMany(models.Comment)
-		models.Lunchbreak.hasMany(models.Participant)
+		models.Lunchbreak.belongsTo(models.Group, { onDelete: 'cascade' })
+		models.Lunchbreak.hasMany(models.Comment, { onDelete: 'cascade' })
+		models.Lunchbreak.hasMany(models.Participant, { onDelete: 'cascade' })
 		models.Lunchbreak.belongsTo(models.Place, { foreignKey: { name: 'result', allowNull: true }})
 	}
 

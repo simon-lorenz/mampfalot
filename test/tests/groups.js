@@ -260,7 +260,7 @@ module.exports = (request, bearerToken) => {
 				})
 			})
 
-			describe.skip('DELETE', () => {
+			describe('DELETE', () => {
 				beforeEach(async () => {
 					await setup.resetData()
 				})
@@ -268,14 +268,16 @@ module.exports = (request, bearerToken) => {
 				it('requires auth', (done) => {
 					request
 						.delete('/groups/1')
-						.expect(401, done)
+						.expect(401)
+						.end(done)
 				})
 
 				it('requires admin rights', (done) => {
 					request
 						.delete('/groups/1')
 						.set({ Authorization: bearerToken[2] })
-						.expect(403, done)
+						.expect(403)
+						.end(done)
 				})
 
 				it('deletes a group successfully', (done) => {
@@ -283,12 +285,13 @@ module.exports = (request, bearerToken) => {
 						.delete('/groups/1')
 						.set({ Authorization: bearerToken[1] })
 						.expect(204)
-						.then(() => {
-							request
+						.expect((res) => {
+							return request
 								.get('/groups/1')
 								.set({ Authorization: bearerToken[1] })
-								.expect(404, done)
+								.expect(404)
 						})
+						.end(done)
 				})
 			})
 
