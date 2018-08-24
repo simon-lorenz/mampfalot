@@ -94,11 +94,11 @@ module.exports = (request, bearerToken) => {
 						.expect(403, done)
 				})
 
-				it('sends 400 if no type is specified', (done) => {
+				it('sends 400 if body is empty', (done) => {
 					request
 						.post('/foodTypes/1')
 						.set({ Authorization: bearerToken[1] })
-						.send( { } )
+						.send({ })
 						.expect(400, done)
 				})
 

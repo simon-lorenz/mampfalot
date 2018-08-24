@@ -19,6 +19,11 @@ router.route('/:foodTypeId').get((req, res) => {
 router.use(commonMiddleware.userIsGroupAdmin)
 
 router.route('/:foodTypeId').post((req, res, next) => {
+	if (Object.keys(req.body).length === 0) {
+		res.status(400).send({ error: 'No body values found '})
+		return
+	}
+
 	res.locals.foodType.update({
 		type: req.body.type
 	})
