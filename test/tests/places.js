@@ -11,7 +11,7 @@ module.exports = (request, bearerToken) => {
 			})
 
 			it('requires authentication', (done) => {
-				request 
+				request
 					.post('/places')
 					.expect(401, done)
 			})
@@ -104,7 +104,7 @@ module.exports = (request, bearerToken) => {
 				})
 
 				it('requires group admin rights', (done) => {
-					request	
+					request
 						.post('/places/1')
 						.set({ Authorization: bearerToken[2] })
 						.expect(403, done)
@@ -159,7 +159,7 @@ module.exports = (request, bearerToken) => {
 				})
 
 				it('requires group admin rights', (done) => {
-					request 
+					request
 						.delete('/places/1')
 						.set({ Authorization: bearerToken[2] })
 						.expect(403, done)

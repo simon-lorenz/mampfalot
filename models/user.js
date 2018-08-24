@@ -51,7 +51,7 @@ module.exports = (sequelize, DataTypes) => {
 			through: models.GroupMembers
 		})
 	}
-	
+
 	User.beforeCreate((user, options) => {
 		user.password = bcrypt.hashSync(user.password, 12)
 	})
@@ -64,7 +64,7 @@ module.exports = (sequelize, DataTypes) => {
 			instance.password = await bcrypt.hash(instance.password, rounds)
 		}
 	})
-	
+
 	User.beforeUpdate((user, options) => {
 		if (user.changed('password')) {
 			user.password = bcrypt.hashSync(user.password, 12)

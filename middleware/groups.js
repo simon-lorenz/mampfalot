@@ -41,7 +41,7 @@ module.exports = {
 					}
 				]
 			})
-	
+
 			if(!res.locals.group) {
 				res.status(404).send()
 			} else {

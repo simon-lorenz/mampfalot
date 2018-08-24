@@ -56,7 +56,7 @@ module.exports = (request, bearerToken) => {
 				})
 
 				it('fails if user does not own comment', (done) => {
-					request	
+					request
 						.delete('/comments/1')
 						.set({ Authorization: bearerToken[2] })
 						.expect(403, done)

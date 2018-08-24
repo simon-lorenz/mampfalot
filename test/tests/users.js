@@ -58,7 +58,7 @@ module.exports = (request, bearerToken) => {
 						user.should.have.property('name').equal(newUser.name)
 						user.should.have.property('email').equal(newUser.email)
 						user.should.not.have.property('password')
-						
+
 						request
 							.get('/auth')
 							.auth(newUser.email, newUser.password)
@@ -185,7 +185,7 @@ module.exports = (request, bearerToken) => {
 						.send({})
 						.expect(400, done)
 				})
-				
+
 				it('fails if request does not contain the current password', (done) => {
 					request
 						.post('/users/1')
@@ -225,7 +225,7 @@ module.exports = (request, bearerToken) => {
 							done(err)
 						})
 				})
-				
+
 				it('does not hash the password again if it has not changed', (done) => {
 					request
 						.post('/users/1')

@@ -9,14 +9,14 @@ module.exports = {
 				where: {
 					id: req.params.placeId
 				},
-				include: [ 
+				include: [
 					{
 						model: Group,
 						include: FoodType
-					} 
+					}
 				]
 			})
-	
+
 			if (!res.locals.place) {
 				res.status(404).send()
 			} else {

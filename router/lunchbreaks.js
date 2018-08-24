@@ -58,7 +58,7 @@ router.route('/:lunchbreakId/participants').get((req, res, next) => {
 })
 
 router.route('/:lunchbreakId/participants').post((req, res, next) => {
-	if (!req.body.userId) { 
+	if (!req.body.userId) {
 		res.status(400).send('Please provide a userId')
 		return
 	}

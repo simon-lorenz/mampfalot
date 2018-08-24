@@ -61,7 +61,7 @@ module.exports = (sequelize, DataTypes) => {
 				equalOrLessThanPointsPerDay(value) {
 					if (value > this.pointsPerDay) {
 						throw value + ' is > ' + this.pointsPerDay
-					}	
+					}
 				}
 			}
 		}
@@ -96,8 +96,8 @@ module.exports = (sequelize, DataTypes) => {
 		Group.addScope('ofUser', function(user) {
 			return {
 				where: {
-					id: { 
-						in: Util.getGroupIds(user, false) 
+					id: {
+						in: Util.getGroupIds(user, false)
 					}
 				},
 				include: [
@@ -115,7 +115,7 @@ module.exports = (sequelize, DataTypes) => {
 				]
 			}
 		})
-		
+
 	}
 
 	return Group

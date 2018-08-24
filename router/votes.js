@@ -10,7 +10,7 @@ const Place = require('../models').Place
 router.route('/').post(async (req, res, next) => {
 	let votes = req.body
 	let sum = 0
-	
+
 	// Conformity check
 	// Does each vote ...
 	// ... have the same participantId?
@@ -55,9 +55,9 @@ router.route('/').post(async (req, res, next) => {
 		res.status(403).send()
 		return
 	}
-	
+
 	let group = participant.lunchbreak.group
-	
+
 	// placeId-check
 	let placeIds = []
 	for (let vote of votes) {
@@ -68,7 +68,7 @@ router.route('/').post(async (req, res, next) => {
 				break
 			}
 
-			if (i === group.places.length - 1) { 
+			if (i === group.places.length - 1) {
 				res.status(400).send('placeId does not belong to this group')
 				return
 			}
@@ -112,7 +112,7 @@ router.route('/').post(async (req, res, next) => {
 			},
 			include: [ Participant, Place ]
 		})
-		
+
 		res.send(newVotes)
 
 	} catch (error) {

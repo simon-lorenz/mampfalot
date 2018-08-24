@@ -7,9 +7,9 @@ module.exports = {
 		let id = res.locals.token.id
 
 		try {
-			let user = await User.findOne({ 
-				where: id, 
-				include: [ 
+			let user = await User.findOne({
+				where: id,
+				include: [
 					{
 						model: Group,
 						attributes: ['id'],

@@ -4,7 +4,7 @@ module.exports = {
 		// Wir wollen nur den b64-String und splitten deshalb beim Leerzeichen
 		let credentialsB64 = basicAuthorizationHeader.split(' ')[1]
 		let credentials = new Buffer(credentialsB64, 'base64').toString('utf-8') // Enthält nun email:password
-		
+
 		let splitted = credentials.split(':')
 
 		let email = splitted[0]

@@ -9,7 +9,7 @@ module.exports = {
 			res.status(401).send('Missing authorization header.')
 			return
 		}
-		
+
 		const token = authorizationHeader.split(' ')[1]
 
 		jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {

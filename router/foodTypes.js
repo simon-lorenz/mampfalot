@@ -35,7 +35,7 @@ router.route('/:foodTypeId').delete(async (req, res) => {
 		await res.locals.foodType.destroy()
 		res.status(204).send()
 	} catch (error) {
-		next(error)		
+		next(error)
 	}
 })
 

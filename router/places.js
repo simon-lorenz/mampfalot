@@ -49,7 +49,7 @@ router.route('/').post(commonMiddleware.userIsGroupAdmin, async (req, res, next)
 router.param('placeId', middleware.loadPlace)
 
 router.route('/:placeId').get(commonMiddleware.userIsGroupMember, (req, res, next) => {
-	res.send(res.locals.place)	
+	res.send(res.locals.place)
 })
 
 router.route('/:placeId').post(commonMiddleware.userIsGroupAdmin, (req, res, next) => {

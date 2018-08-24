@@ -7,14 +7,14 @@ const middleware = require('./../middleware/auth')
 
 router.route('/').get(middleware.basicAuth, async (req, res, next) => {
 	try {
-		let user = await User.unscoped().findOne({ 
-			where: { 
-				email: res.locals.credentials.email 
+		let user = await User.unscoped().findOne({
+			where: {
+				email: res.locals.credentials.email
 			},
 			attributes: ['id', 'name', 'email', 'password'],
-			raw: true 
+			raw: true
 		})
-		
+
 		// Prüfe, ob der User vorhanden ist und ob sein Passwort übereinstimmt
 		if (user) {
 				try {
@@ -36,7 +36,7 @@ router.route('/').get(middleware.basicAuth, async (req, res, next) => {
 
 		// Generiere Token
 		let token = jwt.sign(user, process.env.SECRET_KEY, { expiresIn: '10h' })
-		
+
 		res.send({ token })
 
 	} catch (error) {

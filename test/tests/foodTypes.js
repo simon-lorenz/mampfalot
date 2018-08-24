@@ -6,9 +6,9 @@ module.exports = (request, bearerToken) => {
 			let updatedFoodType
 
 			beforeEach(async () => {
-				updatedFoodType = { 
+				updatedFoodType = {
 					groupId: 1,
-					type: 'New food type' 
+					type: 'New food type'
 				}
 				await setup.resetData()
 			})
@@ -71,7 +71,7 @@ module.exports = (request, bearerToken) => {
 						.expect(res => {
 							let foodType = res.body
 							foodType.should.have.property('id').equal(1)
-							foodType.should.have.property('type').equal('Asiatisch')              
+							foodType.should.have.property('type').equal('Asiatisch')
 						})
 						.end(done)
 				})
@@ -83,7 +83,7 @@ module.exports = (request, bearerToken) => {
 				beforeEach(async () => {
 					updatedFoodType = {
 						type: 'Geändert!'
-					}	
+					}
 					await setup.resetData()
 				})
 
@@ -109,7 +109,7 @@ module.exports = (request, bearerToken) => {
 						.post('/foodTypes/1')
 						.set({ Authorization: bearerToken[1] })
 						.send(updatedFoodType)
-						.expect(400, done)							
+						.expect(400, done)
 				})
 
 				it('updates a new foodType correctly', (done) => {
@@ -121,12 +121,12 @@ module.exports = (request, bearerToken) => {
 						.expect(response => {
 							let foodType = response.body
 							foodType.should.have.property('id')
-							foodType.should.have.property('type').equal(updatedFoodType.type)								
+							foodType.should.have.property('type').equal(updatedFoodType.type)
 						})
 						.end(done)
 				})
 			})
-	
+
 			describe('DELETE', () => {
 				beforeEach(async() => {
 					await setup.resetData()
@@ -138,7 +138,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[2] })
 						.expect(403, done)
 					})
-				
+
 				it('deletes a foodType correctly', (done) => {
 					request
 						.delete('/foodTypes/1')

@@ -74,7 +74,7 @@ module.exports = (request, bearerToken) => {
 						}
 					])
 					.expect(400)
-					.end(done)		
+					.end(done)
 			})
 
 			it('fails if points is greater than maxPointsPerVote', (done) => {
@@ -87,7 +87,7 @@ module.exports = (request, bearerToken) => {
 						points: 101
 					}])
 					.expect(400)
-					.end(done)		
+					.end(done)
 			})
 
 			it('fails if points is lesser than minPointsPerVote', (done) => {
@@ -100,7 +100,7 @@ module.exports = (request, bearerToken) => {
 						points: 29
 					}])
 					.expect(400)
-					.end(done)		
+					.end(done)
 			})
 
 			it('fails if parameter participantId is missing', (done) => {
@@ -176,9 +176,9 @@ module.exports = (request, bearerToken) => {
 						vote.should.have.property('place').which.is.an('object')
 						vote.should.have.property('points').equal(40)
 					})
-					.end(done)		
+					.end(done)
 			})
-			
+
 			it('successfully adds a bunch of votes', (done) => {
 				request
 					.post('/votes')
@@ -222,7 +222,7 @@ module.exports = (request, bearerToken) => {
 				before(async () => {
 					await setup.resetData()
 				})
-				
+
 				it('requires auth', (done) => {
 					request
 						.get('/votes/1')
@@ -255,7 +255,7 @@ module.exports = (request, bearerToken) => {
 							vote.should.have.property('placeId').equal(2)
 							vote.should.have.property('place').which.is.an('object')
 							vote.should.have.property('points').equal(30)
-						}) 
+						})
 						.end(done)
 				})
 			})

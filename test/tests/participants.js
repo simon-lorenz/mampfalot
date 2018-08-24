@@ -21,7 +21,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[2] })
 						.expect(200, done)
 				})
-				
+
 				it('sends a valid participant resource', (done) => {
 					request
 						.get('/participants/1')
@@ -41,7 +41,6 @@ module.exports = (request, bearerToken) => {
 						})
 						.end(done)
 				})
-
 			})
 
 			describe('DELETE', () => {
@@ -77,14 +76,14 @@ module.exports = (request, bearerToken) => {
 					})
 
 					it('sends a list of votes', (done) => {
-						request 
+						request
 						.get('/participants/1/votes')
 						.set({ Authorization: bearerToken[1] })
 						.expect(200)
 						.expect(res => {
 							let votes = res.body
 							votes.should.be.an('array').which.has.a.lengthOf(3)
-							
+
 							let firstVote = votes[0]
 							firstVote.should.have.property('id').equal(1)
 							firstVote.should.have.property('participantId').equal(1)

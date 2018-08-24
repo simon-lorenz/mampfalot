@@ -24,12 +24,12 @@ describe('The mampfalot api', function () {
 				.auth(user.email, user.password)
 			bearerToken[user.id] = 'Bearer ' + res.body.token
 		}
-		
+
 		server.close()
 	})
 
 	beforeEach(async () => {
-		server = app.listen(5001)    
+		server = app.listen(5001)
 	})
 
 	afterEach((done) => {

@@ -12,14 +12,14 @@ module.exports = {
 				include: [ Participant, Place ]
 			})
 
-			if (!res.locals.vote) { 
-				res.status(404).send() 
+			if (!res.locals.vote) {
+				res.status(404).send()
 			}
-			else if (res.locals.vote.participant.userId !== res.locals.user.id) { 
-				res.status(403).send() 
+			else if (res.locals.vote.participant.userId !== res.locals.user.id) {
+				res.status(403).send()
 			}
-			else { 
-				next() 
+			else {
+				next()
 			}
 		} catch (error) {
 			next(error)

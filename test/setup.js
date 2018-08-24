@@ -14,7 +14,7 @@ module.exports = {
 	async resetData() {
 		let tables = ['comments', 'food_types', 'group_members', 'groups', 'lunchbreaks', 'participants', 'places', 'users', 'votes']
 		let queries = []
-		queries.push('SET FOREIGN_KEY_CHECKS = 0;')		
+		queries.push('SET FOREIGN_KEY_CHECKS = 0;')
 		for (let table of tables) {
 			queries.push('TRUNCATE `' + process.env.DB_NAME + '`.`' + table + '`;')
 		}
@@ -35,7 +35,7 @@ module.exports = {
 			console.log(error)
 			throw error
 		}
-		
+
 	},
 	async initialize() {
 		await db.sync({ force: true })

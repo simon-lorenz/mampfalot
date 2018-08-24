@@ -13,7 +13,7 @@ module.exports = {
 			where: {
 				id: req.params.participantId
 			},
-			include: [ 
+			include: [
 				{
 					model: Vote,
 					include: [Place]

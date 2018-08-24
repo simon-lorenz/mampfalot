@@ -53,7 +53,7 @@ router.route('/:userId').get((req, res, next) => {
 		res.status(403).send()
 		return
 	}
-	
+
 	User.findOne({
 			where: {
 				id: req.params.userId
@@ -73,22 +73,22 @@ router.route('/:userId').post(async (req, res, next) => {
 			id: req.params.userId
 		}
 	})
-	
+
 	if (!user) {
 		res.status(404).send()
 		return
 	}
-	
+
 	if (user.id !== res.locals.user.id) {
 		res.status(403).send()
 		return
 	}
-	
+
 	if (!(req.body.name || req.body.email || req.body.password)) {
 		res.status(400).send('Please provide at least one of the following parameter: name, email, password')
 		return
 	}
-	
+
 	if (req.body.password) {
 		if (!(req.body.currentPassword)) {
 			res.status(400).send('Please provide the current password')
@@ -101,7 +101,7 @@ router.route('/:userId').post(async (req, res, next) => {
 		}
 	}
 
-	if (req.body.name) { user.name = req.body.name.trim() } 
+	if (req.body.name) { user.name = req.body.name.trim() }
 	if (req.body.email) { user.email = req.body.email.trim() }
 	if (req.body.password) { user.password = req.body.password }
 
@@ -116,7 +116,7 @@ router.route('/:userId').post(async (req, res, next) => {
 
 })
 
-router.route('/:userId').delete(async (req, res, next) => {	
+router.route('/:userId').delete(async (req, res, next) => {
 	let user = await User.findOne({
 		where: {
 			id: req.params.userId
@@ -157,7 +157,7 @@ router.route('/:userId/groups').get((req, res, next) => {
 		res.send(groups)
 	})
 	.catch(err => {
-		next(err)	
+		next(err)
 	})
 })
 

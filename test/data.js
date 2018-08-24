@@ -35,7 +35,7 @@ module.exports = {
 		},
 		{
 			groupId: 1,
-			userId: 2, 
+			userId: 2,
 			isAdmin: false,
 			color: '#24c4ee'
 		},
@@ -48,7 +48,7 @@ module.exports = {
 	],
 	groups: [
 		{
-			id: 1, 
+			id: 1,
 			name: 'Group_1',
 			defaultLunchTime: '12:30:00',
 			defaultVoteEndingTime: '12:25:00',
@@ -57,7 +57,7 @@ module.exports = {
 			minPointsPerVote: 30
 		},
 		{
-			id: 2, 
+			id: 2,
 			name: 'Group_2',
 			defaultLunchTime: '13:00:00',
 			defaultVoteEndingTime: '12:59:00',
@@ -66,7 +66,7 @@ module.exports = {
 			minPointsPerVote: 2
 		},
 		{
-			id: 3, 
+			id: 3,
 			name: 'Group_3',
 			defaultLunchTime: '12:00:00',
 			defaultVoteEndingTime: '11:55:00',
@@ -84,7 +84,7 @@ module.exports = {
 			voteEndingTime: '12:25:00'
 		},
 		{
-			id: 2, 
+			id: 2,
 			groupId: 2,
 			date: '2018-06-25',
 			lunchTime: '13:00:00',

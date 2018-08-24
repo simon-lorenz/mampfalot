@@ -14,7 +14,7 @@ router.route('/').get((req, res, next) => {
 		res.send(groups)
 	})
 	.catch(err => {
-		next(err)	
+		next(err)
 	})
 })
 
@@ -34,8 +34,8 @@ router.route('/').post(async (req, res, next) => {
 			userId: res.locals.user.id,
 			isAdmin: true
 		})
-		
-		res.send(result)	
+
+		res.send(result)
 	} catch (err) {
 		next(err)
 	}
@@ -57,7 +57,7 @@ router.route('/:groupId').post(commonMiddleware.userIsGroupAdmin, async (req, re
 		where: {
 			id: req.params.groupId
 		}
-	}) 
+	})
 
 	if (req.body.name) { group.name = req.body.name }
 	if (req.body.defaultLunchTime) { group.defaultLunchTime = req.body.defaultLunchTime }
@@ -86,7 +86,7 @@ router.route('/:groupId/members').post(commonMiddleware.userIsGroupAdmin, (req, 
 		groupId: parseInt(res.locals.group.id),
 		color: req.body.color,
 		isAdmin: req.body.isAdmin
-	})	
+	})
 	.then(member => {
 		return Group.findOne({
 			where: {
@@ -136,17 +136,17 @@ router.route('/:groupId/members/:userId').post(async (req, res, next) => {
 		return
 	} else {
 		if (req.body.isAdmin !== undefined) {
-			data.isAdmin = req.body.isAdmin	
+			data.isAdmin = req.body.isAdmin
 		}
 	}
-	
+
 	let memberToUpdate = await GroupMembers.findOne({
 		where: {
 			groupId: req.params.groupId,
 			userId: req.params.userId
 		}
 	})
-	
+
 	if (memberToUpdate.isAdmin && data.isAdmin === false) {
 		// If the user is the groups last admin, we cannot update him to be
 		// a non admin, so we return a 400
@@ -156,13 +156,13 @@ router.route('/:groupId/members/:userId').post(async (req, res, next) => {
 				isAdmin: true
 			}
 		})
-		
+
 		if (admins.length === 1) {
 			res.status(400).send()
 			return
 		}
 	}
-	
+
 	try {
 		let updated = await memberToUpdate.update(data)
 		res.send(updated)
@@ -185,7 +185,7 @@ router.route('/:groupId/members/:userId').delete(async (req, res, next) => {
 			userId: req.params.userId
 		}
 	})
-	
+
 	// If the user is the groups last admin, send a 400
 	if (memberToDelete.isAdmin) {
 		let admins = await GroupMembers.findAll({
@@ -200,7 +200,7 @@ router.route('/:groupId/members/:userId').delete(async (req, res, next) => {
 			return
 		}
 	}
-	
+
 	try {
 		await memberToDelete.destroy()
 		res.status(204).send()
@@ -260,7 +260,7 @@ router.route('/:groupId/places').get((req, res) => {
 
 router.route('/:groupId/places').post(commonMiddleware.userIsGroupAdmin, (req, res, next) => {
 	let foodTypeBelongsToGroup = false
-	
+
 	for (let foodType of res.locals.group.foodTypes) {
 		if (foodType.id === parseInt(req.body.foodTypeId)) {
 			foodTypeBelongsToGroup = true

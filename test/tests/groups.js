@@ -6,7 +6,7 @@ module.exports = (request, bearerToken) => {
 			before(async () => {
 				await setup.resetData()
 			})
-			
+
 			it('requires authentication', (done) => {
 				request
 					.get('/groups')
@@ -51,7 +51,7 @@ module.exports = (request, bearerToken) => {
 						group.should.have.property('maxPointsPerVote').equal(newGroup.maxPointsPerVote)
 						group.should.have.property('minPointsPerVote').equal(newGroup.minPointsPerVote)
 					})
-					.end(done)	
+					.end(done)
 			})
 
 			it('adds the creating user as group admin', async () => {
@@ -63,7 +63,7 @@ module.exports = (request, bearerToken) => {
 						return result.body.id
 					})
 
-				await request	
+				await request
 					.get('/groups/' + id + '/members')
 					.set({ Authorization: bearerToken[1]})
 					.expect(200)
@@ -80,7 +80,7 @@ module.exports = (request, bearerToken) => {
 				before(async () => {
 					await setup.resetData()
 				})
-				
+
 				it('sends a valid group-resource', (done) => {
 					request
 						.get('/groups/1')
@@ -207,7 +207,7 @@ module.exports = (request, bearerToken) => {
 							pointsPerDay: 100
 						})
 						.expect(400, done)
-				})				
+				})
 
 				it('updates a group successfully', (done) => {
 					request
@@ -265,20 +265,20 @@ module.exports = (request, bearerToken) => {
 				beforeEach(async () => {
 					await setup.resetData()
 				})
-	
+
 				it('requires auth', (done) => {
 					request
 						.delete('/groups/1')
 						.expect(401, done)
 				})
-	
+
 				it('requires admin rights', (done) => {
 					request
 						.delete('/groups/1')
 						.set({ Authorization: bearerToken[2] })
 						.expect(403, done)
 				})
-	
+
 				it('deletes a group successfully', (done) => {
 					request
 						.delete('/groups/1')
@@ -298,7 +298,7 @@ module.exports = (request, bearerToken) => {
 					before(async () => {
 						await setup.resetData()
 					})
-					
+
 					it('sends a valid lunchbreak collection', (done) => {
 						request
 							.get('/groups/1/lunchbreaks')
@@ -370,7 +370,7 @@ module.exports = (request, bearerToken) => {
 							})
 							.expect(403, done)
 					})
-					
+
 					it('creates a new lunchbreak successfully when user is no admin', (done) => {
 						request
 							.post('/groups/1/lunchbreaks')
@@ -426,7 +426,7 @@ module.exports = (request, bearerToken) => {
 					})
 
 					it('fails if no date is provided', (done) => {
-						request	
+						request
 							.post('/groups/1/lunchbreaks')
 							.set({ Authorization: bearerToken[2]})
 							.send({})
@@ -464,7 +464,7 @@ module.exports = (request, bearerToken) => {
 					before(async () => {
 						await setup.resetData()
 					})
-					
+
 					it('sends a valid member collection', (done) => {
 						request
 							.get('/groups/1/members')
@@ -593,11 +593,11 @@ module.exports = (request, bearerToken) => {
 								.expect(res => {
 									member = res.body
 									member.should.have.property('color').equal('#fafafa')
-									member.should.have.property('isAdmin').equal(true)									
+									member.should.have.property('isAdmin').equal(true)
 								})
 								.end(done)
 						})
-						
+
 						it('successfully grants and revokes a users admin rights', (done) => {
 							request
 								.post('/groups/1/members/2')
@@ -620,7 +620,7 @@ module.exports = (request, bearerToken) => {
 								.set({ Authorization: bearerToken[2] })
 								.expect(403, done)
 						})
-						
+
 						it('fails if a non admin tries to get admin rights', (done) => {
 							request
 								.post('/groups/1/members/2')
@@ -628,7 +628,7 @@ module.exports = (request, bearerToken) => {
 								.send({ isAdmin: true })
 								.expect(403, done)
 						})
-						
+
 						it('fails if the user is the groups last admin', (done) => {
 							request
 								.post('/groups/1/members/1')
@@ -669,7 +669,7 @@ module.exports = (request, bearerToken) => {
 								.set({ Authorization: bearerToken[2] })
 								.expect(204, done)
 						})
-						
+
 						it('fails if the user is the groups last admin', (done) => {
 							request
 								.delete('/groups/1/members/1')
@@ -685,7 +685,7 @@ module.exports = (request, bearerToken) => {
 					before(async () => {
 						await setup.resetData()
 					})
-					
+
 					it('requires authentication', (done) => {
 						request
 							.get('/groups/1/places')
@@ -701,7 +701,7 @@ module.exports = (request, bearerToken) => {
 								let collection = res.body
 								collection.should.be.an('array')
 								collection.should.have.length(4)
-								
+
 								let place = collection[0]
 								place.should.have.property('id').equal(1)
 								place.should.have.property('foodTypeId').equal(2)
@@ -723,7 +723,7 @@ module.exports = (request, bearerToken) => {
 					})
 
 					it('requires group admin rights', (done) => {
-						request	
+						request
 							.post('/groups/1/places')
 							.set({ Authorization: bearerToken[2] })
 							.expect(403, done)
@@ -778,7 +778,7 @@ module.exports = (request, bearerToken) => {
 					before(async () => {
 						await setup.resetData()
 					})
-					
+
 					it('requires authentication', (done) => {
 						request
 							.get('/groups/1/foodTypes')
@@ -809,7 +809,7 @@ module.exports = (request, bearerToken) => {
 					beforeEach(async () => {
 						newFoodType = {
 							type: 'Neu!'
-						}	
+						}
 						await setup.resetData()
 					})
 
@@ -835,7 +835,7 @@ module.exports = (request, bearerToken) => {
 							.post('/groups/1/foodTypes')
 							.set({ Authorization: bearerToken[1] })
 							.send(newFoodType)
-							.expect(400, done)							
+							.expect(400, done)
 					})
 
 					it('inserts a new foodType correctly', (done) => {
@@ -847,7 +847,7 @@ module.exports = (request, bearerToken) => {
 							.expect(response => {
 								let foodType = response.body
 								foodType.should.have.property('id')
-								foodType.should.have.property('type').equal(newFoodType.type)								
+								foodType.should.have.property('type').equal(newFoodType.type)
 							})
 							.end(done)
 					})
@@ -855,4 +855,4 @@ module.exports = (request, bearerToken) => {
 			})
 		})
 	})
-} 
+}

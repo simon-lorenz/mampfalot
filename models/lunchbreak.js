@@ -1,4 +1,4 @@
-module.exports = (sequelize, DataTypes) => {	
+module.exports = (sequelize, DataTypes) => {
 	const Lunchbreak = sequelize.define('Lunchbreak', {
 		id: {
 			type: DataTypes.INTEGER,

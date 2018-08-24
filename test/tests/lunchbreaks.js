@@ -75,7 +75,7 @@ module.exports = (request, bearerToken) => {
 					request
 						.post('/lunchbreaks/1')
 						.set({ Authorization: bearerToken[1] })
-						.send({ 
+						.send({
 							voteEndingTime: '13:00:00',
 							lunchTime: '12:59:00'
 						})
@@ -95,7 +95,7 @@ module.exports = (request, bearerToken) => {
 						voteEndingTime: '12:55:00',
 						lunchTime: '13:00:00'
 					}
-					
+
 					request
 						.post('/lunchbreaks/1')
 						.set({ Authorization: bearerToken[1] })
@@ -142,7 +142,7 @@ module.exports = (request, bearerToken) => {
 					})
 
 					it('requires auth', (done) => {
-						request 
+						request
 							.post('/lunchbreaks/3/participants')
 							.expect(401, done)
 					})
@@ -200,7 +200,7 @@ module.exports = (request, bearerToken) => {
 					before(async () => {
 						await setup.resetData()
 					})
-					
+
 					it('requires auth', (done) => {
 						request
 							.get('/lunchbreaks/1/comments')

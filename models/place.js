@@ -25,6 +25,6 @@ module.exports = (sequelize, DataTypes) => {
 		models.Place.belongsTo(models.FoodType)
 		models.Place.belongsTo(models.Group)
 	}
-	
+
 	return Place
 }
