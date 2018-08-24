@@ -50,6 +50,11 @@ module.exports = (request, bearerToken) => {
 						group.should.have.property('pointsPerDay').equal(newGroup.pointsPerDay)
 						group.should.have.property('maxPointsPerVote').equal(newGroup.maxPointsPerVote)
 						group.should.have.property('minPointsPerVote').equal(newGroup.minPointsPerVote)
+						group.should.have.property('members').which.is.an('array')
+						group.should.have.property('lunchbreaks').which.is.an('array')
+						group.should.have.property('places').which.is.an('array')
+						group.should.have.property('foodTypes').which.is.an('array')
+
 					})
 					.end(done)
 			})
@@ -59,16 +64,10 @@ module.exports = (request, bearerToken) => {
 					.post('/groups')
 					.set({ Authorization: bearerToken[1]})
 					.send(newGroup)
-					.then(result => {
-						return result.body.id
-					})
-
-				await request
-					.get('/groups/' + id + '/members')
-					.set({ Authorization: bearerToken[1]})
-					.expect(200)
-					.expect(res => {
-						let member = res.body[0]
+					.then(res => {
+						let group = res.body
+						let members = group.members
+						let member = members[0]
 						member.should.have.property('id').equal(1)
 						member.should.have.property('config').which.has.property('isAdmin').equal(true)
 					})

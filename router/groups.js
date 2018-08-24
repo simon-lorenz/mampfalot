@@ -4,6 +4,7 @@ const Group = require('./../models').Group
 const User = require('../models').User
 const GroupMembers = require('./../models').GroupMembers
 const Lunchbreak = require('./../models').Lunchbreak
+const FoodType = require('../models').FoodType
 const middleware = require('./../middleware/groups')
 const commonMiddleware = require('./../middleware/common')
 const foodTypeMiddleware = require('./../middleware/foodTypes')
@@ -35,7 +36,42 @@ router.route('/').post(async (req, res, next) => {
 			isAdmin: true
 		})
 
-		res.send(result)
+		let group = await Group.findOne({
+			where: {
+				id: result.id
+			},
+			include: [
+				{
+					model: Place,
+					attributes: {
+						exclude: ['groupId']
+					},
+					order: ['id']
+				},
+				{
+					model: FoodType,
+					attributes: {
+						exclude: ['groupId']
+					},
+					order: ['id']
+				},
+				{
+					model: Lunchbreak,
+					limit: parseInt(req.query.lunchbreakLimit) || 25,
+					order: ['id']
+				},
+				{
+					model: User,
+					as: 'members',
+					through: {
+						as: 'config',
+						attributes: ['color', 'isAdmin']
+					}
+				}
+			]
+		})
+
+		res.send(group)
 	} catch (err) {
 		next(err)
 	}
