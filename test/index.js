@@ -18,7 +18,7 @@ describe('The mampfalot api', function () {
 		server = app.listen(5001)
 
 		let res
-		for (user of users) {
+		for (let user of users) {
 			res = await request
 				.get('/auth')
 				.auth(user.email, user.password)
