@@ -3,7 +3,15 @@ const setup = require('../setup')
 module.exports = (request, bearerToken) => {
 	return describe('/votes', () => {
 		describe('POST', () => {
+			let newVotes = []
+
 			beforeEach(async () => {
+				newVotes = [{
+					participantId: 1,
+					placeId: 1,
+					points: 40
+				}]
+
 				await setup.resetData()
 			})
 
@@ -14,46 +22,39 @@ module.exports = (request, bearerToken) => {
 			})
 
 			it('fails if participant.userId does not match the users id', (done) => {
+				newVotes[0].participantId = 2
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send([{
-						participantId: 2,
-						placeId: 1,
-						points: 40
-					}])
+					.send(newVotes)
 					.expect(403, done)
 			})
 
 			it('fails if participantId does not exist', (done) => {
+				newVotes[0].participantId =  99
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send([{
-						participantId: 99
-					}])
-					.expect(400, done)
+					.send(newVotes)
+					.expect(400)
+					.end(done)
 			})
 
 			it('fails if placeId does not exist', (done) => {
+				newVotes[0].placeId = 99
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send([{
-						placeId: 99
-					}])
+					.send(newVotes)
 					.expect(400, done)
 			})
 
 			it('fails if place id does not belong to group', (done) => {
+				newVotes[0].placeId = 5
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send([{
-						participantId: 1,
-						points: 50,
-						placeId: 5
-					}])
+					.send(newVotes)
 					.expect(400, done)
 			})
 
@@ -78,61 +79,49 @@ module.exports = (request, bearerToken) => {
 			})
 
 			it('fails if points is greater than maxPointsPerVote', (done) => {
+				newVotes[0].points = 101
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send([{
-						participantId: 1,
-						placeId: 1,
-						points: 101
-					}])
+					.send(newVotes)
 					.expect(400)
 					.end(done)
 			})
 
 			it('fails if points is lesser than minPointsPerVote', (done) => {
+				newVotes[0].points = 29
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send([{
-						participantId: 1,
-						placeId: 1,
-						points: 29
-					}])
+					.send(newVotes)
 					.expect(400)
 					.end(done)
 			})
 
 			it('fails if parameter participantId is missing', (done) => {
+				newVotes[0].participantId = undefined
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send([{
-						placeId: 1,
-						points: 10
-					}])
+					.send(newVotes)
 					.expect(400, done)
 			})
 
 			it('fails if parameter placeId is missing', (done) => {
+				newVotes[0].placeId = undefined
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send([{
-						participantId: 1,
-						points: 10
-					}])
+					.send(newVotes)
 					.expect(400, done)
 			})
 
 			it('fails if parameter points is missing', (done) => {
+				newVotes[0].points = undefined
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send([{
-						participantId: 1,
-						placeId: 1,
-					}])
+					.send(newVotes)
 					.expect(400, done)
 			})
 
@@ -159,11 +148,7 @@ module.exports = (request, bearerToken) => {
 				request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
-					.send([{
-						participantId: 1,
-						placeId: 1,
-						points: 40
-					}])
+					.send(newVotes)
 					.expect(200)
 					.expect(res => {
 						let votes = res.body

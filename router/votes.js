@@ -50,6 +50,11 @@ router.route('/').post(async (req, res, next) => {
 		]
 	})
 
+	if (!participant) {
+		res.status(400).send('Participant does not exist')
+		return
+	}
+
 	// userId has to match participant.userId
 	if(res.locals.user.id !== participant.userId) {
 		res.status(403).send()
