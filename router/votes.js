@@ -1,144 +1,97 @@
-const express = require('express')
-const router = express.Router()
-const Vote = require('./../models').Vote
-const middleware = require('../middleware/votes')
-const Group = require('../models').Group
-const Participant = require('../models').Participant
-const Lunchbreak = require('../models').Lunchbreak
-const Place = require('../models').Place
+const router = require('express').Router()
+const { Vote, Participant, Place } = require('../models')
+const { allowMethods } = require('../util/middleware')
+const { asyncMiddleware } = require('../util/util')
+const { ValidationError, NotFoundError, RequestError } = require('../classes/errors')
 
-router.route('/').post(async (req, res, next) => {
+router.route('/').all(allowMethods(['POST']))
+router.route('/:voteId').all(allowMethods(['GET', 'DELETE']))
+
+router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	let votes = req.body
-	let sum = 0
 
-	// Conformity check
-	// Does each vote ...
-	// ... have the same participantId?
-	// ... have all necessary parameters?
-	let participantId
-	for (vote of votes) {
-		if (!(vote.participantId && vote.placeId && vote.points)) {
-			res.status(400).send('Missing parameter')
-			return
-		}
+	if(Object.keys(votes).length === 0 || !(votes instanceof  Array)) {
+		return next(new RequestError('Please provide an array of votes.'))
+	}
 
-		if (!participantId) {
-			participantId = vote.participantId
-		} else {
-			if (participantId !== vote.participantId) {
-				res.status(400).send('You may only create votes for one participant at a time')
-				return
+	let participantId = votes[0].participantId
+	for (let vote of votes) {
+		if (vote.participantId !== participantId) {
+			let item = {
+				field: 'participantId',
+				value: 'Various values',
+				message: 'The participantId has to be the same in all votes.'
 			}
+			return next(new ValidationError([item]))
 		}
 	}
 
-	// Load participant data
-	let participant = await	Participant.findOne({
+	if (!participantId) {
+		let item = {
+			field: 'participantId',
+			value: null,
+			message: 'participantId cannot be null.'
+		}
+		return next(new ValidationError([item]))
+	}
+
+	let { user } = res.locals
+
+	let participant = await Participant.find({
 		where: {
-			id: participantId
-		},
-		include: [
-			{
-				model: Lunchbreak,
-				include: [
-					{
-						model: Group,
-						include: [ Place ]
-					}
-				]
-			}
-		]
+			id: participantId,
+			userId: user.id
+		}
 	})
 
 	if (!participant) {
-		res.status(400).send('Participant does not exist')
-		return
-	}
-
-	// userId has to match participant.userId
-	if(res.locals.user.id !== participant.userId) {
-		res.status(403).send()
-		return
-	}
-
-	let group = participant.lunchbreak.group
-
-	// placeId-check
-	let placeIds = []
-	for (let vote of votes) {
-		placeIds.push(vote.placeId)
-
-		for (let i = 0; i < group.places.length; i++) {
-			if (vote.placeId === group.places[i].id) {
-				break
-			}
-
-			if (i === group.places.length - 1) {
-				res.status(400).send('placeId does not belong to this group')
-				return
-			}
+		let item = {
+			field: 'participantId',
+			value: participantId,
+			message: 'This participantId is not associated to your userId.'
 		}
+		return next(new ValidationError([item]))
 	}
 
-	for (let i = 0; i < placeIds.length; i++) {
-		if (i !== placeIds.indexOf(placeIds[i])) {
-			res.status(400).send('duplicate placeIds')
-			return
-		}
-	}
+	await user.can.createVoteCollection(participant)
+	await Vote.destroy({ where: { participantId } })
+	await Vote.bulkCreate(votes, { validate: true })
 
-	// points-check
-	for (let vote of votes) {
-		if (vote.points > group.maxPointsPerVote || vote.points < group.minPointsPerVote) {
-			res.status(400).send('Invalid point number')
-			return
-		}
+	res.send(await Vote.findAll({
+		where: { participantId },
+		include: [ Participant, Place ]
+	}))
+}))
 
-		sum += parseInt(vote.points)
-	}
-
-	if (sum > group.pointsPerDay) {
-		res.status(400).send('Sum of points exceeded pointsPerDay limit')
-		return
-	}
-
-	try {
-		await Vote.destroy({
-			where: {
-				participantId: participantId
-			}
-		})
-
-		await Vote.bulkCreate(votes)
-
-		let newVotes = await Vote.findAll({
-			where: {
-				participantId
-			},
-			include: [ Participant, Place ]
-		})
-
-		res.send(newVotes)
-
-	} catch (error) {
-		next(error)
-	}
-})
-
-router.param('voteId', middleware.loadVote)
-
-router.route('/:voteId').get((req, res) => {
-	res.send(res.locals.vote)
-})
-
-router.route('/:voteId').delete((req, res) => {
-	res.locals.vote.destroy()
-	.then(() => {
-		res.status(204).send()
+router.param('voteId', asyncMiddleware(async (req, res, next) => {
+	let voteId = parseInt(req.params.voteId)
+	res.locals.vote = await Vote.findOne({
+		where: {
+			id: voteId
+		},
+		include: [ Participant, Place ]
 	})
-	.catch(err => {
-		next(err)
-	})
-})
+
+	if (res.locals.vote) {
+		next()
+	} else {
+		next(new NotFoundError('Vote', voteId))
+	}
+}))
+
+router.route('/:voteId').get(asyncMiddleware(async (req, res, next) => {
+	let { vote, user } = res.locals
+
+	await user.can.readVote(vote)
+	res.send(vote)
+}))
+
+router.route('/:voteId').delete(asyncMiddleware(async (req, res, next) => {
+	let { vote, user } = res.locals
+
+	await user.can.deleteVote(vote)
+	await vote.destroy()
+	res.status(204).send()
+}))
 
 module.exports = router

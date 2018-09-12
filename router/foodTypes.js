@@ -1,47 +1,56 @@
-const express = require('express')
-const router = express.Router()
-const middleware = require('../middleware/foodTypes')
-const commonMiddleware = require('../middleware/common')
+const router = require('express').Router()
+const { NotFoundError } = require('../classes/errors')
+const { FoodType } = require('../models')
+const { allowMethods, hasBodyValues } = require('../util/middleware')
+const { asyncMiddleware } = require('../util/util')
 
-router.route('/').post((req, res, next) => {
-	res.locals.group = { id: req.body.groupId }
-	next()
-})
+router.route('/').all(allowMethods(['POST']))
+router.route('/:foodTypeId').all(allowMethods(['GET', 'POST', 'DELETE']))
+router.route('/:foodTypeId').post(hasBodyValues(['type'], 'atLeastOne'))
 
-router.route('/').post([commonMiddleware.userIsGroupAdmin, middleware.postFoodType])
+router.route('/').post(asyncMiddleware(async (req, res, next) => {
+	let foodType = FoodType.build({
+		type: req.body.type,
+		groupId: req.body.groupId
+	})
+	await res.locals.user.can.createFoodType(foodType)
+	res.send(await foodType.save())
+}))
 
-router.use('/:foodTypeId*', [middleware.loadFoodType, commonMiddleware.userIsGroupMember])
+router.route('/:foodTypeId').all(asyncMiddleware(async (req, res, next) => {
+	let id = parseInt(req.params.foodTypeId)
 
-router.route('/:foodTypeId').get((req, res) => {
-	res.send(res.locals.foodType)
-})
+	res.locals.foodType = await FoodType.findById(id)
 
-router.use(commonMiddleware.userIsGroupAdmin)
-
-router.route('/:foodTypeId').post((req, res, next) => {
-	if (Object.keys(req.body).length === 0) {
-		res.status(400).send({ error: 'No body values found '})
-		return
+	if (res.locals.foodType) {
+		return next()
+	} else {
+		return next(new NotFoundError('FoodType', id))
 	}
+}))
 
-	res.locals.foodType.update({
-		type: req.body.type
-	})
-	.then((instance) => {
-		res.send(instance)
-	})
-	.catch(err => {
-		next(err)
-	})
-})
+router.route('/:foodTypeId').get(asyncMiddleware(async (req, res, next) => {
+	let { foodType, user } = res.locals
 
-router.route('/:foodTypeId').delete(async (req, res) => {
-	try {
-		await res.locals.foodType.destroy()
-		res.status(204).send()
-	} catch (error) {
-		next(error)
-	}
-})
+	await user.can.readFoodType(foodType)
+	res.send(foodType)
+}))
+
+router.route('/:foodTypeId').post(asyncMiddleware(async (req, res, next) => {
+	let { foodType, user } = res.locals
+
+	foodType.type = req.body.type
+	await user.can.updateFoodType(foodType)
+	await foodType.save()
+	res.send(foodType)
+}))
+
+router.route('/:foodTypeId').delete(asyncMiddleware(async (req, res, next) => {
+	let { foodType, user } = res.locals
+
+	await user.can.deleteFoodType(foodType)
+	await foodType.destroy()
+	res.status(204).send()
+}))
 
 module.exports = router

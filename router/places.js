@@ -1,98 +1,73 @@
-const express = require('express')
-const router = express.Router()
-const Place = require('./../models').Place
-const Group = require('../models').Group
-const FoodType = require('../models').FoodType
-const commonMiddleware = require('../middleware/common')
-const middleware = require('../middleware/places')
+const router = require('express').Router()
+const { Place, Group, FoodType } = require('../models')
+const { allowMethods, hasBodyValues } = require('../util/middleware')
+const { NotFoundError } = require('../classes/errors')
+const { asyncMiddleware } = require('../util/util')
+
+router.route('/').all(allowMethods(['POST']))
+router.route('/').post(hasBodyValues(['groupId', 'foodTypeId', 'name'], 'all'))
+router.route('/:placeId').all(allowMethods(['GET', 'POST', 'DELETE']))
+router.route('/:placeId').post(hasBodyValues(['foodTypeId', 'name'], 'atLeastOne'))
 
 router.route('/').post((req, res, next) => {
-	res.locals.group = { id: req.body.groupId }
-	next()
-})
-
-router.route('/').post(commonMiddleware.userIsGroupAdmin, async (req, res, next) => {
-	let group = await Group.findOne({
-		where: {
-			id: res.locals.group.id
-		},
-		include: [ FoodType ]
-	})
-
-	// Ist die angegebene foodTypeId der Gruppe zugeordnet?
-	let typeBelongsToGroup = false
-	for (let foodType of group.foodTypes) {
-		if (foodType.id === parseInt(req.body.foodTypeId)) {
-			typeBelongsToGroup = true
-			break
-		}
-	}
-
-	if(!typeBelongsToGroup) {
-		res.status(400).send('Foreign key foodTypeId doesn\'t belong to group')
-		return
-	}
-
-	Place.create({
-		groupId: parseInt(req.body.groupId),
-		foodTypeId: parseInt(req.body.foodTypeId),
+	res.locals.place = Place.build({
+		groupId: req.body.groupId,
+		foodTypeId: req.body.foodTypeId,
 		name: req.body.name
 	})
-	.then(result => {
-		res.status(200).send(result)
-	})
-	.catch(error => {
-		next(error)
-	})
+	next()
 })
+router.route('/').post(asyncMiddleware(async (req, res, next) => {
+	let { user, place } = res.locals
 
-router.param('placeId', middleware.loadPlace)
+	await user.can.createPlace(place)
+	await place.save()
+	res.send(place)
+}))
 
-router.route('/:placeId').get(commonMiddleware.userIsGroupMember, (req, res, next) => {
-	res.send(res.locals.place)
-})
+router.route('/:placeId').all(asyncMiddleware(async (req, res, next) => {
+	res.locals.place = await Place.findOne({
+		where: {
+			id: req.params.placeId
+		},
+		include: [
+			{
+				model: Group,
+				include: FoodType
+			}
+		]
+	})
 
-router.route('/:placeId').post(commonMiddleware.userIsGroupAdmin, (req, res, next) => {
-	let data = {}
-
-	if (req.body.foodTypeId) { data.foodTypeId = req.body.foodTypeId }
-	if (req.body.name) { data.name = req.body.name }
-
-	if (Object.keys(data).length === 0) {
-		res.status(400).send('Please provide at least one parameter')
-		return
+	if (res.locals.place) {
+		next()
+	} else {
+		next(new NotFoundError('Place', req.params.placeId))
 	}
+}))
 
-	let foodTypeIdBelongsToGroup = false
-	for (let foodType of res.locals.group.foodTypes) {
-		if (foodType.id === data.foodTypeId) {
-			foodTypeIdBelongsToGroup = true
-			break
-		}
-	}
+router.route('/:placeId').get(asyncMiddleware(async (req, res, next) => {
+	let { user, place } = res.locals
 
-	if (!foodTypeIdBelongsToGroup) {
-		res.status(400).send('Invalid foodTypeId')
-		return
-	}
+	await user.can.readPlace(place)
+	res.send(place)
+}))
 
-	res.locals.place.update(data)
-	.then(instance => {
-		res.send(instance)
-	})
-	.catch(err => {
-		next(err)
-	})
-})
+router.route('/:placeId').post(asyncMiddleware(async (req, res, next) => {
+	let { user, place } = res.locals
 
-router.route('/:placeId').delete(commonMiddleware.userIsGroupAdmin, (req, res, next) => {
-	res.locals.place.destroy()
-	.then(() => {
-		res.status(204).send()
-	})
-	.catch(err => {
-		next(err)
-	})
-})
+	if (req.body.foodTypeId) { place.foodTypeId= req.body.foodTypeId }
+	if (req.body.name) { place.name = req.body.name }
+
+	await user.can.updatePlace(place)
+	res.send(await place.save())
+}))
+
+router.route('/:placeId').delete(asyncMiddleware(async (req, res, next) => {
+	let { user, place } = res.locals
+
+	await user.can.deletePlace(place)
+	await place.destroy()
+	res.status(204).send()
+}))
 
 module.exports = router

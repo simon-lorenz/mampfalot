@@ -1,4 +1,5 @@
 const setup = require('../setup')
+const errorHelper = require('../helpers/errors')
 
 module.exports = (request, bearerToken) => {
 	return describe('/places', () => {
@@ -10,18 +11,34 @@ module.exports = (request, bearerToken) => {
 				await setup.resetData()
 			})
 
-			it('requires authentication', (done) => {
-				request
-					.post('/places')
-					.expect(401, done)
-			})
-
 			it('requires group admin rights', (done) => {
 				request
 					.post('/places')
 					.set({ Authorization: bearerToken[2] })
 					.send(newPlace)
-					.expect(403, done)
+					.expect(403)
+					.expect(res => {
+						let expectedError = {
+							resource: 'Place',
+							id: null,
+							operation: 'CREATE'
+						}
+						errorHelper.checkAuthorizationError(res.body,expectedError)
+					})
+					.end(done)
+			})
+
+			it('requires body values', (done) => {
+				request
+					.post('/places')
+					.set({ Authorization: bearerToken[1] })
+					.send({})
+					.expect(400)
+					.expect(res => {
+						let message = 'This request has to provide all of the following body values: groupId, foodTypeId, name'
+						errorHelper.checkRequestError(res.body, message)
+					})
+					.end(done)
 			})
 
 			it('fails if the foodTypeId doesn\'t belong to the group', (done) => {
@@ -30,7 +47,16 @@ module.exports = (request, bearerToken) => {
 					.post('/places')
 					.set({ Authorization: bearerToken[1] })
 					.send(newPlace)
-					.expect(400, done)
+					.expect(400)
+					.expect(res => {
+						let expectedError = {
+								field: 'foodTypeId',
+								value: newPlace.foodTypeId,
+								message: 'This food type does not belong to group ' + newPlace.groupId
+							}
+						errorHelper.checkValidationError(res.body, expectedError)
+					})
+					.end(done)
 			})
 
 			it('inserts new place correctly', (done) => {
@@ -56,17 +82,26 @@ module.exports = (request, bearerToken) => {
 					await setup.resetData()
 				})
 
-				it('requires authentication', (done) => {
+				it('returns NotFoundError', (done) => {
 					request
-						.get('/places/1')
-						.expect(401, done)
+						.get('/places/99')
+						.set({ Authorization: bearerToken[1] })
+						.expect(404)
+						.expect(res => {
+							errorHelper.checkNotFoundError(res.body, 'Place', '99')
+						})
+						.end(done)
 				})
 
 				it('fails if user is no group member', (done) => {
 					request
 						.get('/places/1')
 						.set({ Authorization: bearerToken[3] })
-						.expect(403, done)
+						.expect(403)
+						.expect(res => {
+							errorHelper.checkAuthorizationError(res.body)
+						})
+						.end(done)
 				})
 
 				it('sends 404 if resource does\'t exist', (done) => {
@@ -107,7 +142,17 @@ module.exports = (request, bearerToken) => {
 					request
 						.post('/places/1')
 						.set({ Authorization: bearerToken[2] })
-						.expect(403, done)
+						.send(updatedPlace)
+						.expect(403)
+						.expect(res => {
+							let expectedError = {
+								resource: 'Place',
+								id: updatedPlace.id,
+								operation: 'UPDATE'
+							}
+							errorHelper.checkAuthorizationError(res.body, expectedError)
+						})
+						.end(done)
 				})
 
 				it('updates a new place correctly', (done) => {
@@ -126,22 +171,22 @@ module.exports = (request, bearerToken) => {
 						.end(done)
 				})
 
-				it('sends 400 on non existent foreign key', (done) => {
-					updatedPlace.foodTypeId = 99 // non existent foodTypeId
-					request
-						.post('/places/1')
-						.set({ Authorization: bearerToken[1] })
-						.send(updatedPlace)
-						.expect(400, done)
-				})
-
 				it('sends 400 on non-group foreign key', (done) => {
 					updatedPlace.foodTypeId = 5 // this id belongs to group 2
 					request
 						.post('/places/1')
 						.set({ Authorization: bearerToken[1] })
 						.send(updatedPlace)
-						.expect(400, done)
+						.expect(400)
+						.expect(res => {
+							let expectedError = {
+								field: 'foodTypeId',
+								value: updatedPlace.foodTypeId,
+								message: 'This food type does not belong to group 1'
+							}
+							errorHelper.checkValidationError(res.body, expectedError)
+						})
+						.end(done)
 				})
 
 				it('sends 400 if no name and foodTypeId is provided', (done) => {
@@ -149,7 +194,11 @@ module.exports = (request, bearerToken) => {
 						.post('/places/1')
 						.set({ Authorization: bearerToken[1] })
 						.send( {} )
-						.expect(400, done)
+						.expect(400)
+						.expect(res => {
+							errorHelper.checkRequestError(res.body)
+						})
+						.end(done)
 				})
 			})
 
@@ -162,15 +211,28 @@ module.exports = (request, bearerToken) => {
 					request
 						.delete('/places/1')
 						.set({ Authorization: bearerToken[2] })
-						.expect(403, done)
+						.expect(403)
+						.expect(res => {
+							let expectedError = {
+								resource: 'Place',
+								id: 1,
+								operation: 'DELETE'
+							}
+							errorHelper.checkAuthorizationError(res.body)
+						})
+						.end(done)
 				})
 
-				it('deletes a place successfully', (done) => {
-					request
+				it('deletes a place successfully', async () => {
+					await request
 						.delete('/places/1')
 						.set({ Authorization: bearerToken[1] })
 						.expect(204)
-						.end(done)
+
+					await request
+						.get('/places/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(404)
 				})
 			})
 		})

@@ -1,164 +1,96 @@
-const express = require('express')
-const router = express.Router()
-const User = require('./../models').User
-const Group = require('../models').Group
-const authMiddleware = require('./../middleware/auth')
-const commonMiddleware = require('./../middleware/common')
+const router = require('express').Router()
 const bcrypt = require('bcrypt')
+const { User, Group } = require('../models')
+const { allowMethods, hasQueryValues, initUser, hasBodyValues, verifyToken } = require('../util/middleware')
+const { AuthenticationError, NotFoundError, RequestError } = require('../classes/errors')
+const { asyncMiddleware }  = require('../util/util')
 
-router.route('/').post((req, res, next) => {
-	User.create({
+router.route('/').all(allowMethods(['GET', 'POST']))
+router.route('/').get(hasQueryValues(['email'], 'all'))
+
+router.route('/').post(asyncMiddleware(async (req, res, next) => {
+	let user = await User.create({
 		name: req.body.name,
 		email: req.body.email,
 		password: req.body.password
 	})
-	.then(result => {
-		result.password = undefined
-		res.send(result)
-	})
-	.catch(err => {
-		next(err)
-	})
-})
+	user.password = undefined
+	res.send(user)
+}))
 
-router.route('/').get((req, res, next) => {
-	let email = req.query.email
-
-	if (!email) {
-		res.status(400).send('Please provide an email to search for.')
-		return
+router.route('/').get(asyncMiddleware(async (req, res, next) => {
+	let user = await User.findOne({ where: { email: req.query.email }})
+	if (user) {
+		res.send(user)
+	} else {
+		return next(new NotFoundError('User', null))
 	}
+}))
 
-	User.findOne({
-		attributes: {
-			exclude: ['password']
-		},
-		where: {
-			email
-		}
-	})
-	.then(user => {
-		if (!user) {
-			res.status(404).send()
-		} else {
-			res.send(user)
-		}
-	})
-})
+router.use([verifyToken, initUser])
 
-router.use([authMiddleware.verifyToken, commonMiddleware.loadUser])
+router.route('/:userId').all(allowMethods(['GET', 'POST', 'DELETE']))
+router.route('/:userId').post(hasBodyValues(['name', 'email', 'password'], 'atLeastOne'))
+router.route('/:userId/groups').all(allowMethods(['GET']))
 
-router.route('/:userId').get((req, res, next) => {
-	if (req.params.userId != res.locals.user.id) {
-		res.status(403).send()
-		return
+router.route('/:userId*').all(asyncMiddleware(async (req, res, next) => {
+	let userId = parseInt(req.params.userId)
+	res.locals.resources = {}
+	res.locals.resources.user = await User.unscoped().findById(userId)
+	if (res.locals.resources.user) {
+		return next()
+	} else {
+		return next(new NotFoundError('User', userId))
 	}
+}))
 
-	User.findOne({
-			where: {
-				id: req.params.userId
-			}
-		})
-		.then(result => {
-			res.send(result)
-		})
-		.catch(error => {
-			next(error)
-		})
-})
+router.route('/:userId').get(asyncMiddleware(async (req, res, next) => {
+	let user = res.locals.user
+	let userResource = res.locals.resources.user
+	await user.can.readUser(userResource)
+	userResource.password = undefined
+	res.send(userResource)
+}))
 
-router.route('/:userId').post(async (req, res, next) => {
-	let user = await User.unscoped().findOne({
-		where: {
-			id: req.params.userId
-		}
-	})
-
-	if (!user) {
-		res.status(404).send()
-		return
-	}
-
-	if (user.id !== res.locals.user.id) {
-		res.status(403).send()
-		return
-	}
-
-	if (!(req.body.name || req.body.email || req.body.password)) {
-		res.status(400).send('Please provide at least one of the following parameter: name, email, password')
-		return
-	}
+router.route('/:userId').post(asyncMiddleware(async (req, res, next) => {
+	let user = res.locals.user
+	let userResource = res.locals.resources.user
 
 	if (req.body.password) {
-		if (!(req.body.currentPassword)) {
-			res.status(400).send('Please provide the current password')
-			return
+		if (!req.body.currentPassword) {
+			return next(new RequestError('You need to provide the current password, if you want to change it.'))
 		}
 
-		if (!bcrypt.compareSync(req.body.currentPassword, user.password)) {
-			res.status(401).send('Current password does not match')
-			return
+		if (await bcrypt.compare(req.body.currentPassword, userResource.password) === false) {
+			return next(new AuthenticationError('The provided credentials are incorrect.'))
 		}
 	}
 
-	if (req.body.name) { user.name = req.body.name.trim() }
-	if (req.body.email) { user.email = req.body.email.trim() }
-	if (req.body.password) { user.password = req.body.password }
+	if (req.body.name) { userResource.name = req.body.name.trim() }
+	if (req.body.email) { userResource.email = req.body.email.trim() }
+	if (req.body.password) { userResource.password = req.body.password }
 
-	user.save().then(newUser => {
-		newUser.password = undefined
-		res.send(newUser)
-		return
-	})
-	.catch(err => {
-		next(err)
-	})
+	await user.can.updateUser(userResource)
+	await userResource.save()
+	userResource.password = undefined
+	res.send(userResource)
+}))
 
-})
+router.route('/:userId').delete(asyncMiddleware(async (req, res, next) => {
+	let user = res.locals.user
+	let userResource = res.locals.resources.user
 
-router.route('/:userId').delete(async (req, res, next) => {
-	let user = await User.findOne({
-		where: {
-			id: req.params.userId
-		}
-	})
+	await user.can.deleteUser(userResource)
+	await userResource.destroy()
+	res.status(204).send()
+}))
 
-	if (!user) {
-		res.status(404).send()
-		return
-	}
+router.route('/:userId/groups').get(asyncMiddleware(async (req, res, next) => {
+	let user = res.locals.user
+	let userResource = res.locals.resources.user
 
-	if (req.params.userId != res.locals.user.id) {
-		res.status(403).send()
-		return
-	}
-
-	User.destroy({
-			where: {
-				id: req.params.userId
-			}
-		})
-		.then(result => {
-			res.status(204).send()
-		})
-		.catch(error => {
-			next(error)
-		})
-})
-
-router.route('/:userId/groups').get((req, res, next) => {
-	if (parseInt(req.params.userId) !== res.locals.user.id) {
-		res.status(403).send()
-		return
-	}
-
-	Group.scope({ method: ['ofUser', res.locals.user]}).findAll()
-	.then(groups => {
-		res.send(groups)
-	})
-	.catch(err => {
-		next(err)
-	})
-})
+	await user.can.readGroupCollection(userResource)
+	res.send(await Group.scope({ method: ['ofUser', userResource.id] }).findAll())
+}))
 
 module.exports = router

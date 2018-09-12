@@ -1,4 +1,5 @@
 const setup = require('../setup')
+const errorHelper = require('../helpers/errors')
 
 module.exports = (request, bearerToken) => {
 	return describe('/participants', () => {
@@ -12,7 +13,27 @@ module.exports = (request, bearerToken) => {
 					request
 						.get('/participants/1')
 						.set({ Authorization: bearerToken[3] })
-						.expect(403, done)
+						.expect(403)
+						.expect(res => {
+							let expectedError = {
+								resource: 'Participant',
+								id: 1,
+								operation: 'READ'
+							}
+							errorHelper.checkAuthorizationError(res.body, expectedError)
+						})
+						.end(done)
+				})
+
+				it('returns NotFoundError', (done) => {
+					request
+						.get('/participants/99')
+						.set({ Authorization: bearerToken[1] })
+						.expect(404)
+						.expect(res => {
+							errorHelper.checkNotFoundError(res.body, 'Participant', 99)
+						})
+						.end(done)
 				})
 
 				it('succeeds if user is group member', (done) => {
@@ -48,24 +69,32 @@ module.exports = (request, bearerToken) => {
 					await setup.resetData()
 				})
 
-				it('requires auth', (done) => {
-					request
-						.delete('/participants/1')
-						.expect(401, done)
-				})
-
 				it('fails if user is not the participant', (done) => {
 					request
 						.delete('/participants/1')
 						.set({ Authorization: bearerToken[2] })
-						.expect(403, done)
+						.expect(403)
+						.expect(res => {
+							let expectedError = {
+								resource: 'Participant',
+								id: 1,
+								operation: 'DELETE'
+							}
+							errorHelper.checkAuthorizationError(res.body, expectedError)
+						})
+						.end(done)
 				})
 
-				it('deletes a participant successfully', (done) => {
-					request
+				it('deletes a participant successfully', async () => {
+					await request
 						.delete('/participants/1')
 						.set({ Authorization: bearerToken[1] })
-						.expect(204, done)
+						.expect(204)
+
+					await request
+						.get('/participants/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(404)
 				})
 			})
 

@@ -1,33 +1,44 @@
-const express = require('express')
-const router = express.Router()
-const middleware = require('../middleware/comment')
+const router = require('express').Router()
+const { Comment } = require('../models')
+const { allowMethods } = require('../util/middleware')
+const { NotFoundError } = require('../classes/errors')
+const { asyncMiddleware } = require('../util/util')
 
-router.param('commentId', middleware.loadComment)
+router.route('/:commentId').all(allowMethods(['GET', 'POST', 'DELETE']))
 
-router.route('/:commentId').post(middleware.userOwnsComment, (req, res, next) => {
-	if (!req.body.comment) {
-		res.status(400).send()
-		return
+router.route('/:commentId').all(asyncMiddleware(async (req, res, next) => {
+	let id = parseInt(req.params.commentId)
+
+	res.locals.comment = await Comment.findById(id)
+
+	if (res.locals.comment) {
+		return next()
+	} else {
+		return next(new NotFoundError('Comment', id))
 	}
+}))
 
-	res.locals.comment.comment = req.body.comment
-	res.locals.comment.save()
-	.then(instance => {
-		res.send(instance)
-	})
-	.catch(err => {
-		next(err)
-	})
-})
+router.route('/:commentId').get(asyncMiddleware(async (req, res, next) => {
+	let { user, comment } = res.locals
 
-router.route('/:commentId').delete(middleware.userOwnsComment, (req, res, next) => {
-	res.locals.comment.destroy()
-	.then(() => {
-		res.status(204).send()
-	})
-	.catch(err => {
-		next(err)
-	})
-})
+	await user.can.readComment(comment)
+	res.send(comment.toJSON())
+}))
+
+router.route('/:commentId').post(asyncMiddleware(async (req, res, next) => {
+	let { user, comment } = res.locals
+
+	comment.comment = req.body.comment
+	await user.can.updateComment(comment)
+	res.send(await comment.save())
+}))
+
+router.route('/:commentId').delete(asyncMiddleware(async (req, res, next) => {
+	let { user, comment } = res.locals
+
+	await user.can.deleteComment(comment)
+	await comment.destroy()
+	res.status(204).send()
+}))
 
 module.exports = router

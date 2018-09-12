@@ -9,7 +9,14 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.TEXT,
 			allowNull: false,
 			validate: {
-				notEmpty: true
+				notEmpty: {
+					args: true,
+					msg: 'comment cannot be empty.'
+				},
+				notNull: {
+					args: true,
+					msg: 'comment cannot be null.'
+				}
 			}
 		}
 	}, {

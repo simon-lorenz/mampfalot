@@ -1,339 +1,299 @@
 const router = require('express').Router()
-const Place = require('./../models').Place
-const Group = require('./../models').Group
-const User = require('../models').User
-const GroupMembers = require('./../models').GroupMembers
-const Lunchbreak = require('./../models').Lunchbreak
-const FoodType = require('../models').FoodType
-const middleware = require('./../middleware/groups')
-const commonMiddleware = require('./../middleware/common')
-const foodTypeMiddleware = require('./../middleware/foodTypes')
+const { Place, Group, User, GroupMembers, Lunchbreak, FoodType } = require('../models')
+const { allowMethods, hasBodyValues } = require('../util/middleware')
+const { asyncMiddleware } = require('../util/util')
+const { NotFoundError } = require('../classes/errors')
+
+router.route('/').all(allowMethods(['GET', 'POST']))
+router.route('/:groupId').all(allowMethods(['GET', 'POST', 'DELETE']))
+router.route('/:groupId').post(hasBodyValues(['name', 'defaultLunchTime', 'defaultVoteEndingTime', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote'], 'atLeastOne'))
+router.route('/:groupId/members').all(allowMethods(['GET', 'POST']))
+router.route('/:groupId/members/:userId').all(allowMethods(['POST', 'DELETE']))
+router.route('/:groupId/lunchbreaks').all(allowMethods(['GET', 'POST']))
+router.route('/:groupId/lunchbreaks').post(hasBodyValues(['date', 'all']))
+router.route('/:groupId/foodTypes').all(allowMethods(['GET', 'POST']))
+router.route('/:groupId/places').all(allowMethods(['GET', 'POST']))
+router.route('/:groupId/places').post(hasBodyValues(['foodTypeId', 'name'], 'all'))
 
 router.route('/').get((req, res, next) => {
-	Group.scope({ method: ['ofUser', res.locals.user]}).findAll()
-	.then(groups => {
-		res.send(groups)
+	Group.scope({
+			method: ['ofUser', res.locals.user]
+		}).findAll()
+		.then(groups => {
+			res.send(groups)
+		})
+		.catch(err => {
+			next(err)
+		})
+})
+
+router.route('/').post(asyncMiddleware(async (req, res, next) => {
+	let result = await Group.create({
+		name: req.body.name,
+		defaultLunchTime: req.body.defaultLunchTime,
+		defaultVoteEndingTime: req.body.defaultVoteEndingTime,
+		pointsPerDay: parseInt(req.body.pointsPerDay),
+		maxPointsPerVote: parseInt(req.body.maxPointsPerVote),
+		minPointsPerVote: parseInt(req.body.minPointsPerVote)
 	})
-	.catch(err => {
-		next(err)
+
+	await GroupMembers.create({
+		groupId: result.id,
+		userId: res.locals.user.id,
+		isAdmin: true
 	})
-})
-
-router.route('/').post(async (req, res, next) => {
-	try {
-		let result = await Group.create({
-			name: req.body.name,
-			defaultLunchTime: req.body.defaultLunchTime,
-			defaultVoteEndingTime: req.body.defaultVoteEndingTime,
-			pointsPerDay: parseInt(req.body.pointsPerDay),
-			maxPointsPerVote: parseInt(req.body.maxPointsPerVote),
-			minPointsPerVote: parseInt(req.body.minPointsPerVote)
-		})
-
-		await GroupMembers.create({
-			groupId: result.id,
-			userId: res.locals.user.id,
-			isAdmin: true
-		})
-
-		let group = await Group.findOne({
-			where: {
-				id: result.id
-			},
-			include: [
-				{
-					model: Place,
-					attributes: {
-						exclude: ['groupId']
-					},
-					order: ['id']
-				},
-				{
-					model: FoodType,
-					attributes: {
-						exclude: ['groupId']
-					},
-					order: ['id']
-				},
-				{
-					model: Lunchbreak,
-					limit: parseInt(req.query.lunchbreakLimit) || 25,
-					order: ['id']
-				},
-				{
-					model: User,
-					as: 'members',
-					through: {
-						as: 'config',
-						attributes: ['color', 'isAdmin']
-					}
-				}
-			]
-		})
-
-		res.send(group)
-	} catch (err) {
-		next(err)
-	}
-})
-
-router.route('/:groupId*').all([middleware.loadGroup, commonMiddleware.userIsGroupMember])
-
-router.route('/:groupId').get((req, res) => {
-	res.send(res.locals.group)
-})
-
-router.route('/:groupId').post(commonMiddleware.userIsGroupAdmin, async (req, res, next) => {
-	if (!(req.body.name || req.body.defaultLunchTime || req.body.defaultVoteEndingTime || req.body.pointsPerDay || req.body.maxPointsPerVote || req.body.minPointsPerVote )) {
-		res.status(400).send()
-		return
-	}
 
 	let group = await Group.findOne({
 		where: {
+			id: result.id
+		},
+		include: [{
+				model: Place,
+				attributes: {
+					exclude: ['groupId']
+				},
+				order: ['id']
+			},
+			{
+				model: FoodType,
+				attributes: {
+					exclude: ['groupId']
+				},
+				order: ['id']
+			},
+			{
+				model: Lunchbreak,
+				limit: parseInt(req.query.lunchbreakLimit) || 25,
+				order: ['id']
+			},
+			{
+				model: User,
+				as: 'members',
+				through: {
+					as: 'config',
+					attributes: ['color', 'isAdmin']
+				}
+			}
+		]
+	})
+	res.send(group)
+}))
+
+router.route('/:groupId*').all(asyncMiddleware(async (req, res, next) => {
+	res.locals.group = await Group.findOne({
+		where: {
 			id: req.params.groupId
-		}
+		},
+		include: [{
+				model: Place,
+				attributes: {
+					exclude: ['groupId']
+				},
+				order: ['id']
+			},
+			{
+				model: FoodType,
+				attributes: {
+					exclude: ['groupId']
+				},
+				order: ['id']
+			},
+			{
+				model: Lunchbreak,
+				limit: parseInt(req.query.lunchbreakLimit) || 25,
+				order: ['id']
+			},
+			{
+				model: User,
+				as: 'members',
+				through: {
+					as: 'config',
+					attributes: ['color', 'isAdmin']
+				}
+			}
+		]
 	})
 
-	if (req.body.name) { group.name = req.body.name }
-	if (req.body.defaultLunchTime) { group.defaultLunchTime = req.body.defaultLunchTime }
-	if (req.body.defaultVoteEndingTime) { group.defaultVoteEndingTime = req.body.defaultVoteEndingTime }
-	if (req.body.pointsPerDay) { group.pointsPerDay = parseInt(req.body.pointsPerDay) }
-	if (req.body.maxPointsPerVote) { group.maxPointsPerVote = parseInt(req.body.maxPointsPerVote) }
-	if (req.body.minPointsPerVote) { group.minPointsPerVote = parseInt(req.body.minPointsPerVote) }
-
-	group
-		.save()
-		.then(updated => {
-			return res.send(updated)
-		})
-		.catch(err => {
-			next(err)
-		})
-})
-
-router.route('/:groupId').delete(commonMiddleware.userIsGroupAdmin, async (req, res, next) => {
-	try {
-		await Group.destroy({
-			where: {
-				id: req.params.groupId
-			}
-		})
-		res.status(204).send()
+	if (!res.locals.group) {
+		next(new NotFoundError('Group', parseInt(req.params.groupId)))
+	} else {
+		next()
 	}
-	catch (err) {
-		next(err)
+}))
+
+router.route('/:groupId').get(asyncMiddleware(async (req, res, next) => {
+	let { user, group } = res.locals
+	await user.can.readGroup(group)
+	res.send(group)
+}))
+
+router.route('/:groupId').post((req, res, next) => {
+	let { group } = res.locals
+
+	if (req.body.name) {
+		group.name = req.body.name
 	}
-})
+	if (req.body.defaultLunchTime) {
+		group.defaultLunchTime = req.body.defaultLunchTime
+	}
+	if (req.body.defaultVoteEndingTime) {
+		group.defaultVoteEndingTime = req.body.defaultVoteEndingTime
+	}
+	if (req.body.pointsPerDay) {
+		group.pointsPerDay = parseInt(req.body.pointsPerDay)
+	}
+	if (req.body.maxPointsPerVote) {
+		group.maxPointsPerVote = parseInt(req.body.maxPointsPerVote)
+	}
+	if (req.body.minPointsPerVote) {
+		group.minPointsPerVote = parseInt(req.body.minPointsPerVote)
+	}
 
-router.route('/:groupId/members').get((req, res) => {
-	res.send(res.locals.group.members)
+	next()
 })
+router.route('/:groupId').post(asyncMiddleware(async (req, res, next) => {
+	let { group, user } = res.locals
 
-router.route('/:groupId/members').post(commonMiddleware.userIsGroupAdmin, (req, res, next) => {
-	GroupMembers.create({
-		userId: parseInt(req.body.userId),
-		groupId: parseInt(res.locals.group.id),
+	await user.can.updateGroup(group)
+	res.send(await group.save())
+}))
+
+router.route('/:groupId').delete(asyncMiddleware(async (req, res, next) => {
+	let { group, user } = res.locals
+	await user.can.deleteGroup(group)
+	await group.destroy()
+	res.status(204).send()
+}))
+
+router.route('/:groupId/members').get(asyncMiddleware(async (req, res, next) => {
+	let { user, group } = res.locals
+	await user.can.readGroupMemberCollection(group)
+	res.send(group.members)
+}))
+
+router.route('/:groupId/members').post(asyncMiddleware(async (req, res, next) => {
+	let { user, group } = res.locals
+
+	let member = GroupMembers.build({
+		userId: req.body.userId,
+		groupId: res.locals.group.id,
 		color: req.body.color,
 		isAdmin: req.body.isAdmin
 	})
-	.then(member => {
-		return Group.findOne({
-			where: {
-				id: res.locals.group.id
+
+	await user.can.createGroupMember(member)
+	await member.save()
+
+	let groupNew = await Group.findOne({
+		where: {
+			id: res.locals.group.id
+		},
+		attributes: [],
+		include: [{
+			model: User,
+			as: 'members',
+			through: {
+				as: 'config',
+				attributes: ['color', 'isAdmin']
 			},
-			attributes: [],
-			include: [
-				{
-					model: User,
-					as: 'members',
-					through: {
-						as: 'config',
-						attributes: ['color', 'isAdmin']
-					},
-					where: {
-						id: member.userId
-					}
-				}
-			]
-		})
-		.then(group => {
-			res.send(group.members[0])
-		})
-		.catch(err => {
-			next(err)
-		})
+			where: {
+				id: member.userId
+			}
+		}]
 	})
-	.catch(err => {
-		next(err)
-	})
-})
 
-router.route('/:groupId/members/:userId').post(async (req, res, next) => {
-	let data = {}
+	res.send(groupNew.members[0])
+}))
 
-	if (res.locals.user.id !== parseInt(req.params.userId)) {
-		if(!res.locals.user.isGroupAdmin(parseInt(req.params.groupId))) {
-			res.status(403).send()
-			return
+router.route('/:groupId/members/:userId').all(asyncMiddleware(async (req, res, next) => {
+	res.locals.member = await GroupMembers.findOne({
+		where: {
+			groupId: req.params.groupId,
+			userId: req.params.userId
 		}
-	}
+	})
 
-	if (req.body.color) { data.color = req.body.color }
-
-	if (req.body.isAdmin && !res.locals.user.isGroupAdmin(req.params.groupId)) {
-		res.status(403).send()
-		return
+	if (res.locals.member) {
+		next()
 	} else {
-		if (req.body.isAdmin !== undefined) {
-			data.isAdmin = req.body.isAdmin
-		}
+		throw new NotFoundError('GroupMember', req.params.userId)
 	}
+}))
 
-	let memberToUpdate = await GroupMembers.findOne({
+router.route('/:groupId/members/:userId').post(asyncMiddleware(async (req, res, next) => {
+	let { user, member } = res.locals
+
+	await user.can.updateGroupMember(member, req.body.isAdmin)
+
+	if (req.body.isAdmin !== undefined) {
+		member.isAdmin = req.body.isAdmin
+	}
+	member.color = req.body.color
+
+	await user.can.updateGroupMember(member)
+	res.send(await member.save())
+}))
+
+router.route('/:groupId/members/:userId').delete(asyncMiddleware(async (req, res, next) => {
+	let { user, member } = res.locals
+
+	await user.can.deleteGroupMember(member)
+	await res.locals.member.destroy()
+	res.status(204).send()
+}))
+
+router.route('/:groupId/lunchbreaks').get(asyncMiddleware(async (req, res, next) => {
+	let { user, group } = res.locals
+
+	await user.can.readGroup(group)
+
+	res.send(await Lunchbreak.findAll({
 		where: {
 			groupId: req.params.groupId,
-			userId: req.params.userId
+			date: req.query.date
 		}
+	}))
+}))
+
+router.route('/:groupId/lunchbreaks').post(asyncMiddleware(async (req, res, next) => {
+	let { user, group } = res.locals
+
+	let lunchbreak = Lunchbreak.build({
+		groupId: req.params.groupId,
+		date: req.body.date,
+		lunchTime: req.body.lunchTime,
+		voteEndingTime: req.body.voteEndingTime
 	})
 
-	if (memberToUpdate.isAdmin && data.isAdmin === false) {
-		// If the user is the groups last admin, we cannot update him to be
-		// a non admin, so we return a 400
-		let admins = await GroupMembers.findAll({
-			where: {
-				groupId: req.params.groupId,
-				isAdmin: true
-			}
-		})
+	await user.can.createLunchbreak(lunchbreak)
 
-		if (admins.length === 1) {
-			res.status(400).send()
-			return
-		}
-	}
-
-	try {
-		let updated = await memberToUpdate.update(data)
-		res.send(updated)
-	} catch (error) {
-		next(error)
-	}
-})
-
-router.route('/:groupId/members/:userId').delete(async (req, res, next) => {
-	if (res.locals.user.id !== parseInt(req.params.userId)) {
-		if(!res.locals.user.isGroupAdmin(parseInt(req.params.groupId))) {
-			res.status(403).send()
-			return
-		}
-	}
-
-	let memberToDelete = await GroupMembers.findOne({
-		where: {
-			groupId: req.params.groupId,
-			userId: req.params.userId
-		}
-	})
-
-	// If the user is the groups last admin, send a 400
-	if (memberToDelete.isAdmin) {
-		let admins = await GroupMembers.findAll({
-			where: {
-				groupId: req.params.groupId,
-				isAdmin: true
-			}
-		})
-
-		if (admins.length === 1) {
-			res.status(400).send()
-			return
-		}
-	}
-
-	try {
-		await memberToDelete.destroy()
-		res.status(204).send()
-	} catch (error) {
-		next(error)
-	}
-})
-
-router.route('/:groupId/lunchbreaks').get(middleware.loadLunchbreak)
-
-router.route('/:groupId/lunchbreaks').post(async (req, res, next) => {
-	let lb = await Lunchbreak.findOne({
-		where: {
-			groupId: req.params.groupId,
-			date: req.body.date
-		}
-	})
-
-	if (lb) {
-		res.status(400).send('This group already has a lunchbreak planned at this date')
-		return
-	}
-
-	if (req.body.lunchTime || req.body.voteEndingTime) {
-		if(!res.locals.user.isGroupAdmin(res.locals.group.id)) {
-			res.status(403).send()
-			return
-		}
-	}
-
-	Lunchbreak.create({
+	res.send(await Lunchbreak.create({
 		groupId: parseInt(req.params.groupId),
 		date: req.body.date,
-		lunchTime: req.body.lunchTime || res.locals.group.defaultLunchTime,
-		voteEndingTime: req.body.voteEndingTime || res.locals.group.defaultVoteEndingTime
-	})
-	.then(result => {
-		res.send(result)
-	})
-	.catch(err => {
-		next(err)
-	})
-})
+		lunchTime: req.body.lunchTime || group.defaultLunchTime,
+		voteEndingTime: req.body.voteEndingTime || group.defaultVoteEndingTime
+	}))
+}))
 
 router.route('/:groupId/foodTypes').get((req, res) => {
 	res.send(res.locals.group.foodTypes)
-})
-
-router.route('/:groupId/foodTypes').post(commonMiddleware.userIsGroupAdmin, (req, res, next) => {
-	req.body.groupId = req.params.groupId
-	foodTypeMiddleware.postFoodType(req, res, next)
 })
 
 router.route('/:groupId/places').get((req, res) => {
 	res.send(res.locals.group.places)
 })
 
-router.route('/:groupId/places').post(commonMiddleware.userIsGroupAdmin, (req, res, next) => {
-	let foodTypeBelongsToGroup = false
+router.route('/:groupId/places').post(asyncMiddleware(async (req, res, next) => {
+	let { user } = res.locals
 
-	for (let foodType of res.locals.group.foodTypes) {
-		if (foodType.id === parseInt(req.body.foodTypeId)) {
-			foodTypeBelongsToGroup = true
-			break
-		}
-	}
-
-	if (!foodTypeBelongsToGroup) {
-		res.status(400).send()
-		return
-	}
-
-	Place.create({
-			groupId: parseInt(req.params.groupId),
-			foodTypeId: parseInt(req.body.foodTypeId),
-			name: req.body.name
-		})
-		.then(result => {
-			res.status(200).send(result)
-		})
-		.catch(err => {
-			next(err)
+	let place = Place.build({
+		groupId: parseInt(req.params.groupId),
+		foodTypeId: parseInt(req.body.foodTypeId),
+		name: req.body.name
 	})
-})
+
+	await user.can.createPlace(place)
+	res.send(await place.save())
+}))
 
 module.exports = router

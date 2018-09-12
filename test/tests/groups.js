@@ -1,19 +1,8 @@
 const setup = require('../setup')
+const errorHelper = require('../helpers/errors')
 
 module.exports = (request, bearerToken) => {
 	return describe('/groups', () => {
-		describe('GET', () => {
-			before(async () => {
-				await setup.resetData()
-			})
-
-			it('requires authentication', (done) => {
-				request
-					.get('/groups')
-					.expect(401, done)
-			})
-		})
-
 		describe('POST', () => {
 			let newGroup = {
 				name: 'My cool group',
@@ -26,13 +15,6 @@ module.exports = (request, bearerToken) => {
 
 			beforeEach(async () => {
 				await setup.resetData()
-			})
-
-			it('requires authentication', (done) => {
-				request
-					.post('/groups')
-					.send(newGroup)
-					.expect(401, done)
 			})
 
 			it('sucessfully creates a group', (done) => {
@@ -75,6 +57,17 @@ module.exports = (request, bearerToken) => {
 		})
 
 		describe('/:groupId', () => {
+			it('sends a 404 if the group does not exist', (done) => {
+				request
+					.get('/groups/99')
+					.set({ Authorization: bearerToken[1] })
+					.expect(404)
+					.expect(res => {
+						errorHelper.checkNotFoundError(res.body, 'Group', 99)
+					})
+					.end(done)
+			})
+
 			describe('GET', () => {
 				before(async () => {
 					await setup.resetData()
@@ -111,7 +104,16 @@ module.exports = (request, bearerToken) => {
 						.set({
 							Authorization: bearerToken[1]
 						})
-						.expect(403, done)
+						.expect(403)
+						.expect(res => {
+							let expectedError = {
+								resource: 'Group',
+								id: 2,
+								operation: 'READ'
+							}
+							errorHelper.checkAuthorizationError(res.body, expectedError)
+						})
+						.end(done)
 				})
 
 				it('sends 404 if group doesn\'t exist', (done) => {
@@ -120,7 +122,11 @@ module.exports = (request, bearerToken) => {
 						.set({
 							Authorization: bearerToken[1]
 						})
-						.expect(404, done)
+						.expect(404)
+						.expect(res => {
+							errorHelper.checkNotFoundError(res.body, 'Group', 99)
+						})
+						.end(done)
 				})
 			})
 
@@ -129,39 +135,52 @@ module.exports = (request, bearerToken) => {
 					await setup.resetData()
 				})
 
-				it('requires authentication', (done) => {
-					request
-						.post('/groups/1')
-						.expect(401, done)
-				})
-
 				it('fails with 404 if group doesn\'t exist', (done) => {
 					request
 						.post('/groups/99')
 						.set({ Authorization:  bearerToken[1] })
-						.expect(404, done)
+						.send({
+							name: 'New name',
+							defaultLunchTime: '14:00:00',
+							defaultVoteEndingTime: '13:30:00',
+							pointsPerDay: 300,
+							maxPointsPerVote: 100,
+							minPointsPerVote: 50
+						})
+						.expect(404)
+						.expect(res => {
+							errorHelper.checkNotFoundError(res.body, 'Group', 99)
+						})
+						.end(done)
 				})
 
 				it('fails with 403 if the user is no group admin', (done) => {
 					request
 						.post('/groups/1')
-						.set({
-							Authorization: bearerToken[2]
+						.set({ Authorization: bearerToken[2] })
+						.send({ name: 'New name' })
+						.expect(403)
+						.expect(res => {
+							let expectedError = {
+								resource: 'Group',
+								id: 1,
+								operation: 'UPDATE'
+							}
+							errorHelper.checkAuthorizationError(res.body, expectedError)
 						})
-						.send({
-							name: 'New name'
-						})
-						.expect(403, done)
+						.end(done)
 				})
 
 				it('requires at least one parameter', (done) => {
 					request
 						.post('/groups/1')
-						.set({
-							Authorization: bearerToken[1]
-						})
+						.set({ Authorization: bearerToken[1] })
 						.send({})
-						.expect(400, done)
+						.expect(400)
+						.expect(res => {
+							errorHelper.checkRequestError(res.body)
+						})
+						.end(done)
 				})
 
 				it('fails if defaultVoteEndingTime is greater than defaultLunchTime', (done) => {
@@ -170,9 +189,18 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[1]})
 						.send({
 							defaultVoteEndingTime: '13:00:00',
-							defaultLunchTime: '12:30:ßß'
+							defaultLunchTime: '12:30:00'
 						})
-						.expect(400, done)
+						.expect(400)
+						.expect(res => {
+							let expectedError = {
+								field: 'timeValidator',
+								value: null,
+								message: 'defaultVoteEndingTime has to be less than defaultLunchTime.'
+							}
+							errorHelper.checkValidationError(res.body, expectedError)
+						})
+						.end(done)
 				})
 
 				it('fails if minPointsPerVote is greater than maxPointsPerVote', (done) => {
@@ -183,7 +211,36 @@ module.exports = (request, bearerToken) => {
 							minPointsPerVote: 50,
 							maxPointsPerVote: 40
 						})
-						.expect(400, done)
+						.expect(400)
+						.expect(res => {
+							let expectedError = {
+								field: 'minPointsPerVote',
+								value: 50,
+								message: 'minPointsPerVote has to be less than or equal to maxPointsPerVote.'
+							}
+							errorHelper.checkValidationError(res.body, expectedError)
+						})
+						.end(done)
+				})
+
+				it('fails if maxPointsPerVote is less than minPointsPerVote', (done) => {
+					request
+						.post('/groups/1')
+						.set({ Authorization: bearerToken[1]})
+						.send({
+							minPointsPerVote: 30,
+							maxPointsPerVote: 29
+						})
+						.expect(400)
+						.expect(res => {
+							let expectedError = {
+								field: 'maxPointsPerVote',
+								value: 29,
+								message: 'maxPointsPerVote has to be greater than or equal to minPointsPerVote.'
+							}
+							errorHelper.checkValidationError(res.body, expectedError)
+						})
+						.end(done)
 				})
 
 				it('fails if maxPointsPerVote is greater than pointsPerDay', (done) => {
@@ -192,9 +249,18 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[1]})
 						.send({
 							pointsPerDay: 30,
-							maxPointsPerVote: 100
+							maxPointsPerVote: 31
 						})
-						.expect(400, done)
+						.expect(400)
+						.expect(res => {
+							let expectedError = {
+								field: 'maxPointsPerVote',
+								value: 31,
+								message: 'maxPointsPerVote has to be less than or equal to pointsPerDay.'
+							}
+							errorHelper.checkValidationError(res.body, expectedError)
+						})
+						.end(done)
 				})
 
 				it('fails if minPointsPerVote is greater than pointsPerDay', (done) => {
@@ -202,10 +268,19 @@ module.exports = (request, bearerToken) => {
 						.post('/groups/1')
 						.set({ Authorization: bearerToken[1]})
 						.send({
-							minPointsPerVote: 1000,
+							minPointsPerVote: 101,
 							pointsPerDay: 100
 						})
-						.expect(400, done)
+						.expect(400)
+						.expect(res => {
+							let expectedError = {
+								field: 'minPointsPerVote',
+								value: 101,
+								message: 'minPointsPerVote has to be less than or equal to pointsPerDay.'
+							}
+							errorHelper.checkValidationError(res.body, expectedError)
+						})
+						.end(done)
 				})
 
 				it('updates a group successfully', (done) => {
@@ -265,37 +340,40 @@ module.exports = (request, bearerToken) => {
 					await setup.resetData()
 				})
 
-				it('requires auth', (done) => {
-					request
-						.delete('/groups/1')
-						.expect(401)
-						.end(done)
-				})
-
 				it('requires admin rights', (done) => {
 					request
 						.delete('/groups/1')
 						.set({ Authorization: bearerToken[2] })
 						.expect(403)
+						.expect(res => {
+							let expectedError = {
+								resource: 'Group',
+								id: 1,
+								operation: 'DELETE'
+							}
+							errorHelper.checkAuthorizationError(res.body, expectedError)
+						})
 						.end(done)
 				})
 
-				it('deletes a group successfully', (done) => {
-					request
+				it('deletes a group successfully', async () => {
+					await request
 						.delete('/groups/1')
 						.set({ Authorization: bearerToken[1] })
 						.expect(204)
-						.expect((res) => {
-							return request
-								.get('/groups/1')
-								.set({ Authorization: bearerToken[1] })
-								.expect(404)
-						})
-						.end(done)
+
+					await request
+						.get('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(404)
 				})
 			})
 
 			describe('/lunchbreaks', () => {
+				beforeEach(async () => {
+					await setup.resetData()
+				})
+
 				describe('GET', () => {
 					before(async () => {
 						await setup.resetData()
@@ -358,7 +436,16 @@ module.exports = (request, bearerToken) => {
 								lunchTime: '13:00:00',
 								voteEndingTime: '12:59:00'
 							})
-							.expect(403, done)
+							.expect(403)
+							.expect(res =>  {
+								let expectedError = {
+									resource: 'Lunchbreak',
+									id: null,
+									operation: 'CREATE'
+								}
+								errorHelper.checkAuthorizationError(res.body, expectedError)
+							})
+							.end(done)
 					})
 
 					it('fails if the user provides times and is no admin', (done) => {
@@ -370,7 +457,16 @@ module.exports = (request, bearerToken) => {
 								lunchTime: '12:00:00',
 								voteEndingTime: '11:59:00'
 							})
-							.expect(403, done)
+							.expect(403)
+							.expect(res => {
+								let expectedError = {
+									resource: 'Lunchbreak',
+									id: null,
+									operation: 'CREATE'
+								}
+								errorHelper.checkAuthorizationError(res.body, expectedError)
+							})
+							.end(done)
 					})
 
 					it('creates a new lunchbreak successfully when user is no admin', (done) => {
@@ -432,9 +528,11 @@ module.exports = (request, bearerToken) => {
 							.post('/groups/1/lunchbreaks')
 							.set({ Authorization: bearerToken[2]})
 							.send({})
-							.expect(400, (err, res) => {
-								done(err)
+							.expect(400)
+							.expect(res => {
+								errorHelper.checkRequestError(res.body)
 							})
+							.end(done)
 					})
 
 					it('fails if voteEndingTime is greater than lunchTime', (done) => {{
@@ -446,7 +544,16 @@ module.exports = (request, bearerToken) => {
 								lunchTime: '12:30:00',
 								voteEndingTime: '12:31:00'
 							})
-							.expect(400, done)
+							.expect(400)
+							.expect(res => {
+								let expectedError = {
+									field: 'voteEndingTime',
+									value: '12:31:00',
+									message: 'voteEndingTime cannot be greater than lunchTime.'
+								}
+								errorHelper.checkValidationError(res.body, expectedError)
+							})
+							.end(done)
 					}})
 
 					it('fails if a lunchbreak at this date exists', (done) => {
@@ -456,7 +563,22 @@ module.exports = (request, bearerToken) => {
 							.send({
 								date: '2018-06-25'
 							})
-							.expect(400, done)
+							.expect(400)
+							.expect(res => {
+								let expectedError = {
+									field: 'date',
+									value: '2018-06-25',
+									message: 'A lunchbreak at this date already exists.'
+								}
+
+								// There is a bug in sequelize (https://github.com/sequelize/sequelize/issues/9871)
+								// which results in a incorrect error value. So in order that our test does not fail,
+								// we temporary expect another value.
+								expectedError.value = '2018'
+
+								errorHelper.checkValidationError(res.body, expectedError)
+							})
+							.end(done)
 					})
 				})
 			})
@@ -465,6 +587,22 @@ module.exports = (request, bearerToken) => {
 				describe('GET', () => {
 					before(async () => {
 						await setup.resetData()
+					})
+
+					it('requires a user to be a member of the group', (done) => {
+						request
+							.get('/groups/1/members')
+							.set({ Authorization: bearerToken[3] })
+							.expect(403)
+							.expect(res => {
+								let expectedError = {
+									resource: 'GroupMemberCollection',
+									id: null,
+									operation: 'READ'
+								}
+								errorHelper.checkAuthorizationError(res.body, expectedError)
+							})
+							.end(done)
 					})
 
 					it('sends a valid member collection', (done) => {
@@ -505,8 +643,76 @@ module.exports = (request, bearerToken) => {
 							.post('/groups/1/members')
 							.set({ Authorization: bearerToken[2] })
 							.send(newMember)
-							.expect(403, done)
+							.expect(403)
+							.expect(res => {
+								let expectedError = {
+									resource: 'GroupMember',
+									id: null,
+									operation: 'CREATE',
+								}
+								errorHelper.checkAuthorizationError(res.body, expectedError)
+							})
+							.end(done)
 					})
+
+					it('fails if userId is undefined', (done) => {
+						newMember.userId = undefined
+						request
+							.post('/groups/1/members')
+							.set({ Authorization: bearerToken[1] })
+							.send(newMember)
+							.expect(400)
+							.expect(res => {
+								let expectedError = {
+									field: 'userId',
+									value: null,
+									message: 'userId cannot be null.'
+								}
+
+								errorHelper.checkValidationError(res.body, expectedError)
+							})
+							.end(done)
+					})
+
+					it('fails if userId does not exist', (done) => {
+						newMember.userId = 99
+						request
+							.post('/groups/1/members')
+							.set({ Authorization: bearerToken[1] })
+							.send(newMember)
+							.expect(400)
+							.expect(res => {
+								let expectedError = {
+									field: 'userId',
+									value: 99,
+									message: 'userId does not exist.'
+								}
+
+								errorHelper.checkValidationError(res.body, expectedError)
+							})
+							.end(done)
+					})
+
+					it('fails if userId is not a number', (done) => {
+						newMember.userId = 'string'
+						request
+							.post('/groups/1/members')
+							.set({ Authorization: bearerToken[1] })
+							.send(newMember)
+							.expect(400)
+							.expect(res => {
+								let expectedError = {
+									field: 'userId',
+									value: 'string',
+									message: 'userId has to be numeric.'
+								}
+
+								errorHelper.checkValidationError(res.body, expectedError)
+							})
+							.end(done)
+					})
+
+					it('responds with a collection of all members')
 
 					it('successfully adds a group member', (done) => {
 						request
@@ -557,20 +763,33 @@ module.exports = (request, bearerToken) => {
 							.post('/groups/1/members')
 							.set({ Authorization: bearerToken[1] })
 							.send(newMember)
-							.expect(400, done)
+							.expect(400)
+							.expect(res => {
+								let expectedError = {
+									field: 'userId',
+									value: null,
+									message: 'userId cannot be null.'
+								}
+							})
+							.end(done)
 					})
 				})
 
 				describe('/:userId', () => {
+					it('returns a 404 if user is no group member', (done) => {
+						request
+							.post('/groups/1/members/404')
+							.set({ Authorization: bearerToken[1] })
+							.expect(404)
+							.expect(res => {
+								errorHelper.checkNotFoundError(res.body, 'GroupMember', '404')
+							})
+							.end(done)
+					})
+
 					describe('POST', () => {
 						beforeEach(async () => {
 							await setup.resetData()
-						})
-
-						it('requires auth', (done) => {
-							request
-								.post('/groups/1/members/1')
-								.expect(401, done)
 						})
 
 						it('allows an user to change his color', (done) => {
@@ -580,7 +799,7 @@ module.exports = (request, bearerToken) => {
 								.send({ color: '#eeeeee' })
 								.expect(200)
 								.expect(res => {
-									member = res.body
+									let member = res.body
 									member.should.have.property('color').equal('#eeeeee')
 								})
 								.end(done)
@@ -593,7 +812,7 @@ module.exports = (request, bearerToken) => {
 								.send({ color: '#fafafa', isAdmin: true })
 								.expect(200)
 								.expect(res => {
-									member = res.body
+									let member = res.body
 									member.should.have.property('color').equal('#fafafa')
 									member.should.have.property('isAdmin').equal(true)
 								})
@@ -606,12 +825,20 @@ module.exports = (request, bearerToken) => {
 								.set({ Authorization: bearerToken[1]})
 								.send({ isAdmin: true })
 								.expect(200)
+								.expect(res => {
+									let member = res.body
+									member.should.have.property('isAdmin').equal(true)
+								})
 								.then(() => {
 									request
 										.post('/groups/1/members/2')
 										.set({ Authorization: bearerToken[1] })
 										.send({ isAdmin: false })
 										.expect(200)
+										.expect(res => {
+											let member = res.body
+											member.should.have.property('isAdmin').equal(false)
+										})
 										.end(done)
 								})
 						})
@@ -620,23 +847,54 @@ module.exports = (request, bearerToken) => {
 							request
 								.post(('/groups/1/members/1'))
 								.set({ Authorization: bearerToken[2] })
-								.expect(403, done)
+								.expect(403)
+								.expect(res => {
+									let expectedError = {
+										resource: 'GroupMember',
+										id: 1,
+										operation: 'UPDATE'
+									}
+									errorHelper.checkAuthorizationError(res.body, expectedError)
+								})
+								.end(done)
 						})
 
-						it('fails if a non admin tries to get admin rights', (done) => {
-							request
-								.post('/groups/1/members/2')
-								.set({ Authorization: bearerToken[2] })
-								.send({ isAdmin: true })
-								.expect(403, done)
-						})
+						it('fails if a non admin tries to get admin rights', async () => {
+							const TRUTHY = [true, 'true', 1, '1']
+
+							for (let val of TRUTHY) {
+								await request
+									.post('/groups/1/members/2')
+									.set({ Authorization: bearerToken[2] })
+									.send({ isAdmin: val })
+									.expect(403)
+									.expect(res => {
+										let expectedError = {
+											resource: 'GroupMember',
+											id: 2,
+											operation: 'UPDATE'
+										}
+										errorHelper.checkAuthorizationError(res.body, expectedError)
+									})
+								}
+							})
 
 						it('fails if the user is the groups last admin', (done) => {
 							request
 								.post('/groups/1/members/1')
 								.set({ Authorization: bearerToken[1] })
 								.send({ isAdmin: false })
-								.expect(400, done)
+								.expect(403)
+								.expect(res => {
+									let expectedError = {
+										resource: 'GroupMember',
+										id: 1,
+										operation: 'UPDATE',
+										message: 'This user is the last admin of this group and cannot revoke his rights.'
+									}
+									errorHelper.checkAuthorizationError(res.body, expectedError)
+								})
+								.end(done)
 						})
 					})
 
@@ -645,17 +903,19 @@ module.exports = (request, bearerToken) => {
 							await setup.resetData()
 						})
 
-						it('requires auth', (done) => {
-							request
-								.delete('/groups/1/members/1')
-								.expect(401, done)
-							})
-
 						it('requires group admin rights to remove other members', (done) => {
 							request
 								.delete('/groups/1/members/1')
 								.set({ Authorization: bearerToken[2] })
-								.expect(403, done)
+								.expect(403)
+								.expect(res => {
+									let expectedError = {
+										resource: 'GroupMember',
+										id: 1,
+										operation: 'DELETE'
+									}
+								})
+								.end(done)
 						})
 
 						it('lets the admins remove other group members', (done) => {
@@ -676,7 +936,17 @@ module.exports = (request, bearerToken) => {
 							request
 								.delete('/groups/1/members/1')
 								.set({ Authorization: bearerToken[1] })
-								.expect(400, done)
+								.expect(403)
+								.expect(res => {
+									let expectedError = {
+										resource: 'GroupMember',
+										id: 1,
+										operation: 'DELETE',
+										message: 'You are the last administrator of this group and cannot leave the group.'
+									}
+									errorHelper.checkAuthorizationError(res.body, expectedError)
+								})
+								.end(done)
 						})
 					})
 				})
@@ -686,12 +956,6 @@ module.exports = (request, bearerToken) => {
 				describe('GET', () => {
 					before(async () => {
 						await setup.resetData()
-					})
-
-					it('requires authentication', (done) => {
-						request
-							.get('/groups/1/places')
-							.expect(401, done)
 					})
 
 					it('sends a valid place collection', (done) => {
@@ -728,7 +992,17 @@ module.exports = (request, bearerToken) => {
 						request
 							.post('/groups/1/places')
 							.set({ Authorization: bearerToken[2] })
-							.expect(403, done)
+							.send(newPlace)
+							.expect(403)
+							.expect(res => {
+								let expectedError = {
+									resource: 'Place',
+									id: null,
+									operation: 'CREATE'
+								}
+								errorHelper.checkAuthorizationError(res.body, expectedError)
+							})
+							.end(done)
 					})
 
 					it('creates a new place correctly', (done) => {
@@ -747,22 +1021,22 @@ module.exports = (request, bearerToken) => {
 							.end(done)
 					})
 
-					it('sends 400 on non existent foreign key', (done) => {
-						newPlace.foodTypeId = 99 // non existent foodTypeId
-						request
-							.post('/groups/1/places')
-							.set({ Authorization: bearerToken[1] })
-							.send(newPlace)
-							.expect(400, done)
-					})
-
 					it('sends 400 on non-group foreign key', (done) => {
 						newPlace.foodTypeId = 5 // this id belongs to group 2
 						request
 							.post('/groups/1/places')
 							.set({ Authorization: bearerToken[1] })
 							.send(newPlace)
-							.expect(400, done)
+							.expect(400)
+							.expect(res => {
+								let expectedError = {
+									field: 'foodTypeId',
+									value: 5,
+									message: 'This food type does not belong to group 1'
+								}
+								errorHelper.checkValidationError(res.body, expectedError)
+							})
+							.end(done)
 					})
 
 					it('sends 400 if no name and foodTypeId is provided', (done) => {
@@ -770,7 +1044,11 @@ module.exports = (request, bearerToken) => {
 							.post('/groups/1/places')
 							.set({ Authorization: bearerToken[1] })
 							.send( {} )
-							.expect(400, done)
+							.expect(400)
+							.expect(res => {
+								errorHelper.checkRequestError(res.body)
+							})
+							.end(done)
 					})
 				})
 			})
@@ -779,12 +1057,6 @@ module.exports = (request, bearerToken) => {
 				describe('GET', () => {
 					before(async () => {
 						await setup.resetData()
-					})
-
-					it('requires authentication', (done) => {
-						request
-							.get('/groups/1/foodTypes')
-							.expect(401, done)
 					})
 
 					it('sends a valid foodType collection', (done) => {
@@ -800,56 +1072,6 @@ module.exports = (request, bearerToken) => {
 								let foodType = collection[0]
 								foodType.should.have.property('id').equal(1)
 								foodType.should.have.property('type').equal('Asiatisch')
-							})
-							.end(done)
-					})
-				})
-
-				describe('POST', () => {
-					let newFoodType
-
-					beforeEach(async () => {
-						newFoodType = {
-							type: 'Neu!'
-						}
-						await setup.resetData()
-					})
-
-					it('requires admin rights', (done) => {
-						request
-							.post('/groups/1/foodTypes')
-							.set({ Authorization: bearerToken[2] })
-							.expect(403, done)
-					})
-
-					it('sends 400 if no type is specified', (done) => {
-						request
-							.post('/groups/1/foodTypes')
-							.set({ Authorization: bearerToken[1] })
-							.send( { } )
-							.expect(400, done)
-					})
-
-					it('fails if type already exists', (done) => {
-						newFoodType.type = 'Döner'
-
-						request
-							.post('/groups/1/foodTypes')
-							.set({ Authorization: bearerToken[1] })
-							.send(newFoodType)
-							.expect(400, done)
-					})
-
-					it('inserts a new foodType correctly', (done) => {
-						request
-							.post('/groups/1/foodTypes')
-							.set({ Authorization: bearerToken[1] })
-							.send(newFoodType)
-							.expect(200)
-							.expect(response => {
-								let foodType = response.body
-								foodType.should.have.property('id')
-								foodType.should.have.property('type').equal(newFoodType.type)
 							})
 							.end(done)
 					})

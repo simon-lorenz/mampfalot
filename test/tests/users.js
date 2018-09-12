@@ -1,4 +1,5 @@
 const setup = require('../setup')
+const errorHelper = require('../helpers/errors')
 
 module.exports = (request, bearerToken) => {
 	return describe('/users', () => {
@@ -10,14 +11,22 @@ module.exports = (request, bearerToken) => {
 			it('fails if no email address is provided', (done) => {
 				request
 					.get('/users')
-					.expect(400, done)
+					.expect(400)
+					.expect(res => {
+						errorHelper.checkRequestError(res.body, 'This request has to provide all of the following query values: email')
+					})
+					.end(done)
 			})
 
 			it('returns 404 if no user with this email exists', (done) => {
 				request
 					.get('/users')
 					.query({ email: 'not.existing@email.com' })
-					.expect(404, done)
+					.expect(404)
+					.expect(res => {
+						errorHelper.checkNotFoundError(res.body, 'User', null)
+					})
+					.end(done)
 			})
 
 			it('returns a user resource if email exists', (done) => {
@@ -72,7 +81,35 @@ module.exports = (request, bearerToken) => {
 				request
 					.post('/users')
 					.send(newUser)
-					.expect(400, done)
+					.expect(400)
+					.expect(res => {
+						let expectedErrorItem = {
+							field: 'name',
+							value: null,
+							message: 'Name cannot be null'
+						}
+
+						errorHelper.checkValidationError(res.body, expectedErrorItem)
+					})
+					.end(done)
+			})
+
+			it('fails with 400 if name is empty', (done) => {
+				newUser.name = ''
+				request
+					.post('/users')
+					.send(newUser)
+					.expect(400)
+					.expect(res => {
+						let expectedErrorItem = {
+							field: 'name',
+							value: '',
+							message: 'Name cannot be empty'
+						}
+
+						errorHelper.checkValidationError(res.body, expectedErrorItem)
+					})
+					.end(done)
 			})
 
 			it('fails with 400 if no password is provided', (done) => {
@@ -81,7 +118,76 @@ module.exports = (request, bearerToken) => {
 				request
 					.post('/users')
 					.send(newUser)
-					.expect(400, done)
+					.expect(400)
+					.expect(res => {
+						let expectedErrorItem = {
+							field: 'password',
+							value: null,
+							message: 'Password cannot be null'
+						}
+
+						errorHelper.checkValidationError(res.body, expectedErrorItem)
+					})
+					.end(done)
+			})
+
+			it('fails with 400 if password is empty', (done) => {
+				newUser.password = ''
+				request
+					.post('/users')
+					.send(newUser)
+					.expect(400)
+					.expect(res => {
+						let expectedErrorItem = {
+							field: 'password',
+							value: '',
+							message: 'Password cannot be empty'
+						}
+
+						errorHelper.checkValidationError(res.body, expectedErrorItem)
+					})
+					.end(done)
+			})
+
+			it('fails if password is too short', (done) => {
+				newUser.password = '1234567'
+				request
+					.post('/users')
+					.send(newUser)
+					.expect(400)
+					.expect(res => {
+						let expectedErrorItem = {
+							field: 'password',
+							value: newUser.password,
+							message: 'Password has to be between 8 and 255 characters long'
+						}
+
+						errorHelper.checkValidationError(res.body, expectedErrorItem)
+					})
+					.end(done)
+			})
+
+			it('fails if password is too long', (done) => {
+				newUser.password =  'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
+									'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
+									'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
+									'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
+									'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
+									'123456' // 256 characters
+				request
+					.post('/users')
+					.send(newUser)
+					.expect(400)
+					.expect(res => {
+						let expectedErrorItem = {
+							field: 'password',
+							value: newUser.password,
+							message: 'Password has to be between 8 and 255 characters long'
+						}
+
+						errorHelper.checkValidationError(res.body, expectedErrorItem)
+					})
+					.end(done)
 			})
 
 			it('fails with 400 if no email is provided', (done) => {
@@ -90,7 +196,61 @@ module.exports = (request, bearerToken) => {
 				request
 					.post('/users')
 					.send(newUser)
-					.expect(400, done)
+					.expect(400)
+					.expect(res => {
+						let expectedErrorItem = {
+							field: 'email',
+							value: null,
+							message: 'E-Mail cannot be null'
+						}
+
+						errorHelper.checkValidationError(res.body, expectedErrorItem)
+					})
+					.end(done)
+			})
+
+			it('fails with 400 if email is empty', (done) => {
+				newUser.email = ''
+
+				request
+					.post('/users')
+					.send(newUser)
+					.expect(400)
+					.expect(res => {
+						let expectedErrorItem = {
+							field: 'email',
+							value: '',
+							message: 'E-Mail cannot be empty'
+						}
+
+						errorHelper.checkValidationError(res.body, expectedErrorItem)
+					})
+					.end(done)
+			})
+
+			it('fails with 400 if value is no valid email', async () => {
+				const INVALID_ADDRESSES = ['123', 'string', 'stringwith@', 'string.com', 'string@test.com&%']
+
+				for (let email of INVALID_ADDRESSES) {
+					newUser.email = email
+					try {
+						await request
+							.post('/users')
+							.send(newUser)
+							.expect(400)
+							.expect(res => {
+								let expectedErrorItem = {
+									field: 'email',
+									value: newUser.email,
+									message: 'This is not a valid e-mail-address'
+								}
+
+								errorHelper.checkValidationError(res.body, expectedErrorItem)
+							})
+					} catch (err) {
+						throw err
+					}
+				}
 			})
 
 			it('fails if email is already taken', (done) => {
@@ -99,18 +259,22 @@ module.exports = (request, bearerToken) => {
 				request
 					.post('/users')
 					.send(newUser)
-					.expect(400, done)
+					.expect(400)
+					.expect(res => {
+						let expectedErrorItem = {
+							field: 'email',
+							value: newUser.email,
+							message: 'This E-Mail is already taken'
+						}
+
+						errorHelper.checkValidationError(res.body, expectedErrorItem)
+					})
+					.end(done)
 			})
 		})
 
 		describe('/:userId', () => {
 			describe('GET', () => {
-				it('requires authentication', (done) => {
-					request
-						.get('/users/1')
-						.expect(401, done)
-				})
-
 				it('returns a valid user resource for Max Mustermann', (done) => {
 					request
 						.get('/users/1')
@@ -149,7 +313,16 @@ module.exports = (request, bearerToken) => {
 						.set({
 							Authorization: bearerToken[1]
 						})
-						.expect(403, done)
+						.expect(403)
+						.expect(res => {
+							let expectedError = {
+								resource: 'User',
+								id: 3,
+								operation: 'READ'
+							}
+							errorHelper.checkAuthorizationError(res.body, expectedError)
+						})
+						.end(done)
 				})
 			})
 
@@ -158,24 +331,33 @@ module.exports = (request, bearerToken) => {
 					await setup.resetData()
 				})
 
-				it('requires authentication', (done) => {
-					request
-						.post('/users/1')
-						.expect(401, done)
-				})
-
 				it('fails with 404 if user doesn\'t exist', (done) => {
 					request
 						.post('/users/99')
 						.set({ Authorization: bearerToken[1]})
-						.expect(404, done)
+						.send({ name: 'Neuer Name', email: 'neu@mail.com', password: 'hurdurdur'})
+						.expect(404)
+						.expect(res => {
+							errorHelper.checkNotFoundError(res.body, 'User', 99)
+						})
+						.end(done)
 				})
 
 				it('fails with 403 if user tries to update another user', (done) => {
 					request
 						.post('/users/3')
 						.set({ Authorization: bearerToken[1]})
-						.expect(403, done)
+						.send({ name: 'New name' })
+						.expect(403)
+						.expect(res => {
+							let expectedError = {
+								resource: 'User',
+								id: 3,
+								operation: 'UPDATE'
+							}
+							errorHelper.checkAuthorizationError(res.body, expectedError)
+						})
+						.end(done)
 				})
 
 				it('fails with 400 if not at least one parameter is provided', (done) => {
@@ -183,7 +365,11 @@ module.exports = (request, bearerToken) => {
 						.post('/users/1')
 						.set({ Authorization: bearerToken[1]})
 						.send({})
-						.expect(400, done)
+						.expect(400)
+						.expect(res => {
+							errorHelper.checkRequestError(res.body, 'This request has to provide at least one of the following body values: name, email, password')
+						})
+						.end(done)
 				})
 
 				it('fails if request does not contain the current password', (done) => {
@@ -199,14 +385,18 @@ module.exports = (request, bearerToken) => {
 						.post('/users/1')
 						.set({ Authorization: bearerToken[1] })
 						.send({ password: 'new!', currentPassword: 'wrongPassword'})
-						.expect(401, done)
+						.expect(401)
+						.expect(res => {
+							errorHelper.checkAuthenticationError(res.body, 'invalidCredentials')
+						})
+						.end(done)
 				})
 
 				it('updates a user correctly', (done) => {
 					request
 						.post('/users/1')
 						.set({ Authorization: bearerToken[1]})
-						.send({ name: 'Neuer Name', email: 'neu@mail.com', password: 'hurdur', currentPassword: '123456'})
+						.send({ name: 'Neuer Name', email: 'neu@mail.com', password: 'hurdurdur', currentPassword: '123456'})
 						.expect(200)
 						.expect(res => {
 							let newUser = res.body
@@ -218,7 +408,7 @@ module.exports = (request, bearerToken) => {
 						.then(() => {
 							request
 								.get('/auth')
-								.auth('neu@mail.com', 'hurdur')
+								.auth('neu@mail.com', 'hurdurdur')
 								.expect(200, done)
 						})
 						.catch((err) => {
@@ -262,7 +452,16 @@ module.exports = (request, bearerToken) => {
 						.set({
 							Authorization: bearerToken[1]
 						})
-						.expect(403, done)
+						.expect(403)
+						.expect(res => {
+							let expectedError = {
+								resource: 'User',
+								id: 5,
+								operation: 'DELETE'
+							}
+							errorHelper.checkAuthorizationError(res.body, expectedError)
+						})
+						.end(done)
 				})
 
 				it('fails with 404 if user doesn\'t exist', (done) => {
@@ -271,18 +470,23 @@ module.exports = (request, bearerToken) => {
 						.set({
 							Authorization: bearerToken[1]
 						})
-						.expect(404, done)
+						.expect(404)
+						.expect(res => {
+							errorHelper.checkNotFoundError(res.body, 'User', 99)
+						})
+						.end(done)
 				})
 
-				it('deletes an existing user', (done) => {
-					request
+				it('deletes an existing user', async () => {
+					await request
 						.delete('/users/3')
-						.set({
-							Authorization: bearerToken[3]
-						})
-						.expect(204, done())
-					// TODO: Prüfen, dass der Server uns auch nicht anlügt.
-					// Ist die Resource wirklich gelöscht? Problem: Token!
+						.set({ Authorization: bearerToken[3] })
+						.expect(204)
+
+					await request
+						.get('/users/3')
+						.set({ Authorization: bearerToken[1] })
+						.expect(404)
 				})
 			})
 
@@ -291,17 +495,20 @@ module.exports = (request, bearerToken) => {
 					await setup.resetData()
 				})
 
-				it('requires auth', (done) => {
-					request
-						.get('/users/1/groups')
-						.expect(401, done)
-				})
-
 				it('fails if user tries to access another users groups', (done) => {
 					request
 						.get('/users/1/groups')
 						.set({ Authorization: bearerToken[2] })
-						.expect(403, done)
+						.expect(403)
+						.expect(res => {
+							let expectedError = {
+								resource: 'GroupCollection',
+								id: null,
+								operation: 'READ'
+							}
+							errorHelper.checkAuthorizationError(res.body, expectedError)
+						})
+						.end(done)
 				})
 
 				it('sends a correct group collection', (done) => {

@@ -1,88 +1,99 @@
-const express = require('express')
-const router = express.Router()
-const Comment = require('./../models').Comment
-const Participant = require('./../models').Participant
-const middleware = require('./../middleware/lunchbreaks')
+const router = require('express').Router()
+const { Comment, Lunchbreak, Participant, Place, Vote, User } = require('../models')
+const { allowMethods, hasBodyValues } = require('../util/middleware')
+const { asyncMiddleware } = require('../util/util')
+const { NotFoundError } = require('../classes/errors')
 
-router.param('lunchbreakId', middleware.loadLunchbreak)
+router.route('/:lunchbreakId').all(allowMethods(['GET', 'POST']))
+router.route('/:lunchbreakId').post(hasBodyValues(['voteEndingTime', 'lunchTime'], 'atLeastOne'))
+router.route('/:lunchbreakId/comments').all(allowMethods(['GET', 'POST']))
+router.route('/:lunchbreakId/comments').post(hasBodyValues(['comment'], 'all'))
+router.route('/:lunchbreakId/participants').all(allowMethods(['GET', 'POST']))
 
-router.route('/:lunchbreakId').get((req, res, next) => {
+router.param('lunchbreakId', asyncMiddleware(async (req, res, next) => {
+	let id = parseInt(req.params.lunchbreakId)
+
+	res.locals.lunchbreak = await Lunchbreak.findOne({
+		where: { id },
+		include: [
+			{
+				model:Participant,
+				attributes: {
+					exclude: ['amountSpent']
+				},
+				include: [
+					{
+						model:Vote,
+						include: [ Place ]
+					},
+					{
+						model: User
+					}]
+			},
+			{
+				model: Comment
+			}
+		]
+	})
+
+	if (res.locals.lunchbreak) {
+		next()
+	} else {
+		next(new NotFoundError('Lunchbreak', id))
+	}
+}))
+
+router.route('/:lunchbreakId').get(asyncMiddleware(async (req, res, next) => {
+	let { user, lunchbreak } = res.locals
+	await user.can.readLunchbreak(lunchbreak)
 	res.send(res.locals.lunchbreak)
-})
+}))
 
-router.route('/:lunchbreakId').post((req, res, next) => {
-	if(!res.locals.user.isGroupAdmin(res.locals.lunchbreak.groupId)) {
-		res.status(403).send()
-		return
-	}
+router.route('/:lunchbreakId').post(asyncMiddleware(async (req, res, next) => {
+	let { user, lunchbreak } = res.locals
 
-	let values = {}
-	if(req.body.voteEndingTime) { values.voteEndingTime = req.body.voteEndingTime }
-	if(req.body.lunchTime) { values.lunchTime = req.body.lunchTime }
+	if(req.body.voteEndingTime) { lunchbreak.voteEndingTime = req.body.voteEndingTime }
+	if(req.body.lunchTime) { lunchbreak.lunchTime = req.body.lunchTime }
 
-	if (Object.keys(values).length === 0) {
-		res.status(400).send('Please provide at least one of the following parameter: voteEndingTime, lunchTime')
-		return
-	}
+	await user.can.updateLunchbreak(lunchbreak)
+	res.send(await lunchbreak.save())
+}))
 
-	res.locals.lunchbreak
-		.update(values)
-		.then((lunchbreak) => {
-			res.send(lunchbreak)
-		})
-		.catch(err => {
-			next(err)
-		})
-})
+router.route('/:lunchbreakId/comments').get(asyncMiddleware(async (req, res, next) => {
+	let { user, lunchbreak } = res.locals
+	await user.can.readLunchbreak(lunchbreak)
+	res.send(lunchbreak.comments)
+}))
 
-router.route('/:lunchbreakId/comments').get((req, res, next) => {
-	res.send(res.locals.lunchbreak.comments)
-})
+router.route('/:lunchbreakId/comments').post(asyncMiddleware(async (req, res, next) => {
+	let { user } = res.locals
 
-router.route('/:lunchbreakId/comments').post((req, res, next) => {
-	Comment.create({
+	let comment = Comment.build({
 		lunchbreakId: res.locals.lunchbreak.id,
 		userId: res.locals.user.id,
 		comment: req.body.comment
 	})
-	.then(comment => {
-		res.send(comment)
-	})
-	.catch(err => {
-		next(err)
-	})
-})
+
+	await user.can.createComment(comment)
+
+	res.send(await comment.save())
+}))
 
 router.route('/:lunchbreakId/participants').get((req, res, next) => {
 	res.send(res.locals.lunchbreak.participants)
 })
 
-router.route('/:lunchbreakId/participants').post((req, res, next) => {
-	if (!req.body.userId) {
-		res.status(400).send('Please provide a userId')
-		return
-	}
+router.route('/:lunchbreakId/participants').post(asyncMiddleware(async (req, res, next) => {
+	let { user } = res.locals
 
-	if (req.body.userId !== res.locals.user.id) {
-		res.status(403).send()
-		return
-	}
-
-	if (!res.locals.user.isGroupMember(res.locals.lunchbreak.groupId)) {
-		res.status(403).send()
-		return
-	}
-
-	Participant.create({
-		userId: parseInt(req.body.userId),
+	let participant = Participant.build({
+		userId: user.id,
 		lunchbreakId: parseInt(req.params.lunchbreakId)
 	})
-	.then(participant => {
-		res.send(participant)
-	})
-	.catch(err => {
-		next(err)
-	})
-})
+
+	await user.can.createParticipant(participant)
+
+	res.send(await participant.save())
+}))
 
 module.exports = router

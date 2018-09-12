@@ -1,4 +1,5 @@
 const setup = require('../setup')
+const errorHelper = require('../helpers/errors')
 
 module.exports = (request, bearerToken) => {
 	return describe('/lunchbreaks', () => {
@@ -8,17 +9,32 @@ module.exports = (request, bearerToken) => {
 					await setup.resetData()
 				})
 
-				it('requires auth', (done) => {
+				it('returns NotFoundError', (done) => {
 					request
-						.get('/lunchbreaks/1')
-						.expect(401, done)
+						.get('/lunchbreaks/99')
+						.set({ Authorization: bearerToken[1] })
+						.expect(404)
+						.expect(res => {
+							errorHelper.checkNotFoundError(res.body, 'Lunchbreak', 99)
+						})
+						.end(done)
 				})
 
 				it('fails if user isn\'t a group member', (done) => {
 					request
 						.get('/lunchbreaks/1')
 						.set({ Authorization: bearerToken[3] })
-						.expect(403, done)
+						.expect(403)
+						.expect(res => {
+							let expectedError = {
+								resource: 'Lunchbreak',
+								id: 1,
+								operation: 'READ'
+							}
+
+							errorHelper.checkAuthorizationError(res.body, expectedError)
+						})
+						.end(done)
 					})
 
 				it('sends a correct lunchbreak resource', (done) => {
@@ -50,25 +66,32 @@ module.exports = (request, bearerToken) => {
 					await setup.resetData()
 				})
 
-				it('requires auth', (done) => {
-					request
-						.post('/lunchbreaks/1')
-						.expect(401, done)
-				})
-
 				it('fails if the user is no group admin', (done) => {
 					request
 						.post('/lunchbreaks/1')
 						.set({ Authorization: bearerToken[2] })
-						.expect(403, done)
+						.send({ voteEndingTime: '10:00:00' })
+						.expect(403)
+						.expect(res => {
+							let expectedError = {
+								resource: 'Lunchbreak',
+								id: 1,
+								operation: 'UPDATE'
+							}
+							errorHelper.checkAuthorizationError(res.body, expectedError)
+						})
+						.end(done)
 				})
 
 				it('requires at least one parameter', (done) => {
 					request
 						.post('/lunchbreaks/1')
 						.set({ Authorization: bearerToken[1] })
-						.send({ })
-						.expect(400, done)
+						.expect(400)
+						.expect(res => {
+							errorHelper.checkRequestError(res.body)
+						})
+						.end(done)
 				})
 
 				it('fails if voteEndingTime is greater than lunchTime', (done) => {
@@ -79,7 +102,16 @@ module.exports = (request, bearerToken) => {
 							voteEndingTime: '13:00:00',
 							lunchTime: '12:59:00'
 						})
-						.expect(400, done)
+						.expect(400)
+						.expect(res => {
+							let expectedError = {
+								field: 'voteEndingTime',
+								value: '13:00:00',
+								message: 'voteEndingTime cannot be greater than lunchTime.'
+							}
+							errorHelper.checkValidationError(res.body, expectedError)
+						})
+						.end(done)
 				})
 
 				it('doesn\'t update the date', (done) => {
@@ -87,7 +119,11 @@ module.exports = (request, bearerToken) => {
 						.post('/lunchbreaks/1')
 						.set({ Authorization: bearerToken[1] })
 						.send({ date: '31.12.2019' })
-						.expect(400, done)
+						.expect(400)
+						.expect(res => {
+							errorHelper.checkRequestError(res.body)
+						})
+						.end(done)
 				})
 
 				it('updates a lunchbreak successfully', (done) => {
@@ -141,48 +177,54 @@ module.exports = (request, bearerToken) => {
 						await setup.resetData()
 					})
 
-					it('requires auth', (done) => {
-						request
-							.post('/lunchbreaks/3/participants')
-							.expect(401, done)
-					})
-
-					it('fails if no userId is provided', (done) => {
-						request
-							.post('/lunchbreaks/3/participants')
-							.set({ Authorization: bearerToken[2] })
-							.expect(400, done)
-					})
-
-					it('fails if user tries to post another user', (done) => {
+					it('ignores provided userIds and inserts depending on token', (done) => {
 						request
 							.post('/lunchbreaks/3/participants')
 							.set({ Authorization:  bearerToken[1] })
-							.send({ userId: 2 })
-							.expect(403, done)
+							.expect(200)
+							.expect(res => {
+								let participant = res.body
+								participant.should.have.property('userId').equal(1)
+							})
+							.end(done)
 					})
 
 					it('fails if user is no group member', (done) => {
 						request
 							.post('/lunchbreaks/3/participants')
 							.set({ Authorization: bearerToken[3] })
-							.send({ userId: 3 })
-							.expect(403, done)
+							.expect(403)
+							.expect(res => {
+								let expectedError = {
+									resoucre: 'Participant',
+									value: null,
+									operation: 'CREATE'
+								}
+								errorHelper.checkAuthorizationError(res.body, expectedError)
+							})
+							.end(done)
 					})
 
 					it('fails if user already participates', (done) => {
 						request
 							.post('/lunchbreaks/1/participants')
 							.set({ Authorization: bearerToken[1] })
-							.send({ userId: 1 })
-							.expect(400, done)
+							.expect(400)
+							.expect(res => {
+								let expectedError = {
+									field: 'userId',
+									value: '1',
+									message: 'This user already participates.'
+								}
+								errorHelper.checkValidationError(res.body, expectedError)
+							})
+							.end(done)
 					})
 
 					it('successfully adds a participant', (done) => {
 						request
 							.post('/lunchbreaks/3/participants')
 							.set({ Authorization: bearerToken[2] })
-							.send({ userId: 2 })
 							.expect(200)
 							.expect(res => {
 								let participant = res.body
@@ -201,17 +243,20 @@ module.exports = (request, bearerToken) => {
 						await setup.resetData()
 					})
 
-					it('requires auth', (done) => {
-						request
-							.get('/lunchbreaks/1/comments')
-							.expect(401, done)
-					})
-
 					it('fails if user is no group member', (done) => {
 						request
 							.get('/lunchbreaks/1/comments')
 							.set({ Authorization: bearerToken[3] })
-							.expect(403, done)
+							.expect(403)
+							.expect(res => {
+								let expectedError = {
+									resource: 'Lunchbreak',
+									id: 1,
+									operation: 'READ'
+								}
+								errorHelper.checkAuthorizationError(res.body, expectedError)
+							})
+							.end(done)
 						})
 
 						it('sends a correct comment collection', (done) => {
@@ -240,31 +285,40 @@ module.exports = (request, bearerToken) => {
 
 					beforeEach(async () => {
 						newComment = {
-							comment: 'Hey ho, let\'s go!'
+							comment: 'Hey ho, let\s go!'
 						}
 						await setup.resetData()
 					})
 
-					it('requires auth', (done) => {
-						request
-							.post('/lunchbreaks/1/comments')
-							.expect(401, done)
-					})
-
-					it('fails if user is no group member', (done) => {
-						request
-							.post('/lunchbreaks/1/comments')
-							.set({ Authorization: bearerToken[3] })
-							.expect(403, done)
-					})
-
 					it('fails if no comment is provided', (done) => {
+						newComment.comment = undefined
+						request
+							.post('/lunchbreaks/1/comments')
+							.set({ Authorization: bearerToken[2] })
+							.send(newComment)
+							.expect(400)
+							.expect(res => {
+								errorHelper.checkRequestError(res.body)
+							})
+							.end(done)
+					})
+
+					it('fails if comment is empty', (done) => {
 						newComment.comment = ''
 						request
 							.post('/lunchbreaks/1/comments')
 							.set({ Authorization: bearerToken[2] })
 							.send(newComment)
-							.expect(400, done)
+							.expect(400)
+							.expect(res => {
+								let expectedError = {
+									field: 'comment',
+									value: newComment.comment,
+									message: 'comment cannot be empty.'
+								}
+								errorHelper.checkValidationError(res.body, expectedError)
+							})
+							.end(done)
 					})
 
 					it('inserts a userId depending on the token, not the body userId', (done) => {

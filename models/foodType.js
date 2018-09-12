@@ -9,9 +9,19 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.STRING,
 			allowNull: false,
 			validate: {
-				notEmpty: true
+				notEmpty: {
+					args: true,
+					msg: 'type cannot be empty.'
+				},
+				notNull: {
+					args: true,
+					msg: 'type cannot be null.'
+				}
 			},
-			unique: 'compositeIndex'
+			unique: {
+				name: 'compositeIndex',
+				msg: 'This type already exists for this group.'
+			}
 		}
 	}, {
 		tableName: 'food_types',

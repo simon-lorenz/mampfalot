@@ -1,35 +1,17 @@
-let Util = {}
+module.exports = {
 
-Util.getGroupIds = function (user, adminOnly = false) {
-	let groupIds = []
-	for (let group of user.groups) {
-		if (adminOnly) {
-			if (group.config.isAdmin) {
-				groupIds.push(group.id)
-			}
-		} else {
-			groupIds.push(group.id)
-		}
-	}
-	return groupIds
-}
-
-Util.pointsInRange = function(votes, min, max) {
-	for (let vote of votes) {
-		if (!(vote.points >= min && vote.points <= max)) {
-			return false
+	/**
+	 * A wrapper for async middleware.
+	 * Makes it possible to omit a lot try...catch statements inside async
+	 * middleware because it catches every error automatically and routes it
+	 * to the next error handling middleware.
+	 */
+	asyncMiddleware: (fn) => {
+		return (req, res, next) => {
+			Promise
+				.resolve(fn(req, res, next))
+				.catch(next);
 		}
 	}
 
-	return true
 }
-
-Util.getPointSum = function (votes) {
-	let sum = 0
-	for (let vote of votes) {
-		sum += vote.points
-	}
-	return sum
-}
-
-module.exports = Util

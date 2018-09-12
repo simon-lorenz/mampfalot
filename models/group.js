@@ -1,5 +1,3 @@
-const Util = require('../util/util')
-
 module.exports = (sequelize, DataTypes) => {
 	const Group = sequelize.define('Group', {
 		id: {
@@ -37,12 +35,12 @@ module.exports = (sequelize, DataTypes) => {
 				min: 1,
 				equalOrGreaterThanMinPointsPerVote(value) {
 					if (value < this.minPointsPerVote) {
-						throw value + ' is < ' + this.minPointsPerVote
+						throw 'maxPointsPerVote has to be greater than or equal to minPointsPerVote.'
 					}
 				},
 				equalOrLessThanPointsPerDay(value) {
 					if (value > this.pointsPerDay) {
-						throw value + ' is > ' + this.pointsPerDay
+						throw 'maxPointsPerVote has to be less than or equal to pointsPerDay.'
 					}
 				},
 			}
@@ -55,12 +53,12 @@ module.exports = (sequelize, DataTypes) => {
 				min: 1,
 				equalOrLessThanMaxPointsPerVote(value) {
 					if (value > this.maxPointsPerVote) {
-						throw value + ' is > ' + this.maxPointsPerVote
+						throw 'minPointsPerVote has to be less than or equal to maxPointsPerVote.'
 					}
 				},
 				equalOrLessThanPointsPerDay(value) {
 					if (value > this.pointsPerDay) {
-						throw value + ' is > ' + this.pointsPerDay
+						throw 'minPointsPerVote has to be less than or equal to pointsPerDay.'
 					}
 				}
 			}
@@ -73,9 +71,9 @@ module.exports = (sequelize, DataTypes) => {
 			plural: 'groups'
 		},
 		validate: {
-			times() {
+			timeValidator() {
 				if (this.defaultLunchTime < this.defaultVoteEndingTime) {
-					throw 'DefaultLunchTime has to be greater or equal to defaultVoteEndingTime'
+					throw 'defaultVoteEndingTime has to be less than defaultLunchTime.'
 				}
 			}
 		}
@@ -94,13 +92,8 @@ module.exports = (sequelize, DataTypes) => {
 
 	Group.loadScopes = function (models) {
 
-		Group.addScope('ofUser', function(user) {
+		Group.addScope('ofUser', function(userId) {
 			return {
-				where: {
-					id: {
-						in: Util.getGroupIds(user, false)
-					}
-				},
 				include: [
 					models.Place,
 					models.FoodType,
@@ -108,6 +101,9 @@ module.exports = (sequelize, DataTypes) => {
 					{
 						model: models.User,
 						as: 'members',
+						where: {
+							id: userId
+						},
 						through: {
 							as: 'config',
 							attributes: ['color', 'isAdmin']

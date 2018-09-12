@@ -1,3 +1,5 @@
+const errorHelper = require('../helpers/errors')
+
 module.exports = (request, token) => {
 	return describe('/auth', () => {
 		describe('GET', () => {
@@ -26,29 +28,48 @@ module.exports = (request, token) => {
 				request
 					.get('/auth')
 					.auth('mustermann@gmail.com', '123456')
-					.expect(200, (err, res) => {
+					.expect(200)
+					.expect(res => {
 						let token = res.body.token
 						let tokenPayload = token.split('.')[1]
 						let payload = Buffer.from(tokenPayload, 'base64').toString()
 						payload = JSON.parse(payload)
 						payload.should.have.property('id').equal(1)
 						payload.should.not.have.property('password')
-						done()
 					})
+					.end(done)
+			})
+
+			it('fails with 401 if auth header is missing', (done) => {
+				request
+					.get('/auth')
+					.expect(401)
+					.expect(res => {
+						errorHelper.checkAuthenticationError(res.body, 'authRequired')
+					})
+					.end(done)
 			})
 
 			it('fails with 401 on wrong password', (done) => {
 				request
 					.get('/auth')
-					.auth('max.mustermann@mail.com', 'wrongPassword')
-					.expect(401, done)
+					.auth('mustermann@gmail.com', 'wrongPassword')
+					.expect(401)
+					.expect(res => {
+						errorHelper.checkAuthenticationError(res.body, 'invalidCredentials')
+					})
+					.end(done)
 			})
 
 			it('fails with 401 on unknown email', (done) => {
 				request
 					.get('/auth')
 					.auth('unkown@mail.de', 'supersafe')
-					.expect(401, done)
+					.expect(401)
+					.expect(res => {
+						errorHelper.checkAuthenticationError(res.body, 'invalidCredentials')
+					})
+					.end(done)
 			})
 		})
 	})
