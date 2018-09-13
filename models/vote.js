@@ -99,25 +99,26 @@ module.exports = (sequelize, DataTypes) => {
 		let placeIds = []
 		let sum = 0
 		for (let vote of votes) {
-			if (vote.points > config.maxPointsPerVote) {
+			let points = parseInt(vote.points)
+			if (points > config.maxPointsPerVote) {
 				let item = {
 					field: 'points',
-					value: vote.points,
+					value: points,
 					message: 'Points exceeds maxPointsPerVote (' + config.maxPointsPerVote + ').'
 				}
 				throw new ValidationError([item])
 			}
 
-			if (vote.points < config.minPointsPerVote) {
+			if (points < config.minPointsPerVote) {
 				let item = {
 					field: 'points',
-					value: vote.points,
+					value: points,
 					message: 'Points deceeds minPointsPerVote (' + config.minPointsPerVote + ').'
 				}
 				throw new ValidationError([item])
 			}
 
-			sum += vote.points
+			sum += points
 			placeIds.push(vote.placeId)
 		}
 

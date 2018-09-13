@@ -284,6 +284,28 @@ module.exports = (request, bearerToken) => {
 					.end(done)
 			})
 
+			it('accepts point value as string', (done) => {
+				newVotes[0].points = '30'
+				newVotes[1].points = '70'
+				request
+					.post('/votes')
+					.set({ Authorization: bearerToken[1] })
+					.send(newVotes)
+					.expect(200)
+					.expect(res => {
+						let votes = res.body
+						votes.should.be.an('array').with.length(2)
+
+						let firstVote = votes[0]
+						firstVote.should.have.property('id')
+						firstVote.should.have.property('participantId').equal(1)
+						firstVote.should.have.property('placeId').equal(1)
+						firstVote.should.have.property('points').equal(30)
+						firstVote.should.have.property('place').which.is.an('object')
+					})
+					.end(done)
+			})
+
 			it('successfully adds a single vote', (done) => {
 				request
 					.post('/votes')
