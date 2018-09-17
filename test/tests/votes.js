@@ -350,6 +350,19 @@ module.exports = (request, bearerToken) => {
 					})
 					.end(done)
 			})
+
+			it('works correctly for participants of different groups', (done) => {
+				newVotes[0].participantId = 3
+				newVotes[0].points = 6
+				newVotes[0].placeId = 5
+				newVotes.pop()
+				request
+					.post('/votes')
+					.set({ Authorization: bearerToken[3] })
+					.send(newVotes)
+					.expect(200)
+					.end(done)
+			})
 		})
 
 		describe('/:voteId', () => {

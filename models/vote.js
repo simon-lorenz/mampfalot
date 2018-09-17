@@ -89,7 +89,9 @@ module.exports = (sequelize, DataTypes) => {
 						{
 							model: Participant,
 							attributes: [],
-							where: participantId
+							where: {
+								id: participantId
+							}
 						}
 					]
 				}
