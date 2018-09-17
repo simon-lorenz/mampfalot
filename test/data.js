@@ -128,6 +128,11 @@ module.exports = {
 			id: 2,
 			userId: 2,
 			lunchbreakId: 1
+		},
+		{
+			id: 3,
+			userId: 3,
+			lunchbreakId: 2
 		}
 	],
 	votes: [
