@@ -22,6 +22,7 @@ module.exports = (sequelize, DataTypes) => {
 
 	Participant.associate = function (models) {
 		models.Participant.belongsTo(models.User, {
+			onDelete: 'CASCADE',
 			foreignKey: {
 				unique: {
 					name:'compositeIndex',
