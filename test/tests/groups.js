@@ -617,7 +617,9 @@ module.exports = (request, bearerToken) => {
 								data.should.have.length(2)
 
 								let firstMember = data[0]
+								firstMember.should.have.all.keys(['id', 'email', 'name', 'config'])
 								firstMember.should.have.property('id').equal(1)
+								firstMember.should.have.property('name').equal('Max Mustermann')
 								firstMember.should.have.property('email').equal('mustermann@gmail.com')
 								firstMember.should.have.property('config').which.has.property('color').equal('#90ba3e')
 								firstMember.should.have.property('config').which.has.property('isAdmin').equal(true)

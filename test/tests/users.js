@@ -63,10 +63,10 @@ module.exports = (request, bearerToken) => {
 					.send(newUser)
 					.expect(200, (err, res) => {
 						let user = res.body
+						user.should.have.all.keys(['id', 'name', 'email', 'createdAt', 'updatedAt'])
 						user.should.have.property('id')
 						user.should.have.property('name').equal(newUser.name)
 						user.should.have.property('email').equal(newUser.email)
-						user.should.not.have.property('password')
 
 						request
 							.get('/auth')
@@ -281,14 +281,15 @@ module.exports = (request, bearerToken) => {
 						.set({
 							Authorization: bearerToken[1]
 						})
-						.expect(200, (err, res) => {
+						.expect(200)
+						.expect(res => {
 							let user = res.body
+							user.should.have.all.keys(['id', 'name', 'email', 'createdAt', 'updatedAt'])
 							user.should.have.property('id').equal(1)
 							user.should.have.property('name').equal('Max Mustermann')
 							user.should.have.property('email').equal('mustermann@gmail.com')
-							user.should.not.have.property('password')
-							done()
 						})
+						.end(done)
 				})
 
 				it('returns a valid user resource for Philipp Loten', (done) => {
@@ -297,14 +298,15 @@ module.exports = (request, bearerToken) => {
 						.set({
 							Authorization: bearerToken[3]
 						})
-						.expect(200, (err, res) => {
+						.expect(200)
+						.expect(res => {
 							let user = res.body
+							user.should.have.all.keys(['id', 'name', 'email', 'createdAt', 'updatedAt'])
 							user.should.have.property('id').equal(3)
 							user.should.have.property('name').equal('Philipp Loten')
 							user.should.have.property('email').equal('philipp.loten@company.com')
-							user.should.not.have.property('password')
-							done()
 						})
+						.end(done)
 				})
 
 				it('fails with 403 if user requests a resource other than himself', (done) => {
@@ -400,10 +402,10 @@ module.exports = (request, bearerToken) => {
 						.expect(200)
 						.expect(res => {
 							let newUser = res.body
+							newUser.should.have.all.keys(['id', 'name', 'email', 'createdAt', 'updatedAt'])
 							newUser.should.have.property('id').equal(1)
 							newUser.should.have.property('name').equal('Neuer Name')
 							newUser.should.have.property('email').equal('neu@mail.com')
-							newUser.should.not.have.property('password')
 						})
 						.then(() => {
 							request
@@ -424,10 +426,10 @@ module.exports = (request, bearerToken) => {
 						.expect(200)
 						.expect(res => {
 							let newUser = res.body
+							newUser.should.have.all.keys(['id', 'name', 'email', 'createdAt', 'updatedAt'])
 							newUser.should.have.property('id').equal(1)
 							newUser.should.have.property('name').equal('Neuer Name')
 							newUser.should.have.property('email').equal('neu@mail.com')
-							newUser.should.not.have.property('password')
 						})
 						.then(() => {
 							request
