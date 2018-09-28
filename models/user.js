@@ -85,7 +85,7 @@ module.exports = (sequelize, DataTypes) => {
 		let rounds
 		process.env.NODE_ENV === 'test' ? rounds = 1 : rounds = 12
 
-		for (instance of instances) {
+		for (let instance of instances) {
 			instance.password = await bcrypt.hash(instance.password, rounds)
 		}
 	})
