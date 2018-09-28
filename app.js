@@ -137,7 +137,8 @@ app.use((err, req, res, next) => {
 // Handle database errors
 app.use((err, req, res, next) => {
 	if (err instanceof Sequelize.DatabaseError) {
-		res.status(500).send(err.errors)
+		console.error(err.toString())
+		res.status(500).send(new ServerError())
 	} else {
 		next(err)
 	}
@@ -145,7 +146,7 @@ app.use((err, req, res, next) => {
 
 // Handle every other possible error
 app.use((err, req, res, next) => {
-	console.log(err.toString())
+	console.error(err.toString())
 	res.status(500).send(new ServerError())
 })
 
