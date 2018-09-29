@@ -94,6 +94,11 @@ const ENDPOINTS = [
 		public: true
 	},
 	{
+		url: '/users/password-reset',
+		methods: ['GET', 'POST'],
+		public: true
+	},
+	{
 		url: '/users/1',
 		methods: ['GET', 'POST', 'DELETE'],
 		public: false

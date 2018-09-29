@@ -273,6 +273,33 @@ module.exports = (request, bearerToken) => {
 			})
 		})
 
+		describe('/password-reset', () => {
+			describe('GET', () => {
+				it('fails if the body does not contain an email address', (done) => {
+					request
+						.get('/users/password-reset')
+						.expect(res => {
+							errorHelper.checkRequestError(res.body)
+						})
+						.end(done)
+				})
+
+				it('sends 204 if email is unknown', (done) => {
+					request
+						.get('/users/password-reset')
+						.query({ email: 'email@mail.com' })
+						.expect(204, done)
+				})
+
+				it('sends 204 if email is known', (done) => {
+					request
+						.get('/users/password-reset')
+						.query({ email: 'mustermann@gmail.com' })
+						.expect(204, done)
+				})
+			})
+		})
+
 		describe('/:userId', () => {
 			describe('GET', () => {
 				it('returns a valid user resource for Max Mustermann', (done) => {

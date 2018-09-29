@@ -54,6 +54,12 @@ module.exports = (sequelize, DataTypes) => {
 					msg: 'Password has to be between 8 and 255 characters long'
 				}
 			}
+		},
+		passwordResetToken: {
+			type: DataTypes.STRING
+		},
+		passwordResetExpiration: {
+			type: DataTypes.DATE
 		}
 	}, {
 		tableName: 'users',
@@ -64,7 +70,7 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		defaultScope: {
 			attributes: {
-				exclude: ['password', 'createdAt', 'updatedAt']
+				exclude: ['password', 'passwordResetToken', 'passwordResetExpiration', 'createdAt', 'updatedAt']
 			}
 		}
 	})
