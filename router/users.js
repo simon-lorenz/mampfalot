@@ -1,12 +1,13 @@
 const router = require('express').Router()
 const bcrypt = require('bcrypt')
 const crypto = require('crypto')
-const nodemailer = require('nodemailer')
 const { Op } = require('sequelize')
 const { User, Group } = require('../models')
 const { allowMethods, hasQueryValues, initUser, hasBodyValues, verifyToken } = require('../util/middleware')
 const { AuthenticationError, NotFoundError, RequestError } = require('../classes/errors')
 const { asyncMiddleware }  = require('../util/util')
+const Mailer = require('../classes/mailer')
+const mailer = new Mailer
 
 router.route('/').all(allowMethods(['GET', 'POST']))
 router.route('/').get(hasQueryValues(['email'], 'all'))
@@ -42,16 +43,6 @@ router.route('/password-reset').get(asyncMiddleware(async (req, res, next) => {
 
 	if (!user) return res.status(204).send()
 
-	let transport = nodemailer.createTransport({
-		host: process.env.MAIL_HOST,
-		port: process.env.MAIL_PORT,
-		secure: true,
-		auth: {
-			user: 'support@mampfalot.app',
-			pass: process.env.MAIL_PASSWORD
-		}
-	})
-
 	// Generate a random token
 	let token = await new Promise((resolve, reject) => {
 		crypto.randomBytes(25, (err, buff) => {
@@ -67,49 +58,11 @@ router.route('/password-reset').get(asyncMiddleware(async (req, res, next) => {
 	user.passwordResetExpiration = tokenExp
 	await user.save()
 
-	let resetLink = `https://mampfalot.app/password-reset/${token}?userId=${user.id}`
-
-	let mailOptions = {
-		from: '"Mampfalot Support" <support@mampfalot.app>',
-		to: email,
-		subject: 'Dein neues Passwort für Mampfalot',
-		text: `
-			Hi ${user.name},
-			du hast kürzlich ein neues Passwort für Mampfalot angefordert.
-			Klicke hier, um ein neues Passwort zu vergeben: ${resetLink}
-			Dieser Link ist 30 Minuten lang gültig.
-			Viele Grüße
-			Dein Mampfalot-Team
-		`,
-		html: `
-			<p>
-				Hi ${user.name}, <br>
-				<br>
-				du hast kürzlich ein neues Passwort für Mampfalot angefordert.<br>
-				Klicke hier, um ein neues Passwort zu vergeben: <br>
-				<br>
-				<a href="${resetLink}">
-					<button>Passwort zurücksetzen</button>
-				</a>
-				<br>
-				<br>
-				Dieser Link ist 30 Minuten lang gültig.
-				<br>
-				<br>
-				Viele Grüße<br>
-				Dein Mampfalot-Team
-			</p>
-		`
-	}
-
 	if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
-		transport.sendMail(mailOptions, (err, info) => {
-			if (err) return next(err)
-			res.status(204).send()
-		})
-	} else {
-		res.status(204).send()
+		await mailer.sendPasswordResetMail(user.email, user.name, user.id, token)
 	}
+
+	res.status(204).send()
 }))
 
 router.route('/password-reset').post(asyncMiddleware(async (req, res, next) => {
