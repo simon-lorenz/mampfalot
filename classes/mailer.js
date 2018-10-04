@@ -14,8 +14,24 @@ class Mailer {
 			secure: true,
 			auth: {
 				user: email,
-				pass: process.env.MAIL_PASSWORD
+				pass: this.getMailAccountPassword(email)
 			}
+		}
+	}
+
+	/**
+	 * Returns the password for an email-account
+	 * @param {string} email The email account
+	 * @throws Exception on unknown email account
+	 */
+	getMailAccountPassword(email) {
+		switch (email) {
+			case 'support@mampfalot.app':
+				return process.env.MAIL_PASSWORD_SUPPORT
+			case 'hello@mampfalot.app':
+				return process.env.MAIL_PASSWORD_HELLO
+			default:
+				throw new Exception(`Unkown mail account "${email}"`)
 		}
 	}
 
