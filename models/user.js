@@ -55,6 +55,13 @@ module.exports = (sequelize, DataTypes) => {
 				}
 			}
 		},
+		verified: {
+			type: DataTypes.BOOLEAN,
+			defaultValue: false
+		},
+		verificationToken: {
+			type: DataTypes.STRING
+		},
 		passwordResetToken: {
 			type: DataTypes.STRING
 		},
@@ -70,7 +77,7 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		defaultScope: {
 			attributes: {
-				exclude: ['password', 'passwordResetToken', 'passwordResetExpiration', 'createdAt', 'updatedAt']
+				exclude: ['password', 'passwordResetToken', 'passwordResetExpiration', 'verificationToken', 'createdAt', 'updatedAt']
 			}
 		}
 	})

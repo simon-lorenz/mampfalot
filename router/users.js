@@ -16,14 +16,24 @@ router.route('/password-reset').get(hasQueryValues(['email'], 'all'))
 router.route('/password-reset').post(hasBodyValues(['userId', 'resetToken', 'newPassword'], 'all'))
 
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
+	let verificationToken = await new Promise((resolve, reject) => {
+		crypto.randomBytes(25, (err, buff) => {
+			if (err) reject(err)
+			resolve(buff.toString('hex'))
+		})
+	})
+
 	let user = await User.create({
 		name: req.body.name,
 		email: req.body.email,
-		password: req.body.password
+		password: req.body.password,
+		verificationToken: await bcrypt.hash(verificationToken, 12)
 	})
+
 	user.password = undefined
 	user.passwordResetToken = undefined
 	user.passwordResetExpiration = undefined
+	user.verificationToken = undefined
 	res.send(user)
 }))
 
@@ -115,6 +125,7 @@ router.route('/:userId').get(asyncMiddleware(async (req, res, next) => {
 	userResource.password = undefined
 	userResource.passwordResetToken = undefined
 	userResource.passwordResetExpiration = undefined
+	userResource.verificationToken = undefined
 	res.send(userResource)
 }))
 
@@ -141,6 +152,7 @@ router.route('/:userId').post(asyncMiddleware(async (req, res, next) => {
 	userResource.password = undefined
 	userResource.passwordResetToken = undefined
 	userResource.passwordResetExpiration = undefined
+	userResource.verificationToken = undefined
 	res.send(userResource)
 }))
 
