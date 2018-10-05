@@ -34,6 +34,11 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	user.passwordResetToken = undefined
 	user.passwordResetExpiration = undefined
 	user.verificationToken = undefined
+
+	if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
+		await mailer.sendWelcomeMail(user.email, user.name, user.id, verificationToken)
+	}
+
 	res.send(user)
 }))
 
