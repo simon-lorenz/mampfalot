@@ -37,7 +37,8 @@ module.exports = (request, bearerToken) => {
 					.expect(res => {
 						let user = res.body
 						user.should.have.property('id').equal(3)
-						user.should.have.property('name').equal('Philipp Loten')
+						user.should.have.property('firstName').equal('Philipp')
+						user.should.have.property('lastName').equal('Loten')
 						user.should.have.property('email').equal('philipp.loten@company.com')
 						user.should.not.have.property('password')
 					})
@@ -50,7 +51,8 @@ module.exports = (request, bearerToken) => {
 
 			beforeEach(async () => {
 				newUser = {
-					name: 'Homer Simpson',
+					firstName: 'Homer',
+					lastName: 'Simpson',
 					email: 'homer@simpson.com',
 					password: "springfield"
 				}
@@ -63,9 +65,10 @@ module.exports = (request, bearerToken) => {
 					.send(newUser)
 					.expect(200, (err, res) => {
 						let user = res.body
-						user.should.have.all.keys(['id', 'name', 'email', 'verified', 'createdAt', 'updatedAt'])
+						user.should.have.all.keys(['id', 'firstName', 'lastName', 'email', 'verified', 'createdAt', 'updatedAt'])
 						user.should.have.property('id')
-						user.should.have.property('name').equal(newUser.name)
+						user.should.have.property('firstName').equal(newUser.firstName)
+						user.should.have.property('lastName').equal(newUser.lastName)
 						user.should.have.property('email').equal(newUser.email)
 
 						request
@@ -75,36 +78,68 @@ module.exports = (request, bearerToken) => {
 					})
 			})
 
-			it('fails with 400 if no name is provided', (done) => {
-				newUser.name = undefined
-
+			it('fails with 400 if no firstName is provided', (done) => {
+				newUser.firstName = undefined
 				request
 					.post('/users')
 					.send(newUser)
 					.expect(400)
 					.expect(res => {
 						let expectedErrorItem = {
-							field: 'name',
+							field: 'firstName',
 							value: null,
-							message: 'Name cannot be null'
+							message: 'firstName cannot be null'
 						}
-
 						errorHelper.checkValidationError(res.body, expectedErrorItem)
 					})
 					.end(done)
 			})
 
-			it('fails with 400 if name is empty', (done) => {
-				newUser.name = ''
+			it('fails with 400 if no lastName is provided', (done) => {
+				newUser.lastName = undefined
 				request
 					.post('/users')
 					.send(newUser)
 					.expect(400)
 					.expect(res => {
 						let expectedErrorItem = {
-							field: 'name',
+							field: 'lastName',
+							value: null,
+							message: 'lastName cannot be null'
+						}
+						errorHelper.checkValidationError(res.body, expectedErrorItem)
+					})
+					.end(done)
+			})
+
+			it('fails with 400 if firstName is empty', (done) => {
+				newUser.firstName = ''
+				request
+					.post('/users')
+					.send(newUser)
+					.expect(400)
+					.expect(res => {
+						let expectedErrorItem = {
+							field: 'firstName',
 							value: '',
-							message: 'Name cannot be empty'
+							message: 'firstName cannot be empty'
+						}
+						errorHelper.checkValidationError(res.body, expectedErrorItem)
+					})
+					.end(done)
+			})
+
+			it('fails with 400 if lastName is empty', (done) => {
+				newUser.lastName = ''
+				request
+					.post('/users')
+					.send(newUser)
+					.expect(400)
+					.expect(res => {
+						let expectedErrorItem = {
+							field: 'lastName',
+							value: '',
+							message: 'lastName cannot be empty'
 						}
 
 						errorHelper.checkValidationError(res.body, expectedErrorItem)
@@ -311,9 +346,10 @@ module.exports = (request, bearerToken) => {
 						.expect(200)
 						.expect(res => {
 							let user = res.body
-							user.should.have.all.keys(['id', 'name', 'email', 'verified', 'createdAt', 'updatedAt'])
+							user.should.have.all.keys(['id', 'firstName', 'lastName', 'email', 'verified', 'createdAt', 'updatedAt'])
 							user.should.have.property('id').equal(1)
-							user.should.have.property('name').equal('Max Mustermann')
+							user.should.have.property('firstName').equal('Max')
+							user.should.have.property('lastName').equal('Mustermann')
 							user.should.have.property('email').equal('mustermann@gmail.com')
 						})
 						.end(done)
@@ -328,9 +364,10 @@ module.exports = (request, bearerToken) => {
 						.expect(200)
 						.expect(res => {
 							let user = res.body
-							user.should.have.all.keys(['id', 'name', 'email', 'verified', 'createdAt', 'updatedAt'])
+							user.should.have.all.keys(['id', 'firstName', 'lastName', 'email', 'verified', 'createdAt', 'updatedAt'])
 							user.should.have.property('id').equal(3)
-							user.should.have.property('name').equal('Philipp Loten')
+							user.should.have.property('firstName').equal('Philipp')
+							user.should.have.property('lastName').equal('Loten')
 							user.should.have.property('email').equal('philipp.loten@company.com')
 						})
 						.end(done)
@@ -364,7 +401,7 @@ module.exports = (request, bearerToken) => {
 					request
 						.post('/users/99')
 						.set({ Authorization: bearerToken[1]})
-						.send({ name: 'Neuer Name', email: 'neu@mail.com', password: 'hurdurdur'})
+						.send({ firstName: 'Neuer', lastName: 'Name', email: 'neu@mail.com', password: 'hurdurdur'})
 						.expect(404)
 						.expect(res => {
 							errorHelper.checkNotFoundError(res.body, 'User', 99)
@@ -425,13 +462,14 @@ module.exports = (request, bearerToken) => {
 					request
 						.post('/users/1')
 						.set({ Authorization: bearerToken[1]})
-						.send({ name: 'Neuer Name', email: 'neu@mail.com', password: 'hurdurdur', currentPassword: '123456'})
+						.send({ firstName: 'Neuer', lastName: 'Name', email: 'neu@mail.com', password: 'hurdurdur', currentPassword: '123456'})
 						.expect(200)
 						.expect(res => {
 							let newUser = res.body
-							newUser.should.have.all.keys(['id', 'name', 'email', 'verified', 'createdAt', 'updatedAt'])
+							newUser.should.have.all.keys(['id', 'firstName', 'lastName', 'email', 'verified', 'createdAt', 'updatedAt'])
 							newUser.should.have.property('id').equal(1)
-							newUser.should.have.property('name').equal('Neuer Name')
+							newUser.should.have.property('firstName').equal('Neuer')
+							newUser.should.have.property('lastName').equal('Name')
 							newUser.should.have.property('email').equal('neu@mail.com')
 						})
 						.then(() => {
@@ -449,13 +487,14 @@ module.exports = (request, bearerToken) => {
 					request
 						.post('/users/1')
 						.set({ Authorization: bearerToken[1]})
-						.send({ name: 'Neuer Name', email: 'neu@mail.com'})
+						.send({ firstName: 'Neuer', lastName: 'Name', email: 'neu@mail.com'})
 						.expect(200)
 						.expect(res => {
 							let newUser = res.body
-							newUser.should.have.all.keys(['id', 'name', 'email', 'verified', 'createdAt', 'updatedAt'])
+							newUser.should.have.all.keys(['id', 'firstName', 'lastName', 'email', 'verified', 'createdAt', 'updatedAt'])
 							newUser.should.have.property('id').equal(1)
-							newUser.should.have.property('name').equal('Neuer Name')
+							newUser.should.have.property('firstName').equal('Neuer')
+							newUser.should.have.property('lastName').equal('Name')
 							newUser.should.have.property('email').equal('neu@mail.com')
 						})
 						.then(() => {

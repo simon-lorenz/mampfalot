@@ -190,37 +190,43 @@ module.exports = {
 	users: [
 		{
 			id: 1,
-			name: 'Max Mustermann',
+			firstName: 'Max',
+			lastName: 'Mustermann',
 			email: 'mustermann@gmail.com',
 			password: '123456'
 		},
 		{
 			id: 2,
-			name: 'John Doe',
+			firstName: 'John',
+			lastName: 'Doe',
 			email: 'john.doe@provider.com',
 			password: 'supersafe'
 		},
 		{
 			id: 3,
-			name: 'Philipp Loten',
+			firstName: 'Philipp',
+			lastName: 'Loten',
 			email: 'philipp.loten@company.com',
 			password: 'password'
 		},
 		{
 			id: 4,
-			name: 'Björn Tietgen',
+			firstName: 'Björn',
+			lastName: 'Tietgen',
 			email: 'björn.tietgen@gmail.com',
 			password: 'test'
 		},
 		{
 			id: 5,
-			name: 'Luisa Rogers',
+			firstName: 'Luisa',
+			lastName: 'Rogers',
 			email: 'l.rogers@university.edu',
 			password: ' !"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
 		},
 		{
 			id: 6,
-			name: 'Alice Jones',
+			firstName: 'Alice',
+			lastName: 'Jones',
 			email: 'alice@jones.com',
 			password: 'letmein'
 		}

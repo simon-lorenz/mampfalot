@@ -617,9 +617,10 @@ module.exports = (request, bearerToken) => {
 								data.should.have.length(2)
 
 								let firstMember = data[0]
-								firstMember.should.have.all.keys(['id', 'email', 'name', 'config'])
+								firstMember.should.have.all.keys(['id', 'email', 'firstName', 'lastName', 'config'])
 								firstMember.should.have.property('id').equal(1)
-								firstMember.should.have.property('name').equal('Max Mustermann')
+								firstMember.should.have.property('firstName').equal('Max')
+								firstMember.should.have.property('lastName').equal('Mustermann')
 								firstMember.should.have.property('email').equal('mustermann@gmail.com')
 								firstMember.should.have.property('config').which.has.property('color').equal('#90ba3e')
 								firstMember.should.have.property('config').which.has.property('isAdmin').equal(true)
@@ -725,7 +726,8 @@ module.exports = (request, bearerToken) => {
 							.expect(res => {
 								let member = res.body
 								member.should.have.property('id').equal(3)
-								member.should.have.property('name').equal('Philipp Loten')
+								member.should.have.property('firstName').equal('Philipp')
+								member.should.have.property('lastName').equal('Loten')
 								member.should.have.property('email').equal('philipp.loten@company.com')
 								member.should.have.property('config').which.is.an('object')
 
@@ -748,7 +750,8 @@ module.exports = (request, bearerToken) => {
 							.expect(res => {
 								let member = res.body
 								member.should.have.property('id').equal(3)
-								member.should.have.property('name').equal('Philipp Loten')
+								member.should.have.property('firstName').equal('Philipp')
+								member.should.have.property('lastName').equal('Loten')
 								member.should.have.property('email').equal('philipp.loten@company.com')
 								member.should.have.property('config').which.is.an('object')
 

@@ -27,7 +27,8 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	})
 
 	let user = await User.create({
-		name: req.body.name,
+		firstName: req.body.firstName,
+		lastName: req.body.lastName,
 		email: req.body.email,
 		password: req.body.password,
 		verificationToken: await bcrypt.hash(verificationToken, 12)
@@ -39,7 +40,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	user.verificationToken = undefined
 
 	if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
-		await mailer.sendWelcomeMail(user.email, user.name, user.id, verificationToken)
+		await mailer.sendWelcomeMail(user.email, user.firstName, user.id, verificationToken)
 	}
 
 	res.send(user)
@@ -68,7 +69,7 @@ router.route('/verify').get(asyncMiddleware(async (req, res, next) => {
 	await user.save()
 
 	if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
-		await mailer.sendWelcomeMail(user.email, user.name, user.id, verificationToken)
+		await mailer.sendWelcomeMail(user.email, user.firstName, user.id, verificationToken)
 	}
 
 	res.status(204).send()
@@ -128,7 +129,7 @@ router.route('/password-reset').get(asyncMiddleware(async (req, res, next) => {
 	await user.save()
 
 	if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
-		await mailer.sendPasswordResetMail(user.email, user.name, user.id, token)
+		await mailer.sendPasswordResetMail(user.email, user.firstName, user.id, token)
 	}
 
 	res.status(204).send()
@@ -202,7 +203,8 @@ router.route('/:userId').post(asyncMiddleware(async (req, res, next) => {
 		}
 	}
 
-	if (req.body.name) { userResource.name = req.body.name.trim() }
+	if (req.body.firstName) { userResource.firstName = req.body.firstName.trim() }
+	if (req.body.lastName) { userResource.lastName = req.body.lastName.trim() }
 	if (req.body.email) { userResource.email = req.body.email.trim() }
 	if (req.body.password) { userResource.password = req.body.password }
 

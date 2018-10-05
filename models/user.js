@@ -7,15 +7,27 @@ module.exports = (sequelize, DataTypes) => {
 			primaryKey: true,
 			autoIncrement: true
 		},
-		name: {
+		firstName: {
 			type: DataTypes.STRING,
 			allowNull: false,
 			validate: {
 				notEmpty: {
-					msg: 'Name cannot be empty'
+					msg: 'firstName cannot be empty'
 				},
 				notNull: {
-					msg: 'Name cannot be null'
+					msg: 'firstName cannot be null'
+				}
+			}
+		},
+		lastName: {
+			type: DataTypes.STRING,
+			allowNull: false,
+			validate: {
+				notEmpty: {
+					msg: 'lastName cannot be empty'
+				},
+				notNull: {
+					msg: 'lastName cannot be null'
 				}
 			}
 		},

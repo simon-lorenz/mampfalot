@@ -34,7 +34,7 @@ router.route('/').get(asyncMiddleware(async (req, res, next) => {
 		where: {
 			email: res.locals.credentials.email
 		},
-		attributes: ['id', 'name', 'email', 'password'],
+		attributes: ['id', 'firstName', 'lastName', 'email', 'password'],
 		raw: true
 	})
 

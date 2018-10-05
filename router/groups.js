@@ -105,7 +105,7 @@ router.route('/:groupId*').all(asyncMiddleware(async (req, res, next) => {
 			},
 			{
 				model: User,
-				attributes: ['id', 'email', 'name'],
+				attributes: ['id', 'email', 'firstName', 'lastName'],
 				as: 'members',
 				through: {
 					as: 'config',
