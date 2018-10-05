@@ -63,7 +63,7 @@ module.exports = (request, bearerToken) => {
 					.send(newUser)
 					.expect(200, (err, res) => {
 						let user = res.body
-						user.should.have.all.keys(['id', 'name', 'email', 'createdAt', 'updatedAt'])
+						user.should.have.all.keys(['id', 'name', 'email', 'verified', 'createdAt', 'updatedAt'])
 						user.should.have.property('id')
 						user.should.have.property('name').equal(newUser.name)
 						user.should.have.property('email').equal(newUser.email)
@@ -311,7 +311,7 @@ module.exports = (request, bearerToken) => {
 						.expect(200)
 						.expect(res => {
 							let user = res.body
-							user.should.have.all.keys(['id', 'name', 'email', 'createdAt', 'updatedAt'])
+							user.should.have.all.keys(['id', 'name', 'email', 'verified', 'createdAt', 'updatedAt'])
 							user.should.have.property('id').equal(1)
 							user.should.have.property('name').equal('Max Mustermann')
 							user.should.have.property('email').equal('mustermann@gmail.com')
@@ -328,7 +328,7 @@ module.exports = (request, bearerToken) => {
 						.expect(200)
 						.expect(res => {
 							let user = res.body
-							user.should.have.all.keys(['id', 'name', 'email', 'createdAt', 'updatedAt'])
+							user.should.have.all.keys(['id', 'name', 'email', 'verified', 'createdAt', 'updatedAt'])
 							user.should.have.property('id').equal(3)
 							user.should.have.property('name').equal('Philipp Loten')
 							user.should.have.property('email').equal('philipp.loten@company.com')
@@ -429,7 +429,7 @@ module.exports = (request, bearerToken) => {
 						.expect(200)
 						.expect(res => {
 							let newUser = res.body
-							newUser.should.have.all.keys(['id', 'name', 'email', 'createdAt', 'updatedAt'])
+							newUser.should.have.all.keys(['id', 'name', 'email', 'verified', 'createdAt', 'updatedAt'])
 							newUser.should.have.property('id').equal(1)
 							newUser.should.have.property('name').equal('Neuer Name')
 							newUser.should.have.property('email').equal('neu@mail.com')
@@ -453,7 +453,7 @@ module.exports = (request, bearerToken) => {
 						.expect(200)
 						.expect(res => {
 							let newUser = res.body
-							newUser.should.have.all.keys(['id', 'name', 'email', 'createdAt', 'updatedAt'])
+							newUser.should.have.all.keys(['id', 'name', 'email', 'verified', 'createdAt', 'updatedAt'])
 							newUser.should.have.property('id').equal(1)
 							newUser.should.have.property('name').equal('Neuer Name')
 							newUser.should.have.property('email').equal('neu@mail.com')

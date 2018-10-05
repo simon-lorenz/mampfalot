@@ -11,20 +11,89 @@ const mailer = new Mailer
 
 router.route('/').all(allowMethods(['GET', 'POST']))
 router.route('/').get(hasQueryValues(['email'], 'all'))
+router.route('/verify').all(allowMethods(['GET', 'POST']))
+router.route('/verify').get(hasQueryValues(['email'], 'all'))
+router.route('/verify').post(hasBodyValues(['userId', 'verificationToken'], 'all'))
 router.route('/password-reset').all(allowMethods(['GET', 'POST']))
 router.route('/password-reset').get(hasQueryValues(['email'], 'all'))
 router.route('/password-reset').post(hasBodyValues(['userId', 'resetToken', 'newPassword'], 'all'))
 
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
+	let verificationToken = await new Promise((resolve, reject) => {
+		crypto.randomBytes(25, (err, buff) => {
+			if (err) reject(err)
+			resolve(buff.toString('hex'))
+		})
+	})
+
 	let user = await User.create({
 		name: req.body.name,
 		email: req.body.email,
-		password: req.body.password
+		password: req.body.password,
+		verificationToken: await bcrypt.hash(verificationToken, 12)
 	})
+
 	user.password = undefined
 	user.passwordResetToken = undefined
 	user.passwordResetExpiration = undefined
+	user.verificationToken = undefined
+
+	if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
+		await mailer.sendWelcomeMail(user.email, user.name, user.id, verificationToken)
+	}
+
 	res.send(user)
+}))
+
+router.route('/verify').get(asyncMiddleware(async (req, res, next) => {
+	let { email } = req.query
+	let user = await User.findOne({
+		attributes: ['id', 'name', 'email', 'verificationToken', 'verified'],
+		where: {
+			email: email
+		}
+	})
+
+	if (!user) return res.status(204).send()
+	if (user.verified) return next(new RequestError('This user is already verified.'))
+
+	let verificationToken = await new Promise((resolve, reject) => {
+		crypto.randomBytes(25, (err, buff) => {
+			if (err) reject(err)
+			resolve(buff.toString('hex'))
+		})
+	})
+
+	user.verificationToken = await bcrypt.hash(verificationToken, 12)
+	await user.save()
+
+	if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
+		await mailer.sendWelcomeMail(user.email, user.name, user.id, verificationToken)
+	}
+
+	res.status(204).send()
+}))
+
+router.route('/verify').post(asyncMiddleware(async (req, res, next) => {
+	let { userId, verificationToken } = req.body
+
+	let user = await User.findOne({
+		attributes: ['id', 'verificationToken', 'verified'],
+		where: {
+			id: userId
+		}
+	})
+
+	if (!user) return res.status(204).send()
+	if (user.verified) return next(new RequestError('This user is already verified.'))
+
+	if (await bcrypt.compare(verificationToken, user.verificationToken) === false) {
+		return next(new AuthenticationError('The provided credentials are incorrect.'))
+	}
+
+	user.verified = true;
+	await user.save()
+	res.status(204).send()
 }))
 
 router.route('/').get(asyncMiddleware(async (req, res, next) => {
@@ -115,6 +184,7 @@ router.route('/:userId').get(asyncMiddleware(async (req, res, next) => {
 	userResource.password = undefined
 	userResource.passwordResetToken = undefined
 	userResource.passwordResetExpiration = undefined
+	userResource.verificationToken = undefined
 	res.send(userResource)
 }))
 
@@ -141,6 +211,7 @@ router.route('/:userId').post(asyncMiddleware(async (req, res, next) => {
 	userResource.password = undefined
 	userResource.passwordResetToken = undefined
 	userResource.passwordResetExpiration = undefined
+	userResource.verificationToken = undefined
 	res.send(userResource)
 }))
 
