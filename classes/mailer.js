@@ -36,6 +36,32 @@ class Mailer {
 	}
 
 	/**
+	 * Sends a welcome mail which contains a verification link
+	 * @param {string} to The users email-address
+	 * @param {string} name The users name
+	 * @param {string} id The users id
+	 * @param {string} verificationToken A verification token
+	 */
+	sendWelcomeMail(to, name, id, verificationToken) {
+		let transport = nodemailer.createTransport(this.getMailOptions('hello@mampfalot.app'))
+		let verificationLink = `https://mampfalot.app/verify/${verificationToken}?userId=${id}`
+		let mailOptions = {
+			from: '"Mampfalot" <hello@mampfalot.app>',
+			to: to,
+			subject: 'Willkommen bei Mampfalot!',
+			text: this.getWelcomeText(name, verificationLink),
+			html: this.getWelcomeHTML(name, verificationLink)
+		}
+
+		return new Promise((resolve, reject) => {
+			transport.sendMail(mailOptions, (err, info) => {
+				if (err) return reject(err)
+				resolve(info)
+			})
+		})
+	}
+
+	/**
 	 * Sends a password reset mail
 	 * @param {*} to The user email-address
 	 * @param {*} name The users name
@@ -101,6 +127,41 @@ class Mailer {
 			du hast kürzlich ein neues Passwort für Mampfalot angefordert.
 			Klicke hier, um ein neues Passwort zu vergeben: ${resetLink}
 			Dieser Link ist 30 Minuten lang gültig.
+			Viele Grüße
+			Dein Mampfalot-Team
+		`
+	}
+
+	/**
+	 * Returns the htmln content of a welcome email
+	 * @param {string} name The users name, used in the greeting
+	 * @param {string} verificationLink A link where the user can verify his email-address
+	 */
+	getWelcomeHTML(name, verificationLink) {
+		return `
+			<html>
+				<head>
+				</head>
+				<body>
+					<p>
+						Hi ${name}! <br>
+						<br>
+						Herzlich willkommen bei Mampfalot!<br>
+						Benutze folgenden Link, um deine E-Mail Adresse zu bestätigen: <a href="${verificationLink}">${verificationLink}</a><br>
+						<br>
+						Viele Grüße<br>
+						Dein Mampfalot-Team
+					</p>
+				</body>
+			</html>
+		`
+	}
+
+	getWelcomeText(name, verificationLink) {
+		return `
+			Hi ${name}!
+			Herzlich willkommen bei Mampfalot!
+			Benutze folgenden Link, um deine E-Mail Adresse zu bestätgen: ${verificationLink}
 			Viele Grüße
 			Dein Mampfalot-Team
 		`
