@@ -18,6 +18,15 @@ router.route('/password-reset').all(allowMethods(['GET', 'POST']))
 router.route('/password-reset').get(hasQueryValues(['email'], 'all'))
 router.route('/password-reset').post(hasBodyValues(['userId', 'resetToken', 'newPassword'], 'all'))
 
+router.route('/').get(asyncMiddleware(async (req, res, next) => {
+	let user = await User.findOne({ where: { email: req.query.email }})
+	if (user) {
+		res.send(user)
+	} else {
+		return next(new NotFoundError('User', null))
+	}
+}))
+
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	let verificationToken = await new Promise((resolve, reject) => {
 		crypto.randomBytes(25, (err, buff) => {
@@ -95,15 +104,6 @@ router.route('/verify').post(asyncMiddleware(async (req, res, next) => {
 	user.verified = true;
 	await user.save()
 	res.status(204).send()
-}))
-
-router.route('/').get(asyncMiddleware(async (req, res, next) => {
-	let user = await User.findOne({ where: { email: req.query.email }})
-	if (user) {
-		res.send(user)
-	} else {
-		return next(new NotFoundError('User', null))
-	}
 }))
 
 router.route('/password-reset').get(asyncMiddleware(async (req, res, next) => {
