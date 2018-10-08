@@ -12,8 +12,7 @@ let sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.
 	logging: false,
 	dialectOptions: {
 		multipleStatements: true
-	},
-	operatorsAliases: Sequelize.Op // Vermeide Deprecation-Warnung
+	}
 })
 
 fs
