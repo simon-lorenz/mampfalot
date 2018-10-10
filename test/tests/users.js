@@ -310,6 +310,10 @@ module.exports = (request, bearerToken) => {
 
 		describe('/password-reset', () => {
 			describe('GET', () => {
+				before(async () => {
+					await setup.resetData()
+				})
+
 				it('fails if the body does not contain an email address', (done) => {
 					request
 						.get('/users/password-reset')
@@ -319,11 +323,11 @@ module.exports = (request, bearerToken) => {
 						.end(done)
 				})
 
-				it('sends 204 if email is unknown', (done) => {
+				it('sends 404 if email is unknown', (done) => {
 					request
 						.get('/users/password-reset')
 						.query({ email: 'email@mail.com' })
-						.expect(204, done)
+						.expect(404, done)
 				})
 
 				it('sends 204 if email is known', (done) => {
@@ -331,6 +335,99 @@ module.exports = (request, bearerToken) => {
 						.get('/users/password-reset')
 						.query({ email: 'mustermann@gmail.com' })
 						.expect(204, done)
+				})
+			})
+
+			describe('POST', () => {
+				beforeEach(async () => {
+					await setup.resetData()
+				})
+
+				it('fails if the body does not contain an userId', (done) => {
+					request
+						.post('/users/password-reset')
+						.send({ resetToken: '123', newPassword: '123456789' })
+						.expect(res => {
+							errorHelper.checkRequestError(res.body)
+						})
+						.end(done)
+				})
+
+				it('fails if the body does not contain a resetToken', (done) => {
+					request
+						.post('/users/password-reset')
+						.send({ userId: '7', newPassword: '123456789' })
+						.expect(res => {
+							errorHelper.checkRequestError(res.body)
+						})
+						.end(done)
+				})
+
+				it('fails if the body does not contain a new password', (done) => {
+					request
+						.post('/users/password-reset')
+						.send({ userId: '7', resetToken: '123' })
+						.expect(res => {
+							errorHelper.checkRequestError(res.body)
+						})
+						.end(done)
+				})
+			})
+		})
+
+		describe('/verify', () => {
+			describe('GET', () => {
+				before(async () => {
+					await setup.resetData()
+				})
+
+				it('fails if the body does not contain an email address', (done) => {
+					request
+						.get('/users/verify')
+						.expect(res => {
+							errorHelper.checkRequestError(res.body)
+						})
+						.end(done)
+				})
+
+				it('sends 404 if email is unknown', (done) => {
+					request
+						.get('/users/verify')
+						.query({ email: 'email@mail.com' })
+						.expect(404, done)
+				})
+
+				it('sends 204 if email is known', (done) => {
+					request
+						.get('/users/verify')
+						.query({ email: 'mustermann@gmail.com' })
+						.expect(204, done)
+				})
+			})
+
+			describe('POST', () => {
+				beforeEach(async () => {
+					await setup.resetData()
+				})
+
+				it('fails if the body does not contain an userId', (done) => {
+					request
+						.get('/users/verify')
+						.send({ verificationToken: '123' })
+						.expect(res => {
+							errorHelper.checkRequestError(res.body)
+						})
+						.end(done)
+				})
+
+				it('fails if the body does not contain an verificationToken', (done) => {
+					request
+						.get('/users/verify')
+						.send({ userId: '7' })
+						.expect(res => {
+							errorHelper.checkRequestError(res.body)
+						})
+						.end(done)
 				})
 			})
 		})

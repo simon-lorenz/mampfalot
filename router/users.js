@@ -58,7 +58,7 @@ router.route('/verify').get(asyncMiddleware(async (req, res, next) => {
 		}
 	})
 
-	if (!user) return res.status(204).send()
+	if (!user) return next(new NotFoundError('User', email))
 	if (user.verified) return next(new RequestError('This user is already verified.'))
 
 	let verificationToken = await generateRandomToken(25)
@@ -100,7 +100,7 @@ router.route('/password-reset').get(asyncMiddleware(async (req, res, next) => {
 
 	let user = await User.findOne({ where: { email }})
 
-	if (!user) return res.status(204).send()
+	if (!user) return next(new NotFoundError('User', email))
 
 	let token = await generateRandomToken(25)
 
