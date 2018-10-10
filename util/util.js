@@ -1,3 +1,5 @@
+const crypto = require('crypto')
+
 module.exports = {
 
 	/**
@@ -12,6 +14,20 @@ module.exports = {
 				.resolve(fn(req, res, next))
 				.catch(next);
 		}
+	},
+
+	/**
+	 * Generates a random token with a length of <size>.
+	 * @param {number} size The length of the token
+	 * @returns {Promise<Token>} Contains the token
+	 */
+	generateRandomToken(size) {
+		return new Promise((resolve, reject) => {
+			crypto.randomBytes(size, (err, buff) => {
+				if (err) return reject(err)
+				resolve(buff.toString('hex'))
+			})
+		})
 	}
 
 }

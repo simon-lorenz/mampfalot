@@ -1,11 +1,10 @@
 const router = require('express').Router()
 const bcrypt = require('bcrypt')
-const crypto = require('crypto')
 const { Op } = require('sequelize')
 const { User, Group } = require('../models')
 const { allowMethods, hasQueryValues, initUser, hasBodyValues, verifyToken } = require('../util/middleware')
 const { AuthenticationError, NotFoundError, RequestError } = require('../classes/errors')
-const { asyncMiddleware }  = require('../util/util')
+const { asyncMiddleware, generateRandomToken }  = require('../util/util')
 const Mailer = require('../classes/mailer')
 const mailer = new Mailer
 
@@ -28,12 +27,7 @@ router.route('/').get(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
-	let verificationToken = await new Promise((resolve, reject) => {
-		crypto.randomBytes(25, (err, buff) => {
-			if (err) reject(err)
-			resolve(buff.toString('hex'))
-		})
-	})
+	let verificationToken = await generateRandomToken(25)
 
 	let user = await User.create({
 		firstName: req.body.firstName,
@@ -67,12 +61,7 @@ router.route('/verify').get(asyncMiddleware(async (req, res, next) => {
 	if (!user) return res.status(204).send()
 	if (user.verified) return next(new RequestError('This user is already verified.'))
 
-	let verificationToken = await new Promise((resolve, reject) => {
-		crypto.randomBytes(25, (err, buff) => {
-			if (err) reject(err)
-			resolve(buff.toString('hex'))
-		})
-	})
+	let verificationToken = await generateRandomToken(25)
 
 	user.verificationToken = await bcrypt.hash(verificationToken, 12)
 	await user.save()
@@ -113,13 +102,7 @@ router.route('/password-reset').get(asyncMiddleware(async (req, res, next) => {
 
 	if (!user) return res.status(204).send()
 
-	// Generate a random token
-	let token = await new Promise((resolve, reject) => {
-		crypto.randomBytes(25, (err, buff) => {
-			if (err) return reject(err)
-			resolve(buff.toString('hex'))
-		})
-	})
+	let token = await generateRandomToken(25)
 
 	let tokenExp = new Date()
 	tokenExp.setMinutes(tokenExp.getMinutes() + 30)
