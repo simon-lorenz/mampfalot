@@ -95,7 +95,8 @@ module.exports = {
 			groupId: 1,
 			date: '2018-06-26',
 			lunchTime: '12:30:00',
-			voteEndingTime: '12:25:00'
+			voteEndingTime: '12:25:00',
+			result: 1
 		}
 	],
 	comments: [

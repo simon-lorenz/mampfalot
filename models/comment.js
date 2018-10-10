@@ -5,6 +5,16 @@ module.exports = (sequelize, DataTypes) => {
 			primaryKey: true,
 			autoIncrement: true
 		},
+		lunchbreakId: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			onDelete: 'CASCADE'
+		},
+		userId: {
+			type: DataTypes.INTEGER,
+			allowNull: true,
+			onDelete: 'SET NULL'
+		},
 		comment: {
 			type: DataTypes.TEXT,
 			allowNull: false,
@@ -29,8 +39,8 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	Comment.associate = function (models) {
-		models.Comment.belongsTo(models.Lunchbreak)
-		models.Comment.belongsTo(models.User)
+		models.Comment.belongsTo(models.Lunchbreak, { foreignKey: 'lunchbreakId' })
+		models.Comment.belongsTo(models.User, { foreignKey: 'userId' })
 	}
 
 	return Comment

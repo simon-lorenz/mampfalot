@@ -94,10 +94,11 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	User.associate = function (models) {
-		models.User.hasMany(models.Comment)
-		models.User.hasMany(models.Participant)
+		models.User.hasMany(models.Comment, { foreignKey: 'userId' })
+		models.User.hasMany(models.Participant, { foreignKey: 'participantId' })
 		models.User.belongsToMany(models.Group, {
-			through: models.GroupMembers
+			through: models.GroupMembers,
+			foreignKey: 'userId'
 		})
 	}
 

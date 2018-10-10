@@ -3,6 +3,7 @@ module.exports = (sequelize, DataTypes) => {
 		userId: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
+			onDelete: 'CASCADE',
 			validate: {
 				notNull: {
 					msg: 'userId cannot be null.'
@@ -17,6 +18,11 @@ module.exports = (sequelize, DataTypes) => {
 					if (!user) throw 'userId does not exist.'
 				}
 			}
+		},
+		groupId: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			onDelete: 'CASCADE'
 		},
 		isAdmin: {
 			type: DataTypes.BOOLEAN,

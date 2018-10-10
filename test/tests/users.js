@@ -556,6 +556,54 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[1] })
 						.expect(404)
 				})
+
+				it('deletes all group memberships of this user', async () => {
+					await request
+						.delete('/users/2')
+						.set({ Authorization: bearerToken[2] })
+						.expect(204)
+
+					await request
+						.get('/groups/1/members')
+						.set({ Authorization: bearerToken[1] })
+						.expect(res => {
+							let members = res.body
+							members.should.be.an('array').with.lengthOf(1)
+							members[0].should.have.property('id').equal(1)
+						})
+				})
+
+				it('sets the foreign key on all associated comments to null', async () => {
+					await request
+						.delete('/users/2')
+						.set({ Authorization: bearerToken[2] })
+						.expect(204)
+
+					await request
+						.get('/comments/3')
+						.set({ Authorization: bearerToken[1] })
+						.expect(200)
+						.expect(res => {
+							let comment = res.body
+							comment.should.have.property('userId').equal(null)
+						})
+				})
+
+				it('sets the foreign key on all associated participants to null', async () => {
+					await request
+						.delete('/users/2')
+						.set({ Authorization: bearerToken[2] })
+						.expect(204)
+
+					await request
+						.get('/participants/2')
+						.set({ Authorization: bearerToken[1] })
+						.expect(200)
+						.expect(res => {
+							let participant = res.body
+							participant.should.have.property('userId').equal(null)
+						})
+				})
 			})
 
 			describe('/groups', () => {

@@ -5,6 +5,24 @@ module.exports = (sequelize, DataTypes) => {
 			primaryKey: true,
 			autoIncrement: true
 		},
+		lunchbreakId: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			onDelete: 'CASCADE',
+			unique: {
+				name:'participateOnceOnly',
+				msg: 'This user already participates.'
+			}
+		},
+		userId: {
+			type: DataTypes.INTEGER,
+			allowNull: true,
+			onDelete: 'SET NULL',
+			unique: {
+				name:'participateOnceOnly',
+				msg: 'This user already participates.'
+			}
+		},
 		amountSpent: {
 			type: DataTypes.DECIMAL
 		},
@@ -21,26 +39,9 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	Participant.associate = function (models) {
-		models.Participant.belongsTo(models.User, {
-			onDelete: 'CASCADE',
-			foreignKey: {
-				unique: {
-					name:'compositeIndex',
-					msg: 'This user already participates.'
-				},
-				allowNull: false
-			}
-		})
-		models.Participant.belongsTo(models.Lunchbreak, {
-			foreignKey: {
-				unique: {
-					name:'compositeIndex',
-					msg: 'This user already participates.'
-				},
-				allowNull: false
-			}
-		})
-		models.Participant.hasMany(models.Vote, { onDelete: 'cascade' })
+		models.Participant.belongsTo(models.User, { foreignKey: 'userId' })
+		models.Participant.belongsTo(models.Lunchbreak, { foreignKey: 'lunchbreakId' })
+		models.Participant.hasMany(models.Vote, { foreignKey: 'participantId' })
 	}
 
 	return Participant

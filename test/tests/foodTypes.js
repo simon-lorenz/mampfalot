@@ -88,6 +88,14 @@ module.exports = (request, bearerToken) => {
 					.end(done)
 			})
 
+			it('inserts a duplicate foodType for a different group', async () => {
+				await request
+					.post('/foodTypes')
+					.set({ Authorization: bearerToken[3] })
+					.send({ groupId: 2, type: 'Asiatisch' })
+					.expect(200)
+			})
+
 			it('inserts a new foodType correctly', (done) => {
 				request
 					.post('/foodTypes')
@@ -262,6 +270,34 @@ module.exports = (request, bearerToken) => {
 						.get('/foodTypes/1')
 						.set({ Authorization: bearerToken[1] })
 						.expect(404)
+				})
+
+				it('does not delete the associated group', async () => {
+					await request
+						.delete('/foodTypes/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					await request
+						.get('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(200)
+				})
+
+				it('sets the foreign key of associated places to null', async () => {
+					await request
+						.delete('/foodTypes/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					await request
+						.get('/places/2')
+						.set({ Authorization: bearerToken[1] })
+						.expect(200)
+						.expect(res => {
+							let place = res.body
+							place.should.have.property('foodTypeId').equal(null)
+						})
 				})
 			})
 		})

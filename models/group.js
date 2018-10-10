@@ -80,13 +80,13 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	Group.associate = function (models) {
-		models.Group.hasMany(models.Place, { onDelete: 'CASCADE' })
-		models.Group.hasMany(models.FoodType, { onDelete: 'CASCADE' })
-		models.Group.hasMany(models.Lunchbreak, { onDelete: 'CASCADE' })
+		models.Group.hasMany(models.Place, { foreignKey: 'groupId' })
+		models.Group.hasMany(models.FoodType, { foreignKey: 'groupId' })
+		models.Group.hasMany(models.Lunchbreak, { foreignKey: 'groupId' })
 		models.Group.belongsToMany(models.User, {
-			onDelete: 'CASCADE',
 			through: models.GroupMembers,
-			as: 'members'
+			as: 'members',
+			foreignKey: 'groupId'
 		})
 	}
 

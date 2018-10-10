@@ -367,6 +367,70 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[1] })
 						.expect(404)
 				})
+
+				it('deletes all places associated to this group', async () => {
+					await request
+						.delete('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					await request
+						.get('/places/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(404)
+				})
+
+				it('deletes all foodTypes associated to this group', async () => {
+					await request
+						.delete('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					await request
+						.get('/foodTypes/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(404)
+				})
+
+
+				it('deletes all lunchbreaks associated to this group', async () => {
+					await request
+						.delete('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					await request
+						.get('/lunchbreaks/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(404)
+				})
+
+				it('deletes all members of this group', async () => {
+					let members = await request
+						.get('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.then(res => {
+							return res.body.members
+						})
+
+					await request
+						.delete('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					for (let member of members) {
+						await request
+							.get(`/users/${member.id}/groups`)
+							.set({ Authorization: bearerToken[member.id] })
+							.then(res => {
+								let groups = res.body
+
+								for (let group of groups) {
+									if (group.id === 1) throw new Error('User is still a member of group 1')
+								}
+							})
+					}
+				})
 			})
 
 			describe('/lunchbreaks', () => {
@@ -952,6 +1016,30 @@ module.exports = (request, bearerToken) => {
 									errorHelper.checkAuthorizationError(res.body, expectedError)
 								})
 								.end(done)
+						})
+
+						it('does not delete the associated group', async () => {
+							await request
+								.delete('/groups/1/members/2')
+								.set({ Authorization: bearerToken[2] })
+								.expect(204)
+
+							await request
+								.get('/groups/1')
+								.set({ Authorization: bearerToken[1] })
+								.expect(200)
+						})
+
+						it('does not delete the associated user', async () => {
+							await request
+								.delete('/groups/1/members/2')
+								.set({ Authorization: bearerToken[2] })
+								.expect(204)
+
+							await request
+								.get('/users/2/')
+								.set({ Authorization: bearerToken[2] })
+								.expect(200)
 						})
 					})
 				})

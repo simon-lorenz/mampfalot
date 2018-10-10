@@ -184,6 +184,30 @@ module.exports = (request, bearerToken) => {
 							errorHelper.checkNotFoundError(res.body, 'Comment', 1)
 						})
 				})
+
+				it('does not delete the associated user', async () => {
+					await request
+						.delete('/comments/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					await request
+						.get('/users/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(200)
+				})
+
+				it('does not delete the associated lunchbreak', async () => {
+					await request
+						.delete('/comments/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					await request
+						.get('/lunchbreaks/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(200)
+				})
 			})
 		})
 	})

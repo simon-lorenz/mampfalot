@@ -96,6 +96,47 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[1] })
 						.expect(404)
 				})
+
+				it('deletes all votes associated to this participant', async () => {
+					await request
+						.delete('/participants/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					await request
+						.get('/votes/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(404)
+
+					await request
+						.get('/votes/2')
+						.set({ Authorization: bearerToken[1] })
+						.expect(404)
+				})
+
+				it('does not delete the associated lunchbreak', async () => {
+					await request
+						.delete('/participants/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					await request
+						.get('/lunchbreaks/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(200)
+				})
+
+				it('does not delete the associated user', async () => {
+					await request
+						.delete('/participants/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					await request
+						.get('/users/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(200)
+				})
 			})
 
 			describe('/votes', () => {

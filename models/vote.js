@@ -12,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
 		participantId: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
+			onDelete: 'CASCADE',
 			validate: {
 				notNull: {
 					msg: 'participantId cannot be null.'
@@ -21,6 +22,7 @@ module.exports = (sequelize, DataTypes) => {
 		placeId: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
+			onDelete: 'CASCADE',
 			validate: {
 				notNull: {
 					msg: 'placeId cannot be null.'
@@ -146,8 +148,8 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	Vote.associate = function(models) {
-		models.Vote.belongsTo(models.Place)
-		models.Vote.belongsTo(models.Participant)
+		models.Vote.belongsTo(models.Place, { foreignKey: 'placeId' })
+		models.Vote.belongsTo(models.Participant, { foreignKey: 'participantId' })
 	}
 
 	return Vote

@@ -234,6 +234,58 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[1] })
 						.expect(404)
 				})
+
+				it('deletes all votes associated with this place', async () => {
+					await request
+						.delete('/places/2')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					await request
+						.get('/votes/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(404)
+				})
+
+				it('does not delete associated foodType', async () => {
+					await request
+						.delete('/places/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					await request
+						.get('/foodTypes/2')
+						.set({ Authorization: bearerToken[1] })
+						.expect(200)
+				})
+
+				it('does not delete the associated group', async () => {
+					await request
+						.delete('/places/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					await request
+						.get('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(200)
+				})
+
+				it('sets associated lunchbreak results to null', async () => {
+					await request
+						.delete('/places/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					await request
+						.get('/lunchbreaks/3')
+						.set({ Authorization: bearerToken[1] })
+						.expect(200)
+						.expect(res => {
+							let lunchbreak = res.body
+							lunchbreak.should.have.property('result').equal(null)
+						})
+				})
 			})
 		})
 	})

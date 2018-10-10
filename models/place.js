@@ -5,8 +5,15 @@ module.exports = (sequelize, DataTypes) => {
 			primaryKey: true,
 			autoIncrement: true
 		},
+		groupId: {
+			type: DataTypes.INTEGER,
+			allowNull:-false,
+			onDelete: 'CASCADE'
+		},
 		foodTypeId: {
 			type: DataTypes.INTEGER,
+			allowNull: true,
+			onDelete: 'SET NULL',
 			validate: {
 				async belongsToGroup(val) {
 					let FoodType = sequelize.models.FoodType
@@ -35,9 +42,9 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	Place.associate = function (models) {
-		models.Place.hasMany(models.Vote, { onDelete: 'CASCADE' })
-		models.Place.belongsTo(models.FoodType)
-		models.Place.belongsTo(models.Group, { onDelete: 'CASCADE' })
+		models.Place.hasMany(models.Vote, { foreignKey: 'placeId' })
+		models.Place.belongsTo(models.FoodType, { foreignKey: 'foodTypeId' })
+		models.Place.belongsTo(models.Group, { foreignKey: 'groupId' })
 	}
 
 	return Place

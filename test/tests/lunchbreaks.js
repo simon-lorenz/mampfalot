@@ -147,6 +147,10 @@ module.exports = (request, bearerToken) => {
 				})
 			})
 
+			describe('DELETE', () => {
+				it('Implement tests')
+			})
+
 			describe('/participants', () => {
 				describe('GET', () => {
 					before(async () => {

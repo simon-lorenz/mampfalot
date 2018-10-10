@@ -5,6 +5,12 @@ module.exports = (sequelize, DataTypes) => {
 			primaryKey: true,
 			autoIncrement: true
 		},
+		groupId: {
+			type: DataTypes.INTEGER,
+			unique: 'uniqueTypesPerGroup',
+			allowNull: false,
+			onDelete: 'CASCADE'
+		},
 		type: {
 			type: DataTypes.STRING,
 			allowNull: false,
@@ -19,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
 				}
 			},
 			unique: {
-				name: 'compositeIndex',
+				name: 'uniqueTypesPerGroup',
 				msg: 'This type already exists for this group.'
 			}
 		}
@@ -33,8 +39,8 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	FoodType.associate = function (models) {
-		models.FoodType.belongsTo(models.Group, { foreignKey: { unique: 'compositeIndex', allowNull: false }, onDelete: "CASCADE", hooks: true })
-		models.FoodType.hasMany(models.Place)
+		models.FoodType.belongsTo(models.Group, { foreignKey: 'groupId' })
+		models.FoodType.hasMany(models.Place, { foreignKey: 'foodTypeId' })
 	}
 
 	return FoodType

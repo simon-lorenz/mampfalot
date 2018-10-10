@@ -458,6 +458,30 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[1] })
 						.expect(404)
 				})
+
+				it('does not delete the associated place', async () => {
+					await request
+						.delete('/votes/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					await request
+						.get('/places/2')
+						.set({ Authorization: bearerToken[1] })
+						.expect(200)
+				})
+
+				it('does not delete the associated participant', async () => {
+					await request
+						.delete('/votes/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					await request
+						.get('/participants/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(200)
+				})
 			})
 		})
 	})
