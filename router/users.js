@@ -52,7 +52,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 router.route('/verify').get(asyncMiddleware(async (req, res, next) => {
 	let { email } = req.query
 	let user = await User.findOne({
-		attributes: ['id', 'name', 'email', 'verificationToken', 'verified'],
+		attributes: ['id', 'firstName', 'lastName', 'email', 'verificationToken', 'verified'],
 		where: {
 			email: email
 		}
