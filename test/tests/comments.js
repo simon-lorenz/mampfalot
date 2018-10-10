@@ -9,10 +9,10 @@ module.exports = (request, bearerToken) => {
 					await setup.resetData()
 				})
 
-				it('fails if userId does not match', (done) => {
+				it('fails if user is no group member', (done) => {
 					request
 						.get('/comments/1')
-						.set({ Authorization: bearerToken[2] })
+						.set({ Authorization: bearerToken[3] })
 						.expect(403)
 						.expect(res => {
 							let expectedError = {
@@ -37,10 +37,10 @@ module.exports = (request, bearerToken) => {
 						.end(done)
 				})
 
-				it('returns a single comment resource', (done) => {
+				it('returns a single comment resource if user is in the same group', (done) => {
 					request
 						.get('/comments/1')
-						.set({ Authorization: bearerToken[1] })
+						.set({ Authorization: bearerToken[2] })
 						.expect(200)
 						.expect(res => {
 							let comment = res.body

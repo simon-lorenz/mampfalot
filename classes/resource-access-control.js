@@ -21,7 +21,8 @@ class ResourceAccessControl {
 	}
 
 	async readComment(comment) {
-		if (comment.userId !== this.user.id) {
+		let lunchbreak = await Lunchbreak.findById(comment.lunchbreakId, { attributes: ['groupId'] })
+		if (!this.user.isGroupMember(lunchbreak.groupId)) {
 			throw new AuthorizationError('Comment', comment.id, 'READ')
 		}
 	}
