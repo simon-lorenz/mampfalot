@@ -40,7 +40,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 		lastName: req.body.lastName,
 		email: req.body.email,
 		password: req.body.password,
-		verificationToken: await bcrypt.hash(verificationToken, 12)
+		verificationToken: await bcrypt.hash(verificationToken, process.env.NODE_ENV === 'test' ? 1 : 12)
 	})
 
 	user.password = undefined
