@@ -2,7 +2,7 @@ const router = require('express').Router()
 const { Place, Group, User, GroupMembers, Lunchbreak, FoodType } = require('../models')
 const { allowMethods, hasBodyValues } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
-const { NotFoundError } = require('../classes/errors')
+const loader = require('../classes/resource-loader')
 
 router.route('/').all(allowMethods(['GET', 'POST']))
 router.route('/:groupId').all(allowMethods(['GET', 'POST', 'DELETE']))
@@ -79,48 +79,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	res.send(group)
 }))
 
-router.route('/:groupId*').all(asyncMiddleware(async (req, res, next) => {
-	res.locals.group = await Group.findOne({
-		where: {
-			id: req.params.groupId
-		},
-		include: [{
-				model: Place,
-				attributes: {
-					exclude: ['groupId']
-				},
-				order: ['id']
-			},
-			{
-				model: FoodType,
-				attributes: {
-					exclude: ['groupId']
-				},
-				order: ['id']
-			},
-			{
-				model: Lunchbreak,
-				limit: parseInt(req.query.lunchbreakLimit) || 25,
-				order: ['id']
-			},
-			{
-				model: User,
-				attributes: ['id', 'email', 'firstName', 'lastName'],
-				as: 'members',
-				through: {
-					as: 'config',
-					attributes: ['color', 'isAdmin']
-				}
-			}
-		]
-	})
-
-	if (!res.locals.group) {
-		next(new NotFoundError('Group', parseInt(req.params.groupId)))
-	} else {
-		next()
-	}
-}))
+router.param('groupId', asyncMiddleware(loader.loadGroup))
 
 router.route('/:groupId').get(asyncMiddleware(async (req, res, next) => {
 	let { user, group } = res.locals
@@ -206,20 +165,7 @@ router.route('/:groupId/members').post(asyncMiddleware(async (req, res, next) =>
 	res.send(groupNew.members[0])
 }))
 
-router.route('/:groupId/members/:userId').all(asyncMiddleware(async (req, res, next) => {
-	res.locals.member = await GroupMembers.findOne({
-		where: {
-			groupId: req.params.groupId,
-			userId: req.params.userId
-		}
-	})
-
-	if (res.locals.member) {
-		next()
-	} else {
-		throw new NotFoundError('GroupMember', req.params.userId)
-	}
-}))
+router.route('/:groupId/members/:userId').all(asyncMiddleware(loader.loadMember))
 
 router.route('/:groupId/members/:userId').post(asyncMiddleware(async (req, res, next) => {
 	let { user, member } = res.locals

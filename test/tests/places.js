@@ -88,7 +88,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[1] })
 						.expect(404)
 						.expect(res => {
-							errorHelper.checkNotFoundError(res.body, 'Place', '99')
+							errorHelper.checkNotFoundError(res.body, 'Place', 99)
 						})
 						.end(done)
 				})

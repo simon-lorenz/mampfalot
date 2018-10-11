@@ -851,7 +851,7 @@ module.exports = (request, bearerToken) => {
 							.set({ Authorization: bearerToken[1] })
 							.expect(404)
 							.expect(res => {
-								errorHelper.checkNotFoundError(res.body, 'GroupMember', '404')
+								errorHelper.checkNotFoundError(res.body, 'GroupMember', 404)
 							})
 							.end(done)
 					})

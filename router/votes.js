@@ -2,7 +2,8 @@ const router = require('express').Router()
 const { Vote, Participant, Place } = require('../models')
 const { allowMethods } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
-const { ValidationError, NotFoundError, RequestError } = require('../classes/errors')
+const { ValidationError, RequestError } = require('../classes/errors')
+const loader = require('../classes/resource-loader')
 
 router.route('/').all(allowMethods(['POST']))
 router.route('/:voteId').all(allowMethods(['GET', 'DELETE']))
@@ -63,21 +64,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	}))
 }))
 
-router.param('voteId', asyncMiddleware(async (req, res, next) => {
-	let voteId = parseInt(req.params.voteId)
-	res.locals.vote = await Vote.findOne({
-		where: {
-			id: voteId
-		},
-		include: [ Participant, Place ]
-	})
-
-	if (res.locals.vote) {
-		next()
-	} else {
-		next(new NotFoundError('Vote', voteId))
-	}
-}))
+router.param('voteId', asyncMiddleware(loader.loadVote))
 
 router.route('/:voteId').get(asyncMiddleware(async (req, res, next) => {
 	let { vote, user } = res.locals

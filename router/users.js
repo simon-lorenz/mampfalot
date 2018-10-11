@@ -7,6 +7,7 @@ const { AuthenticationError, NotFoundError, RequestError } = require('../classes
 const { asyncMiddleware, generateRandomToken }  = require('../util/util')
 const Mailer = require('../classes/mailer')
 const mailer = new Mailer
+const loader = require('../classes/resource-loader')
 
 router.route('/').all(allowMethods(['GET', 'POST']))
 router.route('/').get(hasQueryValues(['email'], 'all'))
@@ -150,16 +151,7 @@ router.route('/:userId').all(allowMethods(['GET', 'POST', 'DELETE']))
 router.route('/:userId').post(hasBodyValues(['firstName', 'lastName', 'email', 'password'], 'atLeastOne'))
 router.route('/:userId/groups').all(allowMethods(['GET']))
 
-router.route('/:userId*').all(asyncMiddleware(async (req, res, next) => {
-	let userId = parseInt(req.params.userId)
-	res.locals.resources = {}
-	res.locals.resources.user = await User.unscoped().findById(userId)
-	if (res.locals.resources.user) {
-		return next()
-	} else {
-		return next(new NotFoundError('User', userId))
-	}
-}))
+router.param('userId', asyncMiddleware(loader.loadUser))
 
 router.route('/:userId').get(asyncMiddleware(async (req, res, next) => {
 	let user = res.locals.user

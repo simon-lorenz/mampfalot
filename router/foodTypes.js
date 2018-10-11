@@ -1,8 +1,8 @@
 const router = require('express').Router()
-const { NotFoundError } = require('../classes/errors')
 const { FoodType } = require('../models')
 const { allowMethods, hasBodyValues } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
+const loader = require('../classes/resource-loader')
 
 router.route('/').all(allowMethods(['POST']))
 router.route('/:foodTypeId').all(allowMethods(['GET', 'POST', 'DELETE']))
@@ -17,17 +17,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	res.send(await foodType.save())
 }))
 
-router.route('/:foodTypeId').all(asyncMiddleware(async (req, res, next) => {
-	let id = parseInt(req.params.foodTypeId)
-
-	res.locals.foodType = await FoodType.findById(id)
-
-	if (res.locals.foodType) {
-		return next()
-	} else {
-		return next(new NotFoundError('FoodType', id))
-	}
-}))
+router.param('foodTypeId', asyncMiddleware(loader.loadFoodType))
 
 router.route('/:foodTypeId').get(asyncMiddleware(async (req, res, next) => {
 	let { foodType, user } = res.locals

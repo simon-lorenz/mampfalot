@@ -1,8 +1,8 @@
 const router = require('express').Router()
-const { Place, Group, FoodType } = require('../models')
+const { Place } = require('../models')
 const { allowMethods, hasBodyValues } = require('../util/middleware')
-const { NotFoundError } = require('../classes/errors')
 const { asyncMiddleware } = require('../util/util')
+const loader = require('../classes/resource-loader')
 
 router.route('/').all(allowMethods(['POST']))
 router.route('/').post(hasBodyValues(['groupId', 'foodTypeId', 'name'], 'all'))
@@ -17,6 +17,7 @@ router.route('/').post((req, res, next) => {
 	})
 	next()
 })
+
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	let { user, place } = res.locals
 
@@ -25,25 +26,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	res.send(place)
 }))
 
-router.route('/:placeId').all(asyncMiddleware(async (req, res, next) => {
-	res.locals.place = await Place.findOne({
-		where: {
-			id: req.params.placeId
-		},
-		include: [
-			{
-				model: Group,
-				include: FoodType
-			}
-		]
-	})
-
-	if (res.locals.place) {
-		next()
-	} else {
-		next(new NotFoundError('Place', req.params.placeId))
-	}
-}))
+router.param('placeId', asyncMiddleware(loader.loadPlace))
 
 router.route('/:placeId').get(asyncMiddleware(async (req, res, next) => {
 	let { user, place } = res.locals

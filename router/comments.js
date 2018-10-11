@@ -1,22 +1,11 @@
 const router = require('express').Router()
-const { Comment } = require('../models')
 const { allowMethods } = require('../util/middleware')
-const { NotFoundError } = require('../classes/errors')
 const { asyncMiddleware } = require('../util/util')
+const loader = require('../classes/resource-loader')
 
 router.route('/:commentId').all(allowMethods(['GET', 'POST', 'DELETE']))
 
-router.route('/:commentId').all(asyncMiddleware(async (req, res, next) => {
-	let id = parseInt(req.params.commentId)
-
-	res.locals.comment = await Comment.findById(id)
-
-	if (res.locals.comment) {
-		return next()
-	} else {
-		return next(new NotFoundError('Comment', id))
-	}
-}))
+router.param('commentId', asyncMiddleware(loader.loadComment))
 
 router.route('/:commentId').get(asyncMiddleware(async (req, res, next) => {
 	let { user, comment } = res.locals
