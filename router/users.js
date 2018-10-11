@@ -147,7 +147,7 @@ router.route('/password-reset').post(asyncMiddleware(async (req, res, next) => {
 router.use([verifyToken, initUser])
 
 router.route('/:userId').all(allowMethods(['GET', 'POST', 'DELETE']))
-router.route('/:userId').post(hasBodyValues(['name', 'email', 'password'], 'atLeastOne'))
+router.route('/:userId').post(hasBodyValues(['firstName', 'lastName', 'email', 'password'], 'atLeastOne'))
 router.route('/:userId/groups').all(allowMethods(['GET']))
 
 router.route('/:userId*').all(asyncMiddleware(async (req, res, next) => {

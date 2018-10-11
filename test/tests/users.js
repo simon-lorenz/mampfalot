@@ -510,7 +510,7 @@ module.exports = (request, bearerToken) => {
 					request
 						.post('/users/3')
 						.set({ Authorization: bearerToken[1]})
-						.send({ name: 'New name' })
+						.send({ firstName: 'New', lastName: 'name' })
 						.expect(403)
 						.expect(res => {
 							let expectedError = {
@@ -530,7 +530,7 @@ module.exports = (request, bearerToken) => {
 						.send({})
 						.expect(400)
 						.expect(res => {
-							errorHelper.checkRequestError(res.body, 'This request has to provide at least one of the following body values: name, email, password')
+							errorHelper.checkRequestError(res.body, 'This request has to provide at least one of the following body values: firstName, lastName, email, password')
 						})
 						.end(done)
 				})
