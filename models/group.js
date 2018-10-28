@@ -90,30 +90,5 @@ module.exports = (sequelize, DataTypes) => {
 		})
 	}
 
-	Group.loadScopes = function (models) {
-
-		Group.addScope('ofUser', function(userId) {
-			return {
-				include: [
-					models.Place,
-					models.FoodType,
-					models.Lunchbreak,
-					{
-						model: models.User,
-						as: 'members',
-						where: {
-							id: userId
-						},
-						through: {
-							as: 'config',
-							attributes: ['color', 'isAdmin']
-						}
-					}
-				]
-			}
-		})
-
-	}
-
 	return Group
 }

@@ -14,14 +14,14 @@ class ResourceAccessControl {
 	}
 
 	async createComment(comment) {
-		let lunchbreak = await Lunchbreak.findById(comment.lunchbreakId, { attributes: ['groupId'] })
+		let lunchbreak = await Lunchbreak.findByPk(comment.lunchbreakId, { attributes: ['groupId'] })
 		if (!this.user.isGroupMember(lunchbreak.groupId)) {
 			throw new AuthorizationError('Comment', null, 'CREATE')
 		}
 	}
 
 	async readComment(comment) {
-		let lunchbreak = await Lunchbreak.findById(comment.lunchbreakId, { attributes: ['groupId'] })
+		let lunchbreak = await Lunchbreak.findByPk(comment.lunchbreakId, { attributes: ['groupId'] })
 		if (!this.user.isGroupMember(lunchbreak.groupId)) {
 			throw new AuthorizationError('Comment', comment.id, 'READ')
 		}
@@ -176,7 +176,7 @@ class ResourceAccessControl {
 	}
 
 	async createParticipant(participant) {
-		let lunchbreak = await Lunchbreak.findById(participant.lunchbreakId, { attributes: ['groupId'] })
+		let lunchbreak = await Lunchbreak.findByPk(participant.lunchbreakId, { attributes: ['groupId'] })
 
 		if (!this.user.isGroupMember(lunchbreak.groupId)) {
 			throw new AuthorizationError('Participant', participant.id, 'CREATE')

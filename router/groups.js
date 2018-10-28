@@ -194,12 +194,12 @@ router.route('/:groupId/lunchbreaks').get(asyncMiddleware(async (req, res, next)
 
 	await user.can.readGroup(group)
 
-	res.send(await Lunchbreak.findAll({
-		where: {
-			groupId: req.params.groupId,
-			date: req.query.date
-		}
-	}))
+	let finder = {}
+	finder.where = {}
+	if (req.params.groupId) finder.where.groupId = req.params.groupId
+	if (req.query.date) finder.where.date = req.query.date
+
+	res.send(await Lunchbreak.findAll(finder))
 }))
 
 router.route('/:groupId/lunchbreaks').post(asyncMiddleware(async (req, res, next) => {

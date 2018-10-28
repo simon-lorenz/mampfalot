@@ -10,7 +10,7 @@ class ResourceLoader {
 	 */
 	async loadComment(req, res, next) {
 		let commentId = parseInt(req.params.commentId)
-		res.locals.comment = await Comment.findById(commentId)
+		res.locals.comment = await Comment.findByPk(commentId)
 		if (res.locals.comment) { next() }
 		else { next(new NotFoundError('Comment', commentId)) }
 	}
@@ -22,7 +22,7 @@ class ResourceLoader {
 	 */
 	async loadFoodType(req, res, next) {
 		let foodTypeId = parseInt(req.params.foodTypeId)
-		res.locals.foodType = await FoodType.findById(foodTypeId)
+		res.locals.foodType = await FoodType.findByPk(foodTypeId)
 		if (res.locals.foodType) {
 			next()
 		} else {
@@ -37,7 +37,7 @@ class ResourceLoader {
 	 */
 	async loadGroup(req, res, next) {
 		let groupId = parseInt(req.params.groupId)
-		res.locals.group = await Group.findById(groupId, {
+		res.locals.group = await Group.findByPk(groupId, {
 			include: [
 				{
 					model: Place,
@@ -104,7 +104,7 @@ class ResourceLoader {
 	async loadLunchbreak (req, res, next) {
 		let lunchbreakId = parseInt(req.params.lunchbreakId)
 
-		res.locals.lunchbreak = await Lunchbreak.findById(lunchbreakId, {
+		res.locals.lunchbreak = await Lunchbreak.findByPk(lunchbreakId, {
 			include: [
 				{
 					model:Participant,
@@ -170,7 +170,7 @@ class ResourceLoader {
 	 */
 	async loadPlace (req, res, next) {
 		let placeId = parseInt(req.params.placeId)
-		res.locals.place = await Place.findById(placeId, {
+		res.locals.place = await Place.findByPk(placeId, {
 			include: [
 				{
 					model: Group,
@@ -194,7 +194,7 @@ class ResourceLoader {
 	async loadUser (req, res, next) {
 		let userId = parseInt(req.params.userId)
 		res.locals.resources = {}
-		res.locals.resources.user = await User.unscoped().findById(userId)
+		res.locals.resources.user = await User.unscoped().findByPk(userId)
 		if (res.locals.resources.user) {
 			return next()
 		} else {
@@ -209,7 +209,7 @@ class ResourceLoader {
 	 */
 	async loadVote (req, res, next) {
 		let voteId = parseInt(req.params.voteId)
-		res.locals.vote = await Vote.findById(voteId, {
+		res.locals.vote = await Vote.findByPk(voteId, {
 			include: [ Participant, Place ]
 		})
 

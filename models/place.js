@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
 			validate: {
 				async belongsToGroup(val) {
 					let FoodType = sequelize.models.FoodType
-					let foodType = await FoodType.findById(val)
+					let foodType = await FoodType.findByPk(val)
 
 					if (foodType.groupId !== this.groupId) {
 						throw 'This food type does not belong to group ' + this.groupId

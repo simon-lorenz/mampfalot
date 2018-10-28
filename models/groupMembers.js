@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
 				},
 				async exists (val) {
 					let UserModel = sequelize.models.User
-					let user = await UserModel.findById(val)
+					let user = await UserModel.findByPk(val)
 
 					if (!user) throw 'userId does not exist.'
 				}

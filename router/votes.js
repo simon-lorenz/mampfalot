@@ -38,7 +38,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 
 	let { user } = res.locals
 
-	let participant = await Participant.find({
+	let participant = await Participant.findOne({
 		where: {
 			id: participantId,
 			userId: user.id
