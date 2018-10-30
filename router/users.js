@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
 const { Op } = require('sequelize')
 const { User, Group, Place, FoodType, Lunchbreak } = require('../models')
 const { allowMethods, hasQueryValues, initUser, hasBodyValues, verifyToken } = require('../util/middleware')

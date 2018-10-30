@@ -1,6 +1,6 @@
 const router = require('express').Router()
 const jwt = require('jsonwebtoken')
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
 const { User } = require('../models')
 const { AuthenticationError } = require('../classes/errors')
 const { allowMethods } = require('../util/middleware')
