@@ -52,7 +52,7 @@ node server.js
 
 ## Enable Testing
 
-1. Install a local mysql server on your machine
+1. Install a local mysql server (v5.6 or v8) on your machine
 2. Create a new, empty database (e.g. "mampfalot_test")
 3. Modify the test section in config.js to match with your local username, password, port, etc.
 
