@@ -1,7 +1,7 @@
 const router = require('express').Router()
 const bcrypt = require('bcryptjs')
 const { Op } = require('sequelize')
-const { User, Group, Place, FoodType, Lunchbreak } = require('../models')
+const { User, Group, Place, FoodType, Lunchbreak, GroupMembers } = require('../models')
 const { allowMethods, hasQueryValues, initUser, hasBodyValues, verifyToken } = require('../util/middleware')
 const { AuthenticationError, NotFoundError, RequestError } = require('../classes/errors')
 const { asyncMiddleware, generateRandomToken }  = require('../util/util')
@@ -206,7 +206,29 @@ router.route('/:userId/groups').get(asyncMiddleware(async (req, res, next) => {
 	let userResource = res.locals.resources.user
 
 	await user.can.readGroupCollection(userResource)
+
+	// The problem here is to find all groups of which our user is a member of and
+	// get a result which still includes all group members and not only our user.
+	// I will do this in two steps, since I don't know how to get this done with
+	// one sql statement alone. If there is a simple solution, please tell me.
+
+	// 1. Get all ids of groups the user is a member of
+	let memberships = await GroupMembers.findAll({
+		attributes: [ 'groupId' ],
+		where: {
+			userId: userResource.id
+		}
+	})
+
+	memberships = memberships.map(membership => membership.groupId)
+
+	// 2. Get all groups with those ids
 	res.send(await Group.findAll({
+		where: {
+			id: {
+				[Op.in]: memberships
+			}
+		},
 		include: [
 			Place,
 			FoodType,
@@ -214,9 +236,6 @@ router.route('/:userId/groups').get(asyncMiddleware(async (req, res, next) => {
 			{
 				model: User,
 				as: 'members',
-				where: {
-					id: userResource.id
-				},
 				through: {
 					as: 'config',
 					attributes: ['color', 'isAdmin']

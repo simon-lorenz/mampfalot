@@ -743,7 +743,7 @@ module.exports = (request, bearerToken) => {
 							group.should.have.property('pointsPerDay')
 							group.should.have.property('maxPointsPerVote')
 							group.should.have.property('minPointsPerVote')
-							group.should.have.property('members').which.is.an('array')
+							group.should.have.property('members').which.is.an('array').with.lengthOf(2)
 							group.should.have.property('lunchbreaks').which.is.an('array')
 							group.should.have.property('places').which.is.an('array')
 							group.should.have.property('foodTypes').which.is.an('array')
