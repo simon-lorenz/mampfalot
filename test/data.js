@@ -191,6 +191,7 @@ module.exports = {
 	users: [
 		{
 			id: 1,
+			username: 'maxmustermann',
 			firstName: 'Max',
 			lastName: 'Mustermann',
 			email: 'mustermann@gmail.com',
@@ -198,6 +199,7 @@ module.exports = {
 		},
 		{
 			id: 2,
+			username: 'johndoe1',
 			firstName: 'John',
 			lastName: 'Doe',
 			email: 'john.doe@provider.com',
@@ -205,6 +207,7 @@ module.exports = {
 		},
 		{
 			id: 3,
+			username: 'loten',
 			firstName: 'Philipp',
 			lastName: 'Loten',
 			email: 'philipp.loten@company.com',
@@ -212,6 +215,7 @@ module.exports = {
 		},
 		{
 			id: 4,
+			username: 'björn_tietgen',
 			firstName: 'Björn',
 			lastName: 'Tietgen',
 			email: 'björn.tietgen@gmail.com',
@@ -219,6 +223,7 @@ module.exports = {
 		},
 		{
 			id: 5,
+			username: 'luisa-rogers',
 			firstName: 'Luisa',
 			lastName: 'Rogers',
 			email: 'l.rogers@university.edu',
@@ -226,6 +231,7 @@ module.exports = {
 		},
 		{
 			id: 6,
+			username: 'alice',
 			firstName: 'Alice',
 			lastName: 'Jones',
 			email: 'alice@jones.com',

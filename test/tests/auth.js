@@ -6,36 +6,36 @@ module.exports = (request, token) => {
 			it('authenticates a user with correct credentials', (done) => {
 				request
 					.get('/auth')
-					.auth('mustermann@gmail.com', '123456')
+					.auth('maxmustermann', '123456')
 					.expect(200, done)
 			})
 
-			it('authenticates a user with umlauts in his mail address', (done) => {
+			it('authenticates a user with umlauts in his username', (done) => {
 				request
 					.get('/auth')
-					.auth('björn.tietgen@gmail.com', 'test')
+					.auth('björn_tietgen', 'test')
 					.expect(200, done)
 			})
 
 			it('authenticates a user with owasp special chars in his password', (done) => {
 				request
 					.get('/auth')
-					.auth('l.rogers@university.edu', ' !"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
+					.auth('luisa-rogers', ' !"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
 					.expect(200, done)
 			})
 
 			it('responds with a well formed token', (done) => {
 				request
 					.get('/auth')
-					.auth('mustermann@gmail.com', '123456')
+					.auth('maxmustermann', '123456')
 					.expect(200)
 					.expect(res => {
 						let token = res.body.token
 						let tokenPayload = token.split('.')[1]
 						let payload = Buffer.from(tokenPayload, 'base64').toString()
 						payload = JSON.parse(payload)
-						payload.should.have.property('id').equal(1)
-						payload.should.not.have.property('password')
+						payload.should.have.all.keys(['id', 'exp', 'iat'])
+						payload.id.should.be.equal(1)
 					})
 					.end(done)
 			})
@@ -53,7 +53,7 @@ module.exports = (request, token) => {
 			it('fails with 401 on wrong password', (done) => {
 				request
 					.get('/auth')
-					.auth('mustermann@gmail.com', 'wrongPassword')
+					.auth('maxmustermann', 'wrongPassword')
 					.expect(401)
 					.expect(res => {
 						errorHelper.checkAuthenticationError(res.body, 'invalidCredentials')
@@ -61,10 +61,10 @@ module.exports = (request, token) => {
 					.end(done)
 			})
 
-			it('fails with 401 on unknown email', (done) => {
+			it('fails with 401 on unknown username', (done) => {
 				request
 					.get('/auth')
-					.auth('unkown@mail.de', 'supersafe')
+					.auth('non-existent-user', 'supersafe')
 					.expect(401)
 					.expect(res => {
 						errorHelper.checkAuthenticationError(res.body, 'invalidCredentials')

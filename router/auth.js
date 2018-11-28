@@ -16,25 +16,25 @@ router.route('/').get((req, res, next) => {
 	// Header-Aufbau: 'Basic <base64String>'
 	// Wir wollen nur den b64-String und splitten deshalb beim Leerzeichen
 	let credentialsB64 = basicAuth.split(' ')[1]
-	let credentials = new Buffer(credentialsB64, 'base64').toString('utf-8') // Enthält nun email:password
+	let credentials = new Buffer(credentialsB64, 'base64').toString('utf-8') // Enthält nun username:password
 
 	let splitted = credentials.split(':')
 
-	let email = splitted[0]
+	let username = splitted[0]
 
 	// Falls das Passwort Doppelpunkte enthält, wurde das Array öfter als 1x gesplittet
 	// Deshalb holen wir uns hier alles hinter der E-Mail und joinen ggf.
 	let password = splitted.slice(1, splitted.length).join(':')
 
-	res.locals.credentials = { email, password }
+	res.locals.credentials = { username, password }
 	next()
 })
 router.route('/').get(asyncMiddleware(async (req, res, next) => {
 	let user = await User.unscoped().findOne({
 		where: {
-			email: res.locals.credentials.email
+			username: res.locals.credentials.username
 		},
-		attributes: ['id', 'firstName', 'lastName', 'email', 'password'],
+		attributes: ['id', 'username', 'password'],
 		raw: true
 	})
 
@@ -48,11 +48,8 @@ router.route('/').get(asyncMiddleware(async (req, res, next) => {
 		return next(new AuthenticationError('The provided credentials are incorrect.'))
 	}
 
-	// Passwort entfernen, damit es nicht im Token landet
-	user.password = undefined
-
 	// Generiere Token
-	let token = jwt.sign(user, process.env.SECRET_KEY, { expiresIn: '10h' })
+	let token = jwt.sign({ id: user.id }, process.env.SECRET_KEY, { expiresIn: '10h' })
 
 	res.send({ token })
 }))

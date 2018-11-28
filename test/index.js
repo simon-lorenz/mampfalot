@@ -44,7 +44,7 @@ describe('The mampfalot api', function () {
 		for (let user of users) {
 			res = await request
 				.get('/auth')
-				.auth(user.email, user.password)
+				.auth(user.username, user.password)
 			bearerToken[user.id] = 'Bearer ' + res.body.token
 		}
 

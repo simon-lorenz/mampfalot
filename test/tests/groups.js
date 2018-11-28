@@ -94,6 +94,9 @@ module.exports = (request, bearerToken) => {
 							group.should.have.property('places').which.is.an('array').and.has.length(4)
 							group.should.have.property('foodTypes').which.is.an('array').and.has.length(4)
 
+							const member = group.members[0]
+							member.should.have.all.keys(['id', 'username', 'firstName', 'lastName', 'config'])
+
 							done()
 						})
 				})
@@ -297,6 +300,7 @@ module.exports = (request, bearerToken) => {
 						})
 						.expect(200, (err, res) => {
 							let group = res.body
+							group.should.have.all.keys(['id', 'name', 'defaultLunchTime', 'defaultVoteEndingTime', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote', 'foodTypes', 'lunchbreaks', 'members', 'places'])
 							group.should.have.property('id').equal(1)
 							group.should.have.property('name').equal('New name')
 							group.should.have.property('defaultLunchTime').equal('14:00:00')
@@ -304,6 +308,10 @@ module.exports = (request, bearerToken) => {
 							group.should.have.property('pointsPerDay').equal(300)
 							group.should.have.property('maxPointsPerVote').equal(100)
 							group.should.have.property('minPointsPerVote').equal(50)
+
+							const member = group.members[0]
+							member.should.have.all.keys(['id', 'username', 'firstName', 'lastName', 'config'])
+
 							done()
 						})
 				})
@@ -681,11 +689,11 @@ module.exports = (request, bearerToken) => {
 								data.should.have.length(2)
 
 								let firstMember = data[0]
-								firstMember.should.have.all.keys(['id', 'email', 'firstName', 'lastName', 'config'])
+								firstMember.should.have.all.keys(['id', 'username', 'firstName', 'lastName', 'config'])
 								firstMember.should.have.property('id').equal(1)
 								firstMember.should.have.property('firstName').equal('Max')
 								firstMember.should.have.property('lastName').equal('Mustermann')
-								firstMember.should.have.property('email').equal('mustermann@gmail.com')
+								firstMember.should.have.property('username').equal('maxmustermann')
 								firstMember.should.have.property('config').which.has.property('color').equal('#90ba3e')
 								firstMember.should.have.property('config').which.has.property('isAdmin').equal(true)
 								done()
@@ -789,10 +797,11 @@ module.exports = (request, bearerToken) => {
 							.expect(200)
 							.expect(res => {
 								let member = res.body
+								member.should.have.all.keys(['id', 'username', 'firstName', 'lastName', 'config'])
 								member.should.have.property('id').equal(3)
 								member.should.have.property('firstName').equal('Philipp')
 								member.should.have.property('lastName').equal('Loten')
-								member.should.have.property('email').equal('philipp.loten@company.com')
+								member.should.have.property('username').equal('loten')
 								member.should.have.property('config').which.is.an('object')
 
 								let config = member.config
@@ -813,10 +822,11 @@ module.exports = (request, bearerToken) => {
 							.expect(200)
 							.expect(res => {
 								let member = res.body
+								member.should.have.all.keys(['id', 'username', 'firstName', 'lastName', 'config'])
 								member.should.have.property('id').equal(3)
 								member.should.have.property('firstName').equal('Philipp')
 								member.should.have.property('lastName').equal('Loten')
-								member.should.have.property('email').equal('philipp.loten@company.com')
+								member.should.have.property('username').equal('loten')
 								member.should.have.property('config').which.is.an('object')
 
 								let config = member.config

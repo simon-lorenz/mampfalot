@@ -10,27 +10,59 @@ const mailer = new Mailer
 const loader = require('../classes/resource-loader')
 
 router.route('/').all(allowMethods(['GET', 'POST']))
-router.route('/').get(hasQueryValues(['email'], 'all'))
+router.route('/').get(hasQueryValues(['username'], 'all'))
+router.route('/').post(hasBodyValues(['username', 'email', 'password'], 'all'))
 router.route('/verify').all(allowMethods(['GET', 'POST']))
-router.route('/verify').get(hasQueryValues(['email'], 'all'))
-router.route('/verify').post(hasBodyValues(['userId', 'verificationToken'], 'all'))
+router.route('/verify').get(hasQueryValues(['username'], 'all'))
+router.route('/verify').post(hasBodyValues(['username', 'token'], 'all'))
 router.route('/password-reset').all(allowMethods(['GET', 'POST']))
-router.route('/password-reset').get(hasQueryValues(['email'], 'all'))
-router.route('/password-reset').post(hasBodyValues(['userId', 'resetToken', 'newPassword'], 'all'))
+router.route('/password-reset').get(hasQueryValues(['username'], 'all'))
+router.route('/password-reset').post(hasBodyValues(['username', 'token', 'newPassword'], 'all'))
 
 router.route('/').get(asyncMiddleware(async (req, res, next) => {
-	let user = await User.findOne({ where: { email: req.query.email }})
+	const { username } = req.query
+	let user = await User.findOne({ where: { username: username }})
 	if (user) {
-		res.send(user)
+		res.send({
+			id: user.id,
+			username: user.username,
+			firstName: user.firstName,
+			lastName: user.lastName,
+			verified: user.verified,
+			createdAt: user.createdAt,
+			updatedAt: user.updatedAt
+		})
 	} else {
-		return next(new NotFoundError('User', null))
+		return next(new NotFoundError('User', username))
 	}
 }))
 
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
+	// Is this email already known?
+	let existingUser = await User.findOne({
+		attributes: ['email', 'username'],
+		where: {
+			email: req.body.email
+		}
+	})
+
+	if (existingUser) {
+		if (existingUser.verified) {
+			if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
+				await mailer.sendUserAlreadyRegisteredMail(existingUser.email, existingUser.username)
+			}
+		} else {
+			if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
+				await mailer.sendUserAlreadyRegisteredButNotVerifiedMail(existingUser.email, existingUser.username, existingUser.verificationToken)
+			}
+		}
+		return res.status(204).send()
+	}
+
 	let verificationToken = await generateRandomToken(25)
 
 	let user = await User.create({
+		username: req.body.username,
 		firstName: req.body.firstName,
 		lastName: req.body.lastName,
 		email: req.body.email,
@@ -38,28 +70,23 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 		verificationToken: await bcrypt.hash(verificationToken, process.env.NODE_ENV === 'test' ? 1 : 12)
 	})
 
-	user.password = undefined
-	user.passwordResetToken = undefined
-	user.passwordResetExpiration = undefined
-	user.verificationToken = undefined
-
 	if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
 		await mailer.sendWelcomeMail(user.email, user.firstName, user.id, verificationToken)
 	}
 
-	res.send(user)
+	res.status(204).send()
 }))
 
 router.route('/verify').get(asyncMiddleware(async (req, res, next) => {
-	let { email } = req.query
+	let { username } = req.query
 	let user = await User.findOne({
 		attributes: ['id', 'firstName', 'lastName', 'email', 'verificationToken', 'verified'],
 		where: {
-			email: email
+			username: username
 		}
 	})
 
-	if (!user) return next(new NotFoundError('User', email))
+	if (!user) return next(new NotFoundError('User', username))
 	if (user.verified) return next(new RequestError('This user is already verified.'))
 
 	let verificationToken = await generateRandomToken(25)
@@ -75,19 +102,20 @@ router.route('/verify').get(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/verify').post(asyncMiddleware(async (req, res, next) => {
-	let { userId, verificationToken } = req.body
+	let { username, token } = req.body
 
 	let user = await User.findOne({
 		attributes: ['id', 'verificationToken', 'verified'],
 		where: {
-			id: userId
+			username: username
 		}
 	})
 
-	if (!user) return res.status(204).send()
+	if (!user) return next(new NotFoundError('User', username))
 	if (user.verified) return next(new RequestError('This user is already verified.'))
+	if (!user.verificationToken) return next(new RequestError('This user needs to request verification first.'))
 
-	if (await bcrypt.compare(verificationToken, user.verificationToken) === false) {
+	if (await bcrypt.compare(token, user.verificationToken) === false) {
 		return next(new AuthenticationError('The provided credentials are incorrect.'))
 	}
 
@@ -97,11 +125,11 @@ router.route('/verify').post(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/password-reset').get(asyncMiddleware(async (req, res, next) => {
-	let { email } = req.query
+	let { username } = req.query
 
-	let user = await User.findOne({ where: { email }})
+	let user = await User.findOne({ where: { username }})
 
-	if (!user) return next(new NotFoundError('User', email))
+	if (!user) return next(new NotFoundError('User', username))
 
 	let token = await generateRandomToken(25)
 
@@ -120,20 +148,21 @@ router.route('/password-reset').get(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/password-reset').post(asyncMiddleware(async (req, res, next) => {
-	let { userId, resetToken, newPassword } = req.body
+	let { username, token, newPassword } = req.body
 
 	let user = await User.unscoped().findOne({
 		where: {
-			id: userId,
+			username: username,
 			passwordResetExpiration: {
 				[Op.gte]: new Date()
 			}
 		}
 	})
 
-	if (!user) return next(new AuthenticationError('The provided credentials are incorrect.'))
+	if (!user) return next(new NotFoundError('User', username))
+	if (!user.passwordResetToken) return next(new RequestError('This user needs to request a password reset first.'))
 
-	if (await bcrypt.compare(resetToken, user.passwordResetToken) === false) {
+	if (await bcrypt.compare(token, user.passwordResetToken) === false) {
 		return next(new AuthenticationError('The provided credentials are incorrect.'))
 	}
 
@@ -148,7 +177,7 @@ router.route('/password-reset').post(asyncMiddleware(async (req, res, next) => {
 router.use([verifyToken, initUser])
 
 router.route('/:userId').all(allowMethods(['GET', 'POST', 'DELETE']))
-router.route('/:userId').post(hasBodyValues(['firstName', 'lastName', 'email', 'password'], 'atLeastOne'))
+router.route('/:userId').post(hasBodyValues(['username', 'firstName', 'lastName', 'email', 'password'], 'atLeastOne'))
 router.route('/:userId/groups').all(allowMethods(['GET']))
 
 router.param('userId', asyncMiddleware(loader.loadUser))
@@ -170,7 +199,7 @@ router.route('/:userId').post(asyncMiddleware(async (req, res, next) => {
 
 	if (req.body.password) {
 		if (!req.body.currentPassword) {
-			return next(new RequestError('You need to provide the current password, if you want to change it.'))
+			return next(new RequestError('You need to provide your current password to change it.'))
 		}
 
 		if (await bcrypt.compare(req.body.currentPassword, userResource.password) === false) {
@@ -178,6 +207,7 @@ router.route('/:userId').post(asyncMiddleware(async (req, res, next) => {
 		}
 	}
 
+	if (req.body.username) { userResource.username = req.body.username }
 	if (req.body.firstName) { userResource.firstName = req.body.firstName.trim() }
 	if (req.body.lastName) { userResource.lastName = req.body.lastName.trim() }
 	if (req.body.email) { userResource.email = req.body.email.trim() }
@@ -235,6 +265,7 @@ router.route('/:userId/groups').get(asyncMiddleware(async (req, res, next) => {
 			Lunchbreak,
 			{
 				model: User,
+				attributes: ['id', 'username', 'firstName', 'lastName'],
 				as: 'members',
 				through: {
 					as: 'config',

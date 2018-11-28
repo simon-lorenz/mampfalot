@@ -7,29 +7,36 @@ module.exports = (sequelize, DataTypes) => {
 			primaryKey: true,
 			autoIncrement: true
 		},
-		firstName: {
+		username: {
 			type: DataTypes.STRING,
+			unique: {
+				args: true,
+				msg: 'This username is already taken'
+			},
 			allowNull: false,
 			validate: {
 				notEmpty: {
-					msg: 'firstName cannot be empty'
+					msg: 'username cannot be empty'
 				},
 				notNull: {
-					msg: 'firstName cannot be null'
+					msg: 'username cannot be null'
+				},
+				len: {
+					args: [3, 255],
+					msg: 'The username must contain 3-255 characters'
+				},
+				validChars(value) {
+					const regex = new RegExp('^[a-z-_0-9]*$')
+					if (!regex.test(value))
+						throw new Error('username can only contain [a-z-_0-9]')
 				}
 			}
 		},
+		firstName: {
+			type: DataTypes.STRING
+		},
 		lastName: {
-			type: DataTypes.STRING,
-			allowNull: false,
-			validate: {
-				notEmpty: {
-					msg: 'lastName cannot be empty'
-				},
-				notNull: {
-					msg: 'lastName cannot be null'
-				}
-			}
+			type: DataTypes.STRING
 		},
 		email: {
 			type: DataTypes.STRING,
@@ -88,7 +95,7 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		defaultScope: {
 			attributes: {
-				exclude: ['password', 'passwordResetToken', 'passwordResetExpiration', 'verificationToken', 'createdAt', 'updatedAt']
+				exclude: ['password', 'passwordResetToken', 'passwordResetExpiration', 'verificationToken']
 			}
 		}
 	})

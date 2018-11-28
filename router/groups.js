@@ -132,7 +132,7 @@ router.route('/:groupId/members').get(asyncMiddleware(async (req, res, next) => 
 }))
 
 router.route('/:groupId/members').post(asyncMiddleware(async (req, res, next) => {
-	let { user, group } = res.locals
+	let { user } = res.locals
 
 	let member = GroupMembers.build({
 		userId: req.body.userId,
@@ -151,6 +151,7 @@ router.route('/:groupId/members').post(asyncMiddleware(async (req, res, next) =>
 		attributes: [],
 		include: [{
 			model: User,
+			attributes: ['id', 'username', 'firstName', 'lastName'],
 			as: 'members',
 			through: {
 				as: 'config',

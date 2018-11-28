@@ -60,7 +60,7 @@ class ResourceLoader {
 				},
 				{
 					model: User,
-					attributes: ['id', 'email', 'firstName', 'lastName'],
+					attributes: ['id', 'username', 'firstName', 'lastName'],
 					as: 'members',
 					through: {
 						as: 'config',

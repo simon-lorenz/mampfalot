@@ -89,6 +89,44 @@ class Mailer {
 		})
 	}
 
+	sendUserAlreadyRegisteredMail(to, username) {
+		const transport = nodemailer.createTransport(this.getMailOptions('hello@mampfalot.app'))
+
+		const mailOptions = {
+			from: '"Mampfalot" <hello@mampfalot.app>',
+			to: to,
+			subject: 'Willkommen zurück bei Mampfalot!',
+			text: this.getUserAlreadyRegisteredText(username),
+			html: this.getUserAlreadyRegisteredHTML(username)
+		}
+
+		return new Promise((resolve, reject) => {
+			transport.sendMail(mailOptions, (err, info) => {
+					if (err) return reject(err)
+					resolve(info)
+				})
+		})
+	}
+
+	sendUserAlreadyRegisteredButNotVerifiedMail(to, username, verificationToken) {
+		const transport = nodemailer.createTransport(this.getMailOptions('hello@mampfalot.app'))
+
+		const mailOptions = {
+			from: '"Mampfalot" <hello@mampfalot.app>',
+			to: to,
+			subject: 'Willkommen zurück bei Mampfalot!',
+			text: this.getUserAlreadyRegisteredButNotVerifiedText(username, verificationToken),
+			html: this.getUserAlreadyRegisteredButNotVerifiedHTML(username, verificationToken)
+		}
+
+		return new Promise((resolve, reject) => {
+			transport.sendMail(mailOptions, (err, info) => {
+					if (err) return reject(err)
+					resolve(info)
+				})
+		})
+	}
+
 	/**
 	 * Returns the html content of a password reset mail
 	 * @param {*} name The user name
@@ -164,6 +202,90 @@ class Mailer {
 			Benutze folgenden Link, um deine E-Mail Adresse zu bestätgen: ${verificationLink}
 			Viele Grüße
 			Dein Mampfalot-Team
+		`
+	}
+
+	getUserAlreadyRegisteredText(username) {
+		return `
+			Hi,
+
+			danke für deine Registrierung!
+			Wir haben festgestellt, dass unter dieser E-Mail-Adresse bereits ein
+			Acccount mit dem Namen ${username} vorhanden ist.
+
+			Für den Fall, dass du dein Passwort vergessen hast, kannst du es hier
+			zurücksetzen: https://mampfalot.app/request-password-reset?user=${username}
+
+			Viele Grüße
+			Dein Mampfalot-Team
+		`
+	}
+
+	getUserAlreadyRegisteredHTML(username) {
+		return `
+			<html>
+				<head>
+				</head>
+				<body>
+					<p>
+						Hi,<br>
+						<br>
+						danke für deine Registrierung!<br>
+						Wir haben festgestellt, dass unter dieser E-Mail-Adresse bereits ein
+						Acccount mit dem Namen ${username} vorhanden ist.<br>
+						<br>
+						Für den Fall, dass du dein Passwort vergessen hast, kannst du es hier
+						zurücksetzen: https://mampfalot.app/request-password-reset?user=${username} <br>
+						<br>
+						Viele Grüße<br>
+						Dein Mampfalot-Team
+					</p>
+				</body>
+			</html>
+		`
+	}
+
+	getUserAlreadyRegisteredButNotVerifiedText(username, verificationToken) {
+		return `
+			Hi,
+
+			danke für deine Registrierung!
+			Wir haben festgestellt, dass unter dieser E-Mail-Adresse bereits ein
+			Acccount mit dem Namen ${username} vorhanden ist.
+
+			Klicke hier, um deinen Account zu aktivieren: https://mampfalot.app/confirm-verification?user=${username}&token=${verificationToken}
+
+			Für den Fall, dass du dein Passwort vergessen hast, kannst du es hier
+			zurücksetzen: https://mampfalot.app/request-password-reset?user=${username}
+
+			Viele Grüße
+			Dein Mampfalot-Team
+		`
+	}
+
+	getUserAlreadyRegisteredButNotVerifiedHTML(username, verificationToken) {
+		return `
+			<html>
+				<head>
+				</head>
+				<body>
+					<p>
+						Hi,<br>
+						<br>
+						danke für deine Registrierung!<br>
+						Wir haben festgestellt, dass unter dieser E-Mail-Adresse bereits ein
+						Acccount mit dem Namen ${username} vorhanden ist.<br>
+						<br>
+						Klicke hier, um deinen Account zu aktivieren: https://mampfalot.app/confirm-verification?user=${username}&token=${verificationToken} <br>
+						<br>
+						Für den Fall, dass du dein Passwort vergessen hast, kannst du es hier
+						zurücksetzen: https://mampfalot.app/request-password-reset?user=${username} <br>
+						<br>
+						Viele Grüße<br>
+						Dein Mampfalot-Team
+					</p>
+				</body>
+			</html>
 		`
 	}
 

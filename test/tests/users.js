@@ -1,5 +1,6 @@
 const setup = require('../setup')
 const errorHelper = require('../helpers/errors')
+const util = require('../helpers/util')
 
 module.exports = (request, bearerToken) => {
 	return describe('/users', () => {
@@ -8,39 +9,41 @@ module.exports = (request, bearerToken) => {
 				await setup.resetData()
 			})
 
-			it('fails if no email address is provided', (done) => {
+			it('fails if no username is provided', (done) => {
 				request
 					.get('/users')
 					.expect(400)
 					.expect(res => {
-						errorHelper.checkRequestError(res.body, 'This request has to provide all of the following query values: email')
+						errorHelper.checkRequestError(res.body, 'This request has to provide all of the following query values: username')
 					})
 					.end(done)
 			})
 
-			it('returns 404 if no user with this email exists', (done) => {
+			it('returns 404 if no user with this username exists', (done) => {
+				const UNKNOWN_USERNAME = 'non-existing-user'
 				request
 					.get('/users')
-					.query({ email: 'not.existing@email.com' })
+					.query({ username: UNKNOWN_USERNAME })
 					.expect(404)
 					.expect(res => {
-						errorHelper.checkNotFoundError(res.body, 'User', null)
+						errorHelper.checkNotFoundError(res.body, 'User', UNKNOWN_USERNAME)
 					})
 					.end(done)
 			})
 
-			it('returns a user resource if email exists', (done) => {
+			it('returns a user resource if username exists', (done) => {
 				request
 					.get('/users')
-					.query({ email: 'philipp.loten@company.com' })
+					.query({ username: 'loten' })
 					.expect(200)
 					.expect(res => {
 						let user = res.body
+
+						user.should.have.all.keys(['id', 'username', 'firstName', 'lastName', 'createdAt', 'updatedAt', 'verified'])
 						user.should.have.property('id').equal(3)
-						user.should.have.property('firstName').equal('Philipp')
-						user.should.have.property('lastName').equal('Loten')
-						user.should.have.property('email').equal('philipp.loten@company.com')
-						user.should.not.have.property('password')
+						user.username.should.be.equal('loten')
+						user.firstName.should.be.equal('Philipp')
+						user.lastName.should.be.equal('Loten')
 					})
 					.end(done)
 			})
@@ -51,95 +54,131 @@ module.exports = (request, bearerToken) => {
 
 			beforeEach(async () => {
 				newUser = {
+					username: 'homer_simpson',
 					firstName: 'Homer',
 					lastName: 'Simpson',
 					email: 'homer@simpson.com',
 					password: "springfield"
 				}
+
 				await setup.resetData()
 			})
 
-			it('inserts a user correctly', (done) => {
-				request
+			it('inserts a user correctly', async () => {
+				await request
 					.post('/users')
 					.send(newUser)
-					.expect(200, (err, res) => {
-						let user = res.body
-						user.should.have.all.keys(['id', 'firstName', 'lastName', 'email', 'verified', 'createdAt', 'updatedAt'])
-						user.should.have.property('id')
-						user.should.have.property('firstName').equal(newUser.firstName)
-						user.should.have.property('lastName').equal(newUser.lastName)
-						user.should.have.property('email').equal(newUser.email)
+					.expect(204)
 
-						request
-							.get('/auth')
-							.auth(newUser.email, newUser.password)
-							.expect(200, done)
-					})
+				await request
+					.get('/auth')
+					.auth(newUser.username, newUser.password)
+					.expect(200)
 			})
 
-			it('fails with 400 if no firstName is provided', (done) => {
+			it('inserts a user without firstName and lastName', async () => {
 				newUser.firstName = undefined
-				request
-					.post('/users')
-					.send(newUser)
-					.expect(400)
-					.expect(res => {
-						let expectedErrorItem = {
-							field: 'firstName',
-							value: null,
-							message: 'firstName cannot be null'
-						}
-						errorHelper.checkValidationError(res.body, expectedErrorItem)
-					})
-					.end(done)
-			})
-
-			it('fails with 400 if no lastName is provided', (done) => {
 				newUser.lastName = undefined
+
+				await request
+					.post('/users')
+					.send(newUser)
+					.expect(204)
+
+				await request
+					.get('/auth')
+					.auth(newUser.username, newUser.password)
+					.expect(200)
+			})
+
+			it('does not fail if the email is already known', async () => {
+				newUser.email = 'mustermann@gmail.com'
+
+				await request
+					.post('/users')
+					.send(newUser)
+					.expect(204)
+			})
+
+			it('requires body values', (done) => {
+				request
+					.post('/users')
+					.set({ Authorization: bearerToken[1] })
+					.send({})
+					.expect(400)
+					.expect(res => {
+						let message = 'This request has to provide all of the following body values: username, email, password'
+						errorHelper.checkRequestError(res.body, message)
+					})
+					.end(done)
+			})
+
+			it('fails with 400 if no username is provided', (done) => {
+				newUser.username = null
 				request
 					.post('/users')
 					.send(newUser)
 					.expect(400)
 					.expect(res => {
 						let expectedErrorItem = {
-							field: 'lastName',
+							field: 'username',
 							value: null,
-							message: 'lastName cannot be null'
+							message: 'username cannot be null'
 						}
 						errorHelper.checkValidationError(res.body, expectedErrorItem)
 					})
 					.end(done)
 			})
 
-			it('fails with 400 if firstName is empty', (done) => {
-				newUser.firstName = ''
+			it('fails with 400 if username is empty', (done) => {
+				newUser.username = ''
 				request
 					.post('/users')
 					.send(newUser)
 					.expect(400)
 					.expect(res => {
 						let expectedErrorItem = {
-							field: 'firstName',
+							field: 'username',
 							value: '',
-							message: 'firstName cannot be empty'
+							message: 'username cannot be empty'
 						}
 						errorHelper.checkValidationError(res.body, expectedErrorItem)
 					})
 					.end(done)
 			})
 
-			it('fails with 400 if lastName is empty', (done) => {
-				newUser.lastName = ''
+			it('fails with 400 if the username contains prohibited chars', async () => {
+				const PROHIBITED = ['UpperCase', '$pecialchars', 'white space']
+
+				for (let name of PROHIBITED) {
+					newUser.username = name
+					await request
+						.post('/users')
+						.send(newUser)
+						.expect(400)
+						.expect(res => {
+							let expectedErrorItem = {
+								field: 'username',
+								value: newUser.username,
+								message: 'username can only contain [a-z-_0-9]'
+							}
+							errorHelper.checkValidationError(res.body, expectedErrorItem)
+						})
+				}
+			})
+
+			it('fails if username is longer than 255 chars', (done) => {
+				newUser.username = util.generateString(256)
+
 				request
 					.post('/users')
 					.send(newUser)
 					.expect(400)
 					.expect(res => {
 						let expectedErrorItem = {
-							field: 'lastName',
-							value: '',
-							message: 'lastName cannot be empty'
+							field: 'username',
+							value: newUser.username,
+							message: 'The username must contain 3-255 characters'
 						}
 
 						errorHelper.checkValidationError(res.body, expectedErrorItem)
@@ -147,8 +186,47 @@ module.exports = (request, bearerToken) => {
 					.end(done)
 			})
 
-			it('fails with 400 if no password is provided', (done) => {
-				newUser.password = undefined
+			it('fails if username is shorter than 3 chars', (done) => {
+				newUser.username = util.generateString(2)
+
+				request
+					.post('/users')
+					.send(newUser)
+					.expect(400)
+					.expect(res => {
+						let expectedErrorItem = {
+							field: 'username',
+							value: newUser.username,
+							message: 'The username must contain 3-255 characters'
+						}
+
+						errorHelper.checkValidationError(res.body, expectedErrorItem)
+					})
+					.end(done)
+			})
+
+
+			it('fails if username is already taken', (done) => {
+				newUser.username = 'maxmustermann'
+
+				request
+					.post('/users')
+					.send(newUser)
+					.expect(400)
+					.expect(res => {
+						let expectedErrorItem = {
+							field: 'username',
+							value: newUser.username,
+							message: 'This username is already taken'
+						}
+
+						errorHelper.checkValidationError(res.body, expectedErrorItem)
+					})
+					.end(done)
+			})
+
+			it('fails with 400 if password is null', (done) => {
+				newUser.password = null
 
 				request
 					.post('/users')
@@ -225,8 +303,8 @@ module.exports = (request, bearerToken) => {
 					.end(done)
 			})
 
-			it('fails with 400 if no email is provided', (done) => {
-				newUser.email = undefined
+			it('fails with 400 if email is null', (done) => {
+				newUser.email = null
 
 				request
 					.post('/users')
@@ -264,7 +342,7 @@ module.exports = (request, bearerToken) => {
 			})
 
 			it('fails with 400 if value is no valid email', async () => {
-				const INVALID_ADDRESSES = ['123', 'string', 'stringwith@', 'string.com', 'string@test.com&%']
+				const INVALID_ADDRESSES = ['email', 'email@', 'email@provider', 'email@provider.', '@provider.com']
 
 				for (let email of INVALID_ADDRESSES) {
 					newUser.email = email
@@ -288,24 +366,6 @@ module.exports = (request, bearerToken) => {
 				}
 			})
 
-			it('fails if email is already taken', (done) => {
-				newUser.email = 'mustermann@gmail.com'
-
-				request
-					.post('/users')
-					.send(newUser)
-					.expect(400)
-					.expect(res => {
-						let expectedErrorItem = {
-							field: 'email',
-							value: newUser.email,
-							message: 'This E-Mail is already taken'
-						}
-
-						errorHelper.checkValidationError(res.body, expectedErrorItem)
-					})
-					.end(done)
-			})
 		})
 
 		describe('/password-reset', () => {
@@ -314,26 +374,31 @@ module.exports = (request, bearerToken) => {
 					await setup.resetData()
 				})
 
-				it('fails if the body does not contain an email address', (done) => {
+				it('fails if the query does not contain an username', (done) => {
 					request
 						.get('/users/password-reset')
 						.expect(res => {
-							errorHelper.checkRequestError(res.body)
+							errorHelper.checkRequestError(res.body, 'This request has to provide all of the following query values: username')
 						})
 						.end(done)
 				})
 
-				it('sends 404 if email is unknown', (done) => {
+				it('sends 404 if username is unknown', (done) => {
+					const UNKNOWN_USERNAME = 'non-existent-user'
 					request
 						.get('/users/password-reset')
-						.query({ email: 'email@mail.com' })
-						.expect(404, done)
+						.query({ username: UNKNOWN_USERNAME })
+						.expect(404)
+						.expect(res => {
+							errorHelper.checkNotFoundError(res.body, 'User', UNKNOWN_USERNAME)
+						})
+						.end(done)
 				})
 
-				it('sends 204 if email is known', (done) => {
+				it('sends 204 if username is known', (done) => {
 					request
 						.get('/users/password-reset')
-						.query({ email: 'mustermann@gmail.com' })
+						.query({ username: 'maxmustermann' })
 						.expect(204, done)
 				})
 			})
@@ -343,12 +408,12 @@ module.exports = (request, bearerToken) => {
 					await setup.resetData()
 				})
 
-				it('fails if the body does not contain an userId', (done) => {
+				it('fails if the body does not contain an username', (done) => {
 					request
 						.post('/users/password-reset')
-						.send({ resetToken: '123', newPassword: '123456789' })
+						.send({ token: '123', newPassword: '123456789' })
 						.expect(res => {
-							errorHelper.checkRequestError(res.body)
+							errorHelper.checkRequestError(res.body, 'This request has to provide all of the following body values: username, token, newPassword')
 						})
 						.end(done)
 				})
@@ -356,9 +421,9 @@ module.exports = (request, bearerToken) => {
 				it('fails if the body does not contain a resetToken', (done) => {
 					request
 						.post('/users/password-reset')
-						.send({ userId: '7', newPassword: '123456789' })
+						.send({ username: 'maxmustermann', newPassword: '123456789' })
 						.expect(res => {
-							errorHelper.checkRequestError(res.body)
+							errorHelper.checkRequestError(res.body, 'This request has to provide all of the following body values: username, token, newPassword')
 						})
 						.end(done)
 				})
@@ -366,11 +431,36 @@ module.exports = (request, bearerToken) => {
 				it('fails if the body does not contain a new password', (done) => {
 					request
 						.post('/users/password-reset')
-						.send({ userId: '7', resetToken: '123' })
+						.send({ username: 'maxmustermann', token: '123' })
 						.expect(res => {
-							errorHelper.checkRequestError(res.body)
+							errorHelper.checkRequestError(res.body, 'This request has to provide all of the following body values: username, token, newPassword')
 						})
 						.end(done)
+				})
+
+				it('fails with 404 on unknown user', (done) => {
+					const UNKNOWN_USERNAME = 'non-existent-use'
+					request
+						.post('/users/password-reset')
+						.send({ username: UNKNOWN_USERNAME, token: 'my-invalid-token', newPassword: 'supersafe123456'})
+						.expect(res => {
+							errorHelper.checkNotFoundError(res.body, 'User', UNKNOWN_USERNAME)
+						})
+						.end(done)
+				})
+
+				it('fails on invalid credentials', async () => {
+					await request
+						.get('/users/password-reset')
+						.query({ username: 'maxmustermann' })
+						.expect(204)
+
+					await request
+						.post('/users/password-reset')
+						.send({ username: 'maxmustermann', token: '123', newPassword: '123456789'})
+						.expect(res => {
+							errorHelper.checkAuthenticationError(res.body, 'invalidCredentials')
+						})
 				})
 			})
 		})
@@ -381,26 +471,31 @@ module.exports = (request, bearerToken) => {
 					await setup.resetData()
 				})
 
-				it('fails if the body does not contain an email address', (done) => {
+				it('fails if the query does not contain an username', (done) => {
 					request
 						.get('/users/verify')
 						.expect(res => {
-							errorHelper.checkRequestError(res.body)
+							errorHelper.checkRequestError(res.body, 'This request has to provide all of the following query values: username')
 						})
 						.end(done)
 				})
 
-				it('sends 404 if email is unknown', (done) => {
+				it('sends 404 if username is unknown', (done) => {
+					const UNKNOWN_USERNAME = 'non-existent-user'
 					request
 						.get('/users/verify')
-						.query({ email: 'email@mail.com' })
-						.expect(404, done)
+						.query({ username: UNKNOWN_USERNAME })
+						.expect(404)
+						.expect(res => {
+							errorHelper.checkNotFoundError(res.body, 'User', UNKNOWN_USERNAME)
+						})
+						.end(done)
 				})
 
-				it('sends 204 if email is known', (done) => {
+				it('sends 204 if username is known', (done) => {
 					request
 						.get('/users/verify')
-						.query({ email: 'mustermann@gmail.com' })
+						.query({ username: 'maxmustermann' })
 						.expect(204, done)
 				})
 			})
@@ -410,22 +505,47 @@ module.exports = (request, bearerToken) => {
 					await setup.resetData()
 				})
 
-				it('fails if the body does not contain an userId', (done) => {
+				it('fails if the body does not contain an username', (done) => {
 					request
-						.get('/users/verify')
-						.send({ verificationToken: '123' })
+						.post('/users/verify')
+						.send({ token: '123' })
 						.expect(res => {
-							errorHelper.checkRequestError(res.body)
+							errorHelper.checkRequestError(res.body, 'This request has to provide all of the following body values: username, token')
 						})
 						.end(done)
 				})
 
-				it('fails if the body does not contain an verificationToken', (done) => {
+				it('fails if the body does not contain an token', (done) => {
 					request
-						.get('/users/verify')
-						.send({ userId: '7' })
+						.post('/users/verify')
+						.send({ username: 'maxmustermann' })
 						.expect(res => {
-							errorHelper.checkRequestError(res.body)
+							errorHelper.checkRequestError(res.body, 'This request has to provide all of the following body values: username, token')
+						})
+						.end(done)
+				})
+
+				it('fails with invalid credentials', async () => {
+					await request
+						.get('/users/verify')
+						.query({ username: 'maxmustermann' })
+						.expect(204)
+
+					await request
+						.post('/users/verify')
+						.send({ username: 'maxmustermann', token: '123456' })
+						.expect(res => {
+							errorHelper.checkAuthenticationError(res.body, 'invalidCredentials')
+						})
+				})
+
+				it('fails with 404 on unknown user', (done) => {
+					const UNKNOWN_USERNAME = 'non-existent-use'
+					request
+						.post('/users/verify')
+						.send({ username: UNKNOWN_USERNAME, token: 'my-invalid-token'})
+						.expect(res => {
+							errorHelper.checkNotFoundError(res.body, 'User', UNKNOWN_USERNAME)
 						})
 						.end(done)
 				})
@@ -443,11 +563,12 @@ module.exports = (request, bearerToken) => {
 						.expect(200)
 						.expect(res => {
 							let user = res.body
-							user.should.have.all.keys(['id', 'firstName', 'lastName', 'email', 'verified', 'createdAt', 'updatedAt'])
-							user.should.have.property('id').equal(1)
-							user.should.have.property('firstName').equal('Max')
-							user.should.have.property('lastName').equal('Mustermann')
-							user.should.have.property('email').equal('mustermann@gmail.com')
+							user.should.have.all.keys(['id', 'username', 'email', 'firstName', 'lastName', 'verified', 'createdAt', 'updatedAt'])
+							user.id.should.be.equal(1)
+							user.username.should.be.equal('maxmustermann')
+							user.email.should.be.equal('mustermann@gmail.com')
+							user.firstName.should.be.equal('Max')
+							user.lastName.should.be.equal('Mustermann')
 						})
 						.end(done)
 				})
@@ -461,11 +582,12 @@ module.exports = (request, bearerToken) => {
 						.expect(200)
 						.expect(res => {
 							let user = res.body
-							user.should.have.all.keys(['id', 'firstName', 'lastName', 'email', 'verified', 'createdAt', 'updatedAt'])
-							user.should.have.property('id').equal(3)
-							user.should.have.property('firstName').equal('Philipp')
-							user.should.have.property('lastName').equal('Loten')
-							user.should.have.property('email').equal('philipp.loten@company.com')
+							user.should.have.all.keys(['id', 'username', 'email', 'firstName', 'lastName', 'verified', 'createdAt', 'updatedAt'])
+							user.id.should.be.equal(3)
+							user.username.should.be.equal('loten')
+							user.email.should.be.equal('philipp.loten@company.com')
+							user.firstName.should.be.equal('Philipp')
+							user.lastName.should.be.equal('Loten')
 						})
 						.end(done)
 				})
@@ -530,7 +652,7 @@ module.exports = (request, bearerToken) => {
 						.send({})
 						.expect(400)
 						.expect(res => {
-							errorHelper.checkRequestError(res.body, 'This request has to provide at least one of the following body values: firstName, lastName, email, password')
+							errorHelper.checkRequestError(res.body, 'This request has to provide at least one of the following body values: username, firstName, lastName, email, password')
 						})
 						.end(done)
 				})
@@ -540,7 +662,11 @@ module.exports = (request, bearerToken) => {
 						.post('/users/1')
 						.set({ Authorization: bearerToken[1] })
 						.send({ password: 'new!' })
-						.expect(400, done)
+						.expect(400)
+						.expect(res => {
+							errorHelper.checkRequestError(res.body, 'You need to provide your current password to change it.')
+						})
+						.end(done)
 				})
 
 				it('fails if the current password does not match', (done) => {
@@ -555,54 +681,47 @@ module.exports = (request, bearerToken) => {
 						.end(done)
 				})
 
-				it('updates a user correctly', (done) => {
-					request
+				it('updates a user correctly', async () => {
+					await request
 						.post('/users/1')
-						.set({ Authorization: bearerToken[1]})
-						.send({ firstName: 'Neuer', lastName: 'Name', email: 'neu@mail.com', password: 'hurdurdur', currentPassword: '123456'})
+						.set({ Authorization: bearerToken[1] })
+						.send({ username: 'fancy-new-name', firstName: 'Neuer', lastName: 'Name', email: 'neu@mail.com', password: 'hurdurdur', currentPassword: '123456'})
 						.expect(200)
 						.expect(res => {
 							let newUser = res.body
-							newUser.should.have.all.keys(['id', 'firstName', 'lastName', 'email', 'verified', 'createdAt', 'updatedAt'])
+							newUser.should.have.all.keys(['id', 'username', 'firstName', 'lastName', 'email', 'verified', 'createdAt', 'updatedAt'])
 							newUser.should.have.property('id').equal(1)
+							newUser.should.have.property('username').equal('fancy-new-name')
 							newUser.should.have.property('firstName').equal('Neuer')
 							newUser.should.have.property('lastName').equal('Name')
 							newUser.should.have.property('email').equal('neu@mail.com')
 						})
-						.then(() => {
-							request
-								.get('/auth')
-								.auth('neu@mail.com', 'hurdurdur')
-								.expect(200, done)
-						})
-						.catch((err) => {
-							done(err)
-						})
+
+					await request
+						.get('/auth')
+						.auth('fancy-new-name', 'hurdurdur')
+						.expect(200)
 				})
 
-				it('does not hash the password again if it has not changed', (done) => {
-					request
+				it('does not hash the password again if it has not changed', async () => {
+					await request
 						.post('/users/1')
 						.set({ Authorization: bearerToken[1]})
-						.send({ firstName: 'Neuer', lastName: 'Name', email: 'neu@mail.com'})
+						.send({ username: 'fancy-new-name', firstName: 'Neuer', lastName: 'Name', email: 'neu@mail.com'})
 						.expect(200)
 						.expect(res => {
 							let newUser = res.body
-							newUser.should.have.all.keys(['id', 'firstName', 'lastName', 'email', 'verified', 'createdAt', 'updatedAt'])
+							newUser.should.have.all.keys(['id', 'username', 'firstName', 'lastName', 'email', 'verified', 'createdAt', 'updatedAt'])
 							newUser.should.have.property('id').equal(1)
 							newUser.should.have.property('firstName').equal('Neuer')
 							newUser.should.have.property('lastName').equal('Name')
 							newUser.should.have.property('email').equal('neu@mail.com')
 						})
-						.then(() => {
-							request
-								.get('/auth')
-								.auth('neu@mail.com', '123456')
-								.expect(200, done)
-						})
-						.catch((err) => {
-							done(err)
-						})
+
+					await request
+						.get('/auth')
+						.auth('fancy-new-name', '123456')
+						.expect(200)
 				})
 			})
 
@@ -747,6 +866,9 @@ module.exports = (request, bearerToken) => {
 							group.should.have.property('lunchbreaks').which.is.an('array')
 							group.should.have.property('places').which.is.an('array')
 							group.should.have.property('foodTypes').which.is.an('array')
+
+							const member = group.members[0]
+							member.should.have.all.keys(['id', 'username', 'firstName', 'lastName', 'config'])
 						})
 						.end(done)
 				})
