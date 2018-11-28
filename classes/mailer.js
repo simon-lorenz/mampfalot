@@ -31,7 +31,7 @@ class Mailer {
 			case 'hello@mampfalot.app':
 				return process.env.MAIL_PASSWORD_HELLO
 			default:
-				throw new Exception(`Unkown mail account "${email}"`)
+				throw new Error(`Unkown mail account "${email}"`)
 		}
 	}
 
