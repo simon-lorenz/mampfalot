@@ -119,7 +119,8 @@ router.route('/verify').post(asyncMiddleware(async (req, res, next) => {
 		return next(new AuthenticationError('The provided credentials are incorrect.'))
 	}
 
-	user.verified = true;
+	user.verified = true
+	user.verificationToken = null
 	await user.save()
 	res.status(204).send()
 }))
