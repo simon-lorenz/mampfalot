@@ -703,6 +703,24 @@ module.exports = (request, bearerToken) => {
 						.expect(200)
 				})
 
+				it('successfully sets firstName and lastName to empty strings', (done) => {
+					request
+						.post('/users/1')
+						.set({ Authorization: bearerToken[1] })
+						.send({ firstName: '', lastName: '' })
+						.expect(200)
+						.expect(res => {
+							let user = res.body
+							user.should.have.all.keys(['id', 'username', 'firstName', 'lastName', 'email', 'verified', 'createdAt', 'updatedAt'])
+							user.should.have.property('id').equal(1)
+							user.should.have.property('username').equal('maxmustermann')
+							user.should.have.property('firstName').equal('')
+							user.should.have.property('lastName').equal('')
+							user.should.have.property('email').equal('mustermann@gmail.com')
+						})
+						.end(done)
+				})
+
 				it('does not hash the password again if it has not changed', async () => {
 					await request
 						.post('/users/1')

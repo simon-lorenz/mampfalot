@@ -208,8 +208,8 @@ router.route('/:userId').post(asyncMiddleware(async (req, res, next) => {
 	}
 
 	if (req.body.username) { userResource.username = req.body.username }
-	if (req.body.firstName) { userResource.firstName = req.body.firstName.trim() }
-	if (req.body.lastName) { userResource.lastName = req.body.lastName.trim() }
+	if (req.body.firstName || req.body.firstName === '') { userResource.firstName = req.body.firstName.trim() }
+	if (req.body.lastName || req.body.lastName === '') { userResource.lastName = req.body.lastName.trim() }
 	if (req.body.email) { userResource.email = req.body.email.trim() }
 	if (req.body.password) { userResource.password = req.body.password }
 
