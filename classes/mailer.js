@@ -43,7 +43,7 @@ class Mailer {
 	 */
 	sendWelcomeMail(to, username, verificationToken) {
 		let transport = nodemailer.createTransport(this.getMailOptions('hello@mampfalot.app'))
-		let verificationLink = `https://mampfalot.app/confirm-verification?user=${username}?token=${verificationToken}`
+		let verificationLink = `https://mampfalot.app/confirm-verification?user=${username}&token=${verificationToken}`
 		let mailOptions = {
 			from: '"Mampfalot" <hello@mampfalot.app>',
 			to: to,
