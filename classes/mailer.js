@@ -43,7 +43,7 @@ class Mailer {
 	 */
 	sendWelcomeMail(to, username, verificationToken) {
 		let transport = nodemailer.createTransport(this.getMailOptions('hello@mampfalot.app'))
-		let verificationLink = `https://mampfalot.app/confirm-verification?user=${username}&token=${verificationToken}`
+		let verificationLink = `${process.env.FRONTEND_BASE_URL}/confirm-verification?user=${username}&token=${verificationToken}`
 		let mailOptions = {
 			from: '"Mampfalot" <hello@mampfalot.app>',
 			to: to,
@@ -69,7 +69,7 @@ class Mailer {
 	sendPasswordResetMail(to, username, token) {
 		let transport = nodemailer.createTransport(this.getMailOptions('support@mampfalot.app'))
 
-		let resetLink = `https://mampfalot.app/confirm-password-reset?token=${token}&user=${username}`
+		let resetLink = `${process.env.FRONTEND_BASE_URL}/confirm-password-reset?token=${token}&user=${username}`
 
 		let mailOptions = {
 			from: '"Mampfalot Support" <support@mampfalot.app>',
@@ -212,7 +212,7 @@ class Mailer {
 			Acccount mit dem Namen ${username} vorhanden ist.
 
 			Für den Fall, dass du dein Passwort vergessen hast, kannst du es hier
-			zurücksetzen: https://mampfalot.app/request-password-reset?user=${username}
+			zurücksetzen: ${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username}
 
 			Viele Grüße
 			Dein Mampfalot-Team
@@ -233,7 +233,7 @@ class Mailer {
 						Acccount mit dem Namen ${username} vorhanden ist.<br>
 						<br>
 						Für den Fall, dass du dein Passwort vergessen hast, kannst du es hier
-						zurücksetzen: https://mampfalot.app/request-password-reset?user=${username} <br>
+						zurücksetzen: ${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username} <br>
 						<br>
 						Viele Grüße<br>
 						Dein Mampfalot-Team
@@ -251,10 +251,10 @@ class Mailer {
 			Wir haben festgestellt, dass unter dieser E-Mail-Adresse bereits ein
 			Acccount mit dem Namen ${username} vorhanden ist.
 
-			Klicke hier, um deinen Account zu aktivieren: https://mampfalot.app/confirm-verification?user=${username}&token=${verificationToken}
+			Klicke hier, um deinen Account zu aktivieren: ${process.env.FRONTEND_BASE_URL}/confirm-verification?user=${username}&token=${verificationToken}
 
 			Für den Fall, dass du dein Passwort vergessen hast, kannst du es hier
-			zurücksetzen: https://mampfalot.app/request-password-reset?user=${username}
+			zurücksetzen: ${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username}
 
 			Viele Grüße
 			Dein Mampfalot-Team
@@ -274,10 +274,10 @@ class Mailer {
 						Wir haben festgestellt, dass unter dieser E-Mail-Adresse bereits ein
 						Acccount mit dem Namen ${username} vorhanden ist.<br>
 						<br>
-						Klicke hier, um deinen Account zu aktivieren: https://mampfalot.app/confirm-verification?user=${username}&token=${verificationToken} <br>
+						Klicke hier, um deinen Account zu aktivieren: ${process.env.FRONTEND_BASE_URL}/confirm-verification?user=${username}&token=${verificationToken} <br>
 						<br>
 						Für den Fall, dass du dein Passwort vergessen hast, kannst du es hier
-						zurücksetzen: https://mampfalot.app/request-password-reset?user=${username} <br>
+						zurücksetzen: ${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username} <br>
 						<br>
 						Viele Grüße<br>
 						Dein Mampfalot-Team
