@@ -38,19 +38,18 @@ class Mailer {
 	/**
 	 * Sends a welcome mail which contains a verification link
 	 * @param {string} to The users email-address
-	 * @param {string} name The users name
-	 * @param {string} id The users id
+	 * @param {string} username
 	 * @param {string} verificationToken A verification token
 	 */
-	sendWelcomeMail(to, name, id, verificationToken) {
+	sendWelcomeMail(to, username, verificationToken) {
 		let transport = nodemailer.createTransport(this.getMailOptions('hello@mampfalot.app'))
-		let verificationLink = `https://mampfalot.app/verify/${verificationToken}?userId=${id}`
+		let verificationLink = `https://mampfalot.app/confirm-verification?user=${username}?token=${verificationToken}`
 		let mailOptions = {
 			from: '"Mampfalot" <hello@mampfalot.app>',
 			to: to,
 			subject: 'Willkommen bei Mampfalot!',
-			text: this.getWelcomeText(name, verificationLink),
-			html: this.getWelcomeHTML(name, verificationLink)
+			text: this.getWelcomeText(username, verificationLink),
+			html: this.getWelcomeHTML(username, verificationLink)
 		}
 
 		return new Promise((resolve, reject) => {
@@ -64,21 +63,20 @@ class Mailer {
 	/**
 	 * Sends a password reset mail
 	 * @param {*} to The user email-address
-	 * @param {*} name The users name
-	 * @param {*} id The users id
+	 * @param {*} username
 	 * @param {*} token A password reset token
 	 */
-	sendPasswordResetMail(to, name, id, token) {
+	sendPasswordResetMail(to, username, token) {
 		let transport = nodemailer.createTransport(this.getMailOptions('support@mampfalot.app'))
 
-		let resetLink = `https://mampfalot.app/password-reset/${token}?userId=${id}`
+		let resetLink = `https://mampfalot.app/confirm-password-reset?token=${token}&user=${username}`
 
 		let mailOptions = {
 			from: '"Mampfalot Support" <support@mampfalot.app>',
 			to: to,
 			subject: 'Dein neues Passwort für Mampfalot',
-			text: this.getPasswordResetText(name, resetLink),
-			html: this.getPasswordResetHTML(name, resetLink)
+			text: this.getPasswordResetText(username, resetLink),
+			html: this.getPasswordResetHTML(username, resetLink)
 		}
 
 		return new Promise((resolve, reject) => {
@@ -129,13 +127,13 @@ class Mailer {
 
 	/**
 	 * Returns the html content of a password reset mail
-	 * @param {*} name The user name
+	 * @param {*} username
 	 * @param {*} resetLink The password reset link
 	 */
-	getPasswordResetHTML(name, resetLink) {
+	getPasswordResetHTML(username, resetLink) {
 		return `
 			<p>
-				Hi ${name}, <br>
+				Hi ${username}, <br>
 				<br>
 				du hast kürzlich ein neues Passwort für Mampfalot angefordert.<br>
 				Klicke hier, um ein neues Passwort zu vergeben: <br>
@@ -156,12 +154,12 @@ class Mailer {
 
 	/**
 	 * Returns the text content of a password reset mail
-	 * @param {*} name
+	 * @param {*} username
 	 * @param {*} resetLink
 	 */
-	getPasswordResetText(name, resetLink) {
+	getPasswordResetText(username, resetLink) {
 		return `
-			Hi ${name},
+			Hi ${username},
 			du hast kürzlich ein neues Passwort für Mampfalot angefordert.
 			Klicke hier, um ein neues Passwort zu vergeben: ${resetLink}
 			Dieser Link ist 30 Minuten lang gültig.
@@ -172,20 +170,20 @@ class Mailer {
 
 	/**
 	 * Returns the htmln content of a welcome email
-	 * @param {string} name The users name, used in the greeting
+	 * @param {string} username
 	 * @param {string} verificationLink A link where the user can verify his email-address
 	 */
-	getWelcomeHTML(name, verificationLink) {
+	getWelcomeHTML(username, verificationLink) {
 		return `
 			<html>
 				<head>
 				</head>
 				<body>
 					<p>
-						Hi ${name}! <br>
+						Hi ${username}! <br>
 						<br>
 						Herzlich willkommen bei Mampfalot!<br>
-						Benutze folgenden Link, um deine E-Mail Adresse zu bestätigen: <a href="${verificationLink}">${verificationLink}</a><br>
+						Benutze folgenden Link, um deinen Account zu aktivieren: <a href="${verificationLink}">${verificationLink}</a><br>
 						<br>
 						Viele Grüße<br>
 						Dein Mampfalot-Team
@@ -195,11 +193,11 @@ class Mailer {
 		`
 	}
 
-	getWelcomeText(name, verificationLink) {
+	getWelcomeText(username, verificationLink) {
 		return `
-			Hi ${name}!
+			Hi ${username}!
 			Herzlich willkommen bei Mampfalot!
-			Benutze folgenden Link, um deine E-Mail Adresse zu bestätgen: ${verificationLink}
+			Benutze folgenden Link, um deinen Account zu aktivieren: ${verificationLink}
 			Viele Grüße
 			Dein Mampfalot-Team
 		`

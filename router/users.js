@@ -71,7 +71,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	})
 
 	if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
-		await mailer.sendWelcomeMail(user.email, user.firstName, user.id, verificationToken)
+		await mailer.sendWelcomeMail(user.email, user.username, verificationToken)
 	}
 
 	res.status(204).send()
@@ -95,7 +95,7 @@ router.route('/verify').get(asyncMiddleware(async (req, res, next) => {
 	await user.save()
 
 	if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
-		await mailer.sendWelcomeMail(user.email, user.firstName, user.id, verificationToken)
+		await mailer.sendWelcomeMail(user.email, user.username, verificationToken)
 	}
 
 	res.status(204).send()
@@ -141,7 +141,7 @@ router.route('/password-reset').get(asyncMiddleware(async (req, res, next) => {
 	await user.save()
 
 	if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
-		await mailer.sendPasswordResetMail(user.email, user.firstName, user.id, token)
+		await mailer.sendPasswordResetMail(user.email, user.username, token)
 	}
 
 	res.status(204).send()
