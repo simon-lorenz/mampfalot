@@ -40,7 +40,7 @@ router.route('/').get(asyncMiddleware(async (req, res, next) => {
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	// Is this email already known?
 	let existingUser = await User.findOne({
-		attributes: ['email', 'username'],
+		attributes: ['email', 'username', 'verificationToken', 'verified'],
 		where: {
 			email: req.body.email
 		}
