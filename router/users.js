@@ -40,7 +40,7 @@ router.route('/').get(asyncMiddleware(async (req, res, next) => {
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	// Is this email already known?
 	let existingUser = await User.findOne({
-		attributes: ['email', 'username', 'verificationToken', 'verified'],
+		attributes: ['id', 'email', 'username', 'verified'],
 		where: {
 			email: req.body.email
 		}
@@ -52,8 +52,13 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 				await mailer.sendUserAlreadyRegisteredMail(existingUser.email, existingUser.username)
 			}
 		} else {
+			// generate a new verification token, because the stored one is hashed
+			let verificationToken = await generateRandomToken(25)
+			existingUser.verificationToken = await bcrypt.hash(verificationToken, process.env.NODE_ENV === 'test' ? 1 : 12)
+			await existingUser.save()
+
 			if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
-				await mailer.sendUserAlreadyRegisteredButNotVerifiedMail(existingUser.email, existingUser.username, existingUser.verificationToken)
+				await mailer.sendUserAlreadyRegisteredButNotVerifiedMail(existingUser.email, existingUser.username, verificationToken)
 			}
 		}
 		return res.status(204).send()
