@@ -36,6 +36,19 @@ class Mailer {
 	}
 
 	/**
+	 * Tries to establish an smtp connection for a given
+	 * e-mail account.Logs the result to the console.
+	 * @returns Promise
+	 */
+	checkConnection(email) {
+		const options = this.getMailOptions(email)
+		const transport = nodemailer.createTransport(options)
+		return transport.verify()
+			.then(() => console.log(`[Mailer] Successfully established smtp connection for account ${email}`))
+			.catch(() => console.log(`[Mailer] Could not establish smtp connection for account ${email}`))
+	}
+
+	/**
 	 * Sends a welcome mail which contains a verification link
 	 * @param {string} to The users email-address
 	 * @param {string} username
