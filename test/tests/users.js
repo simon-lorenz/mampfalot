@@ -57,7 +57,7 @@ module.exports = (request, bearerToken) => {
 					username: 'homer_simpson',
 					firstName: 'Homer',
 					lastName: 'Simpson',
-					email: 'homer@simpson.com',
+					email: 'homer@simpson.nonexistenttld',
 					password: "springfield"
 				}
 
@@ -92,7 +92,7 @@ module.exports = (request, bearerToken) => {
 			})
 
 			it('does not fail if the email is already known', async () => {
-				newUser.email = 'mustermann@gmail.com'
+				newUser.email = 'mustermann@gmail.nonexistenttld'
 
 				await request
 					.post('/users')
@@ -566,7 +566,7 @@ module.exports = (request, bearerToken) => {
 							user.should.have.all.keys(['id', 'username', 'email', 'firstName', 'lastName', 'verified', 'createdAt', 'updatedAt'])
 							user.id.should.be.equal(1)
 							user.username.should.be.equal('maxmustermann')
-							user.email.should.be.equal('mustermann@gmail.com')
+							user.email.should.be.equal('mustermann@gmail.nonexistenttld')
 							user.firstName.should.be.equal('Max')
 							user.lastName.should.be.equal('Mustermann')
 						})
@@ -585,7 +585,7 @@ module.exports = (request, bearerToken) => {
 							user.should.have.all.keys(['id', 'username', 'email', 'firstName', 'lastName', 'verified', 'createdAt', 'updatedAt'])
 							user.id.should.be.equal(3)
 							user.username.should.be.equal('loten')
-							user.email.should.be.equal('philipp.loten@company.com')
+							user.email.should.be.equal('philipp.loten@company.nonexistenttld')
 							user.firstName.should.be.equal('Philipp')
 							user.lastName.should.be.equal('Loten')
 						})
@@ -620,7 +620,7 @@ module.exports = (request, bearerToken) => {
 					request
 						.post('/users/99')
 						.set({ Authorization: bearerToken[1]})
-						.send({ firstName: 'Neuer', lastName: 'Name', email: 'neu@mail.com', password: 'hurdurdur'})
+						.send({ firstName: 'Neuer', lastName: 'Name', email: 'neu@mail.nonexistenttld', password: 'hurdurdur'})
 						.expect(404)
 						.expect(res => {
 							errorHelper.checkNotFoundError(res.body, 'User', 99)
@@ -685,7 +685,7 @@ module.exports = (request, bearerToken) => {
 					await request
 						.post('/users/1')
 						.set({ Authorization: bearerToken[1] })
-						.send({ username: 'fancy-new-name', firstName: 'Neuer', lastName: 'Name', email: 'neu@mail.com', password: 'hurdurdur', currentPassword: '123456'})
+						.send({ username: 'fancy-new-name', firstName: 'Neuer', lastName: 'Name', email: 'neu@mail.nonexistenttld', password: 'hurdurdur', currentPassword: '123456'})
 						.expect(200)
 						.expect(res => {
 							let newUser = res.body
@@ -694,7 +694,7 @@ module.exports = (request, bearerToken) => {
 							newUser.should.have.property('username').equal('fancy-new-name')
 							newUser.should.have.property('firstName').equal('Neuer')
 							newUser.should.have.property('lastName').equal('Name')
-							newUser.should.have.property('email').equal('neu@mail.com')
+							newUser.should.have.property('email').equal('neu@mail.nonexistenttld')
 						})
 
 					await request
@@ -716,7 +716,7 @@ module.exports = (request, bearerToken) => {
 							user.should.have.property('username').equal('maxmustermann')
 							user.should.have.property('firstName').equal('')
 							user.should.have.property('lastName').equal('')
-							user.should.have.property('email').equal('mustermann@gmail.com')
+							user.should.have.property('email').equal('mustermann@gmail.nonexistenttld')
 						})
 						.end(done)
 				})
@@ -725,7 +725,7 @@ module.exports = (request, bearerToken) => {
 					await request
 						.post('/users/1')
 						.set({ Authorization: bearerToken[1]})
-						.send({ username: 'fancy-new-name', firstName: 'Neuer', lastName: 'Name', email: 'neu@mail.com'})
+						.send({ username: 'fancy-new-name', firstName: 'Neuer', lastName: 'Name', email: 'neu@mail.nonexistenttld'})
 						.expect(200)
 						.expect(res => {
 							let newUser = res.body
@@ -733,7 +733,7 @@ module.exports = (request, bearerToken) => {
 							newUser.should.have.property('id').equal(1)
 							newUser.should.have.property('firstName').equal('Neuer')
 							newUser.should.have.property('lastName').equal('Name')
-							newUser.should.have.property('email').equal('neu@mail.com')
+							newUser.should.have.property('email').equal('neu@mail.nonexistenttld')
 						})
 
 					await request

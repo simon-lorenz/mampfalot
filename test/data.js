@@ -194,7 +194,7 @@ module.exports = {
 			username: 'maxmustermann',
 			firstName: 'Max',
 			lastName: 'Mustermann',
-			email: 'mustermann@gmail.com',
+			email: 'mustermann@gmail.nonexistenttld',
 			password: '123456'
 		},
 		{
@@ -202,7 +202,7 @@ module.exports = {
 			username: 'johndoe1',
 			firstName: 'John',
 			lastName: 'Doe',
-			email: 'john.doe@provider.com',
+			email: 'john.doe@provider.nonexistenttld',
 			password: 'supersafe'
 		},
 		{
@@ -210,7 +210,7 @@ module.exports = {
 			username: 'loten',
 			firstName: 'Philipp',
 			lastName: 'Loten',
-			email: 'philipp.loten@company.com',
+			email: 'philipp.loten@company.nonexistenttld',
 			password: 'password'
 		},
 		{
@@ -218,7 +218,7 @@ module.exports = {
 			username: 'björn_tietgen',
 			firstName: 'Björn',
 			lastName: 'Tietgen',
-			email: 'björn.tietgen@gmail.com',
+			email: 'björn.tietgen@gmail.nonexistenttld',
 			password: 'test'
 		},
 		{
@@ -226,7 +226,7 @@ module.exports = {
 			username: 'luisa-rogers',
 			firstName: 'Luisa',
 			lastName: 'Rogers',
-			email: 'l.rogers@university.edu',
+			email: 'l.rogers@university.nonexistenttld',
 			password: ' !"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
 		},
 		{
@@ -234,7 +234,7 @@ module.exports = {
 			username: 'alice',
 			firstName: 'Alice',
 			lastName: 'Jones',
-			email: 'alice@jones.com',
+			email: 'alice@jones.nonexistenttld',
 			password: 'letmein'
 		}
 	]
