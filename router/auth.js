@@ -16,7 +16,7 @@ router.route('/').get((req, res, next) => {
 	// Header-Aufbau: 'Basic <base64String>'
 	// Wir wollen nur den b64-String und splitten deshalb beim Leerzeichen
 	let credentialsB64 = basicAuth.split(' ')[1]
-	let credentials = new Buffer(credentialsB64, 'base64').toString('utf-8') // Enthält nun username:password
+	let credentials = Buffer.from(credentialsB64, 'base64').toString('utf-8') // Enthält nun username:password
 
 	let splitted = credentials.split(':')
 
