@@ -4,6 +4,7 @@ const Sequelize = require('sequelize')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const helmet = require('helmet')
+const morgan = require('morgan')
 const Promise = require('bluebird')
 const { initUser, verifyToken } = require('./util/middleware')
 const { AuthenticationError, AuthorizationError, NotFoundError } = require('./classes/errors')
@@ -11,6 +12,7 @@ const { MethodNotAllowedError, ValidationError, RequestError, ServerError } = re
 
 app.use(cors())
 app.use(helmet())
+app.use(morgan('common'))
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({
