@@ -34,12 +34,16 @@ router.route('/').get(asyncMiddleware(async (req, res, next) => {
 		where: {
 			username: res.locals.credentials.username
 		},
-		attributes: ['id', 'username', 'password'],
+		attributes: ['id', 'username', 'password', 'verified'],
 		raw: true
 	})
 
 	// Prüfe, ob der User vorhanden ist und ob sein Passwort übereinstimmt
 	if (user) {
+		if (!user.verified) {
+			return next(new AuthenticationError('This account is not verified yet.'))
+		}
+
 		let passwordMatch = await bcrypt.compare(res.locals.credentials.password, user.password)
 		if (!passwordMatch) {
 			return next(new AuthenticationError('The provided credentials are incorrect.'))

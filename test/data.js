@@ -195,7 +195,8 @@ module.exports = {
 			firstName: 'Max',
 			lastName: 'Mustermann',
 			email: 'mustermann@gmail.nonexistenttld',
-			password: '123456'
+			password: '123456',
+			verified: true
 		},
 		{
 			id: 2,
@@ -203,7 +204,8 @@ module.exports = {
 			firstName: 'John',
 			lastName: 'Doe',
 			email: 'john.doe@provider.nonexistenttld',
-			password: 'supersafe'
+			password: 'supersafe',
+			verified: true
 		},
 		{
 			id: 3,
@@ -211,7 +213,8 @@ module.exports = {
 			firstName: 'Philipp',
 			lastName: 'Loten',
 			email: 'philipp.loten@company.nonexistenttld',
-			password: 'password'
+			password: 'password',
+			verified: true
 		},
 		{
 			id: 4,
@@ -219,7 +222,8 @@ module.exports = {
 			firstName: 'Björn',
 			lastName: 'Tietgen',
 			email: 'björn.tietgen@gmail.nonexistenttld',
-			password: 'test'
+			password: 'test',
+			verified: true
 		},
 		{
 			id: 5,
@@ -227,7 +231,8 @@ module.exports = {
 			firstName: 'Luisa',
 			lastName: 'Rogers',
 			email: 'l.rogers@university.nonexistenttld',
-			password: ' !"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
+			password: ' !"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~',
+			verified: true
 		},
 		{
 			id: 6,
@@ -235,7 +240,18 @@ module.exports = {
 			firstName: 'Alice',
 			lastName: 'Jones',
 			email: 'alice@jones.nonexistenttld',
-			password: 'letmein'
+			password: 'letmein',
+			verified: true
+		},
+		{
+			id: 7,
+			username: 'to-be-verified',
+			firstName: '',
+			lastName: '',
+			email: 'to-be-verified@email.nonexistenttld',
+			password: 'verifyme',
+			verified: false,
+			verificationToken: '$2a$12$1tHI5g0IJm77KrvASnroLeLIHpQGzdCnU2.lZWqDsFCLPVrXTTfkW' // Hash of "valid-token"
 		}
 	]
 }

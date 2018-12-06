@@ -12,7 +12,10 @@ const { MethodNotAllowedError, ValidationError, RequestError, ServerError } = re
 
 app.use(cors())
 app.use(helmet())
-app.use(morgan('common'))
+
+if (process.env.NODE_ENV !== 'test') {
+	app.use(morgan('common'))
+}
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({

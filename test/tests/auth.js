@@ -71,6 +71,17 @@ module.exports = (request, token) => {
 					})
 					.end(done)
 			})
+
+			it('fails if the user is not verified yet', (done) => {
+				request
+					.get('/auth')
+					.auth('to-be-verified', 'verifyme')
+					.expect(401)
+					.expect(res => {
+						errorHelper.checkAuthenticationError(res.body, 'notVerified')
+					})
+					.end(done)
+			})
 		})
 	})
 }

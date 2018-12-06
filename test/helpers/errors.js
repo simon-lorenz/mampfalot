@@ -67,6 +67,9 @@ module.exports = {
 			case 'invalidToken':
 				error.message.should.be.equal('The provided token is invalid.')
 				break
+			case 'notVerified':
+				error.message.should.be.equal('This account is not verified yet.')
+				break
 			default:
 				throw new Error('Unknown type')
 		}

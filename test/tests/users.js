@@ -73,7 +73,10 @@ module.exports = (request, bearerToken) => {
 				await request
 					.get('/auth')
 					.auth(newUser.username, newUser.password)
-					.expect(200)
+					.expect(401)
+					.expect(res => {
+						errorHelper.checkAuthenticationError(res.body, 'notVerified')
+					})
 			})
 
 			it('inserts a user without firstName and lastName', async () => {
@@ -88,7 +91,10 @@ module.exports = (request, bearerToken) => {
 				await request
 					.get('/auth')
 					.auth(newUser.username, newUser.password)
-					.expect(200)
+					.expect(401)
+					.expect(res => {
+						errorHelper.checkAuthenticationError(res.body, 'notVerified')
+					})
 			})
 
 			it('does not fail if the email is already known', async () => {
@@ -492,10 +498,21 @@ module.exports = (request, bearerToken) => {
 						.end(done)
 				})
 
-				it('sends 204 if username is known', (done) => {
+				it('fails if user is already verified', (done) => {
 					request
 						.get('/users/verify')
 						.query({ username: 'maxmustermann' })
+						.expect(400)
+						.expect(res => {
+							errorHelper.checkRequestError(res.body, 'This user is already verified.')
+						})
+						.end(done)
+				})
+
+				it('sends 204 if user is unverified', (done) => {
+					request
+						.get('/users/verify')
+						.query({ username: 'to-be-verified' })
 						.expect(204, done)
 				})
 			})
@@ -527,13 +544,8 @@ module.exports = (request, bearerToken) => {
 
 				it('fails with invalid credentials', async () => {
 					await request
-						.get('/users/verify')
-						.query({ username: 'maxmustermann' })
-						.expect(204)
-
-					await request
 						.post('/users/verify')
-						.send({ username: 'maxmustermann', token: '123456' })
+						.send({ username: 'to-be-verified', token: '123456' })
 						.expect(res => {
 							errorHelper.checkAuthenticationError(res.body, 'invalidCredentials')
 						})
@@ -548,6 +560,26 @@ module.exports = (request, bearerToken) => {
 							errorHelper.checkNotFoundError(res.body, 'User', UNKNOWN_USERNAME)
 						})
 						.end(done)
+				})
+
+				it('verifies a user successfully', async () => {
+					await request
+						.get('/auth')
+						.auth('to-be-verified', 'verifyme')
+						.expect(401)
+						.expect(res => {
+							errorHelper.checkAuthenticationError(res.body, 'notVerified')
+						})
+
+					await request
+						.post('/users/verify')
+						.send({ username: 'to-be-verified', token: 'valid-token'})
+						.expect(204)
+
+					await request
+						.get('/auth')
+						.auth('to-be-verified', 'verifyme')
+						.expect(200)
 				})
 			})
 		})
