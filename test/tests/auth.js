@@ -1,4 +1,5 @@
 const errorHelper = require('../helpers/errors')
+const { AuthenticationErrorTypes } = require('../helpers/errors')
 
 module.exports = (request, token) => {
 	return describe('/auth', () => {
@@ -45,7 +46,7 @@ module.exports = (request, token) => {
 					.get('/auth')
 					.expect(401)
 					.expect(res => {
-						errorHelper.checkAuthenticationError(res.body, 'authRequired')
+						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.AUTHENTICTAION_REQUIRED)
 					})
 					.end(done)
 			})
@@ -56,7 +57,7 @@ module.exports = (request, token) => {
 					.auth('maxmustermann', 'wrongPassword')
 					.expect(401)
 					.expect(res => {
-						errorHelper.checkAuthenticationError(res.body, 'invalidCredentials')
+						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.INVALID_CREDENTIALS)
 					})
 					.end(done)
 			})
@@ -67,7 +68,7 @@ module.exports = (request, token) => {
 					.auth('non-existent-user', 'supersafe')
 					.expect(401)
 					.expect(res => {
-						errorHelper.checkAuthenticationError(res.body, 'invalidCredentials')
+						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.INVALID_CREDENTIALS)
 					})
 					.end(done)
 			})
@@ -78,7 +79,7 @@ module.exports = (request, token) => {
 					.auth('to-be-verified', 'verifyme')
 					.expect(401)
 					.expect(res => {
-						errorHelper.checkAuthenticationError(res.body, 'notVerified')
+						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.NOT_VERIFIED)
 					})
 					.end(done)
 			})

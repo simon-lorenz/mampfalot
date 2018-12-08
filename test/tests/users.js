@@ -1,5 +1,6 @@
 const setup = require('../setup')
 const errorHelper = require('../helpers/errors')
+const { AuthenticationErrorTypes } = require('../helpers/errors')
 const util = require('../helpers/util')
 
 module.exports = (request, bearerToken) => {
@@ -75,7 +76,7 @@ module.exports = (request, bearerToken) => {
 					.auth(newUser.username, newUser.password)
 					.expect(401)
 					.expect(res => {
-						errorHelper.checkAuthenticationError(res.body, 'notVerified')
+						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.NOT_VERIFIED)
 					})
 			})
 
@@ -93,7 +94,7 @@ module.exports = (request, bearerToken) => {
 					.auth(newUser.username, newUser.password)
 					.expect(401)
 					.expect(res => {
-						errorHelper.checkAuthenticationError(res.body, 'notVerified')
+						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.NOT_VERIFIED)
 					})
 			})
 
@@ -465,7 +466,7 @@ module.exports = (request, bearerToken) => {
 						.post('/users/password-reset')
 						.send({ username: 'maxmustermann', token: '123', newPassword: '123456789'})
 						.expect(res => {
-							errorHelper.checkAuthenticationError(res.body, 'invalidCredentials')
+							errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.INVALID_CREDENTIALS)
 						})
 				})
 			})
@@ -547,7 +548,7 @@ module.exports = (request, bearerToken) => {
 						.post('/users/verify')
 						.send({ username: 'to-be-verified', token: '123456' })
 						.expect(res => {
-							errorHelper.checkAuthenticationError(res.body, 'invalidCredentials')
+							errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.INVALID_CREDENTIALS)
 						})
 				})
 
@@ -568,7 +569,7 @@ module.exports = (request, bearerToken) => {
 						.auth('to-be-verified', 'verifyme')
 						.expect(401)
 						.expect(res => {
-							errorHelper.checkAuthenticationError(res.body, 'notVerified')
+							errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.NOT_VERIFIED)
 						})
 
 					await request
@@ -708,7 +709,7 @@ module.exports = (request, bearerToken) => {
 						.send({ password: 'new!', currentPassword: 'wrongPassword'})
 						.expect(401)
 						.expect(res => {
-							errorHelper.checkAuthenticationError(res.body, 'invalidCredentials')
+							errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.INVALID_CREDENTIALS)
 						})
 						.end(done)
 				})

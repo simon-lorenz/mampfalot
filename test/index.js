@@ -7,6 +7,7 @@ const users = require('./data').users
 const chai = require('chai')
 const endpoints = require('./helpers/endpoints')
 const errorHelper = require('./helpers/errors')
+const { AuthenticationErrorTypes } = require('./helpers/errors')
 
 chai.should()
 
@@ -97,7 +98,7 @@ describe('The mampfalot api', function () {
 						.getMethodByString(method, endpoint.url)
 						.expect(401)
 						.expect(res => {
-							errorHelper.checkAuthenticationError(res.body)
+							errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.AUTHENTICTAION_REQUIRED)
 						})
 						.catch(err => {
 							errors.push(method + ' ' + endpoint.url + ': ' + err.message)
@@ -117,7 +118,7 @@ describe('The mampfalot api', function () {
 			.set({ Authorization: invalid })
 			.expect(401)
 			.expect(res => {
-				errorHelper.checkAuthenticationError(res.body, 'invalidToken')
+				errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.INVALID_TOKEN)
 			})
 			.end(done)
 	})

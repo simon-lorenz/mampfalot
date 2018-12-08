@@ -1,5 +1,12 @@
 module.exports = {
 
+	AuthenticationErrorTypes: {
+		INVALID_CREDENTIALS: 1,
+		AUTHENTICTAION_REQUIRED: 2,
+		INVALID_TOKEN: 3,
+		NOT_VERIFIED: 4
+	},
+
 	/**
 	 * Checks the structure of an authorization error
 	 * @param {Object} error The error to check
@@ -53,21 +60,21 @@ module.exports = {
 		return false
 	},
 
-	checkAuthenticationError(error, type = 'authRequired') {
+	checkAuthenticationError(error, type = this.AuthenticationErrorTypes.AUTHENTICTAION_REQUIRED) {
 		error.should.have.all.keys(['type', 'message'])
 		error.type.should.be.equal('AuthenticationError')
 
 		switch (type) {
-			case 'invalidCredentials':
+			case this.AuthenticationErrorTypes.INVALID_CREDENTIALS:
 				error.message.should.be.equal('The provided credentials are incorrect.')
 				break
-			case 'authRequired':
+			case this.AuthenticationErrorTypes.AUTHENTICTAION_REQUIRED:
 				error.message.should.be.equal('This request requires authentication.')
 				break
-			case 'invalidToken':
+			case this.AuthenticationErrorTypes.INVALID_TOKEN:
 				error.message.should.be.equal('The provided token is invalid.')
 				break
-			case 'notVerified':
+			case this.AuthenticationErrorTypes.NOT_VERIFIED:
 				error.message.should.be.equal('This account is not verified yet.')
 				break
 			default:
