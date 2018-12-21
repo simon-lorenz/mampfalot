@@ -585,6 +585,35 @@ module.exports = (request, bearerToken) => {
 			})
 		})
 
+		describe('/forgot-username', () => {
+			describe('GET', () => {
+				it('requires email parameter', (done) => {
+					request
+						.get('/users/forgot-username')
+						.expect(res => {
+							errorHelper.checkRequestError(res.body, 'This request has to provide all of the following query values: email')
+						})
+						.end(done)
+				})
+
+				it('sends 204 on non existing email', (done) => {
+					request
+						.get('/users/forgot-username')
+						.query({ email: 'non-existing-address@provider.nonexistenttld'})
+						.expect(204)
+						.end(done)
+				})
+
+				it('sends 204 on existing email', (done) => {
+					request
+						.get('/users/forgot-username')
+						.query({ email: 'philipp.loten@company.nonexistenttld'})
+						.expect(204)
+						.end(done)
+				})
+			})
+		})
+
 		describe('/:userId', () => {
 			describe('GET', () => {
 				it('returns a valid user resource for Max Mustermann', (done) => {

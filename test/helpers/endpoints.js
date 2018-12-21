@@ -104,6 +104,11 @@ const ENDPOINTS = [
 		public: true
 	},
 	{
+		url: '/users/forgot-username',
+		methods: ['GET'],
+		public: true
+	},
+	{
 		url: '/users/1',
 		methods: ['GET', 'POST', 'DELETE'],
 		public: false

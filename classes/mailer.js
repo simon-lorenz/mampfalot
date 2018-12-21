@@ -138,6 +138,25 @@ class Mailer {
 		})
 	}
 
+	sendForgotUsernameMail(to, username) {
+		const transport = nodemailer.createTransport(this.getMailOptions('support@mampfalot.app'))
+
+		const mailOptions = {
+			from: '"Mampfalot Support" <support@mampfalot.app>',
+			to: to,
+			subject: 'Dein Benutzername bei Mampfalot',
+			text: this.getForgotUsernameText(username),
+			html: this.getForgotUsernameHTML(username)
+		}
+
+		return new Promise((resolve, reject) => {
+			transport.sendMail(mailOptions, (err, info) => {
+				if (err) return reject(err)
+				resolve(info)
+			})
+		})
+	}
+
 	/**
 	 * Returns the html content of a password reset mail
 	 * @param {*} username
@@ -300,6 +319,37 @@ class Mailer {
 		`
 	}
 
+	getForgotUsernameText(username) {
+		const passwordResetLink = `${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username}`
+		return `
+			Hi,
+
+			dein Benutzername bei Mampfalot lautet: ${username}.
+
+			Für den Fall, dass du dein Passwort vergessen hast, kannst du es hier
+			zurücksetzen: ${passwordResetLink}
+
+			Viele Grüße
+			Dein Mampfalot-Team
+		`
+	}
+
+
+	getForgotUsernameHTML(username) {
+		const passwordResetLink = `${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username}`
+		return `
+			Hi,<br>
+			<br>
+			dein Benutzername bei Mampfalot lautet: ${username}.<br>
+			<br>
+			Für den Fall, dass du dein Passwort vergessen hast, kannst du es hier
+			zurücksetzen: <a href="${passwordResetLink}">${passwordResetLink}</a>  <br>
+			<br>
+
+			Viele Grüße <br>
+			Dein Mampfalot-Team
+		`
+	}
 }
 
 module.exports = Mailer

@@ -6,7 +6,7 @@ const { allowMethods, hasQueryValues, initUser, hasBodyValues, verifyToken } = r
 const { AuthenticationError, NotFoundError, RequestError } = require('../classes/errors')
 const { asyncMiddleware, generateRandomToken }  = require('../util/util')
 const Mailer = require('../classes/mailer')
-const mailer = new Mailer
+const mailer = new Mailer()
 const loader = require('../classes/resource-loader')
 
 router.route('/').all(allowMethods(['GET', 'POST']))
@@ -18,6 +18,8 @@ router.route('/verify').post(hasBodyValues(['username', 'token'], 'all'))
 router.route('/password-reset').all(allowMethods(['GET', 'POST']))
 router.route('/password-reset').get(hasQueryValues(['username'], 'all'))
 router.route('/password-reset').post(hasBodyValues(['username', 'token', 'newPassword'], 'all'))
+router.route('/forgot-username').all(allowMethods(['GET']))
+router.route('/forgot-username').get(hasQueryValues(['email'], 'all'))
 
 router.route('/').get(asyncMiddleware(async (req, res, next) => {
 	const { username } = req.query
@@ -180,6 +182,22 @@ router.route('/password-reset').post(asyncMiddleware(async (req, res, next) => {
 	res.status(204).send()
 }))
 
+router.route('/forgot-username').get(async (req, res, next) => {
+	const { email } = req.query
+
+	const user = await User.findOne({
+		attributes: ['email', 'username'],
+		where: { email }
+	})
+
+	if (user) {
+		if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
+			await mailer.sendForgotUsernameMail(user.email, user.username)
+		}
+	}
+
+	res.status(204).send()
+})
 router.use([verifyToken, initUser])
 
 router.route('/:userId').all(allowMethods(['GET', 'POST', 'DELETE']))
