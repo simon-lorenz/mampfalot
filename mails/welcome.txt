@@ -1,0 +1,7 @@
+Hi {{ username }}!
+
+Herzlich willkommen bei Mampfalot!
+Benutze folgenden Link, um deinen Account zu aktivieren: {{ verificationLink }}
+
+Viele Grüße
+Dein Mampfalot-Team

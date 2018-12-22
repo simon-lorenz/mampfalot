@@ -1,0 +1,11 @@
+Hi,
+
+danke für deine Registrierung!
+Wir haben festgestellt, dass unter dieser E-Mail-Adresse bereits ein
+Acccount mit dem Namen {{ username }} vorhanden ist.
+
+Für den Fall, dass du dein Passwort vergessen hast, kannst du es hier
+zurücksetzen: {{ passwordResetLink }}
+
+Viele Grüße
+Dein Mampfalot-Team

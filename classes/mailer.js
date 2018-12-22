@@ -1,4 +1,21 @@
 const nodemailer = require('nodemailer')
+const handlebars = require('handlebars')
+const fs = require('fs')
+
+async function readFile(path) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(path, { encoding: 'utf-8' }, (err, content) => {
+      if (err) reject(err)
+      resolve(content)
+    })
+  })
+}
+
+async function compileMail(path, values) {
+  const file = await readFile(path)
+  const template = handlebars.compile(file)
+  return template(values)
+}
 
 class Mailer {
 
@@ -48,21 +65,22 @@ class Mailer {
 			.catch(() => console.log(`[Mailer] Could not establish smtp connection for account ${email}`))
 	}
 
+
 	/**
 	 * Sends a welcome mail which contains a verification link
 	 * @param {string} to The users email-address
 	 * @param {string} username
 	 * @param {string} verificationToken A verification token
 	 */
-	sendWelcomeMail(to, username, verificationToken) {
+	async sendWelcomeMail(to, username, verificationToken) {
 		let transport = nodemailer.createTransport(this.getMailOptions('hello@mampfalot.app'))
 		let verificationLink = `${process.env.FRONTEND_BASE_URL}/confirm-verification?user=${username}&token=${verificationToken}`
 		let mailOptions = {
 			from: '"Mampfalot" <hello@mampfalot.app>',
 			to: to,
 			subject: 'Willkommen bei Mampfalot!',
-			text: this.getWelcomeText(username, verificationLink),
-			html: this.getWelcomeHTML(username, verificationLink)
+			text: await this.getWelcomeText(username, verificationLink),
+			html: await this.getWelcomeHTML(username, verificationLink)
 		}
 
 		return new Promise((resolve, reject) => {
@@ -79,7 +97,7 @@ class Mailer {
 	 * @param {*} username
 	 * @param {*} token A password reset token
 	 */
-	sendPasswordResetMail(to, username, token) {
+	async sendPasswordResetMail(to, username, token) {
 		let transport = nodemailer.createTransport(this.getMailOptions('support@mampfalot.app'))
 
 		let resetLink = `${process.env.FRONTEND_BASE_URL}/confirm-password-reset?token=${token}&user=${username}`
@@ -88,8 +106,8 @@ class Mailer {
 			from: '"Mampfalot Support" <support@mampfalot.app>',
 			to: to,
 			subject: 'Dein neues Passwort für Mampfalot',
-			text: this.getPasswordResetText(username, resetLink),
-			html: this.getPasswordResetHTML(username, resetLink)
+			text: await this.getPasswordResetText(username, resetLink),
+			html: await this.getPasswordResetHTML(username, resetLink)
 		}
 
 		return new Promise((resolve, reject) => {
@@ -100,15 +118,15 @@ class Mailer {
 		})
 	}
 
-	sendUserAlreadyRegisteredMail(to, username) {
+	async sendUserAlreadyRegisteredMail(to, username) {
 		const transport = nodemailer.createTransport(this.getMailOptions('hello@mampfalot.app'))
 
 		const mailOptions = {
 			from: '"Mampfalot" <hello@mampfalot.app>',
 			to: to,
 			subject: 'Willkommen zurück bei Mampfalot!',
-			text: this.getUserAlreadyRegisteredText(username),
-			html: this.getUserAlreadyRegisteredHTML(username)
+			text: await this.getUserAlreadyRegisteredText(username),
+			html: await this.getUserAlreadyRegisteredHTML(username)
 		}
 
 		return new Promise((resolve, reject) => {
@@ -119,15 +137,15 @@ class Mailer {
 		})
 	}
 
-	sendUserAlreadyRegisteredButNotVerifiedMail(to, username, verificationToken) {
+	async sendUserAlreadyRegisteredButNotVerifiedMail(to, username, verificationToken) {
 		const transport = nodemailer.createTransport(this.getMailOptions('hello@mampfalot.app'))
 
 		const mailOptions = {
 			from: '"Mampfalot" <hello@mampfalot.app>',
 			to: to,
 			subject: 'Willkommen zurück bei Mampfalot!',
-			text: this.getUserAlreadyRegisteredButNotVerifiedText(username, verificationToken),
-			html: this.getUserAlreadyRegisteredButNotVerifiedHTML(username, verificationToken)
+			text: await this.getUserAlreadyRegisteredButNotVerifiedText(username, verificationToken),
+			html: await this.getUserAlreadyRegisteredButNotVerifiedHTML(username, verificationToken)
 		}
 
 		return new Promise((resolve, reject) => {
@@ -138,15 +156,15 @@ class Mailer {
 		})
 	}
 
-	sendForgotUsernameMail(to, username) {
+	async sendForgotUsernameMail(to, username) {
 		const transport = nodemailer.createTransport(this.getMailOptions('support@mampfalot.app'))
 
 		const mailOptions = {
 			from: '"Mampfalot Support" <support@mampfalot.app>',
 			to: to,
 			subject: 'Dein Benutzername bei Mampfalot',
-			text: this.getForgotUsernameText(username),
-			html: this.getForgotUsernameHTML(username)
+			text: await this.getForgotUsernameText(username),
+			html: await this.getForgotUsernameHTML(username)
 		}
 
 		return new Promise((resolve, reject) => {
@@ -160,195 +178,73 @@ class Mailer {
 	/**
 	 * Returns the html content of a password reset mail
 	 * @param {*} username
-	 * @param {*} resetLink The password reset link
+	 * @param {*} passwordResetLink The password reset link
 	 */
-	getPasswordResetHTML(username, resetLink) {
-		return `
-			<p>
-				Hi ${username}, <br>
-				<br>
-				du hast kürzlich ein neues Passwort für Mampfalot angefordert.<br>
-				Klicke hier, um ein neues Passwort zu vergeben: <br>
-				<br>
-				<a href="${resetLink}">
-					<button>Passwort zurücksetzen</button>
-				</a>
-				<br>
-				<br>
-				Dieser Link ist 30 Minuten lang gültig.
-				<br>
-				<br>
-				Viele Grüße<br>
-				Dein Mampfalot-Team
-			</p>
-		`
+	async getPasswordResetHTML(username, passwordResetLink) {
+		const filepath = __dirname + '/../mails/forgot-password.html'
+		return await compileMail(filepath, { username, passwordResetLink })
 	}
 
 	/**
 	 * Returns the text content of a password reset mail
 	 * @param {*} username
-	 * @param {*} resetLink
+	 * @param {*} passwordResetLink
 	 */
-	getPasswordResetText(username, resetLink) {
-		return `
-			Hi ${username},
-			du hast kürzlich ein neues Passwort für Mampfalot angefordert.
-			Klicke hier, um ein neues Passwort zu vergeben: ${resetLink}
-			Dieser Link ist 30 Minuten lang gültig.
-			Viele Grüße
-			Dein Mampfalot-Team
-		`
+	async getPasswordResetText(username, passwordResetLink) {
+		const filepath = __dirname + '/../mails/forgot-password.txt'
+		return await compileMail(filepath, { username, passwordResetLink })
 	}
 
 	/**
-	 * Returns the htmln content of a welcome email
+	 * Returns the html content of a welcome email
 	 * @param {string} username
 	 * @param {string} verificationLink A link where the user can verify his email-address
 	 */
-	getWelcomeHTML(username, verificationLink) {
-		return `
-			<html>
-				<head>
-				</head>
-				<body>
-					<p>
-						Hi ${username}! <br>
-						<br>
-						Herzlich willkommen bei Mampfalot!<br>
-						Benutze folgenden Link, um deinen Account zu aktivieren: <a href="${verificationLink}">${verificationLink}</a><br>
-						<br>
-						Viele Grüße<br>
-						Dein Mampfalot-Team
-					</p>
-				</body>
-			</html>
-		`
+	async getWelcomeHTML(username, verificationLink) {
+		const filepath = __dirname + '/../mails/welcome.html'
+		return await compileMail(filepath, { username, verificationLink })
 	}
 
-	getWelcomeText(username, verificationLink) {
-		return `
-			Hi ${username}!
-			Herzlich willkommen bei Mampfalot!
-			Benutze folgenden Link, um deinen Account zu aktivieren: ${verificationLink}
-			Viele Grüße
-			Dein Mampfalot-Team
-		`
+	async getWelcomeText(username, verificationLink) {
+		const filepath = __dirname + '/../mails/welcome.txt'
+		return await compileMail(filepath, { username, verificationLink })
 	}
 
-	getUserAlreadyRegisteredText(username) {
-		return `
-			Hi,
-
-			danke für deine Registrierung!
-			Wir haben festgestellt, dass unter dieser E-Mail-Adresse bereits ein
-			Acccount mit dem Namen ${username} vorhanden ist.
-
-			Für den Fall, dass du dein Passwort vergessen hast, kannst du es hier
-			zurücksetzen: ${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username}
-
-			Viele Grüße
-			Dein Mampfalot-Team
-		`
-	}
-
-	getUserAlreadyRegisteredHTML(username) {
-		return `
-			<html>
-				<head>
-				</head>
-				<body>
-					<p>
-						Hi,<br>
-						<br>
-						danke für deine Registrierung!<br>
-						Wir haben festgestellt, dass unter dieser E-Mail-Adresse bereits ein
-						Acccount mit dem Namen ${username} vorhanden ist.<br>
-						<br>
-						Für den Fall, dass du dein Passwort vergessen hast, kannst du es hier
-						zurücksetzen: ${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username} <br>
-						<br>
-						Viele Grüße<br>
-						Dein Mampfalot-Team
-					</p>
-				</body>
-			</html>
-		`
-	}
-
-	getUserAlreadyRegisteredButNotVerifiedText(username, verificationToken) {
-		return `
-			Hi,
-
-			danke für deine Registrierung!
-			Wir haben festgestellt, dass unter dieser E-Mail-Adresse bereits ein
-			Acccount mit dem Namen ${username} vorhanden ist.
-
-			Klicke hier, um deinen Account zu aktivieren: ${process.env.FRONTEND_BASE_URL}/confirm-verification?user=${username}&token=${verificationToken}
-
-			Für den Fall, dass du dein Passwort vergessen hast, kannst du es hier
-			zurücksetzen: ${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username}
-
-			Viele Grüße
-			Dein Mampfalot-Team
-		`
-	}
-
-	getUserAlreadyRegisteredButNotVerifiedHTML(username, verificationToken) {
-		return `
-			<html>
-				<head>
-				</head>
-				<body>
-					<p>
-						Hi,<br>
-						<br>
-						danke für deine Registrierung!<br>
-						Wir haben festgestellt, dass unter dieser E-Mail-Adresse bereits ein
-						Acccount mit dem Namen ${username} vorhanden ist.<br>
-						<br>
-						Klicke hier, um deinen Account zu aktivieren: ${process.env.FRONTEND_BASE_URL}/confirm-verification?user=${username}&token=${verificationToken} <br>
-						<br>
-						Für den Fall, dass du dein Passwort vergessen hast, kannst du es hier
-						zurücksetzen: ${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username} <br>
-						<br>
-						Viele Grüße<br>
-						Dein Mampfalot-Team
-					</p>
-				</body>
-			</html>
-		`
-	}
-
-	getForgotUsernameText(username) {
+	async getUserAlreadyRegisteredText(username) {
+		const filepath = __dirname + '/../mails/already-registered-verified.txt'
 		const passwordResetLink = `${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username}`
-		return `
-			Hi,
+		return await compileMail(filepath, { passwordResetLink, username })
+	}
 
-			dein Benutzername bei Mampfalot lautet: ${username}.
+	async getUserAlreadyRegisteredHTML(username) {
+		const filepath = __dirname + '/../mails/already-registered-verified.html'
+		const passwordResetLink = `${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username}`
+		return await compileMail(filepath, { passwordResetLink, username })
+	}
 
-			Für den Fall, dass du dein Passwort vergessen hast, kannst du es hier
-			zurücksetzen: ${passwordResetLink}
+	async getUserAlreadyRegisteredButNotVerifiedText(username, verificationToken) {
+		const filepath = __dirname + '/../mails/already-registered-unverified.txt'
+		const verificationLink = `${process.env.FRONTEND_BASE_URL}/confirm-verification?user=${username}&token=${verificationToken}`
+		const passwordResetLink = `${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username}`
+		return await compileMail(filepath, { username, verificationLink, passwordResetLink })
+	}
 
-			Viele Grüße
-			Dein Mampfalot-Team
-		`
+	async getUserAlreadyRegisteredButNotVerifiedHTML(username, verificationToken) {
+		const filepath = __dirname + '/../mails/already-registered-unverified.html'
+		const verificationLink = `${process.env.FRONTEND_BASE_URL}/confirm-verification?user=${username}&token=${verificationToken}`
+		const passwordResetLink = `${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username}`
+		return await compileMail(filepath, { username, verificationLink, passwordResetLink })
+	}
+
+	async getForgotUsernameText(username) {
+		const passwordResetLink = `${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username}`
+		return await compileMail(__dirname + '/../mails/forgot-username.txt', { passwordResetLink, username })
 	}
 
 
-	getForgotUsernameHTML(username) {
+	async getForgotUsernameHTML(username) {
 		const passwordResetLink = `${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username}`
-		return `
-			Hi,<br>
-			<br>
-			dein Benutzername bei Mampfalot lautet: ${username}.<br>
-			<br>
-			Für den Fall, dass du dein Passwort vergessen hast, kannst du es hier
-			zurücksetzen: <a href="${passwordResetLink}">${passwordResetLink}</a>  <br>
-			<br>
-
-			Viele Grüße <br>
-			Dein Mampfalot-Team
-		`
+		return await compileMail(__dirname + '/../mails/forgot-username.html', { passwordResetLink, username })
 	}
 }
 
