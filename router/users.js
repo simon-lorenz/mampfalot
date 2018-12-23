@@ -50,18 +50,14 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 
 	if (existingUser) {
 		if (existingUser.verified) {
-			if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
-				await mailer.sendUserAlreadyRegisteredMail(existingUser.email, existingUser.username)
-			}
+			await mailer.sendUserAlreadyRegisteredMail(existingUser.email, existingUser.username)
 		} else {
 			// generate a new verification token, because the stored one is hashed
 			let verificationToken = await generateRandomToken(25)
 			existingUser.verificationToken = await bcrypt.hash(verificationToken, process.env.NODE_ENV === 'test' ? 1 : 12)
 			await existingUser.save()
 
-			if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
-				await mailer.sendUserAlreadyRegisteredButNotVerifiedMail(existingUser.email, existingUser.username, verificationToken)
-			}
+			await mailer.sendUserAlreadyRegisteredButNotVerifiedMail(existingUser.email, existingUser.username, verificationToken)
 		}
 		return res.status(204).send()
 	}
@@ -77,9 +73,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 		verificationToken: await bcrypt.hash(verificationToken, process.env.NODE_ENV === 'test' ? 1 : 12)
 	})
 
-	if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
-		await mailer.sendWelcomeMail(user.email, user.username, verificationToken)
-	}
+	await mailer.sendWelcomeMail(user.email, user.username, verificationToken)
 
 	res.status(204).send()
 }))
@@ -101,9 +95,7 @@ router.route('/verify').get(asyncMiddleware(async (req, res, next) => {
 	user.verificationToken = await bcrypt.hash(verificationToken, 12)
 	await user.save()
 
-	if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
-		await mailer.sendWelcomeMail(user.email, user.username, verificationToken)
-	}
+	await mailer.sendWelcomeMail(user.email, user.username, verificationToken)
 
 	res.status(204).send()
 }))
@@ -148,9 +140,7 @@ router.route('/password-reset').get(asyncMiddleware(async (req, res, next) => {
 	user.passwordResetExpiration = tokenExp
 	await user.save()
 
-	if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
-		await mailer.sendPasswordResetMail(user.email, user.username, token)
-	}
+	await mailer.sendPasswordResetMail(user.email, user.username, token)
 
 	res.status(204).send()
 }))
@@ -191,9 +181,7 @@ router.route('/forgot-username').get(async (req, res, next) => {
 	})
 
 	if (user) {
-		if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
-			await mailer.sendForgotUsernameMail(user.email, user.username)
-		}
+		await mailer.sendForgotUsernameMail(user.email, user.username)
 	}
 
 	res.status(204).send()

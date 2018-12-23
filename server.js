@@ -16,6 +16,5 @@ app.listen(PORT, () => {
 			console.error(err.toString())
 		})
 
-	mailer.checkConnection('hello@mampfalot.app')
-	mailer.checkConnection('support@mampfalot.app')
+	mailer.checkConnections()
 })
