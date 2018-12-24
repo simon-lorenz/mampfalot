@@ -1,96 +1,156 @@
-const Sequelize = require('sequelize');
-const sequelize = require('./../sequelize')
-const User = require('./user')
-const Place = require('./place')
+const { ValidationError } = require('../classes/errors')
 
-const Vote = sequelize.define('votes', 
-    {
-        id: {
-            type: Sequelize.INTEGER,
-            primaryKey: true
-        },
-        placeId: {
-            type: Sequelize.INTEGER,
-            foreignKey: true,
-            validate: {
-                noDuplicates: async function (value) {
-                    let placesToday = await getPlacesAtDay(this.userId, new Date())
-                    if (placesToday.includes(value)) {
-                        throw new Error ('User has already voted for this placeId!')
-                    }
-                }
-            }
-        },
-        points: {
-            type: Sequelize.INTEGER,
-            allowNull: false,
-            validate: {
-                min: 1, 
-                max: 100,
-                sumOfPointsInRange: async function (value) {
-                    let pointsToday = await getPointsAtDate(this.userId, this.date)
-                    if ((pointsToday + value) > 100) {
-                        throw new Error ('Sum of all points should be between 1 and 100 but was ' + (pointsToday + value))
-                    }
-                }
-            }
-        },
-        userId: {
-            type: Sequelize.INTEGER,
-            foreignKey: true
-        },
-        date: {
-            type: Sequelize.DATEONLY,
-            allowNull: false
-        }
-    }, 
-    {
-        timestamps: false,
-        freezeTableName: true
-    }
-)
+module.exports = (sequelize, DataTypes) => {
+	const { Group, Participant, Lunchbreak, Place } = sequelize.models
 
-Vote.belongsTo(Place, { foreignKey: 'placeId' })
-Vote.belongsTo(User, { foreignKey: 'userId' })
+	const Vote = sequelize.define('Vote', {
+		id: {
+			type: DataTypes.INTEGER,
+			primaryKey: true,
+			autoIncrement: true
+		},
+		participantId: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			onDelete: 'CASCADE',
+			validate: {
+				notNull: {
+					msg: 'participantId cannot be null.'
+				}
+			}
+		},
+		placeId: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			onDelete: 'CASCADE',
+			validate: {
+				notNull: {
+					msg: 'placeId cannot be null.'
+				},
+				async belongsToGroup (val) {
+					let group = await Group.findOne({
+						attributes: ['id'],
+						include: [
+							{
+								model: Place,
+								where: {
+									id: val
+								}
+							},
+							{
+								model: Lunchbreak,
+								include: [
+									{
+										model: Participant,
+										where: {
+											id: this.participantId
+										}
+									}
+								]
+							}
+						]
+					})
 
-getPointsAtDate = function (userId, date) {
-    return Vote.findAll({
-        where: {
-            userId,
-            date
-        },
-        raw: true
-    })
-    .then(votes => {
-        let sum = 0
-        votes.forEach((vote) => {
-            sum += vote.points
-        })
-        return sum
-    })
-    .catch(error => {
-        return error
-    })
+					if (!group) {
+						throw new Error('This placeId does not belong to the associated group.')
+					}
+				}
+			}
+		},
+		points: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			validate: {
+				notNull: {
+					msg: 'Points cannot be null.'
+				},
+				isNumeric: {
+					msg: 'Points has to be numeric.'
+				}
+			}
+		}
+	}, {
+		tableName: 'votes',
+		timestamps: false,
+		name: {
+			singular: 'vote',
+			plural: 'votes'
+		}
+	})
+
+	Vote.beforeBulkCreate(async (votes, options) => {
+		let participantId = votes[0].participantId
+
+		let config = await Group.findOne({
+			attributes: ['id', 'minPointsPerVote', 'maxPointsPerVote', 'pointsPerDay'],
+			include: [
+				{
+					model: Lunchbreak,
+					attributes: [],
+					include: [
+						{
+							model: Participant,
+							attributes: [],
+							where: {
+								id: participantId
+							}
+						}
+					]
+				}
+			]
+		})
+
+		let placeIds = []
+		let sum = 0
+		for (let vote of votes) {
+			let points = parseInt(vote.points)
+			if (points > config.maxPointsPerVote) {
+				let item = {
+					field: 'points',
+					value: points,
+					message: 'Points exceeds maxPointsPerVote (' + config.maxPointsPerVote + ').'
+				}
+				throw new ValidationError([item])
+			}
+
+			if (points < config.minPointsPerVote) {
+				let item = {
+					field: 'points',
+					value: points,
+					message: 'Points deceeds minPointsPerVote (' + config.minPointsPerVote + ').'
+				}
+				throw new ValidationError([item])
+			}
+
+			sum += points
+			placeIds.push(vote.placeId)
+		}
+
+		if (sum > config.pointsPerDay) {
+			let item = {
+				field: 'points',
+				value: sum,
+				message: 'Sum of points exceeds pointsPerDay (' + config.pointsPerDay + ').'
+			}
+			throw new ValidationError([item])
+		}
+
+		for (let i = 0; i < placeIds.length; i++) {
+			if (i !== placeIds.indexOf(placeIds[i])) {
+				let item = {
+					field: 'placeId',
+					value: placeIds[i],
+					message: 'Two votes had the same placeId.'
+				}
+				throw new ValidationError([item])
+			}
+		}
+	})
+
+	Vote.associate = function(models) {
+		models.Vote.belongsTo(models.Place, { foreignKey: 'placeId' })
+		models.Vote.belongsTo(models.Participant, { foreignKey: 'participantId' })
+	}
+
+	return Vote
 }
-
-getPlacesAtDay = function (userId, date) {
-    return Vote.findAll({
-        where: {
-            userId,
-            date
-        },
-        raw: true
-    })
-    .then(votes => {
-        let places = []
-        votes.forEach((vote) => {
-            places.push(vote.placeId)
-        })
-        return places
-    })
-    .catch(error => {
-        return error
-    })
-}
-
-module.exports = Vote

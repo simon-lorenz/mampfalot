@@ -1,167 +1,84 @@
-const express = require('express')
-const router = express.Router()
-const Vote = require('./../models/vote')
-const User = require('./../models/user')
-const Place = require('./../models/place')
-const Util = require('./../util/util')
+const router = require('express').Router()
+const { Vote, Participant, Place } = require('../models')
+const { allowMethods } = require('../util/middleware')
+const { asyncMiddleware } = require('../util/util')
+const { ValidationError, RequestError } = require('../classes/errors')
+const loader = require('../classes/resource-loader')
 
-router.route('/').get((req, res) => {
-    let where = {}
+router.route('/').all(allowMethods(['POST']))
+router.route('/:voteId').all(allowMethods(['GET', 'DELETE']))
 
-    if (req.query.date) {
-        where.date = req.query.date
-    }
+router.route('/').post(asyncMiddleware(async (req, res, next) => {
+	let votes = req.body
 
-    if (req.query.userId) {
-        where.userId = req.query.userId
-    }
+	if(Object.keys(votes).length === 0 || !(votes instanceof  Array)) {
+		return next(new RequestError('Please provide an array of votes.'))
+	}
 
-    Vote.findAll({
-        attributes: {
-            exclude: ['placeId', 'userId']
-        },
-        where,
-        order: [
-            ['id', 'ASC']
-        ],
-        include: [
-            {
-                model: User,
-                attributes: {
-                    exclude: ['isAdmin', 'password']
-                }
-            },
-            {
-                model: Place
-            }
-        ]
-    })
-    .then(result => {
-        res.send(result)
-    })
-    .catch(error => {
-        res.status(400).send('Ein Fehler ist aufgetreten' + error)
-    })
-})
+	let participantId = votes[0].participantId
+	for (let vote of votes) {
+		if (vote.participantId !== participantId) {
+			let item = {
+				field: 'participantId',
+				value: 'Various values',
+				message: 'The participantId has to be the same in all votes.'
+			}
+			return next(new ValidationError([item]))
+		}
+	}
 
-router.route('/').post((req, res) => {
-    let vote = {
-        userId: parseInt(req.body.userId),
-        placeId: parseInt(req.body.placeId),
-        date: new Date(),
-        points: parseInt(req.body.points)
-    }
+	if (!participantId) {
+		let item = {
+			field: 'participantId',
+			value: null,
+			message: 'participantId cannot be null.'
+		}
+		return next(new ValidationError([item]))
+	}
 
-    if (vote.userId != req.user.id) {
-        res.status(403).send()
-        return
-    }
+	let { user } = res.locals
 
-    Vote.create(vote)
-    .then(result => {
-        res.status(204).send()
-    })
-    .catch(error => {
-        if (error.name === 'SequelizeValidationError') {
-            res.status(400).send(error.errors)
-        } else if (error.name === 'SequelizeForeignKeyConstraintError') {
-            res.status(400).send('Foreign Key Error: ' + error.fields)
-        } else {
-            console.log(error)
-            res.status(500).send(error)
-        }
-    })
-})
+	let participant = await Participant.findOne({
+		where: {
+			id: participantId,
+			userId: user.id
+		}
+	})
 
-router.route('/:voteId').get((req, res) => {
-    Vote.findOne({
-        where: {
-            id: req.params.voteId
-        }
-    })
-    .then(result => {
-        if (result) {
-            res.send(result)
-        } else {
-            res.status(404).send()
-        }
-    })
-    .catch(error => {
-        console.log(error)
-        res.status(500).send('Something went wrong.')
-    })
-})
+	if (!participant) {
+		let item = {
+			field: 'participantId',
+			value: participantId,
+			message: 'This participantId is not associated to your userId.'
+		}
+		return next(new ValidationError([item]))
+	}
 
-router.route('/:voteId').put((req, res) => {
-    let updateData = {}
+	await user.can.createVoteCollection(participant)
+	await Vote.destroy({ where: { participantId } })
+	await Vote.bulkCreate(votes, { validate: true })
 
-    if (req.body.placeId) { updateData.placeId = req.body.placeId }
-    if (req.body.points) { updateData.points = req.body.points }
-    if (req.body.date) { updateData.date = req.body.date }
+	res.send(await Vote.findAll({
+		where: { participantId },
+		include: [ Participant, Place ]
+	}))
+}))
 
-    if (Object.keys(updateData).length === 0) {
-        res.send(400).send('Request needs to have at least one of the following parameters: placeId, points or date')
-        return
-    }
+router.param('voteId', asyncMiddleware(loader.loadVote))
 
-    Vote.update(
-        updateData,
-        {
-            where: {
-                id: req.params.voteId,
-                userId: req.user.id
-            }
-        })
-    .then(result => {
-        res.send(result)
-    })
-    .catch(error => {
-        console.log(error)
-        res.status(500).send('Something went wrong.')
-    })
-})
+router.route('/:voteId').get(asyncMiddleware(async (req, res, next) => {
+	let { vote, user } = res.locals
 
-router.route('/:voteId').delete((req, res) => {
-    let voteId = req.params.voteId
+	await user.can.readVote(vote)
+	res.send(vote)
+}))
 
-    // Pflichtangaben überprüfen
-    if (!voteId) {
-        res.status(400).send({ success: false, missingValues: 'voteId' })
-        return
-    }
+router.route('/:voteId').delete(asyncMiddleware(async (req, res, next) => {
+	let { vote, user } = res.locals
 
-    Vote.findOne({
-        where: {
-            id: voteId
-        }
-    })
-    .then(result => {
-        if (!result) {
-            res.status(400).send({ success: false, error: 'Invalid voteId'})
-            return
-        } 
-        
-        // Admins dürfen alles löschen, User nur ihre eigenen Votes
-        if (!req.user.isAdmin && (result.userId !== req.user.id)) {
-            res.status(401).send({ success: false, error: 'Unauthorized'})
-            return
-        } 
-
-        Vote.destroy({
-            where: {
-                id: voteId
-            }
-        })
-        .then(() => {
-            res.status(204).send()
-        })
-        .catch(err => {
-            res.status(500).send({success: false})
-        })     
-    })
-    .catch(error => {
-        res.status(500).send(error)
-    })  
-})
+	await user.can.deleteVote(vote)
+	await vote.destroy()
+	res.status(204).send()
+}))
 
 module.exports = router

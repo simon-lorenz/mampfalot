@@ -1,49 +1,61 @@
-const express = require('express')
-const router = express.Router()
+const router = require('express').Router()
 const jwt = require('jsonwebtoken')
-const bcrypt = require('bcrypt')
-const User = require('./../models/user')
-const auth = require('./../util/auth')
+const bcrypt = require('bcryptjs')
+const { User } = require('../models')
+const { AuthenticationError } = require('../classes/errors')
+const { allowMethods } = require('../util/middleware')
+const { asyncMiddleware } = require('../util/util')
 
-router.route('/').get((req, res) => {
-    let credentials
-    try {
-        credentials = auth.decodeBasicAuthorizationHeader(req)
-    } catch (error) {
-        res.status(400).send({ error })
-        return
-    }
+router.route('/').all(allowMethods(['GET']))
 
-    User.findOne({
-        where: {
-            name: credentials.username
-        },
-        raw: true
-    })
-    .then(user => {
-        if (!user) {
-            res.status(401).send({ error: 'Invalid Credentials' })
-            return
-        } 
-        
-        // Ein User wurde gefunden, vergleiche das Passwort
-        if (bcrypt.compareSync(credentials.password, user.password)) {
-            // Passwort korrekt - generiere Token
-            tokenData = user
-            tokenData.password = undefined // Das Passwort bleibt schön hier
+router.route('/').get((req, res, next) => {
+	let basicAuth = req.headers.authorization
 
-            let token = jwt.sign(tokenData, process.env.SECRET_KEY, {
-                expiresIn: '10h'
-            })
-            res.send({ token })
-        } else {
-            // Password inkorrekt
-            res.status(401).send({ error: 'Invalid Credentials' })
-        }
-    })
-    .catch(error => {
-        res.status(500).send(error)
-    })
-});
+	if (!basicAuth) return next(new AuthenticationError('This request requires authentication.'))
+
+	// Header-Aufbau: 'Basic <base64String>'
+	// Wir wollen nur den b64-String und splitten deshalb beim Leerzeichen
+	let credentialsB64 = basicAuth.split(' ')[1]
+	let credentials = Buffer.from(credentialsB64, 'base64').toString('utf-8') // Enthält nun username:password
+
+	let splitted = credentials.split(':')
+
+	let username = splitted[0]
+
+	// Falls das Passwort Doppelpunkte enthält, wurde das Array öfter als 1x gesplittet
+	// Deshalb holen wir uns hier alles hinter der E-Mail und joinen ggf.
+	let password = splitted.slice(1, splitted.length).join(':')
+
+	res.locals.credentials = { username, password }
+	next()
+})
+router.route('/').get(asyncMiddleware(async (req, res, next) => {
+	let user = await User.unscoped().findOne({
+		where: {
+			username: res.locals.credentials.username
+		},
+		attributes: ['id', 'username', 'password', 'verified'],
+		raw: true
+	})
+
+	// Prüfe, ob der User vorhanden ist und ob sein Passwort übereinstimmt
+	if (user) {
+		if (!user.verified) {
+			return next(new AuthenticationError('This account is not verified yet.'))
+		}
+
+		let passwordMatch = await bcrypt.compare(res.locals.credentials.password, user.password)
+		if (!passwordMatch) {
+			return next(new AuthenticationError('The provided credentials are incorrect.'))
+		}
+	} else {
+		return next(new AuthenticationError('The provided credentials are incorrect.'))
+	}
+
+	// Generiere Token
+	let token = jwt.sign({ id: user.id }, process.env.SECRET_KEY, { expiresIn: '10h' })
+
+	res.send({ token })
+}))
 
 module.exports = router

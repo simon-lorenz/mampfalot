@@ -1,114 +1,56 @@
-const express = require('express')
-const router = express.Router()
-const Place = require('./../models/place')
-const FoodType = require('./../models/foodType')
-const util = require('./../util/util')
+const router = require('express').Router()
+const { Place } = require('../models')
+const { allowMethods, hasBodyValues } = require('../util/middleware')
+const { asyncMiddleware } = require('../util/util')
+const loader = require('../classes/resource-loader')
 
-router.route('/').get((req, res) => {
-    Place.findAll({
-        attributes: {
-            exclude: ['foodTypeId']
-        },
-        order: [
-            ['id', 'ASC']
-        ],
-        include: [
-            {
-                model: FoodType
-            }
-        ]
-    })
-    .then(result => {
-        res.send(result)
-    })
-    .catch(error => {
-        res.status(400).send('Ein Fehler ist aufgetreten' + error)
-    })
+router.route('/').all(allowMethods(['POST']))
+router.route('/').post(hasBodyValues(['groupId', 'foodTypeId', 'name'], 'all'))
+router.route('/:placeId').all(allowMethods(['GET', 'POST', 'DELETE']))
+router.route('/:placeId').post(hasBodyValues(['foodTypeId', 'name'], 'atLeastOne'))
+
+router.route('/').post((req, res, next) => {
+	res.locals.place = Place.build({
+		groupId: req.body.groupId,
+		foodTypeId: req.body.foodTypeId,
+		name: req.body.name
+	})
+	next()
 })
 
-router.route('/').post(util.isAdmin, (req, res) => {
-    let place = {
-        name: req.body.name,
-        foodTypeId: req.body.foodTypeId
-    }
+router.route('/').post(asyncMiddleware(async (req, res, next) => {
+	let { user, place } = res.locals
 
-    let missingValues = util.missingValues(place)
-    if (missingValues.length > 0) {
-        res.status(400).send({ missingValues })
-        return
-    }
+	await user.can.createPlace(place)
+	await place.save()
+	res.send(place)
+}))
 
-    Place.create(place)
-    .then(result => {
-        res.status(204).send()
-    })
-    .catch(error => {
-        console.log(error)
-        res.status(500).send('Something went wrong.')
-    })
-})
+router.param('placeId', asyncMiddleware(loader.loadPlace))
 
-router.route('/:placeId').get((req, res) => {
-    Place.findOne({
-        where: {
-            id: req.params.placeId
-        }
-    })
-    .then(result => {
-        if (!result) {
-            res.status(404).send()
-        } else {
-            res.send(result)
-        }
-    })
-    .catch(error => {
-        console.log(error)
-        res.status(500).send('Something went wrong.')
-    })
-})
+router.route('/:placeId').get(asyncMiddleware(async (req, res, next) => {
+	let { user, place } = res.locals
 
-router.route('/:placeId').put(util.isAdmin, (req, res) => {
-    let placeId = req.params.placeId
+	await user.can.readPlace(place)
+	res.send(place)
+}))
 
-    let updateData = {}
-    if (req.body.name) { updateData.name = req.body.name.trim() }
-    if (req.body.foodTypeId) { updateData.foodTypeId = req.body.foodTypeId }
+router.route('/:placeId').post(asyncMiddleware(async (req, res, next) => {
+	let { user, place } = res.locals
 
-    if (Object.keys(updateData).length === 0) {
-        res.status(400).send({ error: 'Request needs to have at least one of the following parameters: name or foodTypeId' })
-        return
-    }
+	if (req.body.foodTypeId) { place.foodTypeId= req.body.foodTypeId }
+	if (req.body.name) { place.name = req.body.name }
 
-    Place.update(updateData, {
-        where: {
-            id: placeId
-        }
-    })
-    .then(result => {
-        res.status(204).send()
-    })
-    .catch(err => {
-        res.status(500).send(err)
-    })
-})
+	await user.can.updatePlace(place)
+	res.send(await place.save())
+}))
 
-router.route('/:placeId').delete(util.isAdmin, (req,  res) => {
-    Place.destroy({
-        where: {
-            id: req.params.placeId
-        }
-    })
-    .then(result => {
-        if (result == 0) {
-            res.status(404).send()
-        } else {
-            res.status(204).send()
-        }
-    })
-    .catch(error => {
-        console.log(error)
-        res.status(500).send('Something went wrong.')
-    })
-})
+router.route('/:placeId').delete(asyncMiddleware(async (req, res, next) => {
+	let { user, place } = res.locals
+
+	await user.can.deletePlace(place)
+	await place.destroy()
+	res.status(204).send()
+}))
 
 module.exports = router

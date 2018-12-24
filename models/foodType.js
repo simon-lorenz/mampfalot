@@ -1,20 +1,47 @@
-const Sequelize = require('sequelize')
-const sequelize = require('./../sequelize')
+module.exports = (sequelize, DataTypes) => {
+	const FoodType = sequelize.define('FoodType', {
+		id: {
+			type: DataTypes.INTEGER,
+			primaryKey: true,
+			autoIncrement: true
+		},
+		groupId: {
+			type: DataTypes.INTEGER,
+			unique: 'uniqueTypesPerGroup',
+			allowNull: false,
+			onDelete: 'CASCADE'
+		},
+		type: {
+			type: DataTypes.STRING,
+			allowNull: false,
+			validate: {
+				notEmpty: {
+					args: true,
+					msg: 'type cannot be empty.'
+				},
+				notNull: {
+					args: true,
+					msg: 'type cannot be null.'
+				}
+			},
+			unique: {
+				name: 'uniqueTypesPerGroup',
+				msg: 'This type already exists for this group.'
+			}
+		}
+	}, {
+		tableName: 'food_types',
+		timestamps: false,
+		name: {
+			singular: 'foodType',
+			plural: 'foodTypes'
+		}
+	})
 
-const FoodType = sequelize.define('foodTypes', 
-    {
-        id: {
-            type: Sequelize.INTEGER,
-            primaryKey: true
-        },
-        type: {
-            type: Sequelize.STRING
-        }
-    }, 
-    {
-     timestamps: false,
-     freezeTableName: true
-    }
-);
+	FoodType.associate = function (models) {
+		models.FoodType.belongsTo(models.Group, { foreignKey: 'groupId' })
+		models.FoodType.hasMany(models.Place, { foreignKey: 'foodTypeId' })
+	}
 
-module.exports = FoodType
+	return FoodType
+}

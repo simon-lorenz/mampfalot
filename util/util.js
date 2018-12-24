@@ -1,38 +1,33 @@
-let Util = {}
+const crypto = require('crypto')
 
-Util.isAdmin = function (req, res, next) {
-    if (req.user.isAdmin) {
-        next()
-    } else {
-        res.status(403).send({success: false, error: 'admin-privileges required'})
-    }
+module.exports = {
+
+	/**
+	 * A wrapper for async middleware.
+	 * Makes it possible to omit a lot try...catch statements inside async
+	 * middleware because it catches every error automatically and routes it
+	 * to the next error handling middleware.
+	 */
+	asyncMiddleware: (fn) => {
+		return (req, res, next) => {
+			Promise
+				.resolve(fn(req, res, next))
+				.catch(next);
+		}
+	},
+
+	/**
+	 * Generates a random token with a length of <size>.
+	 * @param {number} size The length of the token
+	 * @returns {Promise<Token>} Contains the token
+	 */
+	generateRandomToken(size) {
+		return new Promise((resolve, reject) => {
+			crypto.randomBytes(size, (err, buff) => {
+				if (err) return reject(err)
+				resolve(buff.toString('hex'))
+			})
+		})
+	}
+
 }
-
-Util.addKeyIfExists = function (from, to, key) {
-    if (key in from) {
-        to[key] = from[key]
-    }
-}
-
-Util.missingValues = function (obj) {
-    let undefinedKeys = []
-    for (key in obj) {
-        if (!obj[key]) {
-            undefinedKeys.push(key)
-        }
-    }
-    return undefinedKeys
-}
-
-Util.findDuplicates = function (arr) {
-    let duplicates = []
-    let sorted = arr.slice().sort()
-    for(let i = 0; i < sorted.length; i++) {
-        if(sorted[i] == sorted[i + 1]){
-            duplicates.push(sorted[i])
-        }
-    }
-    return duplicates
-}
-
-module.exports = Util

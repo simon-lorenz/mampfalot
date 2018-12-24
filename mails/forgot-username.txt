@@ -1,0 +1,9 @@
+Hi,
+
+dein Benutzername bei Mampfalot lautet: {{ username }}.
+
+Für den Fall, dass du dein Passwort vergessen hast, kannst du es hier
+zurücksetzen: {{ passwordResetLink }}
+
+Viele Grüße
+Dein Mampfalot-Team

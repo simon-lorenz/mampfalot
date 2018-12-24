@@ -3,8 +3,20 @@
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
+  "engines": {
+    "node": "8.11.3"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha test/index.js --exit",
+    "test-auth": "npm run test -- -g /auth",
+    "test-users": "npm run test -- -g /users",
+    "test-groups": "npm run test -- -g /groups",
+    "test-foodTypes": "npm run test -- -g /foodTypes",
+    "test-places": "npm run test -- -g /places",
+    "test-lunchbreaks": "npm run test -- -g /lunchbreaks",
+    "test-participants": "npm run test -- -g /participants",
+    "test-votes": "npm run test -- -g /votes",
+    "test-comments": "npm run test -- -g /comments"
   },
   "repository": {
     "type": "git",
@@ -13,13 +25,22 @@
   "author": "Simon Lorenz",
   "license": "ISC",
   "dependencies": {
-    "bcrypt": "^1.0.3",
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.2",
     "cors": "^2.8.4",
     "dotenv": "^5.0.1",
     "express": "^4.16.3",
+    "handlebars": "^4.0.12",
+    "helmet": "^3.13.0",
     "jsonwebtoken": "^8.2.1",
+    "morgan": "^1.9.1",
     "mysql2": "^1.5.3",
-    "sequelize": "^4.37.6"
+    "nodemailer": "^4.6.8",
+    "sequelize": "5.0.0-beta.13"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
+    "supertest": "^3.1.0"
   }
 }

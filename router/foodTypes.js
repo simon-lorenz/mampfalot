@@ -1,100 +1,46 @@
-const express = require('express')
-const router = express.Router()
-const FoodType = require('./../models/foodType')
-const util = require('./../util/util')
+const router = require('express').Router()
+const { FoodType } = require('../models')
+const { allowMethods, hasBodyValues } = require('../util/middleware')
+const { asyncMiddleware } = require('../util/util')
+const loader = require('../classes/resource-loader')
 
-router.route('/').get((req, res) => {
-    FoodType.findAll({
-        order: [
-            ['id', 'ASC']
-        ]
-    })
-    .then(result => {
-        res.send(result)
-    })
-    .catch(error => {
-        res.status(400).send('Ein Fehler ist aufgetreten' + error)
-    })
-});
+router.route('/').all(allowMethods(['POST']))
+router.route('/:foodTypeId').all(allowMethods(['GET', 'POST', 'DELETE']))
+router.route('/:foodTypeId').post(hasBodyValues(['type'], 'atLeastOne'))
 
-router.route('/').post(util.isAdmin, (req, res) => {
-    let foodType = {
-        type: req.body.type
-    }
+router.route('/').post(asyncMiddleware(async (req, res, next) => {
+	let foodType = FoodType.build({
+		type: req.body.type,
+		groupId: req.body.groupId
+	})
+	await res.locals.user.can.createFoodType(foodType)
+	res.send(await foodType.save())
+}))
 
-    let missingValues = util.missingValues(foodType)
-    if (missingValues.length > 0) {
-        res.status(400).send({ missingValues })
-        return
-    }
+router.param('foodTypeId', asyncMiddleware(loader.loadFoodType))
 
-    FoodType.create(foodType)
-    .then(result => {
-        res.status(204).send()
-    })
-    .catch(error => {
-        console.log(error)
-        res.status(500).send('Something went wrong.')
-    })
-})
+router.route('/:foodTypeId').get(asyncMiddleware(async (req, res, next) => {
+	let { foodType, user } = res.locals
 
-router.route('/:foodTypeId').get((req, res) => {
-    FoodType.findOne({
-        where: {
-            id: req.params.foodTypeId
-        }
-    })
-    .then(result => {
-        if (!result) {
-            res.status(404).send()
-        } else {
-            res.send(result)
-        }
-    })
-})
+	await user.can.readFoodType(foodType)
+	res.send(foodType)
+}))
 
-router.route('/:foodTypeId').put(util.isAdmin, (req, res) => {
-    let foodTypeId = req.params.foodTypeId
-    let updateData = {
-        type: req.body.type
-    }
+router.route('/:foodTypeId').post(asyncMiddleware(async (req, res, next) => {
+	let { foodType, user } = res.locals
 
-    if (Object.keys(updateData).length === 0) {
-        res.status(400).send()
-        return
-    }
+	foodType.type = req.body.type
+	await user.can.updateFoodType(foodType)
+	await foodType.save()
+	res.send(foodType)
+}))
 
-    FoodType.update(updateData, {
-        where: {
-            id: foodTypeId
-        }
-    })
-    .then(result => {
-        res.status(204).send()
-    })
-    .catch(error => {
-        console.log(error)
-        res.status(500).send('Something went wrong.')
-    })
-})
+router.route('/:foodTypeId').delete(asyncMiddleware(async (req, res, next) => {
+	let { foodType, user } = res.locals
 
-router.route('/:foodTypeId').delete(util.isAdmin, (req, res) => {
-    FoodType.destroy({
-        where: {
-            id: req.params.foodTypeId
-        }
-    })
-    .then(result => {
-        if (result === 0) {
-            res.status(404).send()
-        } else {
-            res.status(204).send()
-        }
-    })
-    .catch(error => {
-        console.log(error)
-        res.status(500).send('Something went wrong.')
-    })
-})
+	await user.can.deleteFoodType(foodType)
+	await foodType.destroy()
+	res.status(204).send()
+}))
 
 module.exports = router
