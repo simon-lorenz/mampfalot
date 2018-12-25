@@ -490,6 +490,86 @@ module.exports = (request, bearerToken) => {
 							})
 					})
 				})
+
+				describe('POST', () => {
+					it('fails if the user is no group member', async () => {
+						await request
+							.post('/groups/1/invitations')
+							.set({ Authorization: bearerToken[3] })
+							.send({ to: 3 })
+							.expect(403)
+							.expect(res => {
+								const errorItem = {
+									resource: 'Invitation',
+									id: null,
+									operation: 'CREATE'
+								}
+								errorHelper.checkAuthorizationError(res.body, errorItem)
+							})
+					})
+
+					it('fails if "to" is missing', async () => {
+						await request
+							.post('/groups/1/invitations')
+							.set({ Authorization: bearerToken[2] })
+							.send({ to: undefined })
+							.expect(400)
+							.expect(res => {
+								errorHelper.checkRequestError(res.body, 'This request has to provide all of the following body values: to')
+							})
+					})
+
+					it('fails if invited user is not found', async () => {
+						await request
+							.post('/groups/1/invitations')
+							.set({ Authorization: bearerToken[2] })
+							.send({ to: 9999 })
+							.expect(400)
+					})
+
+					it('fails if the user is already invited', async () => {
+						await request
+							.post('/groups/1/invitations')
+							.set({ Authorization: bearerToken[2] })
+							.send({ to: 3 })
+							.expect(res => {
+								const errorItem = {
+									field: 'to',
+									value: '3',
+									message: 'This user is already invited.'
+								}
+								errorHelper.checkValidationError(res.body, errorItem)
+							})
+					})
+
+					it('creates a new invitation successfully', async () => {
+						await request
+							.post('/groups/1/invitations')
+							.set({ Authorization: bearerToken[2] })
+							.send({ to: 4 })
+							.expect(200)
+							.expect(res => {
+								const expected = {
+									groupId: 1,
+									from: {
+										id: 2,
+										username: 'johndoe1',
+										firstName: 'John',
+										lastName: 'Doe'
+									},
+									to: {
+										id: 4,
+										username: 'björn_tietgen',
+										firstName: 'Björn',
+										lastName: 'Tietgen'
+									}
+								}
+
+								const invitation = res.body
+								invitation.should.be.eql(expected)
+							})
+					})
+				})
 			})
 
 			describe('/lunchbreaks', () => {

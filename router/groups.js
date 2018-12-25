@@ -1,4 +1,5 @@
 const router = require('express').Router()
+const Sequelize = require('sequelize')
 const { Place, Group, User, GroupMembers, Lunchbreak, FoodType, Invitation } = require('../models')
 const { allowMethods, hasBodyValues } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
@@ -8,6 +9,7 @@ router.route('/').all(allowMethods(['GET', 'POST']))
 router.route('/:groupId').all(allowMethods(['GET', 'POST', 'DELETE']))
 router.route('/:groupId').post(hasBodyValues(['name', 'defaultLunchTime', 'defaultVoteEndingTime', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote'], 'atLeastOne'))
 router.route('/:groupId/invitations').all(allowMethods(['GET', 'POST', 'DELETE']))
+router.route('/:groupId/invitations').post(hasBodyValues(['to'], 'all'))
 router.route('/:groupId/members').all(allowMethods(['GET', 'POST']))
 router.route('/:groupId/members/:userId').all(allowMethods(['POST', 'DELETE']))
 router.route('/:groupId/lunchbreaks').all(allowMethods(['GET', 'POST']))
@@ -130,6 +132,56 @@ router.route('/:groupId/invitations').get(asyncMiddleware(async (req, res, next)
 	const { user, group } = res.locals
 	await user.can.readInvitationCollection(group)
 	res.send(group.invitations)
+}))
+
+router.route('/:groupId/invitations').post(asyncMiddleware(async (req, res, next) => {
+	const { user, group } = res.locals
+
+	const invitation = await Invitation.build({
+		groupId: group.id,
+		fromId: user.id,
+		toId: req.body.to
+	})
+
+	await user.can.createInvitation(invitation)
+
+	try {
+		await invitation.save()
+	} catch (error) {
+		// The invitation model has two internal values, fromId and toId.
+		// For a cleaner api these values are externally simply known as from and to.
+		// Thats why we need to format the "field" values of a possible Validation Error.
+		if (error instanceof Sequelize.ValidationError) {
+			for (let item of error.errors) {
+				if (item.path === 'toId') item.path = 'to'
+				if (item.path === 'fromId') item.path = 'from'
+			}
+		}
+		throw error
+	}
+
+	const newInvitation = await Invitation.findOne({
+		attributes: ['groupId'],
+		where: {
+			groupId: invitation.groupId,
+			fromId: invitation.fromId,
+			toId: invitation.toId
+		},
+		include: [
+			{
+				model: User,
+				as: 'from',
+				attributes: ['id', 'username', 'firstName', 'lastName']
+			},
+			{
+				model: User,
+				as: 'to',
+				attributes: ['id', 'username', 'firstName', 'lastName']
+			}
+		]
+	})
+
+	res.send(newInvitation)
 }))
 
 router.route('/:groupId/members').get(asyncMiddleware(async (req, res, next) => {
