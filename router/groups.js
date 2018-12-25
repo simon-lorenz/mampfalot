@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const { Place, Group, User, GroupMembers, Lunchbreak, FoodType } = require('../models')
+const { Place, Group, User, GroupMembers, Lunchbreak, FoodType, Invitation } = require('../models')
 const { allowMethods, hasBodyValues } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
 const loader = require('../classes/resource-loader')
@@ -7,6 +7,7 @@ const loader = require('../classes/resource-loader')
 router.route('/').all(allowMethods(['GET', 'POST']))
 router.route('/:groupId').all(allowMethods(['GET', 'POST', 'DELETE']))
 router.route('/:groupId').post(hasBodyValues(['name', 'defaultLunchTime', 'defaultVoteEndingTime', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote'], 'atLeastOne'))
+router.route('/:groupId/invitations').all(allowMethods(['GET', 'POST', 'DELETE']))
 router.route('/:groupId/members').all(allowMethods(['GET', 'POST']))
 router.route('/:groupId/members/:userId').all(allowMethods(['POST', 'DELETE']))
 router.route('/:groupId/lunchbreaks').all(allowMethods(['GET', 'POST']))
@@ -123,6 +124,12 @@ router.route('/:groupId').delete(asyncMiddleware(async (req, res, next) => {
 	await user.can.deleteGroup(group)
 	await group.destroy()
 	res.status(204).send()
+}))
+
+router.route('/:groupId/invitations').get(asyncMiddleware(async (req, res, next) => {
+	const { user, group } = res.locals
+	await user.can.readInvitationCollection(group)
+	res.send(group.invitations)
 }))
 
 router.route('/:groupId/members').get(asyncMiddleware(async (req, res, next) => {

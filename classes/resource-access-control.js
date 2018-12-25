@@ -102,6 +102,12 @@ class ResourceAccessControl {
 		}
 	}
 
+	async readInvitationCollection(group) {
+		if (!this.user.isGroupMember(group.id)) {
+			throw new AuthorizationError('InvitationCollection', null, 'READ')
+		}
+	}
+
 	async updateGroupMember(member) {
 		let gainsAdminRights = member.isAdmin && !member.previous('isAdmin')
 		let losesAdminRights = !member.isAdmin && member.previous('isAdmin')

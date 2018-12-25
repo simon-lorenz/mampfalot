@@ -441,6 +441,57 @@ module.exports = (request, bearerToken) => {
 				})
 			})
 
+			describe('/invitations', () => {
+				describe('GET', () => {
+					it('fails if the user is no group member', async() => {
+						await request
+							.get('/groups/1/invitations')
+							.set({ Authorization: bearerToken[3] })
+							.expect(403)
+							.expect(res => {
+								const errorItem = {
+									resource: 'InvitationCollection',
+									id: null,
+									operation: 'READ'
+								}
+								errorHelper.checkAuthorizationError(res.body, errorItem)
+							})
+					})
+
+					it('returns a collection of invitations', async () => {
+						await request
+							.get('/groups/1/invitations')
+							.set({ Authorization: bearerToken[1] })
+							.expect(200)
+							.expect(res => {
+								const invitations = res.body
+								invitations.should.be.an('array').with.lengthOf(1)
+
+								const firstInvitation = invitations[0]
+								firstInvitation.should.be.an('object')
+								firstInvitation.should.have.all.keys(['groupId', 'from', 'to'])
+								firstInvitation.groupId.should.be.equal(1)
+								firstInvitation.from.should.be.an('object')
+								firstInvitation.to.should.be.an('object')
+
+								const from = firstInvitation.from
+								from.should.have.all.keys(['id', 'username', 'firstName', 'lastName'])
+								from.id.should.be.equal(1)
+								from.username.should.be.equal('maxmustermann')
+								from.firstName.should.be.equal('Max')
+								from.lastName.should.be.equal('Mustermann')
+
+								const to = firstInvitation.to
+								to.should.have.all.keys(['id', 'username', 'firstName', 'lastName'])
+								to.id.should.be.equal(3)
+								to.username.should.be.equal('loten')
+								to.firstName.should.be.equal('Philipp')
+								to.lastName.should.be.equal('Loten')
+							})
+					})
+				})
+			})
+
 			describe('/lunchbreaks', () => {
 				beforeEach(async () => {
 					await setup.resetData()

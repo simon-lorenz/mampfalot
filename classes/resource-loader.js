@@ -1,4 +1,4 @@
-const { Comment, FoodType, Group, Place, Lunchbreak, User, GroupMembers, Participant, Vote } = require('../models')
+const { Comment, FoodType, Group, Place, Lunchbreak, User, GroupMembers, Participant, Vote, Invitation } = require('../models')
 const { NotFoundError } = require('./errors')
 
 class ResourceLoader {
@@ -66,6 +66,22 @@ class ResourceLoader {
 						as: 'config',
 						attributes: ['color', 'isAdmin']
 					}
+				},
+				{
+					model: Invitation,
+					attributes: ['groupId'],
+					include: [
+						{
+							model: User,
+							as: 'from',
+							attributes: ['id', 'username', 'firstName', 'lastName']
+						},
+						{
+							model: User,
+							as: 'to',
+							attributes: ['id', 'username', 'firstName', 'lastName']
+						}
+					]
 				}
 			]
 		})
