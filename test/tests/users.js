@@ -907,50 +907,53 @@ module.exports = (request, bearerToken) => {
 					await setup.resetData()
 				})
 
-				it('fails if user tries to access another users groups', (done) => {
-					request
-						.get('/users/1/groups')
-						.set({ Authorization: bearerToken[2] })
-						.expect(403)
-						.expect(res => {
-							let expectedError = {
-								resource: 'GroupCollection',
-								id: null,
-								operation: 'READ'
-							}
-							errorHelper.checkAuthorizationError(res.body, expectedError)
-						})
-						.end(done)
-				})
+				describe('GET', () => {
+					it('fails if user tries to access another users groups', (done) => {
+						request
+							.get('/users/1/groups')
+							.set({ Authorization: bearerToken[2] })
+							.expect(403)
+							.expect(res => {
+								let expectedError = {
+									resource: 'GroupCollection',
+									id: null,
+									operation: 'READ'
+								}
+								errorHelper.checkAuthorizationError(res.body, expectedError)
+							})
+							.end(done)
+					})
 
-				it('sends a correct group collection', (done) => {
-					request
-						.get('/users/1/groups')
-						.set({ Authorization: bearerToken[1] })
-						.expect(200)
-						.expect(res => {
-							let groups = res.body
-							groups.should.be.an('array').of.length(1)
+					it('sends a correct group collection', (done) => {
+						request
+							.get('/users/1/groups')
+							.set({ Authorization: bearerToken[1] })
+							.expect(200)
+							.expect(res => {
+								let groups = res.body
+								groups.should.be.an('array').of.length(1)
 
-							let group = groups[0]
+								let group = groups[0]
 
-							group.should.be.an('object')
-							group.should.have.property('id')
-							group.should.have.property('name')
-							group.should.have.property('defaultLunchTime')
-							group.should.have.property('defaultVoteEndingTime')
-							group.should.have.property('pointsPerDay')
-							group.should.have.property('maxPointsPerVote')
-							group.should.have.property('minPointsPerVote')
-							group.should.have.property('members').which.is.an('array').with.lengthOf(2)
-							group.should.have.property('lunchbreaks').which.is.an('array')
-							group.should.have.property('places').which.is.an('array')
-							group.should.have.property('foodTypes').which.is.an('array')
+								group.should.be.an('object')
+								group.should.have.property('id')
+								group.should.have.property('name')
+								group.should.have.property('defaultLunchTime')
+								group.should.have.property('defaultVoteEndingTime')
+								group.should.have.property('pointsPerDay')
+								group.should.have.property('maxPointsPerVote')
+								group.should.have.property('minPointsPerVote')
+								group.should.have.property('members').which.is.an('array').with.lengthOf(2)
+								group.should.have.property('lunchbreaks').which.is.an('array')
+								group.should.have.property('places').which.is.an('array')
+								group.should.have.property('foodTypes').which.is.an('array')
+								group.should.have.property('invitations').which.is.an('array')
 
-							const member = group.members[0]
-							member.should.have.all.keys(['id', 'username', 'firstName', 'lastName', 'config'])
-						})
-						.end(done)
+								const member = group.members[0]
+								member.should.have.all.keys(['id', 'username', 'firstName', 'lastName', 'config'])
+							})
+							.end(done)
+					})
 				})
 			})
 		})

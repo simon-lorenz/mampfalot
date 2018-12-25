@@ -76,6 +76,22 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 					as: 'config',
 					attributes: ['color', 'isAdmin']
 				}
+			},
+			{
+				model: Invitation,
+				attributes: ['groupId'],
+				include: [
+					{
+						model: User,
+						as: 'from',
+						attributes: ['id', 'username', 'firstName', 'lastName']
+					},
+					{
+						model: User,
+						as: 'to',
+						attributes: ['id', 'username', 'firstName', 'lastName']
+					}
+				]
 			}
 		]
 	})

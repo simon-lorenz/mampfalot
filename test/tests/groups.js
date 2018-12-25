@@ -36,6 +36,7 @@ module.exports = (request, bearerToken) => {
 						group.should.have.property('lunchbreaks').which.is.an('array')
 						group.should.have.property('places').which.is.an('array')
 						group.should.have.property('foodTypes').which.is.an('array')
+						group.should.have.property('invitations').which.is.an('array')
 
 					})
 					.end(done)
@@ -93,6 +94,7 @@ module.exports = (request, bearerToken) => {
 							group.should.have.property('lunchbreaks').which.is.an('array').and.has.length(2)
 							group.should.have.property('places').which.is.an('array').and.has.length(4)
 							group.should.have.property('foodTypes').which.is.an('array').and.has.length(4)
+							group.should.have.property('invitations').which.is.an('array').with.length(1)
 
 							const member = group.members[0]
 							member.should.have.all.keys(['id', 'username', 'firstName', 'lastName', 'config'])
@@ -300,7 +302,7 @@ module.exports = (request, bearerToken) => {
 						})
 						.expect(200, (err, res) => {
 							let group = res.body
-							group.should.have.all.keys(['id', 'name', 'defaultLunchTime', 'defaultVoteEndingTime', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote', 'foodTypes', 'lunchbreaks', 'members', 'places'])
+							group.should.have.all.keys(['id', 'name', 'defaultLunchTime', 'defaultVoteEndingTime', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote', 'foodTypes', 'lunchbreaks', 'members', 'places', 'invitations'])
 							group.should.have.property('id').equal(1)
 							group.should.have.property('name').equal('New name')
 							group.should.have.property('defaultLunchTime').equal('14:00:00')
@@ -443,6 +445,10 @@ module.exports = (request, bearerToken) => {
 
 			describe('/invitations', () => {
 				describe('GET', () => {
+					before(async () => {
+						await setup.resetData()
+					})
+
 					it('fails if the user is no group member', async() => {
 						await request
 							.get('/groups/1/invitations')
@@ -492,6 +498,10 @@ module.exports = (request, bearerToken) => {
 				})
 
 				describe('POST', () => {
+					beforeEach(async () => {
+						await setup.resetData()
+					})
+
 					it('fails if the user is no group member', async () => {
 						await request
 							.post('/groups/1/invitations')

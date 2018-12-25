@@ -1,7 +1,7 @@
 const router = require('express').Router()
 const bcrypt = require('bcryptjs')
 const { Op } = require('sequelize')
-const { User, Group, Place, FoodType, Lunchbreak, GroupMembers } = require('../models')
+const { User, Group, Place, FoodType, Lunchbreak, GroupMembers, Invitation } = require('../models')
 const { allowMethods, hasQueryValues, initUser, hasBodyValues, verifyToken } = require('../util/middleware')
 const { AuthenticationError, NotFoundError, RequestError } = require('../classes/errors')
 const { asyncMiddleware, generateRandomToken }  = require('../util/util')
@@ -283,6 +283,22 @@ router.route('/:userId/groups').get(asyncMiddleware(async (req, res, next) => {
 					as: 'config',
 					attributes: ['color', 'isAdmin']
 				}
+			},
+			{
+				model: Invitation,
+				attributes: ['groupId'],
+				include: [
+					{
+						model: User,
+						as: 'from',
+						attributes: ['id', 'username', 'firstName', 'lastName']
+					},
+					{
+						model: User,
+						as: 'to',
+						attributes: ['id', 'username', 'firstName', 'lastName']
+					}
+				]
 			}
 		]
 	}))
