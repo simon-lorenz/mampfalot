@@ -215,41 +215,6 @@ router.route('/:groupId/members').get(asyncMiddleware(async (req, res, next) => 
 	res.send(group.members)
 }))
 
-router.route('/:groupId/members').post(asyncMiddleware(async (req, res, next) => {
-	let { user } = res.locals
-
-	let member = GroupMembers.build({
-		userId: req.body.userId,
-		groupId: res.locals.group.id,
-		color: req.body.color,
-		isAdmin: req.body.isAdmin
-	})
-
-	await user.can.createGroupMember(member)
-	await member.save()
-
-	let groupNew = await Group.findOne({
-		where: {
-			id: res.locals.group.id
-		},
-		attributes: [],
-		include: [{
-			model: User,
-			attributes: ['id', 'username', 'firstName', 'lastName'],
-			as: 'members',
-			through: {
-				as: 'config',
-				attributes: ['color', 'isAdmin']
-			},
-			where: {
-				id: member.userId
-			}
-		}]
-	})
-
-	res.send(groupNew.members[0])
-}))
-
 router.route('/:groupId/members/:userId').all(asyncMiddleware(loader.loadMember))
 
 router.route('/:groupId/members/:userId').post(asyncMiddleware(async (req, res, next) => {
