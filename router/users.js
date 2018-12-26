@@ -191,6 +191,7 @@ router.use([verifyToken, initUser])
 router.route('/:userId').all(allowMethods(['GET', 'POST', 'DELETE']))
 router.route('/:userId').post(hasBodyValues(['username', 'firstName', 'lastName', 'email', 'password'], 'atLeastOne'))
 router.route('/:userId/groups').all(allowMethods(['GET']))
+router.route('/:userId/invitations').all(allowMethods(['GET', 'DELETE']))
 
 router.param('userId', asyncMiddleware(loader.loadUser))
 
@@ -302,6 +303,33 @@ router.route('/:userId/groups').get(asyncMiddleware(async (req, res, next) => {
 			}
 		]
 	}))
+}))
+
+router.route('/:userId/invitations').get(asyncMiddleware(async (req, res, next) => {
+	const { user } = res.locals
+	const userResource = res.locals.resources.user
+	await user.can.readInvitationCollectionOfUser(userResource)
+
+	const invitations = await Invitation.findAll({
+		attributes: ['groupId'],
+		where: {
+			toId: user.id
+		},
+		include: [
+			{
+				model: User,
+				as: 'from',
+				attributes: ['id', 'username', 'firstName', 'lastName']
+			},
+			{
+				model: User,
+				as: 'to',
+				attributes: ['id', 'username', 'firstName', 'lastName']
+			}
+		]
+	})
+
+	res.send(invitations)
 }))
 
 module.exports = router

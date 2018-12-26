@@ -108,6 +108,12 @@ class ResourceAccessControl {
 		}
 	}
 
+	async readInvitationCollectionOfUser(user) {
+		if (this.user.id !== user.id) {
+			throw new AuthorizationError('InvitationCollection', null, 'READ')
+		}
+	}
+
 	async createInvitation(invitation) {
 		if (!this.user.isGroupMember(invitation.groupId)) {
 			throw new AuthorizationError('Invitation', null, 'CREATE')
