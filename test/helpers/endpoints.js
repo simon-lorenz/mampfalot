@@ -36,7 +36,7 @@ const ENDPOINTS = [
 	},
 	{
 		url: '/groups/1/members',
-		methods: ['GET', 'POST'],
+		methods: ['GET'],
 		public: false
 	},
 	{

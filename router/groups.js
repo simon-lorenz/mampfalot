@@ -11,7 +11,7 @@ router.route('/:groupId').post(hasBodyValues(['name', 'defaultLunchTime', 'defau
 router.route('/:groupId/invitations').all(allowMethods(['GET', 'POST', 'DELETE']))
 router.route('/:groupId/invitations').post(hasBodyValues(['to'], 'all'))
 router.route('/:groupId/invitations').delete(hasQueryValues(['to'], 'all'))
-router.route('/:groupId/members').all(allowMethods(['GET', 'POST']))
+router.route('/:groupId/members').all(allowMethods(['GET']))
 router.route('/:groupId/members/:userId').all(allowMethods(['POST', 'DELETE']))
 router.route('/:groupId/lunchbreaks').all(allowMethods(['GET', 'POST']))
 router.route('/:groupId/lunchbreaks').post(hasBodyValues(['date', 'all']))
