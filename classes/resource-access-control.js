@@ -121,8 +121,14 @@ class ResourceAccessControl {
 	}
 
 	async deleteInvitation(invitation) {
-		if (!this.user.isGroupAdmin(invitation.groupId)) {
-			if (this.user.id !== invitation.fromId) {
+		if (this.user.isGroupMember(invitation.groupId)) {
+			if (!this.user.isGroupAdmin(invitation.groupId)) {
+				if (this.user.id !== invitation.fromId) {
+					throw new AuthorizationError('Invitation', null, 'DELETE')
+				}
+			}
+		} else {
+			if (this.user.id !== invitation.toId) {
 				throw new AuthorizationError('Invitation', null, 'DELETE')
 			}
 		}

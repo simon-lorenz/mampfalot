@@ -192,6 +192,7 @@ router.route('/:userId').all(allowMethods(['GET', 'POST', 'DELETE']))
 router.route('/:userId').post(hasBodyValues(['username', 'firstName', 'lastName', 'email', 'password'], 'atLeastOne'))
 router.route('/:userId/groups').all(allowMethods(['GET']))
 router.route('/:userId/invitations').all(allowMethods(['GET', 'DELETE']))
+router.route('/:userId/invitations').delete(hasQueryValues(['groupId', 'accept'], 'all'))
 
 router.param('userId', asyncMiddleware(loader.loadUser))
 
@@ -330,6 +331,35 @@ router.route('/:userId/invitations').get(asyncMiddleware(async (req, res, next) 
 	})
 
 	res.send(invitations)
+}))
+
+router.route('/:userId/invitations').delete(asyncMiddleware(async (req, res, next) => {
+	const { user } = res.locals
+	const userResource = res.locals.resources.user
+	const groupId = Number(req.query.groupId)
+	const accept = req.query.accept == 'true'
+
+	const invitation = await Invitation.findOne({
+		where: {
+			toId: userResource.id,
+			groupId: groupId
+		}
+	})
+
+	if (!invitation) throw new NotFoundError('Invitation', null)
+
+	await user.can.deleteInvitation(invitation)
+
+	if (accept) {
+		await GroupMembers.create({
+			groupId: groupId,
+			userId: userResource.id,
+			isAdmin: false
+		})
+	}
+
+	await invitation.destroy()
+	res.status(204).send()
 }))
 
 module.exports = router

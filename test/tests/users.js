@@ -1008,12 +1008,126 @@ module.exports = (request, bearerToken) => {
 				})
 
 				describe('DELETE', () => {
-					it('fails if the user tries to delete another users invitations')
-					it('requires query values groupId, accept')
-					it('successfully accepts an invitation')
-					it('successfully rejects an invitation')
-					it('does not delete the associated group')
-					it('does not delete the associated users')
+
+					beforeEach(async () => {
+						await setup.resetData()
+					})
+
+					it('fails if the user tries to delete another users invitations', async () => {
+						await request
+							.delete('/users/3/invitations')
+							.query({ groupId: 1, accept: false })
+							.set({ Authorization: bearerToken[2] })
+							.expect(403)
+							.expect(res => {
+								const errorItem = {
+									resource: 'Invitation',
+									id: null,
+									operation: 'DELETE'
+								}
+								errorHelper.checkAuthorizationError(res.body, errorItem)
+							})
+					})
+
+					it('requires query values groupId, accept', async () => {
+						await request
+							.delete('/users/3/invitations')
+							.set({ Authorization: bearerToken[3] })
+							.expect(400)
+							.expect(res => {
+								errorHelper.checkRequiredQueryValues(res.body, ['groupId', 'accept'], 'all')
+							})
+					})
+
+					it('sends NotFoundError', async () => {
+						await request
+							.delete('/users/3/invitations')
+							.query({ groupId: 299, accept: true })
+							.set({ Authorization: bearerToken[3] })
+							.expect(404)
+							.expect(res => {
+								errorHelper.checkNotFoundError(res.body, 'Invitation', null)
+							})
+					})
+
+					it('successfully accepts an invitation', async () => {
+						await request
+							.delete('/users/3/invitations')
+							.query({ groupId: 1, accept: true })
+							.set({ Authorization: bearerToken[3] })
+							.expect(204)
+
+						await request
+							.get('/users/3/groups')
+							.set({ Authorization: bearerToken[3] })
+							.expect(200)
+							.expect(res => {
+								const groups = res.body
+								for (let group of groups) {
+									if (group.id === 1) return
+								}
+								throw new Error('User 3 did not join group 1')
+							})
+					})
+
+					it('successfully rejects an invitation', async () => {
+						await request
+							.delete('/users/3/invitations')
+							.query({ groupId: 1, accept: false })
+							.set({ Authorization: bearerToken[3] })
+							.expect(204)
+
+						await request
+							.get('/users/3/invitations')
+							.set({ Authorization: bearerToken[3] })
+							.expect(200)
+							.expect(res => {
+								const invitations = res.body
+								invitations.should.be.an('array').with.length(0)
+							})
+
+						await request
+							.get('/users/3/groups')
+							.set({ Authorization: bearerToken[3] })
+							.expect(200)
+							.expect(res => {
+								const groups = res.body
+								for (let group of groups) {
+									if (group.id === 1) throw new Error('User 3 did join group 1')
+								}
+							})
+					})
+
+					it('does not delete the associated group', async () => {
+						await request
+							.delete('/users/3/invitations')
+							.query({ groupId: 1, accept: true })
+							.set({ Authorization: bearerToken[3] })
+							.expect(204)
+
+						await request
+							.get('/groups/1')
+							.set({ Authorization: bearerToken[3] })
+							.expect(200)
+					})
+
+					it('does not delete the associated users', async () => {
+						await request
+							.delete('/users/3/invitations')
+							.query({ groupId: 1, accept: true })
+							.set({ Authorization: bearerToken[3] })
+							.expect(204)
+
+						await request
+							.get('/users/1')
+							.set({ Authorization: bearerToken[3] })
+							.expect(403)
+
+						await request
+							.get('/users/3')
+							.set({ Authorization: bearerToken[3] })
+							.expect(200)
+					})
 				})
 			})
 		})
