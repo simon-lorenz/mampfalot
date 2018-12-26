@@ -442,7 +442,20 @@ module.exports = (request, bearerToken) => {
 					}
 				})
 
-				it('deletes all associated invitatons')
+				it('deletes all associated invitatons', async () => {
+					await request
+						.delete('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					await request
+						.get('/users/3/invitations')
+						.set({ Authorization: bearerToken[3] })
+						.expect(res => {
+							const invitations = res.body
+							invitations.should.be.an('array').with.lengthOf(0)
+						})
+				})
 			})
 
 			describe('/invitations', () => {
