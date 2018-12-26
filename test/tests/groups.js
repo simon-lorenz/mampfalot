@@ -520,6 +520,23 @@ module.exports = (request, bearerToken) => {
 							})
 					})
 
+					it('fails if the invited user is already a group member', async () => {
+						await request
+							.post('/groups/1/invitations')
+							.set({ Authorization: bearerToken[1]})
+							.send({ to: 2 })
+							.expect(400)
+							.expect(res => {
+								const error = res.body
+								const item = {
+									field: 'to',
+									value: 2,
+									message: 'This user is already a member of this group.'
+								}
+								errorHelper.checkValidationError(error, item)
+							})
+					})
+
 					it('fails if "to" is missing', async () => {
 						await request
 							.post('/groups/1/invitations')
