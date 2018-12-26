@@ -205,7 +205,7 @@ router.route('/:groupId/invitations').delete(asyncMiddleware(loader.loadInvitati
 router.route('/:groupId/invitations').delete(asyncMiddleware(async (req, res, next) => {
 	const { user, invitation } = res.locals
 	await user.can.deleteInvitation(invitation)
-	await invitation.delete
+	await invitation.destroy()
 	res.status(204).send()
 }))
 

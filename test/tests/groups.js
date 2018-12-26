@@ -662,7 +662,7 @@ module.exports = (request, bearerToken) => {
 							.expect(res => {
 								for (let invitation of res.body) {
 									if (invitation.to.id === 4) {
-										throw 'The invitation was not deleted!'
+										throw new Error('The invitation was not deleted!')
 									}
 								}
 							})
@@ -688,7 +688,7 @@ module.exports = (request, bearerToken) => {
 							.expect(res => {
 								for (let invitation of res.body) {
 									if (invitation.to.id === 4) {
-										throw 'The invitation was not deleted!'
+										throw new Error('The invitation was not deleted!')
 									}
 								}
 							})
