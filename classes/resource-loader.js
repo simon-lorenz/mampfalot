@@ -93,6 +93,21 @@ class ResourceLoader {
 		}
 	}
 
+	async loadInvitation(req, res, next) {
+		const to = Number(req.query.to)
+		const groupId = Number(req.params.groupId)
+
+		res.locals.invitation = await Invitation.findOne({
+			where: { groupId, toId: to }
+		})
+
+		if (res.locals.invitation) {
+			next()
+		} else {
+			throw new NotFoundError('Invitation', null)
+		}
+	}
+
 	/**
 	 * Loads a group member resource into res.locals.member.
 	 * This middleware requires the request to have the params 'groupId' and 'userId'.

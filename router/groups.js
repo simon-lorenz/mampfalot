@@ -1,7 +1,7 @@
 const router = require('express').Router()
 const Sequelize = require('sequelize')
 const { Place, Group, User, GroupMembers, Lunchbreak, FoodType, Invitation } = require('../models')
-const { allowMethods, hasBodyValues } = require('../util/middleware')
+const { allowMethods, hasBodyValues, hasQueryValues } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
 const loader = require('../classes/resource-loader')
 
@@ -10,6 +10,7 @@ router.route('/:groupId').all(allowMethods(['GET', 'POST', 'DELETE']))
 router.route('/:groupId').post(hasBodyValues(['name', 'defaultLunchTime', 'defaultVoteEndingTime', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote'], 'atLeastOne'))
 router.route('/:groupId/invitations').all(allowMethods(['GET', 'POST', 'DELETE']))
 router.route('/:groupId/invitations').post(hasBodyValues(['to'], 'all'))
+router.route('/:groupId/invitations').delete(hasQueryValues(['to'], 'all'))
 router.route('/:groupId/members').all(allowMethods(['GET', 'POST']))
 router.route('/:groupId/members/:userId').all(allowMethods(['POST', 'DELETE']))
 router.route('/:groupId/lunchbreaks').all(allowMethods(['GET', 'POST']))
@@ -198,6 +199,14 @@ router.route('/:groupId/invitations').post(asyncMiddleware(async (req, res, next
 	})
 
 	res.send(newInvitation)
+}))
+
+router.route('/:groupId/invitations').delete(asyncMiddleware(loader.loadInvitation))
+router.route('/:groupId/invitations').delete(asyncMiddleware(async (req, res, next) => {
+	const { user, invitation } = res.locals
+	await user.can.deleteInvitation(invitation)
+	await invitation.delete
+	res.status(204).send()
 }))
 
 router.route('/:groupId/members').get(asyncMiddleware(async (req, res, next) => {

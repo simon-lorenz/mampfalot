@@ -441,6 +441,8 @@ module.exports = (request, bearerToken) => {
 							})
 					}
 				})
+
+				it('deletes all associated invitatons')
 			})
 
 			describe('/invitations', () => {
@@ -578,6 +580,135 @@ module.exports = (request, bearerToken) => {
 								const invitation = res.body
 								invitation.should.be.eql(expected)
 							})
+					})
+				})
+
+				describe('DELETE', () => {
+
+					beforeEach(async () => {
+						await setup.resetData()
+					})
+
+					it('requires parameter "to"', async () => {
+						await request
+							.delete('/groups/1/invitations')
+							.set({ Authorization: bearerToken[1] })
+							.expect(400)
+							.expect(res => {
+								const error = res.body
+								const values = ['to']
+								errorHelper.checkRequiredQueryValues(error, values, true)
+							})
+					})
+
+					it('sends NotFoundError', async () => {
+						await request
+							.delete('/groups/1/invitations')
+							.set({ Authorization: bearerToken[1] })
+							.query({ to: 933492 })
+							.expect(404)
+							.expect(res => {
+								errorHelper.checkNotFoundError(res.body, 'Invitation', null)
+							})
+					})
+
+					it('admins can delete other invitations', async () => {
+						await request
+							.post('/groups/1/invitations')
+							.set({ Authorization: bearerToken[2] })
+							.send({ to: 4 })
+							.expect(200)
+
+						await request
+							.delete('/groups/1/invitations')
+							.set({ Authorization: bearerToken[1] })
+							.query({ to: 4 })
+							.expect(204)
+
+						await request
+							.get('/groups/1/invitations')
+							.set({ Authorization: bearerToken[1] })
+							.expect(200)
+							.expect(res => {
+								for (let invitation of res.body) {
+									if (invitation.to.id === 4) {
+										throw 'The invitation was not deleted!'
+									}
+								}
+							})
+					})
+
+					it('members can delete their own invitations', async () => {
+						await request
+							.post('/groups/1/invitations')
+							.set({ Authorization: bearerToken[2] })
+							.send({ to: 4 })
+							.expect(200)
+
+						await request
+							.delete('/groups/1/invitations')
+							.set({ Authorization: bearerToken[2] })
+							.query({ to: 4 })
+							.expect(204)
+
+						await request
+							.get('/groups/1/invitations')
+							.set({ Authorization: bearerToken[1] })
+							.expect(200)
+							.expect(res => {
+								for (let invitation of res.body) {
+									if (invitation.to.id === 4) {
+										throw 'The invitation was not deleted!'
+									}
+								}
+							})
+					})
+
+					it('members cannot delete anothers members invitations', async () => {
+						await request
+							.delete('/groups/1/invitations')
+							.set({ Authorization: bearerToken[2] })
+							.query({ to: 3 })
+							.expect(403)
+							.expect(res => {
+								const errorItem = {
+									resource: 'Invitation',
+									id: null,
+									operation: 'DELETE'
+								}
+								errorHelper.checkAuthorizationError(res.body, errorItem)
+							})
+					})
+
+					it('does not delete the associated users', async () => {
+						await request
+							.delete('/groups/1/invitations')
+							.set({ Authorization: bearerToken[1] })
+							.query({ to: 3 })
+							.expect(204)
+
+						await request
+							.get('/users/1')
+							.set({ Authorization: bearerToken[1] })
+							.expect(200)
+
+						await request
+							.get('/users/3')
+							.set({ Authorization: bearerToken[3] })
+							.expect(200)
+					})
+
+					it('does not delete the associated group', async () => {
+						await request
+							.delete('/groups/1/invitations')
+							.set({ Authorization: bearerToken[1] })
+							.query({ to: 3 })
+							.expect(204)
+
+						await request
+							.get('/groups/1')
+							.set({ Authorization: bearerToken[1] })
+							.expect(200)
 					})
 				})
 			})

@@ -114,6 +114,14 @@ class ResourceAccessControl {
 		}
 	}
 
+	async deleteInvitation(invitation) {
+		if (!this.user.isGroupAdmin(invitation.groupId)) {
+			if (this.user.id !== invitation.fromId) {
+				throw new AuthorizationError('Invitation', null, 'DELETE')
+			}
+		}
+	}
+
 	async updateGroupMember(member) {
 		let gainsAdminRights = member.isAdmin && !member.previous('isAdmin')
 		let losesAdminRights = !member.isAdmin && member.previous('isAdmin')
