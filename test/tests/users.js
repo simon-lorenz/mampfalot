@@ -907,50 +907,227 @@ module.exports = (request, bearerToken) => {
 					await setup.resetData()
 				})
 
-				it('fails if user tries to access another users groups', (done) => {
-					request
-						.get('/users/1/groups')
-						.set({ Authorization: bearerToken[2] })
-						.expect(403)
-						.expect(res => {
-							let expectedError = {
-								resource: 'GroupCollection',
-								id: null,
-								operation: 'READ'
-							}
-							errorHelper.checkAuthorizationError(res.body, expectedError)
-						})
-						.end(done)
+				describe('GET', () => {
+					it('fails if user tries to access another users groups', (done) => {
+						request
+							.get('/users/1/groups')
+							.set({ Authorization: bearerToken[2] })
+							.expect(403)
+							.expect(res => {
+								let expectedError = {
+									resource: 'GroupCollection',
+									id: null,
+									operation: 'READ'
+								}
+								errorHelper.checkAuthorizationError(res.body, expectedError)
+							})
+							.end(done)
+					})
+
+					it('sends a correct group collection', (done) => {
+						request
+							.get('/users/1/groups')
+							.set({ Authorization: bearerToken[1] })
+							.expect(200)
+							.expect(res => {
+								let groups = res.body
+								groups.should.be.an('array').of.length(1)
+
+								let group = groups[0]
+
+								group.should.be.an('object')
+								group.should.have.property('id')
+								group.should.have.property('name')
+								group.should.have.property('defaultLunchTime')
+								group.should.have.property('defaultVoteEndingTime')
+								group.should.have.property('pointsPerDay')
+								group.should.have.property('maxPointsPerVote')
+								group.should.have.property('minPointsPerVote')
+								group.should.have.property('members').which.is.an('array').with.lengthOf(2)
+								group.should.have.property('lunchbreaks').which.is.an('array')
+								group.should.have.property('places').which.is.an('array')
+								group.should.have.property('foodTypes').which.is.an('array')
+								group.should.have.property('invitations').which.is.an('array')
+
+								const member = group.members[0]
+								member.should.have.all.keys(['id', 'username', 'firstName', 'lastName', 'config'])
+							})
+							.end(done)
+					})
+				})
+			})
+
+			describe('/invitations', () => {
+				describe('GET', () => {
+					it('fails if the user tries to access another users invitations', async () => {
+						await request
+							.get('/users/1/invitations')
+							.set({ Authorization: bearerToken[2] })
+							.expect(403)
+							.expect(res => {
+								const errorItem = {
+									resource: 'InvitationCollection',
+									id: null,
+									operation: 'READ'
+								}
+								errorHelper.checkAuthorizationError(res.body, errorItem)
+							})
+					})
+
+					it('sends a correct collection of invitations', async () => {
+						await request
+							.get('/users/3/invitations')
+							.set({ Authorization: bearerToken[3] })
+							.expect(200)
+							.expect(res => {
+								const invitations = res.body
+								invitations.should.be.an('array')
+
+								const firstInvitation = invitations[0]
+								firstInvitation.should.be.an('object')
+								firstInvitation.should.have.all.keys(['groupId', 'from', 'to'])
+								firstInvitation.groupId.should.be.equal(1)
+								firstInvitation.from.should.be.an('object')
+								firstInvitation.to.should.be.an('object')
+
+								const from = firstInvitation.from
+								from.should.have.all.keys(['id', 'username', 'firstName', 'lastName'])
+								from.id.should.be.equal(1)
+								from.username.should.be.equal('maxmustermann')
+								from.firstName.should.be.equal('Max')
+								from.lastName.should.be.equal('Mustermann')
+
+								const to = firstInvitation.to
+								to.should.have.all.keys(['id', 'username', 'firstName', 'lastName'])
+								to.id.should.be.equal(3)
+								to.username.should.be.equal('loten')
+								to.firstName.should.be.equal('Philipp')
+								to.lastName.should.be.equal('Loten')
+							})
+					})
 				})
 
-				it('sends a correct group collection', (done) => {
-					request
-						.get('/users/1/groups')
-						.set({ Authorization: bearerToken[1] })
-						.expect(200)
-						.expect(res => {
-							let groups = res.body
-							groups.should.be.an('array').of.length(1)
+				describe('DELETE', () => {
 
-							let group = groups[0]
+					beforeEach(async () => {
+						await setup.resetData()
+					})
 
-							group.should.be.an('object')
-							group.should.have.property('id')
-							group.should.have.property('name')
-							group.should.have.property('defaultLunchTime')
-							group.should.have.property('defaultVoteEndingTime')
-							group.should.have.property('pointsPerDay')
-							group.should.have.property('maxPointsPerVote')
-							group.should.have.property('minPointsPerVote')
-							group.should.have.property('members').which.is.an('array').with.lengthOf(2)
-							group.should.have.property('lunchbreaks').which.is.an('array')
-							group.should.have.property('places').which.is.an('array')
-							group.should.have.property('foodTypes').which.is.an('array')
+					it('fails if the user tries to delete another users invitations', async () => {
+						await request
+							.delete('/users/3/invitations')
+							.query({ groupId: 1, accept: false })
+							.set({ Authorization: bearerToken[2] })
+							.expect(403)
+							.expect(res => {
+								const errorItem = {
+									resource: 'Invitation',
+									id: null,
+									operation: 'DELETE'
+								}
+								errorHelper.checkAuthorizationError(res.body, errorItem)
+							})
+					})
 
-							const member = group.members[0]
-							member.should.have.all.keys(['id', 'username', 'firstName', 'lastName', 'config'])
-						})
-						.end(done)
+					it('requires query values groupId, accept', async () => {
+						await request
+							.delete('/users/3/invitations')
+							.set({ Authorization: bearerToken[3] })
+							.expect(400)
+							.expect(res => {
+								errorHelper.checkRequiredQueryValues(res.body, ['groupId', 'accept'], 'all')
+							})
+					})
+
+					it('sends NotFoundError', async () => {
+						await request
+							.delete('/users/3/invitations')
+							.query({ groupId: 299, accept: true })
+							.set({ Authorization: bearerToken[3] })
+							.expect(404)
+							.expect(res => {
+								errorHelper.checkNotFoundError(res.body, 'Invitation', null)
+							})
+					})
+
+					it('successfully accepts an invitation', async () => {
+						await request
+							.delete('/users/3/invitations')
+							.query({ groupId: 1, accept: true })
+							.set({ Authorization: bearerToken[3] })
+							.expect(204)
+
+						await request
+							.get('/users/3/groups')
+							.set({ Authorization: bearerToken[3] })
+							.expect(200)
+							.expect(res => {
+								const groups = res.body
+								for (let group of groups) {
+									if (group.id === 1) return
+								}
+								throw new Error('User 3 did not join group 1')
+							})
+					})
+
+					it('successfully rejects an invitation', async () => {
+						await request
+							.delete('/users/3/invitations')
+							.query({ groupId: 1, accept: false })
+							.set({ Authorization: bearerToken[3] })
+							.expect(204)
+
+						await request
+							.get('/users/3/invitations')
+							.set({ Authorization: bearerToken[3] })
+							.expect(200)
+							.expect(res => {
+								const invitations = res.body
+								invitations.should.be.an('array').with.length(0)
+							})
+
+						await request
+							.get('/users/3/groups')
+							.set({ Authorization: bearerToken[3] })
+							.expect(200)
+							.expect(res => {
+								const groups = res.body
+								for (let group of groups) {
+									if (group.id === 1) throw new Error('User 3 did join group 1')
+								}
+							})
+					})
+
+					it('does not delete the associated group', async () => {
+						await request
+							.delete('/users/3/invitations')
+							.query({ groupId: 1, accept: true })
+							.set({ Authorization: bearerToken[3] })
+							.expect(204)
+
+						await request
+							.get('/groups/1')
+							.set({ Authorization: bearerToken[3] })
+							.expect(200)
+					})
+
+					it('does not delete the associated users', async () => {
+						await request
+							.delete('/users/3/invitations')
+							.query({ groupId: 1, accept: true })
+							.set({ Authorization: bearerToken[3] })
+							.expect(204)
+
+						await request
+							.get('/users/1')
+							.set({ Authorization: bearerToken[3] })
+							.expect(403)
+
+						await request
+							.get('/users/3')
+							.set({ Authorization: bearerToken[3] })
+							.expect(200)
+					})
 				})
 			})
 		})

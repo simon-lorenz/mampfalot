@@ -1,12 +1,16 @@
 const router = require('express').Router()
-const { Place, Group, User, GroupMembers, Lunchbreak, FoodType } = require('../models')
-const { allowMethods, hasBodyValues } = require('../util/middleware')
+const Sequelize = require('sequelize')
+const { Place, Group, User, GroupMembers, Lunchbreak, FoodType, Invitation } = require('../models')
+const { allowMethods, hasBodyValues, hasQueryValues } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
 const loader = require('../classes/resource-loader')
 
 router.route('/').all(allowMethods(['GET', 'POST']))
 router.route('/:groupId').all(allowMethods(['GET', 'POST', 'DELETE']))
 router.route('/:groupId').post(hasBodyValues(['name', 'defaultLunchTime', 'defaultVoteEndingTime', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote'], 'atLeastOne'))
+router.route('/:groupId/invitations').all(allowMethods(['GET', 'POST', 'DELETE']))
+router.route('/:groupId/invitations').post(hasBodyValues(['to'], 'all'))
+router.route('/:groupId/invitations').delete(hasQueryValues(['to'], 'all'))
 router.route('/:groupId/members').all(allowMethods(['GET', 'POST']))
 router.route('/:groupId/members/:userId').all(allowMethods(['POST', 'DELETE']))
 router.route('/:groupId/lunchbreaks').all(allowMethods(['GET', 'POST']))
@@ -73,6 +77,22 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 					as: 'config',
 					attributes: ['color', 'isAdmin']
 				}
+			},
+			{
+				model: Invitation,
+				attributes: ['groupId'],
+				include: [
+					{
+						model: User,
+						as: 'from',
+						attributes: ['id', 'username', 'firstName', 'lastName']
+					},
+					{
+						model: User,
+						as: 'to',
+						attributes: ['id', 'username', 'firstName', 'lastName']
+					}
+				]
 			}
 		]
 	})
@@ -125,45 +145,74 @@ router.route('/:groupId').delete(asyncMiddleware(async (req, res, next) => {
 	res.status(204).send()
 }))
 
+router.route('/:groupId/invitations').get(asyncMiddleware(async (req, res, next) => {
+	const { user, group } = res.locals
+	await user.can.readInvitationCollection(group)
+	res.send(group.invitations)
+}))
+
+router.route('/:groupId/invitations').post(asyncMiddleware(async (req, res, next) => {
+	const { user, group } = res.locals
+
+	const invitation = await Invitation.build({
+		groupId: group.id,
+		fromId: user.id,
+		toId: req.body.to
+	})
+
+	await user.can.createInvitation(invitation)
+
+	try {
+		await invitation.save()
+	} catch (error) {
+		// The invitation model has two internal values, fromId and toId.
+		// For a cleaner api these values are externally simply known as from and to.
+		// Thats why we need to format the "field" values of a possible Validation Error.
+		if (error instanceof Sequelize.ValidationError) {
+			for (let item of error.errors) {
+				if (item.path === 'toId') item.path = 'to'
+				if (item.path === 'fromId') item.path = 'from'
+			}
+		}
+		throw error
+	}
+
+	const newInvitation = await Invitation.findOne({
+		attributes: ['groupId'],
+		where: {
+			groupId: invitation.groupId,
+			fromId: invitation.fromId,
+			toId: invitation.toId
+		},
+		include: [
+			{
+				model: User,
+				as: 'from',
+				attributes: ['id', 'username', 'firstName', 'lastName']
+			},
+			{
+				model: User,
+				as: 'to',
+				attributes: ['id', 'username', 'firstName', 'lastName']
+			}
+		]
+	})
+
+	res.send(newInvitation)
+}))
+
+router.route('/:groupId/invitations').delete(asyncMiddleware(loader.loadInvitation))
+router.route('/:groupId/invitations').delete(asyncMiddleware(async (req, res, next) => {
+	const { user, invitation } = res.locals
+	await user.can.deleteInvitation(invitation)
+	await invitation.delete
+	res.status(204).send()
+}))
+
 router.route('/:groupId/members').get(asyncMiddleware(async (req, res, next) => {
 	let { user, group } = res.locals
 	await user.can.readGroupMemberCollection(group)
 	res.send(group.members)
-}))
-
-router.route('/:groupId/members').post(asyncMiddleware(async (req, res, next) => {
-	let { user } = res.locals
-
-	let member = GroupMembers.build({
-		userId: req.body.userId,
-		groupId: res.locals.group.id,
-		color: req.body.color,
-		isAdmin: req.body.isAdmin
-	})
-
-	await user.can.createGroupMember(member)
-	await member.save()
-
-	let groupNew = await Group.findOne({
-		where: {
-			id: res.locals.group.id
-		},
-		attributes: [],
-		include: [{
-			model: User,
-			attributes: ['id', 'username', 'firstName', 'lastName'],
-			as: 'members',
-			through: {
-				as: 'config',
-				attributes: ['color', 'isAdmin']
-			},
-			where: {
-				id: member.userId
-			}
-		}]
-	})
-
-	res.send(groupNew.members[0])
 }))
 
 router.route('/:groupId/members/:userId').all(asyncMiddleware(loader.loadMember))

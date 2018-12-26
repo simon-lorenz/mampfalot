@@ -36,6 +36,7 @@ module.exports = (request, bearerToken) => {
 						group.should.have.property('lunchbreaks').which.is.an('array')
 						group.should.have.property('places').which.is.an('array')
 						group.should.have.property('foodTypes').which.is.an('array')
+						group.should.have.property('invitations').which.is.an('array')
 
 					})
 					.end(done)
@@ -93,6 +94,7 @@ module.exports = (request, bearerToken) => {
 							group.should.have.property('lunchbreaks').which.is.an('array').and.has.length(2)
 							group.should.have.property('places').which.is.an('array').and.has.length(4)
 							group.should.have.property('foodTypes').which.is.an('array').and.has.length(4)
+							group.should.have.property('invitations').which.is.an('array').with.length(1)
 
 							const member = group.members[0]
 							member.should.have.all.keys(['id', 'username', 'firstName', 'lastName', 'config'])
@@ -300,7 +302,7 @@ module.exports = (request, bearerToken) => {
 						})
 						.expect(200, (err, res) => {
 							let group = res.body
-							group.should.have.all.keys(['id', 'name', 'defaultLunchTime', 'defaultVoteEndingTime', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote', 'foodTypes', 'lunchbreaks', 'members', 'places'])
+							group.should.have.all.keys(['id', 'name', 'defaultLunchTime', 'defaultVoteEndingTime', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote', 'foodTypes', 'lunchbreaks', 'members', 'places', 'invitations'])
 							group.should.have.property('id').equal(1)
 							group.should.have.property('name').equal('New name')
 							group.should.have.property('defaultLunchTime').equal('14:00:00')
@@ -438,6 +440,306 @@ module.exports = (request, bearerToken) => {
 								}
 							})
 					}
+				})
+
+				it('deletes all associated invitatons', async () => {
+					await request
+						.delete('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(204)
+
+					await request
+						.get('/users/3/invitations')
+						.set({ Authorization: bearerToken[3] })
+						.expect(res => {
+							const invitations = res.body
+							invitations.should.be.an('array').with.lengthOf(0)
+						})
+				})
+			})
+
+			describe('/invitations', () => {
+				describe('GET', () => {
+					before(async () => {
+						await setup.resetData()
+					})
+
+					it('fails if the user is no group member', async() => {
+						await request
+							.get('/groups/1/invitations')
+							.set({ Authorization: bearerToken[3] })
+							.expect(403)
+							.expect(res => {
+								const errorItem = {
+									resource: 'InvitationCollection',
+									id: null,
+									operation: 'READ'
+								}
+								errorHelper.checkAuthorizationError(res.body, errorItem)
+							})
+					})
+
+					it('returns a collection of invitations', async () => {
+						await request
+							.get('/groups/1/invitations')
+							.set({ Authorization: bearerToken[1] })
+							.expect(200)
+							.expect(res => {
+								const invitations = res.body
+								invitations.should.be.an('array').with.lengthOf(1)
+
+								const firstInvitation = invitations[0]
+								firstInvitation.should.be.an('object')
+								firstInvitation.should.have.all.keys(['groupId', 'from', 'to'])
+								firstInvitation.groupId.should.be.equal(1)
+								firstInvitation.from.should.be.an('object')
+								firstInvitation.to.should.be.an('object')
+
+								const from = firstInvitation.from
+								from.should.have.all.keys(['id', 'username', 'firstName', 'lastName'])
+								from.id.should.be.equal(1)
+								from.username.should.be.equal('maxmustermann')
+								from.firstName.should.be.equal('Max')
+								from.lastName.should.be.equal('Mustermann')
+
+								const to = firstInvitation.to
+								to.should.have.all.keys(['id', 'username', 'firstName', 'lastName'])
+								to.id.should.be.equal(3)
+								to.username.should.be.equal('loten')
+								to.firstName.should.be.equal('Philipp')
+								to.lastName.should.be.equal('Loten')
+							})
+					})
+				})
+
+				describe('POST', () => {
+					beforeEach(async () => {
+						await setup.resetData()
+					})
+
+					it('fails if the user is no group member', async () => {
+						await request
+							.post('/groups/1/invitations')
+							.set({ Authorization: bearerToken[3] })
+							.send({ to: 3 })
+							.expect(403)
+							.expect(res => {
+								const errorItem = {
+									resource: 'Invitation',
+									id: null,
+									operation: 'CREATE'
+								}
+								errorHelper.checkAuthorizationError(res.body, errorItem)
+							})
+					})
+
+					it('fails if the invited user is already a group member', async () => {
+						await request
+							.post('/groups/1/invitations')
+							.set({ Authorization: bearerToken[1]})
+							.send({ to: 2 })
+							.expect(400)
+							.expect(res => {
+								const error = res.body
+								const item = {
+									field: 'to',
+									value: 2,
+									message: 'This user is already a member of this group.'
+								}
+								errorHelper.checkValidationError(error, item)
+							})
+					})
+
+					it('fails if "to" is missing', async () => {
+						await request
+							.post('/groups/1/invitations')
+							.set({ Authorization: bearerToken[2] })
+							.send({ to: undefined })
+							.expect(400)
+							.expect(res => {
+								errorHelper.checkRequestError(res.body, 'This request has to provide all of the following body values: to')
+							})
+					})
+
+					it('fails if invited user is not found', async () => {
+						await request
+							.post('/groups/1/invitations')
+							.set({ Authorization: bearerToken[2] })
+							.send({ to: 9999 })
+							.expect(400)
+					})
+
+					it('fails if the user is already invited', async () => {
+						await request
+							.post('/groups/1/invitations')
+							.set({ Authorization: bearerToken[2] })
+							.send({ to: 3 })
+							.expect(res => {
+								const errorItem = {
+									field: 'to',
+									value: '3',
+									message: 'This user is already invited.'
+								}
+								errorHelper.checkValidationError(res.body, errorItem)
+							})
+					})
+
+					it('creates a new invitation successfully', async () => {
+						await request
+							.post('/groups/1/invitations')
+							.set({ Authorization: bearerToken[2] })
+							.send({ to: 4 })
+							.expect(200)
+							.expect(res => {
+								const expected = {
+									groupId: 1,
+									from: {
+										id: 2,
+										username: 'johndoe1',
+										firstName: 'John',
+										lastName: 'Doe'
+									},
+									to: {
+										id: 4,
+										username: 'björn_tietgen',
+										firstName: 'Björn',
+										lastName: 'Tietgen'
+									}
+								}
+
+								const invitation = res.body
+								invitation.should.be.eql(expected)
+							})
+					})
+				})
+
+				describe('DELETE', () => {
+
+					beforeEach(async () => {
+						await setup.resetData()
+					})
+
+					it('requires parameter "to"', async () => {
+						await request
+							.delete('/groups/1/invitations')
+							.set({ Authorization: bearerToken[1] })
+							.expect(400)
+							.expect(res => {
+								const error = res.body
+								const values = ['to']
+								errorHelper.checkRequiredQueryValues(error, values, true)
+							})
+					})
+
+					it('sends NotFoundError', async () => {
+						await request
+							.delete('/groups/1/invitations')
+							.set({ Authorization: bearerToken[1] })
+							.query({ to: 933492 })
+							.expect(404)
+							.expect(res => {
+								errorHelper.checkNotFoundError(res.body, 'Invitation', null)
+							})
+					})
+
+					it('admins can delete other invitations', async () => {
+						await request
+							.post('/groups/1/invitations')
+							.set({ Authorization: bearerToken[2] })
+							.send({ to: 4 })
+							.expect(200)
+
+						await request
+							.delete('/groups/1/invitations')
+							.set({ Authorization: bearerToken[1] })
+							.query({ to: 4 })
+							.expect(204)
+
+						await request
+							.get('/groups/1/invitations')
+							.set({ Authorization: bearerToken[1] })
+							.expect(200)
+							.expect(res => {
+								for (let invitation of res.body) {
+									if (invitation.to.id === 4) {
+										throw 'The invitation was not deleted!'
+									}
+								}
+							})
+					})
+
+					it('members can delete their own invitations', async () => {
+						await request
+							.post('/groups/1/invitations')
+							.set({ Authorization: bearerToken[2] })
+							.send({ to: 4 })
+							.expect(200)
+
+						await request
+							.delete('/groups/1/invitations')
+							.set({ Authorization: bearerToken[2] })
+							.query({ to: 4 })
+							.expect(204)
+
+						await request
+							.get('/groups/1/invitations')
+							.set({ Authorization: bearerToken[1] })
+							.expect(200)
+							.expect(res => {
+								for (let invitation of res.body) {
+									if (invitation.to.id === 4) {
+										throw 'The invitation was not deleted!'
+									}
+								}
+							})
+					})
+
+					it('members cannot delete anothers members invitations', async () => {
+						await request
+							.delete('/groups/1/invitations')
+							.set({ Authorization: bearerToken[2] })
+							.query({ to: 3 })
+							.expect(403)
+							.expect(res => {
+								const errorItem = {
+									resource: 'Invitation',
+									id: null,
+									operation: 'DELETE'
+								}
+								errorHelper.checkAuthorizationError(res.body, errorItem)
+							})
+					})
+
+					it('does not delete the associated users', async () => {
+						await request
+							.delete('/groups/1/invitations')
+							.set({ Authorization: bearerToken[1] })
+							.query({ to: 3 })
+							.expect(204)
+
+						await request
+							.get('/users/1')
+							.set({ Authorization: bearerToken[1] })
+							.expect(200)
+
+						await request
+							.get('/users/3')
+							.set({ Authorization: bearerToken[3] })
+							.expect(200)
+					})
+
+					it('does not delete the associated group', async () => {
+						await request
+							.delete('/groups/1/invitations')
+							.set({ Authorization: bearerToken[1] })
+							.query({ to: 3 })
+							.expect(204)
+
+						await request
+							.get('/groups/1')
+							.set({ Authorization: bearerToken[1] })
+							.expect(200)
+					})
 				})
 			})
 
@@ -698,159 +1000,6 @@ module.exports = (request, bearerToken) => {
 								firstMember.should.have.property('config').which.has.property('isAdmin').equal(true)
 								done()
 							})
-					})
-				})
-
-				describe('POST', () => {
-					let newMember
-
-					beforeEach(async () => {
-						newMember = {
-							userId: 3,
-							color: '#18e6a3',
-							isAdmin: false
-						}
-						await setup.resetData()
-					})
-
-					it('requires group admin rights', (done) => {
-						request
-							.post('/groups/1/members')
-							.set({ Authorization: bearerToken[2] })
-							.send(newMember)
-							.expect(403)
-							.expect(res => {
-								let expectedError = {
-									resource: 'GroupMember',
-									id: null,
-									operation: 'CREATE',
-								}
-								errorHelper.checkAuthorizationError(res.body, expectedError)
-							})
-							.end(done)
-					})
-
-					it('fails if userId is undefined', (done) => {
-						newMember.userId = undefined
-						request
-							.post('/groups/1/members')
-							.set({ Authorization: bearerToken[1] })
-							.send(newMember)
-							.expect(400)
-							.expect(res => {
-								let expectedError = {
-									field: 'userId',
-									value: null,
-									message: 'userId cannot be null.'
-								}
-
-								errorHelper.checkValidationError(res.body, expectedError)
-							})
-							.end(done)
-					})
-
-					it('fails if userId does not exist', (done) => {
-						newMember.userId = 99
-						request
-							.post('/groups/1/members')
-							.set({ Authorization: bearerToken[1] })
-							.send(newMember)
-							.expect(400)
-							.expect(res => {
-								let expectedError = {
-									field: 'userId',
-									value: 99,
-									message: 'userId does not exist.'
-								}
-
-								errorHelper.checkValidationError(res.body, expectedError)
-							})
-							.end(done)
-					})
-
-					it('fails if userId is not a number', (done) => {
-						newMember.userId = 'string'
-						request
-							.post('/groups/1/members')
-							.set({ Authorization: bearerToken[1] })
-							.send(newMember)
-							.expect(400)
-							.expect(res => {
-								let expectedError = {
-									field: 'userId',
-									value: 'string',
-									message: 'userId has to be numeric.'
-								}
-
-								errorHelper.checkValidationError(res.body, expectedError)
-							})
-							.end(done)
-					})
-
-					it('responds with a collection of all members')
-
-					it('successfully adds a group member', (done) => {
-						request
-							.post('/groups/1/members')
-							.set({ Authorization: bearerToken[1] })
-							.send(newMember)
-							.expect(200)
-							.expect(res => {
-								let member = res.body
-								member.should.have.all.keys(['id', 'username', 'firstName', 'lastName', 'config'])
-								member.should.have.property('id').equal(3)
-								member.should.have.property('firstName').equal('Philipp')
-								member.should.have.property('lastName').equal('Loten')
-								member.should.have.property('username').equal('loten')
-								member.should.have.property('config').which.is.an('object')
-
-								let config = member.config
-								config.should.have.property('color').equal(newMember.color)
-								config.should.have.property('isAdmin').equal(newMember.isAdmin)
-							})
-							.end(done)
-					})
-
-					it('uses default values if only the userId is provided', (done) => {
-						newMember.color = undefined
-						newMember.isAdmin = undefined
-
-						request
-							.post('/groups/1/members')
-							.set({ Authorization: bearerToken[1] })
-							.send(newMember)
-							.expect(200)
-							.expect(res => {
-								let member = res.body
-								member.should.have.all.keys(['id', 'username', 'firstName', 'lastName', 'config'])
-								member.should.have.property('id').equal(3)
-								member.should.have.property('firstName').equal('Philipp')
-								member.should.have.property('lastName').equal('Loten')
-								member.should.have.property('username').equal('loten')
-								member.should.have.property('config').which.is.an('object')
-
-								let config = member.config
-								config.should.have.property('color')
-								config.should.have.property('isAdmin')
-							})
-							.end(done)
-					})
-
-					it('fails if no userId is provided', (done) => {
-						newMember.userId = undefined
-						request
-							.post('/groups/1/members')
-							.set({ Authorization: bearerToken[1] })
-							.send(newMember)
-							.expect(400)
-							.expect(res => {
-								let expectedError = {
-									field: 'userId',
-									value: null,
-									message: 'userId cannot be null.'
-								}
-							})
-							.end(done)
 					})
 				})
 

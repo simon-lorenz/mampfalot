@@ -54,6 +54,11 @@ const ENDPOINTS = [
 		methods: ['GET', 'POST']
 	},
 	{
+		url: '/groups/1/invitations',
+		methods: ['GET', 'POST', 'DELETE'],
+		public: false
+	},
+	{
 		url: '/lunchbreaks/1',
 		methods: ['GET', 'POST'],
 		public: false
@@ -116,6 +121,11 @@ const ENDPOINTS = [
 	{
 		url: '/users/1/groups',
 		methods: ['GET'],
+		public: false
+	},
+	{
+		url: '/users/1/invitations',
+		methods: ['GET', 'DELETE'],
 		public: false
 	},
 	{

@@ -75,6 +75,13 @@ module.exports = {
 			minPointsPerVote: 1
 		}
 	],
+	invitations: [
+		{
+			groupId: 1,
+			fromId: 1,
+			toId: 3
+		}
+	],
 	lunchbreaks: [
 		{
 			id: 1,
