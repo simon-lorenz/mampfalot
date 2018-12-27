@@ -72,6 +72,10 @@ class ResourceLoader {
 					attributes: ['groupId'],
 					include: [
 						{
+							model: Group,
+							attributes: ['id', 'name']
+						},
+						{
 							model: User,
 							as: 'from',
 							attributes: ['id', 'username', 'firstName', 'lastName']

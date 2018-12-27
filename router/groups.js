@@ -148,7 +148,31 @@ router.route('/:groupId').delete(asyncMiddleware(async (req, res, next) => {
 router.route('/:groupId/invitations').get(asyncMiddleware(async (req, res, next) => {
 	const { user, group } = res.locals
 	await user.can.readInvitationCollection(group)
-	res.send(group.invitations)
+
+	const invitations = await Invitation.findAll({
+		attributes: [],
+		where: {
+			groupId: group.id
+		},
+		include: [
+			{
+				model: Group,
+				attributes: ['id', 'name']
+			},
+			{
+				model: User,
+				as: 'from',
+				attributes: ['id', 'username', 'firstName', 'lastName']
+			},
+			{
+				model: User,
+				as: 'to',
+				attributes: ['id', 'username', 'firstName', 'lastName']
+			}
+		]
+	})
+
+	res.send(invitations)
 }))
 
 router.route('/:groupId/invitations').post(asyncMiddleware(async (req, res, next) => {
@@ -178,13 +202,17 @@ router.route('/:groupId/invitations').post(asyncMiddleware(async (req, res, next
 	}
 
 	const newInvitation = await Invitation.findOne({
-		attributes: ['groupId'],
+		attributes: [],
 		where: {
 			groupId: invitation.groupId,
 			fromId: invitation.fromId,
 			toId: invitation.toId
 		},
 		include: [
+			{
+				model: Group,
+				attributes: ['id', 'name']
+			},
 			{
 				model: User,
 				as: 'from',

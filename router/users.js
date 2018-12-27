@@ -312,11 +312,15 @@ router.route('/:userId/invitations').get(asyncMiddleware(async (req, res, next) 
 	await user.can.readInvitationCollectionOfUser(userResource)
 
 	const invitations = await Invitation.findAll({
-		attributes: ['groupId'],
+		attributes: [],
 		where: {
 			toId: user.id
 		},
 		include: [
+			{
+				model: Group,
+				attributes: ['id', 'name']
+			},
 			{
 				model: User,
 				as: 'from',
