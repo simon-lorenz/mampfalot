@@ -102,6 +102,38 @@ class ResourceAccessControl {
 		}
 	}
 
+	async readInvitationCollection(group) {
+		if (!this.user.isGroupMember(group.id)) {
+			throw new AuthorizationError('InvitationCollection', null, 'READ')
+		}
+	}
+
+	async readInvitationCollectionOfUser(user) {
+		if (this.user.id !== user.id) {
+			throw new AuthorizationError('InvitationCollection', null, 'READ')
+		}
+	}
+
+	async createInvitation(invitation) {
+		if (!this.user.isGroupMember(invitation.groupId)) {
+			throw new AuthorizationError('Invitation', null, 'CREATE')
+		}
+	}
+
+	async deleteInvitation(invitation) {
+		if (this.user.isGroupMember(invitation.groupId)) {
+			if (!this.user.isGroupAdmin(invitation.groupId)) {
+				if (this.user.id !== invitation.fromId) {
+					throw new AuthorizationError('Invitation', null, 'DELETE')
+				}
+			}
+		} else {
+			if (this.user.id !== invitation.toId) {
+				throw new AuthorizationError('Invitation', null, 'DELETE')
+			}
+		}
+	}
+
 	async updateGroupMember(member) {
 		let gainsAdminRights = member.isAdmin && !member.previous('isAdmin')
 		let losesAdminRights = !member.isAdmin && member.previous('isAdmin')

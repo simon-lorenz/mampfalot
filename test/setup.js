@@ -7,12 +7,13 @@ const Place = require('./../models').Place
 const Participant = require('../models').Participant
 const Vote = require('../models').Vote
 const Comment = require('../models').Comment
+const Invitation = require('../models').Invitation
 const db = require('./../models').sequelize
 const data = require('./data')
 
 module.exports = {
 	async resetData() {
-		let tables = ['comments', 'food_types', 'group_members', 'groups', 'lunchbreaks', 'participants', 'places', 'users', 'votes']
+		let tables = ['comments', 'food_types', 'group_members', 'groups', 'invitations', 'lunchbreaks', 'participants', 'places', 'users', 'votes']
 		let queries = []
 		queries.push('SET FOREIGN_KEY_CHECKS = 0;')
 		for (let table of tables) {
@@ -25,6 +26,7 @@ module.exports = {
 			await User.bulkCreate(data.users)
 			await Group.bulkCreate(data.groups)
 			await GroupMembers.bulkCreate(data.groupMembers)
+			await Invitation.bulkCreate(data.invitations)
 			await FoodType.bulkCreate(data.foodTypes)
 			await Place.bulkCreate(data.places)
 			await Lunchbreak.bulkCreate(data.lunchbreaks)

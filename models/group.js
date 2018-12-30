@@ -80,6 +80,7 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	Group.associate = function (models) {
+		models.Group.hasMany(models.Invitation, { foreignKey: 'groupId' })
 		models.Group.hasMany(models.Place, { foreignKey: 'groupId' })
 		models.Group.hasMany(models.FoodType, { foreignKey: 'groupId' })
 		models.Group.hasMany(models.Lunchbreak, { foreignKey: 'groupId' })

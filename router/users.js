@@ -1,7 +1,7 @@
 const router = require('express').Router()
 const bcrypt = require('bcryptjs')
 const { Op } = require('sequelize')
-const { User, Group, Place, FoodType, Lunchbreak, GroupMembers } = require('../models')
+const { User, Group, Place, FoodType, Lunchbreak, GroupMembers, Invitation } = require('../models')
 const { allowMethods, hasQueryValues, initUser, hasBodyValues, verifyToken } = require('../util/middleware')
 const { AuthenticationError, NotFoundError, RequestError } = require('../classes/errors')
 const { asyncMiddleware, generateRandomToken }  = require('../util/util')
@@ -191,6 +191,8 @@ router.use([verifyToken, initUser])
 router.route('/:userId').all(allowMethods(['GET', 'POST', 'DELETE']))
 router.route('/:userId').post(hasBodyValues(['username', 'firstName', 'lastName', 'email', 'password'], 'atLeastOne'))
 router.route('/:userId/groups').all(allowMethods(['GET']))
+router.route('/:userId/invitations').all(allowMethods(['GET', 'DELETE']))
+router.route('/:userId/invitations').delete(hasQueryValues(['groupId', 'accept'], 'all'))
 
 router.param('userId', asyncMiddleware(loader.loadUser))
 
@@ -283,9 +285,85 @@ router.route('/:userId/groups').get(asyncMiddleware(async (req, res, next) => {
 					as: 'config',
 					attributes: ['color', 'isAdmin']
 				}
+			},
+			{
+				model: Invitation,
+				attributes: ['groupId'],
+				include: [
+					{
+						model: User,
+						as: 'from',
+						attributes: ['id', 'username', 'firstName', 'lastName']
+					},
+					{
+						model: User,
+						as: 'to',
+						attributes: ['id', 'username', 'firstName', 'lastName']
+					}
+				]
 			}
 		]
 	}))
+}))
+
+router.route('/:userId/invitations').get(asyncMiddleware(async (req, res, next) => {
+	const { user } = res.locals
+	const userResource = res.locals.resources.user
+	await user.can.readInvitationCollectionOfUser(userResource)
+
+	const invitations = await Invitation.findAll({
+		attributes: [],
+		where: {
+			toId: user.id
+		},
+		include: [
+			{
+				model: Group,
+				attributes: ['id', 'name']
+			},
+			{
+				model: User,
+				as: 'from',
+				attributes: ['id', 'username', 'firstName', 'lastName']
+			},
+			{
+				model: User,
+				as: 'to',
+				attributes: ['id', 'username', 'firstName', 'lastName']
+			}
+		]
+	})
+
+	res.send(invitations)
+}))
+
+router.route('/:userId/invitations').delete(asyncMiddleware(async (req, res, next) => {
+	const { user } = res.locals
+	const userResource = res.locals.resources.user
+	const groupId = Number(req.query.groupId)
+	const accept = req.query.accept == 'true'
+
+	const invitation = await Invitation.findOne({
+		where: {
+			toId: userResource.id,
+			groupId: groupId
+		}
+	})
+
+	if (!invitation) throw new NotFoundError('Invitation', null)
+
+	await user.can.deleteInvitation(invitation)
+
+	if (accept) {
+		await GroupMembers.create({
+			groupId: groupId,
+			userId: userResource.id,
+			isAdmin: false
+		})
+	}
+
+	await invitation.destroy()
+	res.status(204).send()
 }))
 
 module.exports = router

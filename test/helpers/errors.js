@@ -118,6 +118,26 @@ module.exports = {
 		if (message) {
 			error.message.should.be.equal(message)
 		}
+	},
+
+	checkRequiredBodyValues(error, values, all) {
+		let message
+		if (all) {
+			message = 'This request has to provide all of the following body values: ' + values.join(', ')
+		} else {
+			message = 'This request has to provide at least one of the following body values: ' + values.join(', ')
+		}
+		this.checkRequestError(error, message)
+	},
+
+	checkRequiredQueryValues(error, values, all) {
+		let message
+		if (all) {
+			message = 'This request has to provide all of the following query values: ' + values.join(', ')
+		} else {
+			message = 'This request has to provide at least one of the following query values: ' + values.join(', ')
+		}
+		this.checkRequestError(error, message)
 	}
 
 }
