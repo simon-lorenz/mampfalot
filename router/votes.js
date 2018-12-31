@@ -1,3 +1,5 @@
+'use strict'
+
 const router = require('express').Router()
 const { Vote, Participant, Place } = require('../models')
 const { allowMethods } = require('../util/middleware')
@@ -9,16 +11,16 @@ router.route('/').all(allowMethods(['POST']))
 router.route('/:voteId').all(allowMethods(['GET', 'DELETE']))
 
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
-	let votes = req.body
+	const votes = req.body
 
 	if(Object.keys(votes).length === 0 || !(votes instanceof  Array)) {
 		return next(new RequestError('Please provide an array of votes.'))
 	}
 
-	let participantId = votes[0].participantId
-	for (let vote of votes) {
+	const participantId = votes[0].participantId
+	for (const vote of votes) {
 		if (vote.participantId !== participantId) {
-			let item = {
+			const item = {
 				field: 'participantId',
 				value: 'Various values',
 				message: 'The participantId has to be the same in all votes.'
@@ -28,7 +30,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	}
 
 	if (!participantId) {
-		let item = {
+		const item = {
 			field: 'participantId',
 			value: null,
 			message: 'participantId cannot be null.'
@@ -36,9 +38,9 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 		return next(new ValidationError([item]))
 	}
 
-	let { user } = res.locals
+	const { user } = res.locals
 
-	let participant = await Participant.findOne({
+	const participant = await Participant.findOne({
 		where: {
 			id: participantId,
 			userId: user.id
@@ -46,7 +48,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	})
 
 	if (!participant) {
-		let item = {
+		const item = {
 			field: 'participantId',
 			value: participantId,
 			message: 'This participantId is not associated to your userId.'
@@ -67,14 +69,14 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 router.param('voteId', asyncMiddleware(loader.loadVote))
 
 router.route('/:voteId').get(asyncMiddleware(async (req, res, next) => {
-	let { vote, user } = res.locals
+	const { vote, user } = res.locals
 
 	await user.can.readVote(vote)
 	res.send(vote)
 }))
 
 router.route('/:voteId').delete(asyncMiddleware(async (req, res, next) => {
-	let { vote, user } = res.locals
+	const { vote, user } = res.locals
 
 	await user.can.deleteVote(vote)
 	await vote.destroy()

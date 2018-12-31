@@ -1,3 +1,5 @@
+'use strict'
+
 const setup = require('../setup')
 const errorHelper = require('../helpers/errors')
 
@@ -15,7 +17,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[3] })
 						.expect(403)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								resource: 'Comment',
 								id: 1,
 								operation: 'READ',
@@ -43,7 +45,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[2] })
 						.expect(200)
 						.expect(res => {
-							let comment = res.body
+							const comment = res.body
 							comment.should.have.all.keys(['id', 'userId', 'lunchbreakId', 'comment', 'updatedAt', 'createdAt'])
 							comment.id.should.be.equal(1)
 							comment.userId.should.be.equal(1)
@@ -65,7 +67,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[2] })
 						.expect(403)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								resource: 'Comment',
 								id: 1,
 								operation: 'UPDATE',
@@ -82,13 +84,13 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[1] })
 						.expect(400)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								field: 'comment',
 								value: null,
 								message: 'comment cannot be null.'
 							}
 
-							errorHelper.checkValidationError(res.body)
+							errorHelper.checkValidationError(res.body, expectedError)
 						})
 						.end(done)
 				})
@@ -100,11 +102,12 @@ module.exports = (request, bearerToken) => {
 						.send({ comment: '' })
 						.expect(400)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								field: 'comment',
 								value: '',
 								message: 'comment cannot be empty.'
 							}
+							errorHelper.checkValidationError(res.body, expectedError)
 						})
 						.end(done)
 				})
@@ -127,7 +130,7 @@ module.exports = (request, bearerToken) => {
 						.send({ comment: 'New comment text!' })
 						.expect(200)
 						.expect(res => {
-							let comment = res.body
+							const comment = res.body
 							comment.should.have.property('id').equal(1)
 							comment.should.have.property('userId').equal(1)
 							comment.should.have.property('comment').equal('New comment text!')
@@ -147,7 +150,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[2] })
 						.expect(403)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								resource: 'Comment',
 								id: 1,
 								operation: 'DELETE',

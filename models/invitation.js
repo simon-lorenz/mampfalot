@@ -1,3 +1,5 @@
+'use strict'
+
 module.exports = (sequelize, DataTypes) => {
 	const Invitation = sequelize.define('Invitation', {
 		groupId: {
@@ -20,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
 				msg: 'This user is already invited.'
 			},
 			validate: {
-				async notMemberOfGroup(value) {
+				async notMemberOfGroup() {
 					const { GroupMembers } = sequelize.models
 					const member = await GroupMembers.findOne({
 						where: {
@@ -28,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
 							userId: this.toId
 						}
 					})
-					if (member) throw 'This user is already a member of this group.'
+					if (member) throw new Error('This user is already a member of this group.')
 				}
 			}
 		}

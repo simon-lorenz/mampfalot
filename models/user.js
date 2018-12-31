@@ -1,3 +1,5 @@
+'use strict'
+
 const bcrypt = require('bcryptjs')
 
 module.exports = (sequelize, DataTypes) => {
@@ -111,20 +113,20 @@ module.exports = (sequelize, DataTypes) => {
 		})
 	}
 
-	User.beforeCreate((user, options) => {
+	User.beforeCreate((user) => {
 		user.password = bcrypt.hashSync(user.password, 12)
 	})
 
-	User.beforeBulkCreate(async (instances, options) => {
+	User.beforeBulkCreate(async (instances) => {
 		let rounds
 		process.env.NODE_ENV === 'test' ? rounds = 1 : rounds = 12
 
-		for (let instance of instances) {
+		for (const instance of instances) {
 			instance.password = await bcrypt.hash(instance.password, rounds)
 		}
 	})
 
-	User.beforeUpdate((user, options) => {
+	User.beforeUpdate((user) => {
 		if (user.changed('password')) {
 			user.password = bcrypt.hashSync(user.password, 12)
 		}

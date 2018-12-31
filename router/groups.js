@@ -1,3 +1,5 @@
+'use strict'
+
 const router = require('express').Router()
 const Sequelize = require('sequelize')
 const { Place, Group, User, GroupMembers, Lunchbreak, FoodType, Invitation } = require('../models')
@@ -20,9 +22,11 @@ router.route('/:groupId/places').all(allowMethods(['GET', 'POST']))
 router.route('/:groupId/places').post(hasBodyValues(['foodTypeId', 'name'], 'all'))
 
 router.route('/').get((req, res, next) => {
-	Group.scope({
+	Group
+		.scope({
 			method: ['ofUser', res.locals.user]
-		}).findAll()
+		})
+		.findAll()
 		.then(groups => {
 			res.send(groups)
 		})
@@ -32,7 +36,7 @@ router.route('/').get((req, res, next) => {
 })
 
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
-	let result = await Group.create({
+	const result = await Group.create({
 		name: req.body.name,
 		defaultLunchTime: req.body.defaultLunchTime,
 		defaultVoteEndingTime: req.body.defaultVoteEndingTime,
@@ -47,54 +51,53 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 		isAdmin: true
 	})
 
-	let group = await Group.findOne({
+	const group = await Group.findOne({
 		where: {
 			id: result.id
 		},
 		include: [{
-				model: Place,
-				attributes: {
-					exclude: ['groupId']
-				},
-				order: ['id']
+			model: Place,
+			attributes: {
+				exclude: ['groupId']
 			},
-			{
-				model: FoodType,
-				attributes: {
-					exclude: ['groupId']
-				},
-				order: ['id']
+			order: ['id']
+		},
+		{
+			model: FoodType,
+			attributes: {
+				exclude: ['groupId']
 			},
-			{
-				model: Lunchbreak,
-				limit: parseInt(req.query.lunchbreakLimit) || 25,
-				order: ['id']
-			},
-			{
-				model: User,
-				as: 'members',
-				through: {
-					as: 'config',
-					attributes: ['color', 'isAdmin']
-				}
-			},
-			{
-				model: Invitation,
-				attributes: ['groupId'],
-				include: [
-					{
-						model: User,
-						as: 'from',
-						attributes: ['id', 'username', 'firstName', 'lastName']
-					},
-					{
-						model: User,
-						as: 'to',
-						attributes: ['id', 'username', 'firstName', 'lastName']
-					}
-				]
+			order: ['id']
+		},
+		{
+			model: Lunchbreak,
+			limit: parseInt(req.query.lunchbreakLimit) || 25,
+			order: ['id']
+		},
+		{
+			model: User,
+			as: 'members',
+			through: {
+				as: 'config',
+				attributes: ['color', 'isAdmin']
 			}
-		]
+		},
+		{
+			model: Invitation,
+			attributes: ['groupId'],
+			include: [
+				{
+					model: User,
+					as: 'from',
+					attributes: ['id', 'username', 'firstName', 'lastName']
+				},
+				{
+					model: User,
+					as: 'to',
+					attributes: ['id', 'username', 'firstName', 'lastName']
+				}
+			]
+		}]
 	})
 	res.send(group)
 }))
@@ -102,13 +105,13 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 router.param('groupId', asyncMiddleware(loader.loadGroup))
 
 router.route('/:groupId').get(asyncMiddleware(async (req, res, next) => {
-	let { user, group } = res.locals
+	const { user, group } = res.locals
 	await user.can.readGroup(group)
 	res.send(group)
 }))
 
 router.route('/:groupId').post((req, res, next) => {
-	let { group } = res.locals
+	const { group } = res.locals
 
 	if (req.body.name) {
 		group.name = req.body.name
@@ -132,14 +135,14 @@ router.route('/:groupId').post((req, res, next) => {
 	next()
 })
 router.route('/:groupId').post(asyncMiddleware(async (req, res, next) => {
-	let { group, user } = res.locals
+	const { group, user } = res.locals
 
 	await user.can.updateGroup(group)
 	res.send(await group.save())
 }))
 
 router.route('/:groupId').delete(asyncMiddleware(async (req, res, next) => {
-	let { group, user } = res.locals
+	const { group, user } = res.locals
 	await user.can.deleteGroup(group)
 	await group.destroy()
 	res.status(204).send()
@@ -193,7 +196,7 @@ router.route('/:groupId/invitations').post(asyncMiddleware(async (req, res, next
 		// For a cleaner api these values are externally simply known as from and to.
 		// Thats why we need to format the "field" values of a possible Validation Error.
 		if (error instanceof Sequelize.ValidationError) {
-			for (let item of error.errors) {
+			for (const item of error.errors) {
 				if (item.path === 'toId') item.path = 'to'
 				if (item.path === 'fromId') item.path = 'from'
 			}
@@ -238,7 +241,7 @@ router.route('/:groupId/invitations').delete(asyncMiddleware(async (req, res, ne
 }))
 
 router.route('/:groupId/members').get(asyncMiddleware(async (req, res, next) => {
-	let { user, group } = res.locals
+	const { user, group } = res.locals
 	await user.can.readGroupMemberCollection(group)
 	res.send(group.members)
 }))
@@ -246,7 +249,7 @@ router.route('/:groupId/members').get(asyncMiddleware(async (req, res, next) => 
 router.route('/:groupId/members/:userId').all(asyncMiddleware(loader.loadMember))
 
 router.route('/:groupId/members/:userId').post(asyncMiddleware(async (req, res, next) => {
-	let { user, member } = res.locals
+	const { user, member } = res.locals
 
 	await user.can.updateGroupMember(member, req.body.isAdmin)
 
@@ -260,7 +263,7 @@ router.route('/:groupId/members/:userId').post(asyncMiddleware(async (req, res, 
 }))
 
 router.route('/:groupId/members/:userId').delete(asyncMiddleware(async (req, res, next) => {
-	let { user, member } = res.locals
+	const { user, member } = res.locals
 
 	await user.can.deleteGroupMember(member)
 	await res.locals.member.destroy()
@@ -268,11 +271,11 @@ router.route('/:groupId/members/:userId').delete(asyncMiddleware(async (req, res
 }))
 
 router.route('/:groupId/lunchbreaks').get(asyncMiddleware(async (req, res, next) => {
-	let { user, group } = res.locals
+	const { user, group } = res.locals
 
 	await user.can.readGroup(group)
 
-	let finder = {}
+	const finder = {}
 	finder.where = {}
 	if (req.params.groupId) finder.where.groupId = req.params.groupId
 	if (req.query.date) finder.where.date = req.query.date
@@ -281,9 +284,9 @@ router.route('/:groupId/lunchbreaks').get(asyncMiddleware(async (req, res, next)
 }))
 
 router.route('/:groupId/lunchbreaks').post(asyncMiddleware(async (req, res, next) => {
-	let { user, group } = res.locals
+	const { user, group } = res.locals
 
-	let lunchbreak = Lunchbreak.build({
+	const lunchbreak = Lunchbreak.build({
 		groupId: req.params.groupId,
 		date: req.body.date,
 		lunchTime: req.body.lunchTime,
@@ -309,9 +312,9 @@ router.route('/:groupId/places').get((req, res) => {
 })
 
 router.route('/:groupId/places').post(asyncMiddleware(async (req, res, next) => {
-	let { user } = res.locals
+	const { user } = res.locals
 
-	let place = Place.build({
+	const place = Place.build({
 		groupId: parseInt(req.params.groupId),
 		foodTypeId: parseInt(req.body.foodTypeId),
 		name: req.body.name

@@ -1,3 +1,5 @@
+'use strict'
+
 module.exports = (sequelize, DataTypes) => {
 	const Place = sequelize.define('Place', {
 		id: {
@@ -16,11 +18,11 @@ module.exports = (sequelize, DataTypes) => {
 			onDelete: 'SET NULL',
 			validate: {
 				async belongsToGroup(val) {
-					let FoodType = sequelize.models.FoodType
-					let foodType = await FoodType.findByPk(val)
+					const FoodType = sequelize.models.FoodType
+					const foodType = await FoodType.findByPk(val)
 
 					if (foodType.groupId !== this.groupId) {
-						throw 'This food type does not belong to group ' + this.groupId
+						throw new Error(`This food type does not belong to group ${this.groupId}`)
 					}
 				}
 			}

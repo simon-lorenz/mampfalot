@@ -1,3 +1,5 @@
+'use strict'
+
 const { ValidationError } = require('../classes/errors')
 
 module.exports = (sequelize, DataTypes) => {
@@ -28,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
 					msg: 'placeId cannot be null.'
 				},
 				async belongsToGroup (val) {
-					let group = await Group.findOne({
+					const group = await Group.findOne({
 						attributes: ['id'],
 						include: [
 							{
@@ -78,10 +80,10 @@ module.exports = (sequelize, DataTypes) => {
 		}
 	})
 
-	Vote.beforeBulkCreate(async (votes, options) => {
-		let participantId = votes[0].participantId
+	Vote.beforeBulkCreate(async (votes) => {
+		const participantId = votes[0].participantId
 
-		let config = await Group.findOne({
+		const config = await Group.findOne({
 			attributes: ['id', 'minPointsPerVote', 'maxPointsPerVote', 'pointsPerDay'],
 			include: [
 				{
@@ -100,24 +102,24 @@ module.exports = (sequelize, DataTypes) => {
 			]
 		})
 
-		let placeIds = []
+		const placeIds = []
 		let sum = 0
-		for (let vote of votes) {
-			let points = parseInt(vote.points)
+		for (const vote of votes) {
+			const points = parseInt(vote.points)
 			if (points > config.maxPointsPerVote) {
-				let item = {
+				const item = {
 					field: 'points',
 					value: points,
-					message: 'Points exceeds maxPointsPerVote (' + config.maxPointsPerVote + ').'
+					message: `Points exceeds maxPointsPerVote (${config.maxPointsPerVote}).`
 				}
 				throw new ValidationError([item])
 			}
 
 			if (points < config.minPointsPerVote) {
-				let item = {
+				const item = {
 					field: 'points',
 					value: points,
-					message: 'Points deceeds minPointsPerVote (' + config.minPointsPerVote + ').'
+					message: `Points deceeds minPointsPerVote (${config.minPointsPerVote}).`
 				}
 				throw new ValidationError([item])
 			}
@@ -127,17 +129,17 @@ module.exports = (sequelize, DataTypes) => {
 		}
 
 		if (sum > config.pointsPerDay) {
-			let item = {
+			const item = {
 				field: 'points',
 				value: sum,
-				message: 'Sum of points exceeds pointsPerDay (' + config.pointsPerDay + ').'
+				message: `Sum of points exceeds pointsPerDay (${config.pointsPerDay}).`
 			}
 			throw new ValidationError([item])
 		}
 
 		for (let i = 0; i < placeIds.length; i++) {
 			if (i !== placeIds.indexOf(placeIds[i])) {
-				let item = {
+				const item = {
 					field: 'placeId',
 					value: placeIds[i],
 					message: 'Two votes had the same placeId.'

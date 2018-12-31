@@ -1,6 +1,8 @@
+'use strict'
+
 process.env.NODE_ENV = 'test'
 
-let request = require('supertest')('http://localhost:5001/api')
+const request = require('supertest')('http://localhost:5001/api')
 const app = require('./../app')
 const setup = require('./setup')
 const users = require('./data').users
@@ -26,27 +28,27 @@ request.getMethodByString = function(method, url) {
 			return this.delete(url)
 
 		default:
-			throw new Error('Unsupported method: ' + method)
+			throw new Error(`Unsupported method: ${method}`)
 
 	}
 }
 
 describe('The mampfalot api', function () {
 	let server
-	let bearerToken = []
+	const bearerToken = []
 	this.timeout(10000)
 
-	before(async () =>{
+	before(async () => {
 		await setup.initialize()
 		await setup.resetData()
 		server = app.listen(5001)
 
 		let res
-		for (let user of users) {
+		for (const user of users) {
 			res = await request
 				.get('/auth')
 				.auth(user.username, user.password)
-			bearerToken[user.id] = 'Bearer ' + res.body.token
+			bearerToken[user.id] = `Bearer ${res.body.token}`
 		}
 
 		server.close()
@@ -72,7 +74,7 @@ describe('The mampfalot api', function () {
 			.get('/foo')
 			.expect(404)
 			.expect(res => {
-				let error = res.body
+				const error = res.body
 				error.should.have.property('type').which.is.equal('NotFoundError')
 				error.should.have.property('message').which.is.equal('This route could not be found.')
 			})
@@ -83,7 +85,7 @@ describe('The mampfalot api', function () {
 		request
 			.get('/')
 			.expect(res => {
-				let headers = res.headers
+				const headers = res.headers
 				headers.should.not.have.property('x-powered-by')
 			})
 			.end(done)
@@ -91,28 +93,28 @@ describe('The mampfalot api', function () {
 
 	it('requires authentication for all protected endpoints', async () => {
 		const PROTECTED_ENDPOINTS = endpoints.getProtected()
-		let errors = []
-		for (let endpoint of PROTECTED_ENDPOINTS) {
-			for (let method of endpoint.methods) {
+		const errors = []
+		for (const endpoint of PROTECTED_ENDPOINTS) {
+			for (const method of endpoint.methods) {
 				await request
-						.getMethodByString(method, endpoint.url)
-						.expect(401)
-						.expect(res => {
-							errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.AUTHENTICTAION_REQUIRED)
-						})
-						.catch(err => {
-							errors.push(method + ' ' + endpoint.url + ': ' + err.message)
-						})
+					.getMethodByString(method, endpoint.url)
+					.expect(401)
+					.expect(res => {
+						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.AUTHENTICTAION_REQUIRED)
+					})
+					.catch(err => {
+						errors.push(`${method} ${endpoint.url}: ${err.message}`)
+					})
 			}
 		}
 
 		if (errors.length > 0) {
-			throw new Error('\n' + errors.join('\n'))
+			throw new Error(`\n${errors.join('\n')}`)
 		}
 	})
 
 	it('fails if token is invalid', (done) => {
-		let invalid = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6NSwibmFtZSI6Ik1heCBNdXN0ZXJtYW5uIiwiZW1haWwiOiJtdXN0ZXJtYW5uQGdtYWlsLmNvbSIsImlhdCI6MTUzNjc1Njk3MCwiZXhwIjoxNTM2NzYwNTg5LCJqdGkiOiI2YTA5OTY1Ny03MmRlLTQyOGMtOWE2NS00MDQ5N2FmZjY5YjcifQ.Ym0pnoafK1bpBKq_ohqPKyx0mITa_YfkIaHey94wXgQ'
+		const invalid = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6NSwibmFtZSI6Ik1heCBNdXN0ZXJtYW5uIiwiZW1haWwiOiJtdXN0ZXJtYW5uQGdtYWlsLmNvbSIsImlhdCI6MTUzNjc1Njk3MCwiZXhwIjoxNTM2NzYwNTg5LCJqdGkiOiI2YTA5OTY1Ny03MmRlLTQyOGMtOWE2NS00MDQ5N2FmZjY5YjcifQ.Ym0pnoafK1bpBKq_ohqPKyx0mITa_YfkIaHey94wXgQ'
 		request
 			.get('/users/5')
 			.set({ Authorization: invalid })
@@ -125,8 +127,8 @@ describe('The mampfalot api', function () {
 
 	it('returns correct MethodNotAllowedErrors for all routes', async () => {
 		const ENDPOINTS = endpoints.getAll()
-		let errors = []
-		for (let endpoint of ENDPOINTS) {
+		const errors = []
+		for (const endpoint of ENDPOINTS) {
 			await request
 				.patch(endpoint.url)
 				.set({ Authorization: bearerToken[1] })
@@ -135,11 +137,11 @@ describe('The mampfalot api', function () {
 					errorHelper.checkMethodNotAllowedError(res.body, 'PATCH', endpoint.methods)
 				})
 				.catch((err) => {
-					errors.push(endpoint.url + ': ' + err.message)
+					errors.push(`${endpoint.url}: ${err.message}`)
 				})
 		}
 
-		if (errors.length > 0) { throw new Error ('\n' + errors.join('\n') ) }
+		if (errors.length > 0) { throw new Error (`\n${errors.join('\n')}` ) }
 	})
 
 	require('./tests/users')(request, bearerToken)

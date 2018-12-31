@@ -1,3 +1,5 @@
+'use strict'
+
 const router = require('express').Router()
 const { Place } = require('../models')
 const { allowMethods, hasBodyValues } = require('../util/middleware')
@@ -19,7 +21,7 @@ router.route('/').post((req, res, next) => {
 })
 
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
-	let { user, place } = res.locals
+	const { user, place } = res.locals
 
 	await user.can.createPlace(place)
 	await place.save()
@@ -29,14 +31,14 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 router.param('placeId', asyncMiddleware(loader.loadPlace))
 
 router.route('/:placeId').get(asyncMiddleware(async (req, res, next) => {
-	let { user, place } = res.locals
+	const { user, place } = res.locals
 
 	await user.can.readPlace(place)
 	res.send(place)
 }))
 
 router.route('/:placeId').post(asyncMiddleware(async (req, res, next) => {
-	let { user, place } = res.locals
+	const { user, place } = res.locals
 
 	if (req.body.foodTypeId) { place.foodTypeId= req.body.foodTypeId }
 	if (req.body.name) { place.name = req.body.name }
@@ -46,7 +48,7 @@ router.route('/:placeId').post(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/:placeId').delete(asyncMiddleware(async (req, res, next) => {
-	let { user, place } = res.locals
+	const { user, place } = res.locals
 
 	await user.can.deletePlace(place)
 	await place.destroy()

@@ -1,3 +1,5 @@
+'use strict'
+
 module.exports = (sequelize, DataTypes) => {
 	const Participant = sequelize.define('Participant', {
 		id: {

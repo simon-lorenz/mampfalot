@@ -1,10 +1,12 @@
+'use strict'
+
 const jwt = require('jsonwebtoken')
 const { RequestError, MethodNotAllowedError, AuthenticationError } = require('../classes/errors')
 const User = require('../classes/user')
 
 module.exports = {
 	initUser: async function (req, res, next) {
-		let id = res.locals.token.id
+		const id = res.locals.token.id
 
 		try {
 			res.locals.user = new User(id)
@@ -25,9 +27,9 @@ module.exports = {
 	 */
 	hasBodyValues(values, mode = 'atLeastOne') {
 		return (req, res, next) => {
-			let missing = []
+			const missing = []
 
-			for (let value of values) {
+			for (const value of values) {
 				if (req.body[value] === undefined) {
 					missing.push(value)
 				}
@@ -36,14 +38,14 @@ module.exports = {
 			switch (mode) {
 				case 'all':
 					if (missing.length > 0) {
-						return  next(new RequestError('This request has to provide all of the following body values: ' + values.join(', ')))
+						return  next(new RequestError(`This request has to provide all of the following body values: ${values.join(', ')}`))
 					} else {
 						return next()
 					}
 
 				case 'atLeastOne':
 					if (missing.length === values.length) {
-						return next(new RequestError('This request has to provide at least one of the following body values: ' + values.join(', ')))
+						return next(new RequestError(`This request has to provide at least one of the following body values: ${values.join(', ')}`))
 					} else {
 						return next()
 					}
@@ -56,9 +58,9 @@ module.exports = {
 
 	hasQueryValues(values, mode = 'atLeastOne') {
 		return (req, res, next) => {
-			let missing = []
+			const missing = []
 
-			for (let value of values) {
+			for (const value of values) {
 				if (req.query[value] === undefined) {
 					missing.push(value)
 				}
@@ -67,14 +69,14 @@ module.exports = {
 			switch (mode) {
 				case 'all':
 					if (missing.length > 0) {
-						return  next(new RequestError('This request has to provide all of the following query values: ' + values.join(', ')))
+						return  next(new RequestError(`This request has to provide all of the following query values: ${values.join(', ')}`))
 					} else {
 						return next()
 					}
 
 				case 'atLeastOne':
 					if (missing.length === values.length) {
-						return next(new RequestError('This request has to provide at least one of the following query values: ' + values.toString()))
+						return next(new RequestError(`This request has to provide at least one of the following query values: ${values.toString()}`))
 					} else {
 						return next()
 					}
@@ -102,7 +104,7 @@ module.exports = {
 	},
 
 	verifyToken(req, res, next) {
-		let authorizationHeader = req.headers['authorization']
+		const authorizationHeader = req.headers['authorization']
 
 		if (!authorizationHeader) return next(new AuthenticationError('This request requires authentication.'))
 

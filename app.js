@@ -1,3 +1,5 @@
+'use strict'
+
 require('./config')
 const app = require('express')()
 const Sequelize = require('sequelize')
@@ -100,7 +102,7 @@ app.use((err, req, res, next) => {
 // Convert Sequelize validation errors
 app.use((err, req, res, next) => {
 	if (err instanceof Sequelize.ValidationError) {
-		let validationError = new ValidationError()
+		const validationError = new ValidationError()
 		validationError.fromSequelizeValidationError(err)
 		err = validationError
 	}
@@ -110,9 +112,9 @@ app.use((err, req, res, next) => {
 // Convert Sequelize BulkRecordError
 app.use((err, req, res, next) => {
 	if (err instanceof Promise.AggregateError) {
-		let bulkRecordError = err[0]
+		const bulkRecordError = err[0]
 
-		let validationError = new ValidationError()
+		const validationError = new ValidationError()
 		validationError.fromBulkRecordError(bulkRecordError)
 		err = validationError
 		// console.log(JSON.stringify(err))
@@ -156,7 +158,7 @@ app.use((err, req, res, next) => {
 })
 
 app.use((req, res, next) => {
-	let error = {
+	const error = {
 		type: 'NotFoundError',
 		message: 'This route could not be found.'
 	}

@@ -1,3 +1,5 @@
+'use strict'
+
 const setup = require('../setup')
 const errorHelper = require('../helpers/errors')
 
@@ -54,7 +56,7 @@ module.exports = (request, bearerToken) => {
 					.send(newVotes)
 					.expect(400)
 					.expect(res => {
-						let expectedError = {
+						const expectedError = {
 							field: 'participantId',
 							value: 2,
 							message: 'This participantId is not associated to your userId.'
@@ -73,7 +75,7 @@ module.exports = (request, bearerToken) => {
 					.send(newVotes)
 					.expect(400)
 					.expect(res => {
-						let expectedError = {
+						const expectedError = {
 							field: 'participantId',
 							value: 99,
 							message: 'This participantId is not associated to your userId.'
@@ -91,7 +93,7 @@ module.exports = (request, bearerToken) => {
 					.send(newVotes)
 					.expect(400)
 					.expect(res => {
-						let expectedError = {
+						const expectedError = {
 							field: 'placeId',
 							value: 99,
 							message: 'This placeId does not belong to the associated group.'
@@ -109,7 +111,7 @@ module.exports = (request, bearerToken) => {
 					.send(newVotes)
 					.expect(400)
 					.expect(res => {
-						let expectedError = {
+						const expectedError = {
 							field: 'placeId',
 							value: 5,
 							message: 'This placeId does not belong to the associated group.'
@@ -128,7 +130,7 @@ module.exports = (request, bearerToken) => {
 					.send(newVotes)
 					.expect(400)
 					.expect(res => {
-						let expectedError = {
+						const expectedError = {
 							field: 'points',
 							value: 120,
 							message: 'Sum of points exceeds pointsPerDay (100).'
@@ -146,7 +148,7 @@ module.exports = (request, bearerToken) => {
 					.send(newVotes)
 					.expect(400)
 					.expect(res => {
-						let expectedError = {
+						const expectedError = {
 							field: 'points',
 							value: 101,
 							message: 'Points exceeds maxPointsPerVote (70).'
@@ -164,7 +166,7 @@ module.exports = (request, bearerToken) => {
 					.send(newVotes)
 					.expect(400)
 					.expect(res => {
-						let expectedError = {
+						const expectedError = {
 							field: 'points',
 							value: 29,
 							message: 'Points deceeds minPointsPerVote (30).'
@@ -183,7 +185,7 @@ module.exports = (request, bearerToken) => {
 					.send(newVotes)
 					.expect(400)
 					.expect(res => {
-						let expectedError = {
+						const expectedError = {
 							field: 'participantId',
 							value: null,
 							message: 'participantId cannot be null.'
@@ -201,7 +203,7 @@ module.exports = (request, bearerToken) => {
 					.send(newVotes)
 					.expect(400)
 					.expect(res => {
-						let expectedError = {
+						const expectedError = {
 							field: 'placeId',
 							value: null,
 							message: 'placeId cannot be null.'
@@ -219,7 +221,7 @@ module.exports = (request, bearerToken) => {
 					.send(newVotes)
 					.expect(400)
 					.expect(res => {
-						let expectedError = {
+						const expectedError = {
 							field: 'points',
 							value: null,
 							message: 'Points cannot be null.'
@@ -237,7 +239,7 @@ module.exports = (request, bearerToken) => {
 					.send(newVotes)
 					.expect(400)
 					.expect(res => {
-						let expectedError = {
+						const expectedError = {
 							field: 'points',
 							value: 'Not a number',
 							message: 'Points has to be numeric.'
@@ -255,7 +257,7 @@ module.exports = (request, bearerToken) => {
 					.send(newVotes)
 					.expect(400)
 					.expect(res => {
-						let expectedError = {
+						const expectedError = {
 							field: 'participantId',
 							value: 'Various values',
 							message: 'The participantId has to be the same in all votes.'
@@ -274,7 +276,7 @@ module.exports = (request, bearerToken) => {
 					.send(newVotes)
 					.expect(400)
 					.expect(res => {
-						let expectedError = {
+						const expectedError = {
 							field: 'placeId',
 							value: 1,
 							message: 'Two votes had the same placeId.'
@@ -293,10 +295,10 @@ module.exports = (request, bearerToken) => {
 					.send(newVotes)
 					.expect(200)
 					.expect(res => {
-						let votes = res.body
+						const votes = res.body
 						votes.should.be.an('array').with.length(2)
 
-						let firstVote = votes[0]
+						const firstVote = votes[0]
 						firstVote.should.have.property('id')
 						firstVote.should.have.property('participantId').equal(1)
 						firstVote.should.have.property('placeId').equal(1)
@@ -317,10 +319,10 @@ module.exports = (request, bearerToken) => {
 					}])
 					.expect(200)
 					.expect(res => {
-						let votes = res.body
+						const votes = res.body
 						votes.should.be.an('array').with.length(1)
 
-						let vote = votes[0]
+						const vote = votes[0]
 						vote.should.have.property('id')
 						vote.should.have.property('participantId').equal(1)
 						vote.should.have.property('placeId').equal(1)
@@ -337,10 +339,10 @@ module.exports = (request, bearerToken) => {
 					.send(newVotes)
 					.expect(200)
 					.expect(res => {
-						let votes = res.body
+						const votes = res.body
 						votes.should.be.an('array').with.length(2)
 
-						let firstVote = votes[0]
+						const firstVote = votes[0]
 						firstVote.should.have.property('id')
 						firstVote.should.have.property('participantId').equal(1)
 						firstVote.should.have.property('placeId').equal(1)
@@ -377,7 +379,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[2] })
 						.expect(403)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								resource: 'Vote',
 								id: 1,
 								operation: 'READ'
@@ -404,7 +406,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[1] })
 						.expect(200)
 						.expect(res => {
-							let vote = res.body
+							const vote = res.body
 							vote.should.have.property('id').equal(1)
 							vote.should.have.property('participantId').equal(1)
 							vote.should.have.property('placeId').equal(2)
@@ -426,7 +428,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[2] })
 						.expect(403)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								resource: 'Vote',
 								id: 1,
 								operation: 'DELETE'

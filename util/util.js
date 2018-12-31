@@ -1,3 +1,5 @@
+'use strict'
+
 const crypto = require('crypto')
 
 module.exports = {
@@ -12,7 +14,7 @@ module.exports = {
 		return (req, res, next) => {
 			Promise
 				.resolve(fn(req, res, next))
-				.catch(next);
+				.catch(next)
 		}
 	},
 

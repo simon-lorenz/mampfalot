@@ -1,3 +1,5 @@
+'use strict'
+
 const router = require('express').Router()
 const { allowMethods } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
@@ -9,14 +11,14 @@ router.route('/:participantId/votes').all(allowMethods(['GET']))
 router.param('participantId', asyncMiddleware(loader.loadParticipant))
 
 router.route('/:participantId').get(asyncMiddleware(async (req, res, next) => {
-	let { participant, user } = res.locals
+	const { participant, user } = res.locals
 
 	await user.can.readParticipant(participant)
 	res.send(participant)
 }))
 
 router.route('/:participantId').delete(asyncMiddleware(async (req, res, next) => {
-	let { participant, user } = res.locals
+	const { participant, user } = res.locals
 
 	await user.can.deleteParticipant(participant)
 	await participant.destroy()
@@ -24,7 +26,7 @@ router.route('/:participantId').delete(asyncMiddleware(async (req, res, next) =>
 }))
 
 router.route('/:participantId/votes').get(asyncMiddleware(async (req, res, next) => {
-	let { participant, user } = res.locals
+	const { participant, user } = res.locals
 
 	await user.can.readParticipant(participant)
 	res.send(participant.votes)

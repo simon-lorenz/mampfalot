@@ -1,3 +1,5 @@
+'use strict'
+
 const ENDPOINTS = [
 	{
 		url: '/auth',
@@ -145,8 +147,8 @@ module.exports = {
 		return ENDPOINTS
 	},
 	getProtected() {
-		let protectedEndpoints = []
-		for (let endpoint of ENDPOINTS) {
+		const protectedEndpoints = []
+		for (const endpoint of ENDPOINTS) {
 			if (!endpoint.public) {
 				protectedEndpoints.push(endpoint)
 			}
@@ -154,8 +156,8 @@ module.exports = {
 		return protectedEndpoints
 	},
 	getPublic() {
-		let publicEndpoints = []
-		for (let endpoint of ENDPOINTS) {
+		const publicEndpoints = []
+		for (const endpoint of ENDPOINTS) {
 			if (endpoint.public) {
 				publicEndpoints.push(endpoint)
 			}

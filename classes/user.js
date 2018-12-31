@@ -1,3 +1,5 @@
+'use strict'
+
 const ResourceAccessControl = require('../classes/resource-access-control')
 const UserModel = require('../models').User
 const GroupModel = require('../models').Group
@@ -15,7 +17,7 @@ class User {
 	 * user from the database.
 	 */
 	async init() {
-		let finder = {
+		const finder = {
 			attributes: [],
 			where: {
 				id: this.id
@@ -30,7 +32,7 @@ class User {
 			}]
 		}
 
-		let record = await UserModel.findOne(finder, { raw: true })
+		const record = await UserModel.findOne(finder, { raw: true })
 
 		if (record) {
 			this.groups = record.groups
@@ -40,7 +42,7 @@ class User {
 	}
 
 	isGroupAdmin(groupId) {
-		for (let group of this.groups) {
+		for (const group of this.groups) {
 			if (group.id === parseInt(groupId)) {
 				return group.config.isAdmin
 			}
@@ -49,7 +51,7 @@ class User {
 	}
 
 	isGroupMember(groupId) {
-		for (let group of this.groups) {
+		for (const group of this.groups) {
 			if (group.id === parseInt(groupId)) {
 				return true
 			}
@@ -58,8 +60,8 @@ class User {
 	}
 
 	getGroupIds(adminOnly = false) {
-		let groupIds = []
-		for (let group of this.groups) {
+		const groupIds = []
+		for (const group of this.groups) {
 			if (adminOnly) {
 				if (group.config.isAdmin) {
 					groupIds.push(group.id)

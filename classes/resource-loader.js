@@ -1,3 +1,5 @@
+'use strict'
+
 const { Comment, FoodType, Group, Place, Lunchbreak, User, GroupMembers, Participant, Vote, Invitation } = require('../models')
 const { NotFoundError } = require('./errors')
 
@@ -9,7 +11,7 @@ class ResourceLoader {
 	 * If the resource can not be found, a NotFoundError is passed to next()
 	 */
 	async loadComment(req, res, next) {
-		let commentId = parseInt(req.params.commentId)
+		const commentId = parseInt(req.params.commentId)
 		res.locals.comment = await Comment.findByPk(commentId)
 		if (res.locals.comment) { next() }
 		else { next(new NotFoundError('Comment', commentId)) }
@@ -21,7 +23,7 @@ class ResourceLoader {
 	 * If the resource can not be found, a NotFoundError is passed to next()
 	 */
 	async loadFoodType(req, res, next) {
-		let foodTypeId = parseInt(req.params.foodTypeId)
+		const foodTypeId = parseInt(req.params.foodTypeId)
 		res.locals.foodType = await FoodType.findByPk(foodTypeId)
 		if (res.locals.foodType) {
 			next()
@@ -36,7 +38,7 @@ class ResourceLoader {
 	 * If the resource can not be found, a NotFoundError is passed to next()
 	 */
 	async loadGroup(req, res, next) {
-		let groupId = parseInt(req.params.groupId)
+		const groupId = parseInt(req.params.groupId)
 		res.locals.group = await Group.findByPk(groupId, {
 			include: [
 				{
@@ -118,8 +120,8 @@ class ResourceLoader {
 	 * If the resource can not be found, a NotFoundError is passed to next()
 	 */
 	async loadMember(req, res, next) {
-		let groupId = parseInt(req.params.groupId)
-		let userId = parseInt(req.params.userId)
+		const groupId = parseInt(req.params.groupId)
+		const userId = parseInt(req.params.userId)
 		res.locals.member = await GroupMembers.findOne({
 			where: { groupId, userId }
 		})
@@ -137,7 +139,7 @@ class ResourceLoader {
 	 * If the resource can not be found, a NotFoundError is passed to next()
 	 */
 	async loadLunchbreak (req, res, next) {
-		let lunchbreakId = parseInt(req.params.lunchbreakId)
+		const lunchbreakId = parseInt(req.params.lunchbreakId)
 
 		res.locals.lunchbreak = await Lunchbreak.findByPk(lunchbreakId, {
 			include: [
@@ -174,7 +176,7 @@ class ResourceLoader {
 	 * If the resource can not be found, a NotFoundError is passed to next()
 	 */
 	async loadParticipant (req, res, next) {
-		let participantId = parseInt(req.params.participantId)
+		const participantId = parseInt(req.params.participantId)
 
 		res.locals.participant = await Participant.findOne({
 			attributes: {
@@ -204,7 +206,7 @@ class ResourceLoader {
 	 * If the resource can not be found, a NotFoundError is passed to next()
 	 */
 	async loadPlace (req, res, next) {
-		let placeId = parseInt(req.params.placeId)
+		const placeId = parseInt(req.params.placeId)
 		res.locals.place = await Place.findByPk(placeId, {
 			include: [
 				{
@@ -227,7 +229,7 @@ class ResourceLoader {
 	 * If the resource can not be found, a NotFoundError is passed to next()
 	 */
 	async loadUser (req, res, next) {
-		let userId = parseInt(req.params.userId)
+		const userId = parseInt(req.params.userId)
 		res.locals.resources = {}
 		res.locals.resources.user = await User.unscoped().findByPk(userId)
 		if (res.locals.resources.user) {
@@ -243,7 +245,7 @@ class ResourceLoader {
 	 * If the resource can not be found, a NotFoundError is passed to next()
 	 */
 	async loadVote (req, res, next) {
-		let voteId = parseInt(req.params.voteId)
+		const voteId = parseInt(req.params.voteId)
 		res.locals.vote = await Vote.findByPk(voteId, {
 			include: [ Participant, Place ]
 		})
