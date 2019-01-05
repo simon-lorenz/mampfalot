@@ -26,7 +26,12 @@ module.exports = (sequelize, DataTypes) => {
 			allowNull: false,
 			defaultValue: 100,
 			validate: {
-				min: 1
+				min: 1,
+				equalOrGreaterThanMaxPointsPerVote(value) {
+					if (value < this.maxPointsPerVote) {
+						throw new Error('pointsPerDay has to be equal or greater than maxPointsPerVote.')
+					}
+				}
 			}
 		},
 		maxPointsPerVote: {

@@ -190,6 +190,34 @@ module.exports = (request, bearerToken) => {
 						.end(done)
 				})
 
+				it('fails if pointsPerDay is not greater or equal than maxPointsPerVote', async () => {
+					await request
+						.post('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.send({ pointsPerDay: 69 })
+						.expect(400)
+						.expect(res => {
+							const expectedError = {
+								field: 'pointsPerDay',
+								value: 69,
+								message: 'pointsPerDay has to be equal or greater than maxPointsPerVote.'
+							}
+							errorHelper.checkValidationError(res.body, expectedError)
+						})
+
+					await request
+						.post('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.send({ maxPointsPerVote: 69 })
+						.expect(200)
+
+					await request
+						.post('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.send({ pointsPerDay: 69 })
+						.expect(200)
+				})
+
 				it('fails if defaultVoteEndingTime is greater than defaultLunchTime', (done) => {
 					request
 						.post('/groups/1')
