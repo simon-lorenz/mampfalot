@@ -42,21 +42,21 @@ The only exception is the /users route. You may POST a new user without a token.
 
 ## Development Setup
 
-``` bash
-# install dependencies
-npm i
+### System Requirements
 
-# start webserver
-node server.js
-```
+- [Node.js](https://nodejs.org/en/)
+- [MySQL Server](https://dev.mysql.com/downloads/mysql/) (Version 5.6 or 8+)
 
-## Enable Testing
+### Setup
 
-1. Install a local mysql server (v5.6 or v8) on your machine
-2. Create a new, empty database (e.g. "mampfalot_test")
-3. Modify the test section in config.js to match with your local username, password, port, etc.
+1. Run ```npm install``` to install all dependencies.
+2. In the root directory you'll find a ```.env.example``` file. Copy it and create a new file named ```.env```. Modify the environment variables in it according to your development environment.
+3. Run ```npm start``` to launch the webserver.
 
-``` bash
-# fire up the tests
-npm test
-```
+### Testing
+
+This project contains a test suite with integration tests. You can run all of them with ```npm test```. It may take some time to run them all, but you also have the option to test only routes that, for example, contain "/users" with ```npm run test-users```. See ```package.json``` for all commands.
+
+### Linting
+
+Run ESLint with ```npm run lint```.
