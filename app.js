@@ -1,6 +1,6 @@
 'use strict'
 
-require('./config')
+require('dotenv').load()
 const app = require('express')()
 const Sequelize = require('sequelize')
 const bodyParser = require('body-parser')
