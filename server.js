@@ -15,7 +15,9 @@ app.listen(PORT, () => {
 		.then(() => console.log('[Database] Connection successfully established.'))
 		.catch((err) => {
 			console.error('[Database] Connection could not be established.')
-			console.error(err.toString())
+			console.error(JSON.stringify(err))
+			console.info('Shutting down...')
+			process.exit()
 		})
 
 	mailer.checkConnections()
