@@ -1,7 +1,9 @@
+'use strict'
+
 const errorHelper = require('../helpers/errors')
 const { AuthenticationErrorTypes } = require('../helpers/errors')
 
-module.exports = (request, token) => {
+module.exports = (request) => {
 	return describe('/auth', () => {
 		describe('GET', () => {
 			it('authenticates a user with correct credentials', (done) => {
@@ -31,8 +33,8 @@ module.exports = (request, token) => {
 					.auth('maxmustermann', '123456')
 					.expect(200)
 					.expect(res => {
-						let token = res.body.token
-						let tokenPayload = token.split('.')[1]
+						const token = res.body.token
+						const tokenPayload = token.split('.')[1]
 						let payload = Buffer.from(tokenPayload, 'base64').toString()
 						payload = JSON.parse(payload)
 						payload.should.have.all.keys(['id', 'exp', 'iat'])

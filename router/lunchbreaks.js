@@ -1,3 +1,5 @@
+'use strict'
+
 const router = require('express').Router()
 const { Comment, Participant } = require('../models')
 const { allowMethods, hasBodyValues } = require('../util/middleware')
@@ -13,13 +15,13 @@ router.route('/:lunchbreakId/participants').all(allowMethods(['GET', 'POST']))
 router.param('lunchbreakId', asyncMiddleware(loader.loadLunchbreak))
 
 router.route('/:lunchbreakId').get(asyncMiddleware(async (req, res, next) => {
-	let { user, lunchbreak } = res.locals
+	const { user, lunchbreak } = res.locals
 	await user.can.readLunchbreak(lunchbreak)
 	res.send(res.locals.lunchbreak)
 }))
 
 router.route('/:lunchbreakId').post(asyncMiddleware(async (req, res, next) => {
-	let { user, lunchbreak } = res.locals
+	const { user, lunchbreak } = res.locals
 
 	if(req.body.voteEndingTime) { lunchbreak.voteEndingTime = req.body.voteEndingTime }
 	if(req.body.lunchTime) { lunchbreak.lunchTime = req.body.lunchTime }
@@ -29,15 +31,15 @@ router.route('/:lunchbreakId').post(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/:lunchbreakId/comments').get(asyncMiddleware(async (req, res, next) => {
-	let { user, lunchbreak } = res.locals
+	const { user, lunchbreak } = res.locals
 	await user.can.readLunchbreak(lunchbreak)
 	res.send(lunchbreak.comments)
 }))
 
 router.route('/:lunchbreakId/comments').post(asyncMiddleware(async (req, res, next) => {
-	let { user } = res.locals
+	const { user } = res.locals
 
-	let comment = Comment.build({
+	const comment = Comment.build({
 		lunchbreakId: res.locals.lunchbreak.id,
 		userId: res.locals.user.id,
 		comment: req.body.comment
@@ -53,9 +55,9 @@ router.route('/:lunchbreakId/participants').get((req, res, next) => {
 })
 
 router.route('/:lunchbreakId/participants').post(asyncMiddleware(async (req, res, next) => {
-	let { user } = res.locals
+	const { user } = res.locals
 
-	let participant = Participant.build({
+	const participant = Participant.build({
 		userId: user.id,
 		lunchbreakId: parseInt(req.params.lunchbreakId)
 	})

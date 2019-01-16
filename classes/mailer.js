@@ -1,3 +1,5 @@
+'use strict'
+
 const nodemailer = require('nodemailer')
 const handlebars = require('handlebars')
 const fs = require('fs')
@@ -8,12 +10,12 @@ const fs = require('fs')
  * @param {string} path
  */
 async function readFile(path) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(path, { encoding: 'utf-8' }, (err, content) => {
-      if (err) reject(err)
-      resolve(content)
-    })
-  })
+	return new Promise((resolve, reject) => {
+		fs.readFile(path, { encoding: 'utf-8' }, (err, content) => {
+			if (err) reject(err)
+			resolve(content)
+		})
+	})
 }
 
 /**
@@ -23,9 +25,9 @@ async function readFile(path) {
  * @param {object} values
  */
 async function compileTemplate(path, values) {
-  const file = await readFile(path)
-  const template = handlebars.compile(file)
-  return template(values)
+	const file = await readFile(path)
+	const template = handlebars.compile(file)
+	return template(values)
 }
 
 /**
@@ -108,7 +110,7 @@ class Mailer {
 		this.accounts = new Array()
 		this.accounts.push(new MailAccount('support@mampfalot.app', 'Mampfalot Support', process.env.MAIL_PASSWORD_SUPPORT))
 		this.accounts.push(new MailAccount('hello@mampfalot.app', 'Mampfalot', process.env.MAIL_PASSWORD_HELLO))
-		this.templateFolder = __dirname + '/../mails'
+		this.templateFolder = `${__dirname}/../mails`
 	}
 
 	/**
@@ -131,7 +133,7 @@ class Mailer {
 		for (const account of this.accounts) {
 			if (account.address === address) return account
 		}
-		throw `No account with address "${address}" found!`
+		throw new Error(`No account with address "${address}" found!`)
 	}
 
 	/**
@@ -142,8 +144,8 @@ class Mailer {
 	 */
 	async sendWelcomeMail(to, username, verificationToken) {
 		// Prepare template data
-		const fileHtml = this.templateFolder + '/welcome.html'
-		const fileText = this.templateFolder + '/welcome.txt'
+		const fileHtml = `${this.templateFolder}/welcome.html`
+		const fileText = `${this.templateFolder}/welcome.txt`
 		const verificationLink = `${process.env.FRONTEND_BASE_URL}/confirm-verification?user=${username}&token=${verificationToken}`
 
 		// Compile templates
@@ -163,8 +165,8 @@ class Mailer {
 	 */
 	async sendPasswordResetMail(to, username, token) {
 		// Prepare template data
-		const fileHtml = this.templateFolder + '/forgot-password.html'
-		const fileText = this.templateFolder + '/forgot-password.txt'
+		const fileHtml = `${this.templateFolder}/forgot-password.html`
+		const fileText = `${this.templateFolder}/forgot-password.txt`
 		const passwordResetLink = `${process.env.FRONTEND_BASE_URL}/confirm-password-reset?token=${token}&user=${username}`
 
 		// Compile templates
@@ -178,8 +180,8 @@ class Mailer {
 
 	async sendUserAlreadyRegisteredMail(to, username) {
 		// Prepare template data
-		const fileHtml = this.templateFolder + '/already-registered-verified.html'
-		const fileText = this.templateFolder + '/already-registered-verified.txt'
+		const fileHtml = `${this.templateFolder}/already-registered-verified.html`
+		const fileText = `${this.templateFolder}/already-registered-verified.txt`
 		const passwordResetLink = `${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username}`
 
 		// Compile templates
@@ -193,8 +195,8 @@ class Mailer {
 
 	async sendUserAlreadyRegisteredButNotVerifiedMail(to, username, verificationToken) {
 		// Prepare template data
-		const fileHtml = this.templateFolder + '/already-registered-unverified.html'
-		const fileText = this.templateFolder + '/already-registered-unverified.txt'
+		const fileHtml = `${this.templateFolder}/already-registered-unverified.html`
+		const fileText = `${this.templateFolder}/already-registered-unverified.txt`
 		const verificationLink = `${process.env.FRONTEND_BASE_URL}/confirm-verification?user=${username}&token=${verificationToken}`
 		const passwordResetLink = `${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username}`
 
@@ -209,8 +211,8 @@ class Mailer {
 
 	async sendForgotUsernameMail(to, username) {
 		// Prepare template data
-		const fileHtml = this.templateFolder + '/forgot-username.html'
-		const fileText = this.templateFolder + '/forgot-username.txt'
+		const fileHtml = `${this.templateFolder}/forgot-username.html`
+		const fileText = `${this.templateFolder}/forgot-username.txt`
 		const passwordResetLink = `${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username}`
 
 		// Compile templates

@@ -1,3 +1,5 @@
+'use strict'
+
 const User = require('./../models').User
 const Group = require('./../models').Group
 const GroupMembers = require('./../models').GroupMembers
@@ -13,11 +15,11 @@ const data = require('./data')
 
 module.exports = {
 	async resetData() {
-		let tables = ['comments', 'food_types', 'group_members', 'groups', 'invitations', 'lunchbreaks', 'participants', 'places', 'users', 'votes']
-		let queries = []
+		const tables = ['comments', 'food_types', 'group_members', 'groups', 'invitations', 'lunchbreaks', 'participants', 'places', 'users', 'votes']
+		const queries = []
 		queries.push('SET FOREIGN_KEY_CHECKS = 0;')
-		for (let table of tables) {
-			queries.push('TRUNCATE `' + process.env.DB_NAME + '`.`' + table + '`;')
+		for (const table of tables) {
+			queries.push(`TRUNCATE \`${process.env.DB_NAME}\`.\`${table}\`;`)
 		}
 		queries.push('SET FOREIGN_KEY_CHECKS = 1;')
 

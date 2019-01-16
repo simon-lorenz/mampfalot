@@ -1,3 +1,5 @@
+'use strict'
+
 const setup = require('../setup')
 const errorHelper = require('../helpers/errors')
 
@@ -15,7 +17,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[3] })
 						.expect(403)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								resource: 'Participant',
 								id: 1,
 								operation: 'READ'
@@ -49,11 +51,11 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[1] })
 						.expect(200)
 						.expect(res => {
-							let participant = res.body
+							const participant = res.body
 							participant.should.have.property('id').equal(1)
 							participant.should.have.property('user')
 							participant.should.have.property('votes')
-							let firstVote = participant.votes[0]
+							const firstVote = participant.votes[0]
 							firstVote.should.have.property('place')
 							participant.should.have.property('lunchbreakId').equal(1)
 							participant.should.have.property('userId').equal(1)
@@ -75,7 +77,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[2] })
 						.expect(403)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								resource: 'Participant',
 								id: 1,
 								operation: 'DELETE'
@@ -147,20 +149,20 @@ module.exports = (request, bearerToken) => {
 
 					it('sends a list of votes', (done) => {
 						request
-						.get('/participants/1/votes')
-						.set({ Authorization: bearerToken[1] })
-						.expect(200)
-						.expect(res => {
-							let votes = res.body
-							votes.should.be.an('array').which.has.a.lengthOf(3)
+							.get('/participants/1/votes')
+							.set({ Authorization: bearerToken[1] })
+							.expect(200)
+							.expect(res => {
+								const votes = res.body
+								votes.should.be.an('array').which.has.a.lengthOf(3)
 
-							let firstVote = votes[0]
-							firstVote.should.have.property('id').equal(1)
-							firstVote.should.have.property('participantId').equal(1)
-							firstVote.should.have.property('placeId').equal(2)
-							firstVote.should.have.property('points').equal(30)
-						})
-						.end(done)
+								const firstVote = votes[0]
+								firstVote.should.have.property('id').equal(1)
+								firstVote.should.have.property('participantId').equal(1)
+								firstVote.should.have.property('placeId').equal(2)
+								firstVote.should.have.property('points').equal(30)
+							})
+							.end(done)
 					})
 				})
 			})

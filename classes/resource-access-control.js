@@ -1,3 +1,5 @@
+'use strict'
+
 const { GroupMembers, Lunchbreak } = require('../models')
 const { AuthorizationError } = require('./errors')
 
@@ -14,14 +16,14 @@ class ResourceAccessControl {
 	}
 
 	async createComment(comment) {
-		let lunchbreak = await Lunchbreak.findByPk(comment.lunchbreakId, { attributes: ['groupId'] })
+		const lunchbreak = await Lunchbreak.findByPk(comment.lunchbreakId, { attributes: ['groupId'] })
 		if (!this.user.isGroupMember(lunchbreak.groupId)) {
 			throw new AuthorizationError('Comment', null, 'CREATE')
 		}
 	}
 
 	async readComment(comment) {
-		let lunchbreak = await Lunchbreak.findByPk(comment.lunchbreakId, { attributes: ['groupId'] })
+		const lunchbreak = await Lunchbreak.findByPk(comment.lunchbreakId, { attributes: ['groupId'] })
 		if (!this.user.isGroupMember(lunchbreak.groupId)) {
 			throw new AuthorizationError('Comment', comment.id, 'READ')
 		}
@@ -135,8 +137,8 @@ class ResourceAccessControl {
 	}
 
 	async updateGroupMember(member) {
-		let gainsAdminRights = member.isAdmin && !member.previous('isAdmin')
-		let losesAdminRights = !member.isAdmin && member.previous('isAdmin')
+		const gainsAdminRights = member.isAdmin && !member.previous('isAdmin')
+		const losesAdminRights = !member.isAdmin && member.previous('isAdmin')
 
 		if (this.user.id === member.userId || this.user.isGroupAdmin(member.groupId)) {
 			if (gainsAdminRights && !this.user.isGroupAdmin(member.groupId)) {
@@ -144,7 +146,7 @@ class ResourceAccessControl {
 			}
 
 			if (losesAdminRights) {
-				let admins = await GroupMembers.findAll({
+				const admins = await GroupMembers.findAll({
 					where: {
 						groupId: member.groupId,
 						isAdmin: true
@@ -152,7 +154,7 @@ class ResourceAccessControl {
 				})
 
 				if (admins.length === 1) {
-					let err = new AuthorizationError('GroupMember', member.userId, 'UPDATE')
+					const err = new AuthorizationError('GroupMember', member.userId, 'UPDATE')
 					err.message = 'This user is the last admin of this group and cannot revoke his rights.'
 					throw err
 				}
@@ -165,7 +167,7 @@ class ResourceAccessControl {
 	async deleteGroupMember(member) {
 		if (this.user.id === member.userId || this.user.isGroupAdmin(member.groupId)) {
 			if (member.isAdmin) {
-				let admins = await GroupMembers.findAll({
+				const admins = await GroupMembers.findAll({
 					where: {
 						groupId: member.groupId,
 						isAdmin: true
@@ -173,7 +175,7 @@ class ResourceAccessControl {
 				})
 
 				if (admins.length === 1 && admins[0].userId === member.userId) {
-					let err = new AuthorizationError('GroupMember', member.userId, 'DELETE')
+					const err = new AuthorizationError('GroupMember', member.userId, 'DELETE')
 					err.message = 'You are the last administrator of this group and cannot leave the group.'
 					throw err
 				}
@@ -208,7 +210,7 @@ class ResourceAccessControl {
 	}
 
 	async createParticipant(participant) {
-		let lunchbreak = await Lunchbreak.findByPk(participant.lunchbreakId, { attributes: ['groupId'] })
+		const lunchbreak = await Lunchbreak.findByPk(participant.lunchbreakId, { attributes: ['groupId'] })
 
 		if (!this.user.isGroupMember(lunchbreak.groupId)) {
 			throw new AuthorizationError('Participant', participant.id, 'CREATE')
@@ -261,7 +263,7 @@ class ResourceAccessControl {
 		if (this.user.id !== user.id) {
 			throw new AuthorizationError('User', user.id, 'UPDATE')
 		}
-	 }
+	}
 
 	async deleteUser(user) {
 		if (this.user.id !== user.id) {

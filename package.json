@@ -7,6 +7,8 @@
     "node": "8.11.3"
   },
   "scripts": {
+    "prestart": "node gcloud-env-loader.js",
+    "lint": "./node_modules/.bin/eslint . --ext .js",
     "test": "mocha test/index.js --exit",
     "test-auth": "npm run test -- -g /auth",
     "test-users": "npm run test -- -g /users",
@@ -26,6 +28,7 @@
   "author": "Simon Lorenz",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/storage": "^2.3.4",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.2",
     "cors": "^2.8.4",
@@ -41,6 +44,7 @@
   },
   "devDependencies": {
     "chai": "^4.1.2",
+    "eslint": "^5.11.1",
     "mocha": "^5.2.0",
     "supertest": "^3.1.0"
   }

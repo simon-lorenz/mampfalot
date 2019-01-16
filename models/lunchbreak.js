@@ -1,3 +1,5 @@
+'use strict'
+
 module.exports = (sequelize, DataTypes) => {
 	const Lunchbreak = sequelize.define('Lunchbreak', {
 		id: {
@@ -34,7 +36,7 @@ module.exports = (sequelize, DataTypes) => {
 			validate: {
 				compareWithLunchTime(value) {
 					if (value > this.lunchTime) {
-						throw 'voteEndingTime cannot be greater than lunchTime.'
+						throw new Error('voteEndingTime cannot be greater than lunchTime.')
 					}
 				}
 			}

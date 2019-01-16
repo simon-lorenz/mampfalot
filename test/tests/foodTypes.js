@@ -1,3 +1,5 @@
+'use strict'
+
 const setup = require('../setup')
 const errorHelper = require('../helpers/errors')
 
@@ -21,7 +23,7 @@ module.exports = (request, bearerToken) => {
 					.send(updatedFoodType)
 					.expect(403)
 					.expect(res => {
-						let expectedError = {
+						const expectedError = {
 							resource: 'FoodType',
 							operation: 'CREATE',
 							message: 'You do not have the necessary permissions for this operation.'
@@ -39,7 +41,7 @@ module.exports = (request, bearerToken) => {
 					.send(updatedFoodType)
 					.expect(400)
 					.expect(res => {
-						let expectedError = {
+						const expectedError = {
 							field: 'type',
 							value: null,
 							message: 'type cannot be null.'
@@ -58,7 +60,7 @@ module.exports = (request, bearerToken) => {
 					.send(updatedFoodType)
 					.expect(400)
 					.expect(res => {
-						let expectedError = {
+						const expectedError = {
 							field: 'type',
 							value: updatedFoodType.type,
 							message: 'type cannot be empty.'
@@ -77,7 +79,7 @@ module.exports = (request, bearerToken) => {
 					.send(updatedFoodType)
 					.expect(400)
 					.expect(res => {
-						let expectedError = {
+						const expectedError = {
 							field: 'type',
 							value: updatedFoodType.type,
 							message: 'This type already exists for this group.'
@@ -103,7 +105,7 @@ module.exports = (request, bearerToken) => {
 					.send(updatedFoodType)
 					.expect(200)
 					.expect(res => {
-						let foodType = res.body
+						const foodType = res.body
 						foodType.should.have.property('id')
 						foodType.should.have.property('groupId').equal(updatedFoodType.groupId)
 						foodType.should.have.property('type').equal(updatedFoodType.type)
@@ -135,7 +137,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[3] })
 						.expect(403)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								resource: 'FoodType',
 								id: 1,
 								operation: 'READ',
@@ -153,7 +155,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[2] })
 						.expect(200)
 						.expect(res => {
-							let foodType = res.body
+							const foodType = res.body
 							foodType.should.have.property('id').equal(1)
 							foodType.should.have.property('type').equal('Asiatisch')
 						})
@@ -178,7 +180,7 @@ module.exports = (request, bearerToken) => {
 						.send(updatedFoodType)
 						.expect(403)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								resource: 'FoodType',
 								id: 1,
 								operation: 'UPDATE',
@@ -211,7 +213,7 @@ module.exports = (request, bearerToken) => {
 						.send(updatedFoodType)
 						.expect(400)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								field: 'type',
 								value: updatedFoodType.type,
 								message: 'This type already exists for this group.'
@@ -229,7 +231,7 @@ module.exports = (request, bearerToken) => {
 						.send(updatedFoodType)
 						.expect(200)
 						.expect(response => {
-							let foodType = response.body
+							const foodType = response.body
 							foodType.should.have.property('id')
 							foodType.should.have.property('type').equal(updatedFoodType.type)
 						})
@@ -248,7 +250,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[2] })
 						.expect(403)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								resource: 'FoodType',
 								id: 1,
 								operation: 'DELETE',
@@ -258,7 +260,7 @@ module.exports = (request, bearerToken) => {
 							errorHelper.checkAuthorizationError(res.body, expectedError)
 						})
 						.end(done)
-					})
+				})
 
 				it('deletes a foodType correctly', async () => {
 					await request
@@ -295,7 +297,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[1] })
 						.expect(200)
 						.expect(res => {
-							let place = res.body
+							const place = res.body
 							place.should.have.property('foodTypeId').equal(null)
 						})
 				})

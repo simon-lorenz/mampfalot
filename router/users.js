@@ -1,3 +1,5 @@
+'use strict'
+
 const router = require('express').Router()
 const bcrypt = require('bcryptjs')
 const { Op } = require('sequelize')
@@ -23,7 +25,7 @@ router.route('/forgot-username').get(hasQueryValues(['email'], 'all'))
 
 router.route('/').get(asyncMiddleware(async (req, res, next) => {
 	const { username } = req.query
-	let user = await User.findOne({ where: { username: username }})
+	const user = await User.findOne({ where: { username: username } })
 	if (user) {
 		res.send({
 			id: user.id,
@@ -41,7 +43,7 @@ router.route('/').get(asyncMiddleware(async (req, res, next) => {
 
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	// Is this email already known?
-	let existingUser = await User.findOne({
+	const existingUser = await User.findOne({
 		attributes: ['id', 'email', 'username', 'verified'],
 		where: {
 			email: req.body.email
@@ -53,7 +55,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 			await mailer.sendUserAlreadyRegisteredMail(existingUser.email, existingUser.username)
 		} else {
 			// generate a new verification token, because the stored one is hashed
-			let verificationToken = await generateRandomToken(25)
+			const verificationToken = await generateRandomToken(25)
 			existingUser.verificationToken = await bcrypt.hash(verificationToken, process.env.NODE_ENV === 'test' ? 1 : 12)
 			await existingUser.save()
 
@@ -62,9 +64,9 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 		return res.status(204).send()
 	}
 
-	let verificationToken = await generateRandomToken(25)
+	const verificationToken = await generateRandomToken(25)
 
-	let user = await User.create({
+	const user = await User.create({
 		username: req.body.username,
 		firstName: req.body.firstName,
 		lastName: req.body.lastName,
@@ -79,8 +81,8 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/verify').get(asyncMiddleware(async (req, res, next) => {
-	let { username } = req.query
-	let user = await User.findOne({
+	const { username } = req.query
+	const user = await User.findOne({
 		attributes: ['id', 'username', 'firstName', 'lastName', 'email', 'verificationToken', 'verified'],
 		where: {
 			username: username
@@ -90,7 +92,7 @@ router.route('/verify').get(asyncMiddleware(async (req, res, next) => {
 	if (!user) return next(new NotFoundError('User', username))
 	if (user.verified) return next(new RequestError('This user is already verified.'))
 
-	let verificationToken = await generateRandomToken(25)
+	const verificationToken = await generateRandomToken(25)
 
 	user.verificationToken = await bcrypt.hash(verificationToken, 12)
 	await user.save()
@@ -101,9 +103,9 @@ router.route('/verify').get(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/verify').post(asyncMiddleware(async (req, res, next) => {
-	let { username, token } = req.body
+	const { username, token } = req.body
 
-	let user = await User.findOne({
+	const user = await User.findOne({
 		attributes: ['id', 'verificationToken', 'verified'],
 		where: {
 			username: username
@@ -125,15 +127,15 @@ router.route('/verify').post(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/password-reset').get(asyncMiddleware(async (req, res, next) => {
-	let { username } = req.query
+	const { username } = req.query
 
-	let user = await User.findOne({ where: { username }})
+	const user = await User.findOne({ where: { username } })
 
 	if (!user) return next(new NotFoundError('User', username))
 
-	let token = await generateRandomToken(25)
+	const token = await generateRandomToken(25)
 
-	let tokenExp = new Date()
+	const tokenExp = new Date()
 	tokenExp.setMinutes(tokenExp.getMinutes() + 30)
 
 	user.passwordResetToken = await bcrypt.hash(token, 12)
@@ -146,9 +148,9 @@ router.route('/password-reset').get(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/password-reset').post(asyncMiddleware(async (req, res, next) => {
-	let { username, token, newPassword } = req.body
+	const { username, token, newPassword } = req.body
 
-	let user = await User.unscoped().findOne({
+	const user = await User.unscoped().findOne({
 		where: {
 			username: username,
 			passwordResetExpiration: {
@@ -197,8 +199,8 @@ router.route('/:userId/invitations').delete(hasQueryValues(['groupId', 'accept']
 router.param('userId', asyncMiddleware(loader.loadUser))
 
 router.route('/:userId').get(asyncMiddleware(async (req, res, next) => {
-	let user = res.locals.user
-	let userResource = res.locals.resources.user
+	const user = res.locals.user
+	const userResource = res.locals.resources.user
 	await user.can.readUser(userResource)
 	userResource.password = undefined
 	userResource.passwordResetToken = undefined
@@ -208,8 +210,8 @@ router.route('/:userId').get(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/:userId').post(asyncMiddleware(async (req, res, next) => {
-	let user = res.locals.user
-	let userResource = res.locals.resources.user
+	const user = res.locals.user
+	const userResource = res.locals.resources.user
 
 	if (req.body.password) {
 		if (!req.body.currentPassword) {
@@ -237,8 +239,8 @@ router.route('/:userId').post(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/:userId').delete(asyncMiddleware(async (req, res, next) => {
-	let user = res.locals.user
-	let userResource = res.locals.resources.user
+	const user = res.locals.user
+	const userResource = res.locals.resources.user
 
 	await user.can.deleteUser(userResource)
 	await userResource.destroy()
@@ -246,8 +248,8 @@ router.route('/:userId').delete(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/:userId/groups').get(asyncMiddleware(async (req, res, next) => {
-	let user = res.locals.user
-	let userResource = res.locals.resources.user
+	const user = res.locals.user
+	const userResource = res.locals.resources.user
 
 	await user.can.readGroupCollection(userResource)
 

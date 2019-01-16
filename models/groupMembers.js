@@ -1,3 +1,5 @@
+'use strict'
+
 module.exports = (sequelize, DataTypes) => {
 	const GroupMembers = sequelize.define('GroupMembers', {
 		userId: {
@@ -12,10 +14,10 @@ module.exports = (sequelize, DataTypes) => {
 					msg: 'userId has to be numeric.'
 				},
 				async exists (val) {
-					let UserModel = sequelize.models.User
-					let user = await UserModel.findByPk(val)
+					const UserModel = sequelize.models.User
+					const user = await UserModel.findByPk(val)
 
-					if (!user) throw 'userId does not exist.'
+					if (!user) throw new Error('userId does not exist.')
 				}
 			}
 		},

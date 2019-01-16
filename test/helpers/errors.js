@@ -1,3 +1,5 @@
+'use strict'
+
 module.exports = {
 
 	AuthenticationErrorTypes: {
@@ -42,17 +44,17 @@ module.exports = {
 		error.should.have.property('type').equal('ValidationError')
 		error.should.have.property('errors').which.is.an('array')
 
-		for (let errorItem of error.errors) {
+		for (const errorItem of error.errors) {
 			errorItem.should.have.all.keys(['field', 'value', 'message'])
 		}
 
 		if (item && !this.validationErrorItemExists(error, item)) {
-			throw new Error('Searched validationErrorItem ' + JSON.stringify(item) + ' was not found in '+ JSON.stringify(error.errors))
+			throw new Error(`Searched validationErrorItem ${JSON.stringify(item)} was not found in ${JSON.stringify(error.errors)}`)
 		}
 	},
 
 	validationErrorItemExists(error, searchedItem) {
-		for (let item of error.errors) {
+		for (const item of error.errors) {
 			if (item.field === searchedItem.field && item.value === searchedItem.value && item.message === searchedItem.message) {
 				return true
 			}
@@ -123,9 +125,9 @@ module.exports = {
 	checkRequiredBodyValues(error, values, all) {
 		let message
 		if (all) {
-			message = 'This request has to provide all of the following body values: ' + values.join(', ')
+			message = `This request has to provide all of the following body values: ${values.join(', ')}`
 		} else {
-			message = 'This request has to provide at least one of the following body values: ' + values.join(', ')
+			message = `This request has to provide at least one of the following body values: ${values.join(', ')}`
 		}
 		this.checkRequestError(error, message)
 	},
@@ -133,9 +135,9 @@ module.exports = {
 	checkRequiredQueryValues(error, values, all) {
 		let message
 		if (all) {
-			message = 'This request has to provide all of the following query values: ' + values.join(', ')
+			message = `This request has to provide all of the following query values: ${values.join(', ')}`
 		} else {
-			message = 'This request has to provide at least one of the following query values: ' + values.join(', ')
+			message = `This request has to provide at least one of the following query values: ${values.join(', ')}`
 		}
 		this.checkRequestError(error, message)
 	}

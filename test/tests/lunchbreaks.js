@@ -1,3 +1,5 @@
+'use strict'
+
 const setup = require('../setup')
 const errorHelper = require('../helpers/errors')
 
@@ -26,7 +28,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[3] })
 						.expect(403)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								resource: 'Lunchbreak',
 								id: 1,
 								operation: 'READ'
@@ -35,7 +37,7 @@ module.exports = (request, bearerToken) => {
 							errorHelper.checkAuthorizationError(res.body, expectedError)
 						})
 						.end(done)
-					})
+				})
 
 				it('sends a correct lunchbreak resource', (done) => {
 					request
@@ -43,7 +45,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[2] })
 						.expect(200)
 						.expect(res => {
-							let lunchbreak = res.body
+							const lunchbreak = res.body
 							lunchbreak.should.have.property('id').equal(1)
 							lunchbreak.should.have.property('groupId').equal(1)
 							lunchbreak.should.have.property('date').equal('2018-06-25')
@@ -51,14 +53,14 @@ module.exports = (request, bearerToken) => {
 							lunchbreak.should.have.property('voteEndingTime').equal('12:25:00')
 							lunchbreak.should.have.property('comments')
 							lunchbreak.should.have.property('participants')
-							let firstParticipant = lunchbreak.participants[0]
+							const firstParticipant = lunchbreak.participants[0]
 							firstParticipant.should.have.property('votes')
-							let firstVote = firstParticipant.votes[0]
+							const firstVote = firstParticipant.votes[0]
 							firstVote.should.have.property('place')
 							firstParticipant.should.have.property('user')
 						})
 						.end(done)
-					})
+				})
 			})
 
 			describe('POST', () => {
@@ -73,7 +75,7 @@ module.exports = (request, bearerToken) => {
 						.send({ voteEndingTime: '10:00:00' })
 						.expect(403)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								resource: 'Lunchbreak',
 								id: 1,
 								operation: 'UPDATE'
@@ -104,7 +106,7 @@ module.exports = (request, bearerToken) => {
 						})
 						.expect(400)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								field: 'voteEndingTime',
 								value: '13:00:00',
 								message: 'voteEndingTime cannot be greater than lunchTime.'
@@ -127,7 +129,7 @@ module.exports = (request, bearerToken) => {
 				})
 
 				it('updates a lunchbreak successfully', (done) => {
-					let newTimes = {
+					const newTimes = {
 						voteEndingTime: '12:55:00',
 						lunchTime: '13:00:00'
 					}
@@ -138,7 +140,7 @@ module.exports = (request, bearerToken) => {
 						.send(newTimes)
 						.expect(200)
 						.expect(res => {
-							let lunchbreak = res.body
+							const lunchbreak = res.body
 							lunchbreak.should.have.property('id').equal(1)
 							lunchbreak.should.have.property('voteEndingTime').equal(newTimes.voteEndingTime)
 							lunchbreak.should.have.property('lunchTime').equal(newTimes.lunchTime)
@@ -163,9 +165,9 @@ module.exports = (request, bearerToken) => {
 							.set({ Authorization: bearerToken[2] })
 							.expect(200)
 							.expect(res => {
-								let participants = res.body
+								const participants = res.body
 								participants.should.be.an('array').which.has.length(2)
-								let firstParticipant = participants[0]
+								const firstParticipant = participants[0]
 								firstParticipant.should.have.property('id').equal(1)
 								firstParticipant.should.have.property('lunchbreakId').equal(1)
 								firstParticipant.should.have.property('userId').equal(1)
@@ -187,7 +189,7 @@ module.exports = (request, bearerToken) => {
 							.set({ Authorization:  bearerToken[1] })
 							.expect(200)
 							.expect(res => {
-								let participant = res.body
+								const participant = res.body
 								participant.should.have.property('userId').equal(1)
 							})
 							.end(done)
@@ -199,7 +201,7 @@ module.exports = (request, bearerToken) => {
 							.set({ Authorization: bearerToken[3] })
 							.expect(403)
 							.expect(res => {
-								let expectedError = {
+								const expectedError = {
 									resoucre: 'Participant',
 									value: null,
 									operation: 'CREATE'
@@ -215,7 +217,7 @@ module.exports = (request, bearerToken) => {
 							.set({ Authorization: bearerToken[1] })
 							.expect(400)
 							.expect(res => {
-								let expectedError = {
+								const expectedError = {
 									field: 'userId',
 									value: '1',
 									message: 'This user already participates.'
@@ -231,13 +233,13 @@ module.exports = (request, bearerToken) => {
 							.set({ Authorization: bearerToken[2] })
 							.expect(200)
 							.expect(res => {
-								let participant = res.body
+								const participant = res.body
 								participant.should.have.property('id')
 								participant.should.have.property('userId').equal(2)
 								participant.should.have.property('lunchbreakId').equal(3)
 							})
 							.end(done)
-						})
+					})
 				})
 			})
 
@@ -253,7 +255,7 @@ module.exports = (request, bearerToken) => {
 							.set({ Authorization: bearerToken[3] })
 							.expect(403)
 							.expect(res => {
-								let expectedError = {
+								const expectedError = {
 									resource: 'Lunchbreak',
 									id: 1,
 									operation: 'READ'
@@ -261,27 +263,27 @@ module.exports = (request, bearerToken) => {
 								errorHelper.checkAuthorizationError(res.body, expectedError)
 							})
 							.end(done)
-						})
+					})
 
-						it('sends a correct comment collection', (done) => {
-							request
-								.get('/lunchbreaks/1/comments')
-								.set({ Authorization: bearerToken[2] })
-								.expect(200)
-								.expect(res => {
-									let comments = res.body
-									comments.should.be.an('array').with.lengthOf(3)
+					it('sends a correct comment collection', (done) => {
+						request
+							.get('/lunchbreaks/1/comments')
+							.set({ Authorization: bearerToken[2] })
+							.expect(200)
+							.expect(res => {
+								const comments = res.body
+								comments.should.be.an('array').with.lengthOf(3)
 
-									let firstComment = comments[0]
-									firstComment.should.have.property('id').equal(1)
-									firstComment.should.have.property('userId').equal(1)
-									firstComment.should.have.property('lunchbreakId').equal(1)
-									firstComment.should.have.property('comment').equal('Dies ist ein erster Kommentar von Max Mustermann')
-									firstComment.should.have.property('createdAt')
-									firstComment.should.have.property('updatedAt')
-								})
-								.end(done)
-						})
+								const firstComment = comments[0]
+								firstComment.should.have.property('id').equal(1)
+								firstComment.should.have.property('userId').equal(1)
+								firstComment.should.have.property('lunchbreakId').equal(1)
+								firstComment.should.have.property('comment').equal('Dies ist ein erster Kommentar von Max Mustermann')
+								firstComment.should.have.property('createdAt')
+								firstComment.should.have.property('updatedAt')
+							})
+							.end(done)
+					})
 				})
 
 				describe('POST', () =>  {
@@ -289,7 +291,7 @@ module.exports = (request, bearerToken) => {
 
 					beforeEach(async () => {
 						newComment = {
-							comment: 'Hey ho, let\s go!'
+							comment: 'Hey ho, let\'s go!'
 						}
 						await setup.resetData()
 					})
@@ -315,7 +317,7 @@ module.exports = (request, bearerToken) => {
 							.send(newComment)
 							.expect(400)
 							.expect(res => {
-								let expectedError = {
+								const expectedError = {
 									field: 'comment',
 									value: newComment.comment,
 									message: 'comment cannot be empty.'
@@ -333,7 +335,7 @@ module.exports = (request, bearerToken) => {
 							.send(newComment)
 							.expect(200)
 							.expect(res => {
-								let comment = res.body
+								const comment = res.body
 								comment.should.have.property('userId').equal(2)
 							})
 							.end(done)
@@ -346,7 +348,7 @@ module.exports = (request, bearerToken) => {
 							.send(newComment)
 							.expect(200)
 							.expect(res => {
-								let comment = res.body
+								const comment = res.body
 								comment.should.have.property('id')
 								comment.should.have.property('userId').equal(2)
 								comment.should.have.property('lunchbreakId').equal(1)

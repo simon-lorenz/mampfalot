@@ -1,3 +1,5 @@
+'use strict'
+
 const setup = require('../setup')
 const errorHelper = require('../helpers/errors')
 
@@ -18,7 +20,7 @@ module.exports = (request, bearerToken) => {
 					.send(newPlace)
 					.expect(403)
 					.expect(res => {
-						let expectedError = {
+						const expectedError = {
 							resource: 'Place',
 							id: null,
 							operation: 'CREATE'
@@ -35,7 +37,7 @@ module.exports = (request, bearerToken) => {
 					.send({})
 					.expect(400)
 					.expect(res => {
-						let message = 'This request has to provide all of the following body values: groupId, foodTypeId, name'
+						const message = 'This request has to provide all of the following body values: groupId, foodTypeId, name'
 						errorHelper.checkRequestError(res.body, message)
 					})
 					.end(done)
@@ -49,11 +51,11 @@ module.exports = (request, bearerToken) => {
 					.send(newPlace)
 					.expect(400)
 					.expect(res => {
-						let expectedError = {
-								field: 'foodTypeId',
-								value: newPlace.foodTypeId,
-								message: 'This food type does not belong to group ' + newPlace.groupId
-							}
+						const expectedError = {
+							field: 'foodTypeId',
+							value: newPlace.foodTypeId,
+							message: `This food type does not belong to group ${newPlace.groupId}`
+						}
 						errorHelper.checkValidationError(res.body, expectedError)
 					})
 					.end(done)
@@ -66,7 +68,7 @@ module.exports = (request, bearerToken) => {
 					.send(newPlace)
 					.expect(200)
 					.expect(res => {
-						let place = res.body
+						const place = res.body
 						place.should.have.property('id')
 						place.should.have.property('groupId').equals(newPlace.groupId)
 						place.should.have.property('foodTypeId').equals(newPlace.foodTypeId)
@@ -117,7 +119,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[2] })
 						.expect(200)
 						.expect(res => {
-							let place = res.body
+							const place = res.body
 							place.should.have.property('id').equals(1)
 							place.should.have.property('groupId').equals(1)
 							place.should.have.property('foodTypeId').equals(2)
@@ -145,7 +147,7 @@ module.exports = (request, bearerToken) => {
 						.send(updatedPlace)
 						.expect(403)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								resource: 'Place',
 								id: updatedPlace.id,
 								operation: 'UPDATE'
@@ -162,7 +164,7 @@ module.exports = (request, bearerToken) => {
 						.send(updatedPlace)
 						.expect(200)
 						.expect(response => {
-							let place = response.body
+							const place = response.body
 							place.should.have.property('id')
 							place.should.have.property('name').equal(updatedPlace.name)
 							place.should.have.property('foodTypeId').equal(updatedPlace.foodTypeId)
@@ -179,7 +181,7 @@ module.exports = (request, bearerToken) => {
 						.send(updatedPlace)
 						.expect(400)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								field: 'foodTypeId',
 								value: updatedPlace.foodTypeId,
 								message: 'This food type does not belong to group 1'
@@ -213,12 +215,12 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[2] })
 						.expect(403)
 						.expect(res => {
-							let expectedError = {
+							const expectedError = {
 								resource: 'Place',
 								id: 1,
 								operation: 'DELETE'
 							}
-							errorHelper.checkAuthorizationError(res.body)
+							errorHelper.checkAuthorizationError(res.body, expectedError)
 						})
 						.end(done)
 				})
@@ -282,7 +284,7 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[1] })
 						.expect(200)
 						.expect(res => {
-							let lunchbreak = res.body
+							const lunchbreak = res.body
 							lunchbreak.should.have.property('result').equal(null)
 						})
 				})
