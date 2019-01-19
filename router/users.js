@@ -44,7 +44,7 @@ router.route('/').get(asyncMiddleware(async (req, res, next) => {
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	// Is this email already known?
 	const existingUser = await User.findOne({
-		attributes: ['id', 'email', 'username', 'verified'],
+		attributes: ['id', 'email', 'username', 'firstName', 'verified'],
 		where: {
 			email: req.body.email
 		}
@@ -52,14 +52,14 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 
 	if (existingUser) {
 		if (existingUser.verified) {
-			await mailer.sendUserAlreadyRegisteredMail(existingUser.email, existingUser.username)
+			await mailer.sendUserAlreadyRegisteredMail(existingUser.email, existingUser.username, existingUser.firstName)
 		} else {
 			// generate a new verification token, because the stored one is hashed
 			const verificationToken = await generateRandomToken(25)
 			existingUser.verificationToken = await bcrypt.hash(verificationToken, process.env.NODE_ENV === 'test' ? 1 : 12)
 			await existingUser.save()
 
-			await mailer.sendUserAlreadyRegisteredButNotVerifiedMail(existingUser.email, existingUser.username, verificationToken)
+			await mailer.sendUserAlreadyRegisteredButNotVerifiedMail(existingUser.email, existingUser.username, verificationToken, existingUser.firstName)
 		}
 		return res.status(204).send()
 	}
@@ -75,7 +75,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 		verificationToken: await bcrypt.hash(verificationToken, process.env.NODE_ENV === 'test' ? 1 : 12)
 	})
 
-	await mailer.sendWelcomeMail(user.email, user.username, verificationToken)
+	await mailer.sendWelcomeMail(user.email, user.username, verificationToken, user.firstName)
 
 	res.status(204).send()
 }))
@@ -97,7 +97,7 @@ router.route('/verify').get(asyncMiddleware(async (req, res, next) => {
 	user.verificationToken = await bcrypt.hash(verificationToken, 12)
 	await user.save()
 
-	await mailer.sendWelcomeMail(user.email, user.username, verificationToken)
+	await mailer.sendWelcomeMail(user.email, user.username, verificationToken, user.firstName)
 
 	res.status(204).send()
 }))
@@ -142,7 +142,7 @@ router.route('/password-reset').get(asyncMiddleware(async (req, res, next) => {
 	user.passwordResetExpiration = tokenExp
 	await user.save()
 
-	await mailer.sendPasswordResetMail(user.email, user.username, token)
+	await mailer.sendPasswordResetMail(user.email, user.username, token, user.firstName)
 
 	res.status(204).send()
 }))
@@ -178,12 +178,12 @@ router.route('/forgot-username').get(async (req, res, next) => {
 	const { email } = req.query
 
 	const user = await User.findOne({
-		attributes: ['email', 'username'],
+		attributes: ['email', 'username', 'firstName'],
 		where: { email }
 	})
 
 	if (user) {
-		await mailer.sendForgotUsernameMail(user.email, user.username)
+		await mailer.sendForgotUsernameMail(user.email, user.username, user.firstName)
 	}
 
 	res.status(204).send()

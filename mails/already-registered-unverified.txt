@@ -1,4 +1,4 @@
-Hi,
+Hi {{ greeting }},
 
 danke für deine Registrierung!
 Wir haben festgestellt, dass unter dieser E-Mail-Adresse bereits ein
