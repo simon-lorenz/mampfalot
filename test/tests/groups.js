@@ -418,19 +418,6 @@ module.exports = (request, bearerToken) => {
 						.expect(404)
 				})
 
-				it('deletes all foodTypes associated to this group', async () => {
-					await request
-						.delete('/groups/1')
-						.set({ Authorization: bearerToken[1] })
-						.expect(204)
-
-					await request
-						.get('/foodTypes/1')
-						.set({ Authorization: bearerToken[1] })
-						.expect(404)
-				})
-
-
 				it('deletes all lunchbreaks associated to this group', async () => {
 					await request
 						.delete('/groups/1')
