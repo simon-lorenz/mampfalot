@@ -41,30 +41,6 @@ class ResourceAccessControl {
 		}
 	}
 
-	async createFoodType(foodType) {
-		if (!this.user.isGroupAdmin(foodType.groupId)) {
-			throw new AuthorizationError('FoodType', null, 'CREATE')
-		}
-	}
-
-	async readFoodType(foodType) {
-		if (!this.user.isGroupMember(foodType.groupId)) {
-			throw new AuthorizationError('FoodType', foodType.id, 'READ')
-		}
-	}
-
-	async updateFoodType(foodType) {
-		if (!this.user.isGroupAdmin(foodType.groupId)) {
-			throw new AuthorizationError('FoodType', foodType.id, 'UPDATE')
-		}
-	}
-
-	async deleteFoodType(foodType) {
-		if (!this.user.isGroupAdmin(foodType.groupId)) {
-			throw new AuthorizationError('FoodType', foodType.id, 'DELETE')
-		}
-	}
-
 	async readGroup(group) {
 		if (!this.user.isGroupMember(group.id)) {
 			throw new AuthorizationError('Group', group.id, 'READ')

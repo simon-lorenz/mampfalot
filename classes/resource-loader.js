@@ -1,6 +1,6 @@
 'use strict'
 
-const { Comment, FoodType, Group, Place, Lunchbreak, User, GroupMembers, Participant, Vote, Invitation } = require('../models')
+const { Comment, Group, Place, Lunchbreak, User, GroupMembers, Participant, Vote, Invitation } = require('../models')
 const { NotFoundError } = require('./errors')
 
 class ResourceLoader {
@@ -18,21 +18,6 @@ class ResourceLoader {
 	}
 
 	/**
-	 * Loads a foodType resource into res.locals.foodType.
-	 * This middleware requires the request to have the param 'foodTypeId'.
-	 * If the resource can not be found, a NotFoundError is passed to next()
-	 */
-	async loadFoodType(req, res, next) {
-		const foodTypeId = parseInt(req.params.foodTypeId)
-		res.locals.foodType = await FoodType.findByPk(foodTypeId)
-		if (res.locals.foodType) {
-			next()
-		} else {
-			next(new NotFoundError('FoodType', foodTypeId))
-		}
-	}
-
-	/**
 	 * Loads a group resource into res.locals.group.
 	 * This middleware requires the request to have the param 'groupId'.
 	 * If the resource can not be found, a NotFoundError is passed to next()
@@ -43,13 +28,6 @@ class ResourceLoader {
 			include: [
 				{
 					model: Place,
-					attributes: {
-						exclude: ['groupId']
-					},
-					order: ['id']
-				},
-				{
-					model: FoodType,
 					attributes: {
 						exclude: ['groupId']
 					},
@@ -210,8 +188,7 @@ class ResourceLoader {
 		res.locals.place = await Place.findByPk(placeId, {
 			include: [
 				{
-					model: Group,
-					include: FoodType
+					model: Group
 				}
 			]
 		})

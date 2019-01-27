@@ -35,7 +35,6 @@ const router = {
 	auth: require('./router/auth'),
 	groups: require('./router/groups'),
 	places: require('./router/places'),
-	foodTypes: require('./router/foodTypes'),
 	users: require('./router/users'),
 	votes: require('./router/votes'),
 	lunchbreaks: require('./router/lunchbreaks'),
@@ -48,7 +47,6 @@ app.use('/api/users', router.users)
 
 app.use('/api/groups', [verifyToken, initUser], router.groups)
 app.use('/api/places', [verifyToken, initUser], router.places)
-app.use('/api/foodTypes', [verifyToken, initUser], router.foodTypes)
 app.use('/api/votes', [verifyToken, initUser], router.votes)
 app.use('/api/lunchbreaks', [verifyToken, initUser], router.lunchbreaks)
 app.use('/api/participants', [verifyToken, initUser], router.participants)

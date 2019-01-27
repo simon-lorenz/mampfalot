@@ -14,7 +14,6 @@
     "test-users": "npm run test -- -g /users",
     "test-groups": "npm run test -- -g /groups",
     "test-invitations": "npm run test -- -g /invitations",
-    "test-foodTypes": "npm run test -- -g /foodTypes",
     "test-places": "npm run test -- -g /places",
     "test-lunchbreaks": "npm run test -- -g /lunchbreaks",
     "test-participants": "npm run test -- -g /participants",

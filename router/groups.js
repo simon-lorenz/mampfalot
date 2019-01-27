@@ -2,7 +2,7 @@
 
 const router = require('express').Router()
 const Sequelize = require('sequelize')
-const { Place, Group, User, GroupMembers, Lunchbreak, FoodType, Invitation } = require('../models')
+const { Place, Group, User, GroupMembers, Lunchbreak, Invitation } = require('../models')
 const { allowMethods, hasBodyValues, hasQueryValues } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
 const loader = require('../classes/resource-loader')
@@ -17,9 +17,8 @@ router.route('/:groupId/members').all(allowMethods(['GET']))
 router.route('/:groupId/members/:userId').all(allowMethods(['POST', 'DELETE']))
 router.route('/:groupId/lunchbreaks').all(allowMethods(['GET', 'POST']))
 router.route('/:groupId/lunchbreaks').post(hasBodyValues(['date', 'all']))
-router.route('/:groupId/foodTypes').all(allowMethods(['GET', 'POST']))
 router.route('/:groupId/places').all(allowMethods(['GET', 'POST']))
-router.route('/:groupId/places').post(hasBodyValues(['foodTypeId', 'name'], 'all'))
+router.route('/:groupId/places').post(hasBodyValues(['foodType', 'name'], 'all'))
 
 router.route('/').get((req, res, next) => {
 	Group
@@ -57,13 +56,6 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 		},
 		include: [{
 			model: Place,
-			attributes: {
-				exclude: ['groupId']
-			},
-			order: ['id']
-		},
-		{
-			model: FoodType,
 			attributes: {
 				exclude: ['groupId']
 			},
@@ -303,10 +295,6 @@ router.route('/:groupId/lunchbreaks').post(asyncMiddleware(async (req, res, next
 	}))
 }))
 
-router.route('/:groupId/foodTypes').get((req, res) => {
-	res.send(res.locals.group.foodTypes)
-})
-
 router.route('/:groupId/places').get((req, res) => {
 	res.send(res.locals.group.places)
 })
@@ -316,7 +304,7 @@ router.route('/:groupId/places').post(asyncMiddleware(async (req, res, next) => 
 
 	const place = Place.build({
 		groupId: parseInt(req.params.groupId),
-		foodTypeId: parseInt(req.body.foodTypeId),
+		foodType: req.body.foodType,
 		name: req.body.name
 	})
 

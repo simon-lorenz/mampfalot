@@ -25,8 +25,6 @@ The only exception is the /users route. You may POST a new user without a token.
 |--------------|---------------------------------|---------------------------------|-------------------------------|-------------------------------|
 | Comment      | `/comments`                     | `/comments/:id`                 | `/comments/:id`               | `/comments/:id`               |
 |              | `/lunchbreaks/:id/comments`     | `/lunchbreaks/:id/comments`     |                               |                               |
-| FoodType     | `/foodTypes`                    | `/foodTypes/:id`                | `/foodTypes/:id`               | `/foodTypes/:id`              |
-|              | `/groups/:id/foodTypes`         | `/groups/:id/foodTypes`         |                               |                               |
 | Group        | `/groups`                       | `/groups/:id`                   | `/groups/:id`                 | `/groups/:id`                 |
 |              |                                 | `/users/:id/groups`             |                               |                               |
 | GroupMembers | `/groups/:id/members`           | `/groups/:id/members`           | `/groups/:id/members/:userId` | `/groups/:id/members/:userId` |

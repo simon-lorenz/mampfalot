@@ -12,16 +12,6 @@ const ENDPOINTS = [
 		public: false
 	},
 	{
-		url: '/foodTypes',
-		methods: ['POST'],
-		public: false
-	},
-	{
-		url: '/foodTypes/1',
-		methods: ['GET', 'POST', 'DELETE'],
-		public: false
-	},
-	{
 		url: '/groups',
 		methods: ['GET', 'POST'],
 		public: false
@@ -50,10 +40,6 @@ const ENDPOINTS = [
 		url: '/groups/1/places',
 		methods: ['GET', 'POST'],
 		public: false
-	},
-	{
-		url: '/groups/1/foodTypes',
-		methods: ['GET', 'POST']
 	},
 	{
 		url: '/groups/1/invitations',

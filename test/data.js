@@ -1,33 +1,6 @@
 'use strict'
 
 module.exports = {
-	foodTypes: [
-		{
-			id: 1,
-			groupId: 1,
-			type: 'Asiatisch'
-		},
-		{
-			id: 2,
-			groupId: 1,
-			type: 'Döner'
-		},
-		{
-			id: 3,
-			groupId: 1,
-			type: 'Fast-Food'
-		},
-		{
-			id: 4,
-			groupId: 1,
-			type: 'Italienisch'
-		},
-		{
-			id: 5,
-			groupId: 2,
-			type: 'Döööööner'
-		}
-	],
 	groupMembers: [
 		{
 			groupId: 1,
@@ -170,31 +143,31 @@ module.exports = {
 			id: 1,
 			name: 'VIP-Döner',
 			groupId: 1,
-			foodTypeId: 2
+			foodType: 'Döner'
 		},
 		{
 			id: 2,
 			name: 'AsiaFood',
 			groupId: 1,
-			foodTypeId: 1
+			foodType: 'Asiatisch'
 		},
 		{
 			id: 3,
 			name: 'Mc Donald\'s',
 			groupId: 1,
-			foodTypeId: 3
+			foodType: 'Fast-Food'
 		},
 		{
 			id: 4,
 			name: 'L\'Osteria',
 			groupId: 1,
-			foodTypeId: 4
+			foodType: 'Italienisch'
 		},
 		{
 			id: 5,
 			name: 'VIP-Döner',
 			groupId: 2,
-			foodTypeId: 5
+			foodType: 'Döner'
 		}
 	],
 	users: [
