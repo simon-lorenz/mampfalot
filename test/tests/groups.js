@@ -1277,6 +1277,24 @@ module.exports = (request, bearerToken) => {
 							.end(done)
 					})
 
+					it('fails if the foodType is empty', (done) => {
+						newPlace.foodType = ''
+						request
+							.post('/groups/1/places')
+							.set({ Authorization: bearerToken[1] })
+							.send(newPlace)
+							.expect(400)
+							.expect(res => {
+								const expectedError = {
+									field: 'foodType',
+									value: newPlace.foodType,
+									message: 'foodType cannot be empty.'
+								}
+								errorHelper.checkValidationError(res.body, expectedError)
+							})
+							.end(done)
+					})
+
 					it('creates a new place correctly', (done) => {
 						request
 							.post('/groups/1/places')

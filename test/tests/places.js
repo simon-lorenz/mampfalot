@@ -43,6 +43,24 @@ module.exports = (request, bearerToken) => {
 					.end(done)
 			})
 
+			it('fails if the foodType is empty', (done) => {
+				newPlace.foodType = ''
+				request
+					.post('/places')
+					.set({ Authorization: bearerToken[1] })
+					.send(newPlace)
+					.expect(400)
+					.expect(res => {
+						const expectedError = {
+							field: 'foodType',
+							value: newPlace.foodType,
+							message: 'foodType cannot be empty.'
+						}
+						errorHelper.checkValidationError(res.body, expectedError)
+					})
+					.end(done)
+			})
+
 			it('inserts new place correctly', (done) => {
 				request
 					.post('/places')
@@ -164,6 +182,39 @@ module.exports = (request, bearerToken) => {
 						.expect(res => {
 							const message = 'This request has to provide at least one of the following body values: foodType, name'
 							errorHelper.checkRequestError(res.body, message)
+						})
+						.end(done)
+				})
+
+				it('allows patching', (done) => {
+					updatedPlace.foodType = undefined
+					request
+						.post('/places/1')
+						.set({ Authorization: bearerToken[1] })
+						.send(updatedPlace)
+						.expect(200)
+						.expect(res => {
+							const place = res.body
+							place.should.have.property('name').equal(updatedPlace.name)
+							place.should.have.property('foodType').equal('Döner')
+						})
+						.end(done)
+				})
+
+				it('fails if the foodType is empty', (done) => {
+					updatedPlace.foodType = ''
+					request
+						.post('/places/1')
+						.set({ Authorization: bearerToken[1] })
+						.send(updatedPlace)
+						.expect(400)
+						.expect(res => {
+							const expectedError = {
+								field: 'foodType',
+								value: updatedPlace.foodType,
+								message: 'foodType cannot be empty.'
+							}
+							errorHelper.checkValidationError(res.body, expectedError)
 						})
 						.end(done)
 				})

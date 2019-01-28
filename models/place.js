@@ -21,7 +21,13 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		foodType: {
 			type: DataTypes.STRING,
-			allowNull: false
+			allowNull: false,
+			validate: {
+				notEmpty: {
+					args: true,
+					msg: 'foodType cannot be empty.'
+				}
+			}
 		},
 	}, {
 		tableName: 'places',

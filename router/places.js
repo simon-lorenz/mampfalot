@@ -39,9 +39,10 @@ router.route('/:placeId').get(asyncMiddleware(async (req, res, next) => {
 
 router.route('/:placeId').post(asyncMiddleware(async (req, res, next) => {
 	const { user, place } = res.locals
+	const { foodType, name } = req.body
 
-	if (req.body.foodType) { place.foodType= req.body.foodType }
-	if (req.body.name) { place.name = req.body.name }
+	if (foodType != undefined) place.foodType = foodType
+	if (name != undefined) place.name = name
 
 	await user.can.updatePlace(place)
 	res.send(await place.save())
