@@ -964,11 +964,6 @@ module.exports = (request, bearerToken) => {
 									message: 'A lunchbreak at this date already exists.'
 								}
 
-								// There is a bug in sequelize (https://github.com/sequelize/sequelize/issues/9871)
-								// which results in a incorrect error value. So in order that our test does not fail,
-								// we temporary expect another value.
-								expectedError.value = '2018'
-
 								errorHelper.checkValidationError(res.body, expectedError)
 							})
 							.end(done)

@@ -43,7 +43,7 @@ The only exception is the /users route. You may POST a new user without a token.
 ### System Requirements
 
 - [Node.js](https://nodejs.org/en/)
-- [MySQL Server](https://dev.mysql.com/downloads/mysql/) (Version 5.6 or 8+)
+- [PostgreSQL Server](https://www.postgresql.org/)
 
 ### Setup
 

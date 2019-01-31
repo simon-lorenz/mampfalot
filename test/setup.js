@@ -14,16 +14,9 @@ const data = require('./data')
 
 module.exports = {
 	async resetData() {
-		const tables = ['comments', 'group_members', 'groups', 'invitations', 'lunchbreaks', 'participants', 'places', 'users', 'votes']
-		const queries = []
-		queries.push('SET FOREIGN_KEY_CHECKS = 0;')
-		for (const table of tables) {
-			queries.push(`TRUNCATE \`${process.env.DB_NAME}\`.\`${table}\`;`)
-		}
-		queries.push('SET FOREIGN_KEY_CHECKS = 1;')
+		await db.sync({ force: true })
 
 		try {
-			await db.query(queries.join(' '), { raw: true })
 			await User.bulkCreate(data.users)
 			await Group.bulkCreate(data.groups)
 			await GroupMembers.bulkCreate(data.groupMembers)
@@ -33,13 +26,22 @@ module.exports = {
 			await Participant.bulkCreate(data.participants)
 			await Vote.bulkCreate(data.votes)
 			await Comment.bulkCreate(data.comments)
+
+			// The test data gets inserted with explicit primary keys.
+			// As a result, the postgres autoincrement/serial won't get incremented and we'll get
+			// conflicts when we try to insert new rows without manually setting the id.
+			// The following lines update the serials sequence value to prevent these conflicts.
+			await db.query('SELECT setval(\'users_id_seq\', (SELECT MAX(id) from "users"));')
+			await db.query('SELECT setval(\'groups_id_seq\', (SELECT MAX(id) from "groups"));')
+			await db.query('SELECT setval(\'invitations_id_seq\', (SELECT MAX(id) from "invitations"));')
+			await db.query('SELECT setval(\'places_id_seq\', (SELECT MAX(id) from "places"));')
+			await db.query('SELECT setval(\'lunchbreaks_id_seq\', (SELECT MAX(id) from "lunchbreaks"));')
+			await db.query('SELECT setval(\'participants_id_seq\', (SELECT MAX(id) from "participants"));')
+			await db.query('SELECT setval(\'votes_id_seq\', (SELECT MAX(id) from "votes"));')
+			await db.query('SELECT setval(\'comments_id_seq\', (SELECT MAX(id) from "comments"));')
 		} catch (error) {
 			console.log(error)
 			throw error
 		}
-
-	},
-	async initialize() {
-		await db.sync({ force: true })
 	}
 }

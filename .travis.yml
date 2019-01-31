@@ -2,11 +2,11 @@ language: node_js
 node_js:
 - 8.11.3
 services:
-- mysql
+- postgresql
 before_install:
 - openssl aes-256-cbc -K $encrypted_dbf50fab8cc4_key -iv $encrypted_dbf50fab8cc4_iv
   -in client-secret.json.enc -out client-secret.json -d
-- mysql -e 'CREATE DATABASE mampfalot;'
+- psql -c 'create database mampfalot;' -U postgres
 before_script:
 - npm run lint
 deploy:
