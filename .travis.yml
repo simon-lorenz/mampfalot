@@ -4,19 +4,13 @@ node_js:
 services:
 - postgresql
 before_install:
-- openssl aes-256-cbc -K $encrypted_dbf50fab8cc4_key -iv $encrypted_dbf50fab8cc4_iv
-  -in client-secret.json.enc -out client-secret.json -d
 - psql -c 'create database mampfalot;' -U postgres
 before_script:
 - npm run lint
 deploy:
-  - provider: gae
-    keyfile: client-secret.json
-    project: mampfalot
-    config: app.beta.yaml
-    on: dev
-  - provider: gae
-    keyfile: client-secret.json
-    project: mampfalot
-    config: app.yaml
-    on: master
+  provider: heroku
+  api_key:
+    secure: YXfIx700s85tjJO+mRRewytz1cOvgl/Wx52ffc5W6zxshRxE7RJ3K3iXsdeKjxZuxz//P7o3MfEFSumsjAOJj7mKDncU7Ein95NATo8IenYU2g18iEykETf/fSXmZc6pmDdJYe8IKALvH3tPLv8qLAQRhMH+MJHma8wTyBUajLS96DJ9iDF8VUimAsaseF0YgT9PbBJLRE55Bzy8x9tyy6zCeWPrnTP+NJTY4+sM0t7fzLBrnJPK5/uwHKy9cC2xqjVdJ5SV+Us0ANvrHz/GRnuD3HqYrOOjepvdt1CpZ4ugDpDdouX3OM92w6rgh1e10LCeDOSkR2sSouX7IFCQJCaJcVuXaEuJb6dUHq4wpBNYH9AnJ3+PhspbuP69qgEHLOOtSAd2vZlt+6C2FUlwsA32ESgn2CGsWM9JUZhDckZgmm1XW9AxA+SrT8q4UbfTaJfPPb8a9nKQQCfsmCc7RxUaNaJ8ZIbEphDHAyPoY4WnHS2vc1mffkOtLDG48Qzd5172SXQMcAJpAoQ9+K06LfgCy05e9qgrIOEfbQu+GYrkJVb17CC1aBZLb21tCi36u0KFN4YHTMHyw5jwkEMGRdPwonjhYEIdfxJwCDJVjPEBE9XpWPg9wM1Bo1kICJAeH85Idbfriu3oPw/WmArcCt46qOlYmorgP+Yb6NYR4CI=
+  app:
+    master: mampfalot
+    dev: mampfalot-beta
