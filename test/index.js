@@ -39,7 +39,6 @@ describe('The mampfalot api', function () {
 	this.timeout(10000)
 
 	before(async () => {
-		await setup.initialize()
 		await setup.resetData()
 		server = app.listen(5001)
 
@@ -147,7 +146,6 @@ describe('The mampfalot api', function () {
 	require('./tests/users')(request, bearerToken)
 	require('./tests/auth')(request, bearerToken)
 	require('./tests/groups')(request, bearerToken)
-	require('./tests/foodTypes')(request, bearerToken)
 	require('./tests/places')(request, bearerToken)
 	require('./tests/lunchbreaks')(request, bearerToken)
 	require('./tests/participants')(request, bearerToken)

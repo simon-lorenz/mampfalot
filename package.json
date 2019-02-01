@@ -7,14 +7,12 @@
     "node": "8.11.3"
   },
   "scripts": {
-    "prestart": "node gcloud-env-loader.js",
     "lint": "./node_modules/.bin/eslint . --ext .js",
     "test": "mocha test/index.js --exit",
     "test-auth": "npm run test -- -g /auth",
     "test-users": "npm run test -- -g /users",
     "test-groups": "npm run test -- -g /groups",
     "test-invitations": "npm run test -- -g /invitations",
-    "test-foodTypes": "npm run test -- -g /foodTypes",
     "test-places": "npm run test -- -g /places",
     "test-lunchbreaks": "npm run test -- -g /lunchbreaks",
     "test-participants": "npm run test -- -g /participants",
@@ -38,8 +36,8 @@
     "helmet": "^3.13.0",
     "jsonwebtoken": "^8.2.1",
     "morgan": "^1.9.1",
-    "mysql2": "^1.5.3",
     "nodemailer": "^4.6.8",
+    "pg": "^6.0.0",
     "sequelize": "5.0.0-beta.13"
   },
   "devDependencies": {

@@ -141,16 +141,18 @@ class Mailer {
 	 * @param {string} to The users email-address
 	 * @param {string} username
 	 * @param {string} verificationToken A verification token
+	 * @param {string} firstName Optional. Used for a more personal greeting.
 	 */
-	async sendWelcomeMail(to, username, verificationToken) {
+	async sendWelcomeMail(to, username, verificationToken, firstName) {
 		// Prepare template data
 		const fileHtml = `${this.templateFolder}/welcome.html`
 		const fileText = `${this.templateFolder}/welcome.txt`
 		const verificationLink = `${process.env.FRONTEND_BASE_URL}/confirm-verification?user=${username}&token=${verificationToken}`
+		const greeting = firstName || username
 
 		// Compile templates
-		const html = await compileTemplate(fileHtml, { username, verificationLink })
-		const text = await compileTemplate(fileText, { username, verificationLink })
+		const html = await compileTemplate(fileHtml, { greeting, verificationLink })
+		const text = await compileTemplate(fileText, { greeting, verificationLink })
 
 		// Send
 		const subject = 'Willkommen bei Mampfalot!'
@@ -162,62 +164,85 @@ class Mailer {
 	 * @param {*} to The user email-address
 	 * @param {*} username
 	 * @param {*} token A password reset token
+	 * @param {string} firstName Optional. Used for a more personal greeting.
 	 */
-	async sendPasswordResetMail(to, username, token) {
+	async sendPasswordResetMail(to, username, token, firstName) {
 		// Prepare template data
 		const fileHtml = `${this.templateFolder}/forgot-password.html`
 		const fileText = `${this.templateFolder}/forgot-password.txt`
 		const passwordResetLink = `${process.env.FRONTEND_BASE_URL}/confirm-password-reset?token=${token}&user=${username}`
+		const greeting = firstName || username
 
 		// Compile templates
-		const html = await compileTemplate(fileHtml, { username, passwordResetLink })
-		const text = await compileTemplate(fileText, { username, passwordResetLink })
+		const html = await compileTemplate(fileHtml, { greeting, passwordResetLink })
+		const text = await compileTemplate(fileText, { greeting, passwordResetLink })
 
 		// Send
 		const subject = 'Dein neues Passwort für Mampfalot'
 		this.getAccount('support@mampfalot.app').send(to, subject, text, html)
 	}
 
-	async sendUserAlreadyRegisteredMail(to, username) {
+	/**
+	 * Informs the user that he already has an account with this email address.
+	 * @param {string} to
+	 * @param {string} username
+	 * @param {string} firstName Optional. Used for a more personal greeting.
+	 */
+	async sendUserAlreadyRegisteredMail(to, username, firstName) {
 		// Prepare template data
 		const fileHtml = `${this.templateFolder}/already-registered-verified.html`
 		const fileText = `${this.templateFolder}/already-registered-verified.txt`
 		const passwordResetLink = `${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username}`
+		const greeting = firstName || username
 
 		// Compile templates
-		const html = await compileTemplate(fileHtml, { username, passwordResetLink })
-		const text = await compileTemplate(fileText, { username, passwordResetLink })
+		const html = await compileTemplate(fileHtml, { username, greeting, passwordResetLink })
+		const text = await compileTemplate(fileText, { username, greeting, passwordResetLink })
 
 		// Send
 		const subject = 'Willkommen zurück bei Mampfalot!'
 		this.getAccount('hello@mampfalot.app').send(to, subject, text, html)
 	}
 
-	async sendUserAlreadyRegisteredButNotVerifiedMail(to, username, verificationToken) {
+	/**
+	 * Informs the user that he already has an (unverified) account with this email address.
+	 * @param {string} to
+	 * @param {string} username
+	 * @param {string} verificationToken
+	 * @param {string} firstName Optional. Used for a more personal greeting.
+	 */
+	async sendUserAlreadyRegisteredButNotVerifiedMail(to, username, verificationToken, firstName) {
 		// Prepare template data
 		const fileHtml = `${this.templateFolder}/already-registered-unverified.html`
 		const fileText = `${this.templateFolder}/already-registered-unverified.txt`
 		const verificationLink = `${process.env.FRONTEND_BASE_URL}/confirm-verification?user=${username}&token=${verificationToken}`
 		const passwordResetLink = `${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username}`
+		const greeting = firstName || username
 
 		// Compile templates
-		const html = await compileTemplate(fileHtml, { username, verificationLink, passwordResetLink })
-		const text = await compileTemplate(fileText, { username, verificationLink, passwordResetLink })
+		const html = await compileTemplate(fileHtml, { username, greeting, verificationLink, passwordResetLink })
+		const text = await compileTemplate(fileText, { username, greeting, verificationLink, passwordResetLink })
 
 		// Send
 		const subject = 'Willkommen zurück bei Mampfalot!'
 		this.getAccount('hello@mampfalot.app').send(to, subject, text, html)
 	}
 
-	async sendForgotUsernameMail(to, username) {
+	/**
+	 * @param {string} to
+	 * @param {string} username
+	 * @param {string} firstName Optional. Used for a more personal greeting.
+	 */
+	async sendForgotUsernameMail(to, username, firstName) {
 		// Prepare template data
 		const fileHtml = `${this.templateFolder}/forgot-username.html`
 		const fileText = `${this.templateFolder}/forgot-username.txt`
 		const passwordResetLink = `${process.env.FRONTEND_BASE_URL}/request-password-reset?user=${username}`
+		const greeting = firstName || username
 
 		// Compile templates
-		const html = await compileTemplate(fileHtml, { passwordResetLink, username })
-		const text = await compileTemplate(fileText, { passwordResetLink, username })
+		const html = await compileTemplate(fileHtml, { greeting, passwordResetLink, username })
+		const text = await compileTemplate(fileText, { greeting, passwordResetLink, username })
 
 		// Send
 		const subject = 'Dein Benutzername bei Mampfalot'

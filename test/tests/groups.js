@@ -37,7 +37,6 @@ module.exports = (request, bearerToken) => {
 						group.should.have.property('members').which.is.an('array')
 						group.should.have.property('lunchbreaks').which.is.an('array')
 						group.should.have.property('places').which.is.an('array')
-						group.should.have.property('foodTypes').which.is.an('array')
 						group.should.have.property('invitations').which.is.an('array')
 
 					})
@@ -95,7 +94,6 @@ module.exports = (request, bearerToken) => {
 							group.should.have.property('members').which.is.an('array').and.has.length(2)
 							group.should.have.property('lunchbreaks').which.is.an('array').and.has.length(2)
 							group.should.have.property('places').which.is.an('array').and.has.length(4)
-							group.should.have.property('foodTypes').which.is.an('array').and.has.length(4)
 							group.should.have.property('invitations').which.is.an('array').with.length(1)
 
 							const member = group.members[0]
@@ -332,7 +330,7 @@ module.exports = (request, bearerToken) => {
 						})
 						.expect(200, (err, res) => {
 							const group = res.body
-							group.should.have.all.keys(['id', 'name', 'defaultLunchTime', 'defaultVoteEndingTime', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote', 'foodTypes', 'lunchbreaks', 'members', 'places', 'invitations'])
+							group.should.have.all.keys(['id', 'name', 'defaultLunchTime', 'defaultVoteEndingTime', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote', 'lunchbreaks', 'members', 'places', 'invitations'])
 							group.should.have.property('id').equal(1)
 							group.should.have.property('name').equal('New name')
 							group.should.have.property('defaultLunchTime').equal('14:00:00')
@@ -419,19 +417,6 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[1] })
 						.expect(404)
 				})
-
-				it('deletes all foodTypes associated to this group', async () => {
-					await request
-						.delete('/groups/1')
-						.set({ Authorization: bearerToken[1] })
-						.expect(204)
-
-					await request
-						.get('/foodTypes/1')
-						.set({ Authorization: bearerToken[1] })
-						.expect(404)
-				})
-
 
 				it('deletes all lunchbreaks associated to this group', async () => {
 					await request
@@ -979,11 +964,6 @@ module.exports = (request, bearerToken) => {
 									message: 'A lunchbreak at this date already exists.'
 								}
 
-								// There is a bug in sequelize (https://github.com/sequelize/sequelize/issues/9871)
-								// which results in a incorrect error value. So in order that our test does not fail,
-								// we temporary expect another value.
-								expectedError.value = '2018'
-
 								errorHelper.checkValidationError(res.body, expectedError)
 							})
 							.end(done)
@@ -1257,7 +1237,7 @@ module.exports = (request, bearerToken) => {
 
 								const place = collection[0]
 								place.should.have.property('id').equal(1)
-								place.should.have.property('foodTypeId').equal(2)
+								place.should.have.property('foodType').equal('Döner')
 								place.should.have.property('name').equal('VIP-Döner')
 							})
 							.end(done)
@@ -1271,7 +1251,7 @@ module.exports = (request, bearerToken) => {
 						await setup.resetData()
 						newPlace = {
 							name: 'NewPlace',
-							foodTypeId: 2
+							foodType: 'Italian'
 						}
 					})
 
@@ -1292,6 +1272,24 @@ module.exports = (request, bearerToken) => {
 							.end(done)
 					})
 
+					it('fails if the foodType is empty', (done) => {
+						newPlace.foodType = ''
+						request
+							.post('/groups/1/places')
+							.set({ Authorization: bearerToken[1] })
+							.send(newPlace)
+							.expect(400)
+							.expect(res => {
+								const expectedError = {
+									field: 'foodType',
+									value: newPlace.foodType,
+									message: 'foodType cannot be empty.'
+								}
+								errorHelper.checkValidationError(res.body, expectedError)
+							})
+							.end(done)
+					})
+
 					it('creates a new place correctly', (done) => {
 						request
 							.post('/groups/1/places')
@@ -1302,63 +1300,21 @@ module.exports = (request, bearerToken) => {
 								const place = response.body
 								place.should.have.property('id')
 								place.should.have.property('name').equal(newPlace.name)
-								place.should.have.property('foodTypeId').equal(newPlace.foodTypeId)
+								place.should.have.property('foodType').equal(newPlace.foodType)
 								place.should.have.property('groupId').equal(1)
 							})
 							.end(done)
 					})
 
-					it('sends 400 on non-group foreign key', (done) => {
-						newPlace.foodTypeId = 5 // this id belongs to group 2
-						request
-							.post('/groups/1/places')
-							.set({ Authorization: bearerToken[1] })
-							.send(newPlace)
-							.expect(400)
-							.expect(res => {
-								const expectedError = {
-									field: 'foodTypeId',
-									value: 5,
-									message: 'This food type does not belong to group 1'
-								}
-								errorHelper.checkValidationError(res.body, expectedError)
-							})
-							.end(done)
-					})
-
-					it('sends 400 if no name and foodTypeId is provided', (done) => {
+					it('sends 400 if no name and foodType is provided', (done) => {
 						request
 							.post('/groups/1/places')
 							.set({ Authorization: bearerToken[1] })
 							.send( {} )
 							.expect(400)
 							.expect(res => {
-								errorHelper.checkRequestError(res.body)
-							})
-							.end(done)
-					})
-				})
-			})
-
-			describe('/foodTypes', () => {
-				describe('GET', () => {
-					before(async () => {
-						await setup.resetData()
-					})
-
-					it('sends a valid foodType collection', (done) => {
-						request
-							.get('/groups/1/foodTypes')
-							.set({ Authorization: bearerToken[1] })
-							.expect(200)
-							.expect(res => {
-								const collection = res.body
-								collection.should.be.an('array')
-								collection.should.have.length(4)
-
-								const foodType = collection[0]
-								foodType.should.have.property('id').equal(1)
-								foodType.should.have.property('type').equal('Asiatisch')
+								const message = 'This request has to provide all of the following body values: foodType, name'
+								errorHelper.checkRequestError(res.body, message)
 							})
 							.end(done)
 					})

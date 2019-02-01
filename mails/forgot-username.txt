@@ -1,4 +1,4 @@
-Hi,
+Hi {{ greeting }},
 
 dein Benutzername bei Mampfalot lautet: {{ username }}.
 

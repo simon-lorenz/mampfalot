@@ -9,7 +9,7 @@ module.exports = (request, bearerToken) => {
 			let newPlace
 
 			beforeEach(async () => {
-				newPlace = { name: 'new place', groupId: 1, foodTypeId: 1 }
+				newPlace = { name: 'new place', groupId: 1, foodType: 'Italian' }
 				await setup.resetData()
 			})
 
@@ -37,14 +37,14 @@ module.exports = (request, bearerToken) => {
 					.send({})
 					.expect(400)
 					.expect(res => {
-						const message = 'This request has to provide all of the following body values: groupId, foodTypeId, name'
+						const message = 'This request has to provide all of the following body values: groupId, foodType, name'
 						errorHelper.checkRequestError(res.body, message)
 					})
 					.end(done)
 			})
 
-			it('fails if the foodTypeId doesn\'t belong to the group', (done) => {
-				newPlace.foodTypeId = 5
+			it('fails if the foodType is empty', (done) => {
+				newPlace.foodType = ''
 				request
 					.post('/places')
 					.set({ Authorization: bearerToken[1] })
@@ -52,9 +52,9 @@ module.exports = (request, bearerToken) => {
 					.expect(400)
 					.expect(res => {
 						const expectedError = {
-							field: 'foodTypeId',
-							value: newPlace.foodTypeId,
-							message: `This food type does not belong to group ${newPlace.groupId}`
+							field: 'foodType',
+							value: newPlace.foodType,
+							message: 'foodType cannot be empty.'
 						}
 						errorHelper.checkValidationError(res.body, expectedError)
 					})
@@ -71,7 +71,7 @@ module.exports = (request, bearerToken) => {
 						const place = res.body
 						place.should.have.property('id')
 						place.should.have.property('groupId').equals(newPlace.groupId)
-						place.should.have.property('foodTypeId').equals(newPlace.foodTypeId)
+						place.should.have.property('foodType').equals(newPlace.foodType)
 						place.should.have.property('name').equals(newPlace.name)
 					})
 					.end(done)
@@ -122,7 +122,7 @@ module.exports = (request, bearerToken) => {
 							const place = res.body
 							place.should.have.property('id').equals(1)
 							place.should.have.property('groupId').equals(1)
-							place.should.have.property('foodTypeId').equals(2)
+							place.should.have.property('foodType').equals('Döner')
 							place.should.have.property('name').equals('VIP-Döner')
 						})
 						.end(done)
@@ -136,7 +136,7 @@ module.exports = (request, bearerToken) => {
 					await setup.resetData()
 					updatedPlace = {
 						name: 'updated',
-						foodTypeId: 2
+						foodType: 'updatedFoodType'
 					}
 				})
 
@@ -167,14 +167,42 @@ module.exports = (request, bearerToken) => {
 							const place = response.body
 							place.should.have.property('id')
 							place.should.have.property('name').equal(updatedPlace.name)
-							place.should.have.property('foodTypeId').equal(updatedPlace.foodTypeId)
+							place.should.have.property('foodType').equal(updatedPlace.foodType)
 							place.should.have.property('groupId').equal(1)
 						})
 						.end(done)
 				})
 
-				it('sends 400 on non-group foreign key', (done) => {
-					updatedPlace.foodTypeId = 5 // this id belongs to group 2
+				it('sends 400 if no name and foodType is provided', (done) => {
+					request
+						.post('/places/1')
+						.set({ Authorization: bearerToken[1] })
+						.send( {} )
+						.expect(400)
+						.expect(res => {
+							const message = 'This request has to provide at least one of the following body values: foodType, name'
+							errorHelper.checkRequestError(res.body, message)
+						})
+						.end(done)
+				})
+
+				it('allows patching', (done) => {
+					updatedPlace.foodType = undefined
+					request
+						.post('/places/1')
+						.set({ Authorization: bearerToken[1] })
+						.send(updatedPlace)
+						.expect(200)
+						.expect(res => {
+							const place = res.body
+							place.should.have.property('name').equal(updatedPlace.name)
+							place.should.have.property('foodType').equal('Döner')
+						})
+						.end(done)
+				})
+
+				it('fails if the foodType is empty', (done) => {
+					updatedPlace.foodType = ''
 					request
 						.post('/places/1')
 						.set({ Authorization: bearerToken[1] })
@@ -182,23 +210,11 @@ module.exports = (request, bearerToken) => {
 						.expect(400)
 						.expect(res => {
 							const expectedError = {
-								field: 'foodTypeId',
-								value: updatedPlace.foodTypeId,
-								message: 'This food type does not belong to group 1'
+								field: 'foodType',
+								value: updatedPlace.foodType,
+								message: 'foodType cannot be empty.'
 							}
 							errorHelper.checkValidationError(res.body, expectedError)
-						})
-						.end(done)
-				})
-
-				it('sends 400 if no name and foodTypeId is provided', (done) => {
-					request
-						.post('/places/1')
-						.set({ Authorization: bearerToken[1] })
-						.send( {} )
-						.expect(400)
-						.expect(res => {
-							errorHelper.checkRequestError(res.body)
 						})
 						.end(done)
 				})
@@ -247,18 +263,6 @@ module.exports = (request, bearerToken) => {
 						.get('/votes/1')
 						.set({ Authorization: bearerToken[1] })
 						.expect(404)
-				})
-
-				it('does not delete associated foodType', async () => {
-					await request
-						.delete('/places/1')
-						.set({ Authorization: bearerToken[1] })
-						.expect(204)
-
-					await request
-						.get('/foodTypes/2')
-						.set({ Authorization: bearerToken[1] })
-						.expect(200)
 				})
 
 				it('does not delete the associated group', async () => {
