@@ -1,6 +1,6 @@
 'use strict'
 
-const { ValidationError } = require('../classes/errors')
+const { ValidationError, RequestError } = require('../classes/errors')
 
 module.exports = (sequelize, DataTypes) => {
 	const { Group, Participant, Lunchbreak, Place } = sequelize.models
@@ -81,10 +81,13 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	Vote.beforeBulkCreate(async (votes) => {
+		if (process.env.SEEDING === 'true')
+			return
+
 		const participantId = votes[0].participantId
 
 		const config = await Group.findOne({
-			attributes: ['id', 'minPointsPerVote', 'maxPointsPerVote', 'pointsPerDay'],
+			attributes: ['id', 'defaultVoteEndingTime', 'utcOffset', 'minPointsPerVote', 'maxPointsPerVote', 'pointsPerDay'],
 			include: [
 				{
 					model: Lunchbreak,
@@ -101,6 +104,20 @@ module.exports = (sequelize, DataTypes) => {
 				}
 			]
 		})
+
+		// Calculate client time
+		const clientTime = new Date()
+		clientTime.setUTCMinutes(clientTime.getUTCMinutes() + config.utcOffset)
+
+		// Lookup the groups voteEndingTime
+		const voteEndingTime = new Date()
+		voteEndingTime.setUTCHours(config.defaultVoteEndingTime.split(':')[0])
+		voteEndingTime.setUTCMinutes(config.defaultVoteEndingTime.split(':')[1])
+		voteEndingTime.setUTCSeconds(config.defaultVoteEndingTime.split(':')[2])
+
+		if (clientTime > voteEndingTime) {
+			throw new RequestError('The end of voting has been reached, therefore no new votes will be accepted.')
+		}
 
 		const placeIds = []
 		let sum = 0

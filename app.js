@@ -14,8 +14,8 @@ const { MethodNotAllowedError, ValidationError, RequestError, ServerError } = re
 
 // Enable time-manipulation for testing purposes
 app.use((req, res, next) => {
+	const tk = require('timekeeper')
 	if (process.env.NODE_ENV === 'test' && process.env.TIME !== '') {
-		const tk = require('timekeeper')
 		const simulatedTime = process.env.TIME
 		const newSystemTime = new Date()
 
@@ -24,6 +24,8 @@ app.use((req, res, next) => {
 		newSystemTime.setUTCSeconds(simulatedTime.split(':')[2])
 
 		tk.freeze(newSystemTime)
+	} else {
+		tk.reset()
 	}
 	next()
 })

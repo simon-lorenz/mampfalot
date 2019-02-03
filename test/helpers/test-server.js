@@ -9,6 +9,11 @@ class TestServer {
 		this.server = app.listen(port)
 	}
 
+	restart(port, time = '') {
+		this.close()
+		this.start(port, time)
+	}
+
 	close() {
 		if (this.server) {
 			this.server.close()

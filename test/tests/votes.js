@@ -2,6 +2,7 @@
 
 const setup = require('../setup')
 const errorHelper = require('../helpers/errors')
+const testServer = require('../helpers/test-server')
 
 module.exports = (request, bearerToken) => {
 	return describe('/votes', () => {
@@ -9,6 +10,7 @@ module.exports = (request, bearerToken) => {
 			let newVotes
 
 			beforeEach(async () => {
+				testServer.restart(5001, '11:24:59') // UTC-Time! Group_1 has an offset of +60 Minutes.
 				newVotes = [
 					{
 						participantId: 1,
@@ -24,15 +26,14 @@ module.exports = (request, bearerToken) => {
 				await setup.resetData()
 			})
 
-			it('fails if no body values are provided', (done) => {
-				request
+			it('fails if no body values are provided', async () => {
+				await request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
 					.expect(400)
 					.expect(res => {
 						errorHelper.checkRequestError(res.body)
 					})
-					.end(done)
 			})
 
 			it('fails if body contains an empty array', (done) => {
@@ -284,6 +285,23 @@ module.exports = (request, bearerToken) => {
 						errorHelper.checkValidationError(res.body, expectedError)
 					})
 					.end(done)
+			})
+
+			it('fails if the groups voteEndingTime is reached', async () => {
+				testServer.restart(5001, '11:25:01') // UTC-Time! Group_1 has an offset of +60 Minutes.
+				await request
+					.post('/votes')
+					.set({ Authorization: bearerToken[1] })
+					.send([{
+						participantId: 1,
+						placeId: 1,
+						points: 40
+					}])
+					.expect(400)
+					.expect(res => {
+						const MESSAGE = 'The end of voting has been reached, therefore no new votes will be accepted.'
+						errorHelper.checkRequestError(res.body, MESSAGE)
+					})
 			})
 
 			it('accepts point value as string', (done) => {
