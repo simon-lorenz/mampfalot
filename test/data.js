@@ -27,6 +27,7 @@ module.exports = {
 			name: 'Group_1',
 			defaultLunchTime: '12:30:00',
 			defaultVoteEndingTime: '12:25:00',
+			utcOffset: 60,
 			pointsPerDay: 100,
 			maxPointsPerVote: 70,
 			minPointsPerVote: 30
@@ -36,6 +37,7 @@ module.exports = {
 			name: 'Group_2',
 			defaultLunchTime: '13:00:00',
 			defaultVoteEndingTime: '12:59:00',
+			utcOffset: -120,
 			pointsPerDay: 10,
 			maxPointsPerVote: 6,
 			minPointsPerVote: 2

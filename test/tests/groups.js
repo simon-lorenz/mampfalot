@@ -10,6 +10,7 @@ module.exports = (request, bearerToken) => {
 				name: 'My cool group',
 				defaultLunchTime: '12:30:00',
 				defaultVoteEndingTime: '12:00:00',
+				utcOffset: 60,
 				pointsPerDay: 20,
 				maxPointsPerVote: 10,
 				minPointsPerVote: 5
@@ -17,6 +18,17 @@ module.exports = (request, bearerToken) => {
 
 			beforeEach(async () => {
 				await setup.resetData()
+			})
+
+			it('fails if required values are missing', async () => {
+				await request
+					.post('/groups')
+					.set({ Authorization: bearerToken[1] })
+					.expect(400)
+					.expect(res => {
+						const MESSAGE = 'This request has to provide all of the following body values: name'
+						errorHelper.checkRequestError(res.body, MESSAGE)
+					})
 			})
 
 			it('sucessfully creates a group', (done) => {
@@ -27,10 +39,12 @@ module.exports = (request, bearerToken) => {
 					.expect(200)
 					.expect(res => {
 						const group = res.body
+						group.should.have.all.keys(['id', 'name', 'defaultLunchTime', 'defaultVoteEndingTime', 'utcOffset', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote', 'lunchbreaks', 'members', 'places', 'invitations'])
 						group.should.have.property('id')
 						group.should.have.property('name').equal(newGroup.name)
 						group.should.have.property('defaultLunchTime').equal(newGroup.defaultLunchTime)
 						group.should.have.property('defaultVoteEndingTime').equal(newGroup.defaultVoteEndingTime)
+						group.should.have.property('utcOffset').equal(newGroup.utcOffset)
 						group.should.have.property('pointsPerDay').equal(newGroup.pointsPerDay)
 						group.should.have.property('maxPointsPerVote').equal(newGroup.maxPointsPerVote)
 						group.should.have.property('minPointsPerVote').equal(newGroup.minPointsPerVote)
@@ -316,6 +330,54 @@ module.exports = (request, bearerToken) => {
 						.end(done)
 				})
 
+				it('fails if utcOffset is greater than 720', async () => {
+					await request
+						.post('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.send({ utcOffset: 721 })
+						.expect(400)
+						.expect(res => {
+							const expectedError = {
+								field: 'utcOffset',
+								value: 721,
+								message: 'utcOffset cannot be greater than 720'
+							}
+							errorHelper.checkValidationError(res.body, expectedError)
+						})
+				})
+
+				it('fails if utcOffset is less than -720', async () => {
+					await request
+						.post('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.send({ utcOffset: -721 })
+						.expect(400)
+						.expect(res => {
+							const expectedError = {
+								field: 'utcOffset',
+								value: -721,
+								message: 'utcOffset cannot be less than -720'
+							}
+							errorHelper.checkValidationError(res.body, expectedError)
+						})
+				})
+
+				it('fails if utcOffset is not a multiple of 60', async () => {
+					await request
+						.post('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.send({ utcOffset: 61 })
+						.expect(400)
+						.expect(res => {
+							const expectedError = {
+								field: 'utcOffset',
+								value: 61,
+								message: 'This is not a valid UTC offset.'
+							}
+							errorHelper.checkValidationError(res.body, expectedError)
+						})
+				})
+
 				it('updates a group successfully', (done) => {
 					request
 						.post('/groups/1')
@@ -324,17 +386,19 @@ module.exports = (request, bearerToken) => {
 							name: 'New name',
 							defaultLunchTime: '14:00:00',
 							defaultVoteEndingTime: '13:30:00',
+							utcOffset: -120,
 							pointsPerDay: 300,
 							maxPointsPerVote: 100,
 							minPointsPerVote: 50
 						})
 						.expect(200, (err, res) => {
 							const group = res.body
-							group.should.have.all.keys(['id', 'name', 'defaultLunchTime', 'defaultVoteEndingTime', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote', 'lunchbreaks', 'members', 'places', 'invitations'])
+							group.should.have.all.keys(['id', 'name', 'defaultLunchTime', 'defaultVoteEndingTime', 'utcOffset', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote', 'lunchbreaks', 'members', 'places', 'invitations'])
 							group.should.have.property('id').equal(1)
 							group.should.have.property('name').equal('New name')
 							group.should.have.property('defaultLunchTime').equal('14:00:00')
 							group.should.have.property('defaultVoteEndingTime').equal('13:30:00')
+							group.should.have.property('utcOffset').equal(-120)
 							group.should.have.property('pointsPerDay').equal(300)
 							group.should.have.property('maxPointsPerVote').equal(100)
 							group.should.have.property('minPointsPerVote').equal(50)

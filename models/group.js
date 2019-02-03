@@ -21,6 +21,26 @@ module.exports = (sequelize, DataTypes) => {
 			allowNull: false,
 			defaultValue: '12:20:00'
 		},
+		utcOffset: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			defaultValue: 0,
+			validate: {
+				min: {
+					args: -720,
+					msg: 'utcOffset cannot be less than -720'
+				},
+				max: {
+					args: 720,
+					msg: 'utcOffset cannot be greater than 720'
+				},
+				validOffset: function (value) {
+					if (value % 60 !== 0) {
+						throw new Error('This is not a valid UTC offset.')
+					}
+				}
+			}
+		},
 		pointsPerDay: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
