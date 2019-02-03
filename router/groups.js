@@ -281,22 +281,18 @@ router.route('/:groupId/lunchbreaks').get(asyncMiddleware(async (req, res, next)
 }))
 
 router.route('/:groupId/lunchbreaks').post(asyncMiddleware(async (req, res, next) => {
-	const { user, group } = res.locals
+	const { user } = res.locals
 
 	const lunchbreak = Lunchbreak.build({
 		groupId: req.params.groupId,
-		date: req.body.date,
-		lunchTime: req.body.lunchTime,
-		voteEndingTime: req.body.voteEndingTime
+		date: req.body.date
 	})
 
 	await user.can.createLunchbreak(lunchbreak)
 
 	res.send(await Lunchbreak.create({
 		groupId: parseInt(req.params.groupId),
-		date: req.body.date,
-		lunchTime: req.body.lunchTime || group.defaultLunchTime,
-		voteEndingTime: req.body.voteEndingTime || group.defaultVoteEndingTime
+		date: req.body.date
 	}))
 }))
 

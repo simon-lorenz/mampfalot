@@ -162,13 +162,7 @@ class ResourceAccessControl {
 	}
 
 	async createLunchbreak(lunchbreak) {
-		if (this.user.isGroupMember(lunchbreak.groupId)) {
-			if (lunchbreak.lunchTime || lunchbreak.voteEndingTime) {
-				if (!this.user.isGroupAdmin(lunchbreak.groupId)) {
-					throw new AuthorizationError('Lunchbreak', null, 'CREATE')
-				}
-			}
-		} else {
+		if (!this.user.isGroupMember(lunchbreak.groupId)) {
 			throw new AuthorizationError('Lunchbreak', null, 'CREATE')
 		}
 	}

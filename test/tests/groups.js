@@ -850,8 +850,6 @@ module.exports = (request, bearerToken) => {
 								const firstLunchbreak = data[0]
 								firstLunchbreak.should.have.property('id').equal(1)
 								firstLunchbreak.should.have.property('date').equal('2018-06-25')
-								firstLunchbreak.should.have.property('lunchTime').equal('12:30:00')
-								firstLunchbreak.should.have.property('voteEndingTime').equal('12:25:00')
 
 								done()
 							})
@@ -872,8 +870,6 @@ module.exports = (request, bearerToken) => {
 								lunchbreak.should.be.an('object')
 								lunchbreak.should.have.property('id').equal(3)
 								lunchbreak.should.have.property('date').equal('2018-06-26')
-								lunchbreak.should.have.property('lunchTime').equal('12:30:00')
-								lunchbreak.should.have.property('voteEndingTime').equal('12:25:00')
 							})
 							.end(done)
 					})
@@ -905,27 +901,6 @@ module.exports = (request, bearerToken) => {
 							.end(done)
 					})
 
-					it('fails if the user provides times and is no admin', (done) => {
-						request
-							.post('/groups/1/lunchbreaks')
-							.set({ Authorization: bearerToken[2] })
-							.send({
-								date: '2018-06-30',
-								lunchTime: '12:00:00',
-								voteEndingTime: '11:59:00'
-							})
-							.expect(403)
-							.expect(res => {
-								const expectedError = {
-									resource: 'Lunchbreak',
-									id: null,
-									operation: 'CREATE'
-								}
-								errorHelper.checkAuthorizationError(res.body, expectedError)
-							})
-							.end(done)
-					})
-
 					it('creates a new lunchbreak successfully when user is no admin', (done) => {
 						request
 							.post('/groups/1/lunchbreaks')
@@ -937,47 +912,8 @@ module.exports = (request, bearerToken) => {
 								lunchbreak.should.have.property('id')
 								lunchbreak.should.have.property('groupId').equal(1)
 								lunchbreak.should.have.property('date').equal('2018-06-30')
-								lunchbreak.should.have.property('lunchTime').equal('12:30:00')
-								lunchbreak.should.have.property('voteEndingTime').equal('12:25:00')
 							})
 							.end(done)
-					})
-
-					it('creates a new lunchbreak successfully when user is admin', (done) => {
-						request
-							.post('/groups/1/lunchbreaks')
-							.set({ Authorization: bearerToken[1] })
-							.send({
-								date: '2018-06-30',
-								lunchTime: '12:00:00',
-								voteEndingTime: '11:59:00'
-							})
-							.expect(200, (err, res) => {
-								const newLunchbreak = res.body
-								newLunchbreak.should.have.property('id')
-								newLunchbreak.should.have.property('groupId').equal(1)
-								newLunchbreak.should.have.property('date').equal('2018-06-30')
-								newLunchbreak.should.have.property('lunchTime').equal('12:00:00')
-								newLunchbreak.should.have.property('voteEndingTime').equal('11:59:00')
-								done()
-							})
-					})
-
-					it('creates a new lunchbreak with default values if none are provided', (done) => {
-						request
-							.post('/groups/1/lunchbreaks')
-							.set({ Authorization: bearerToken[2] })
-							.send({
-								date: '2018-06-30'
-							})
-							.expect(200, (err, res) => {
-								const newLunchbreak = res.body
-								newLunchbreak.should.have.property('id')
-								newLunchbreak.should.have.property('date').equal('2018-06-30')
-								newLunchbreak.should.have.property('lunchTime').equal('12:30:00')
-								newLunchbreak.should.have.property('voteEndingTime').equal('12:25:00')
-								done()
-							})
 					})
 
 					it('fails if no date is provided', (done) => {
@@ -991,27 +927,6 @@ module.exports = (request, bearerToken) => {
 							})
 							.end(done)
 					})
-
-					it('fails if voteEndingTime is greater than lunchTime', (done) => {{
-						request
-							.post('/groups/1/lunchbreaks')
-							.set({ Authorization: bearerToken[1] })
-							.send({
-								date: '2018-06-30',
-								lunchTime: '12:30:00',
-								voteEndingTime: '12:31:00'
-							})
-							.expect(400)
-							.expect(res => {
-								const expectedError = {
-									field: 'voteEndingTime',
-									value: '12:31:00',
-									message: 'voteEndingTime cannot be greater than lunchTime.'
-								}
-								errorHelper.checkValidationError(res.body, expectedError)
-							})
-							.end(done)
-					}})
 
 					it('fails if a lunchbreak at this date exists', (done) => {
 						request

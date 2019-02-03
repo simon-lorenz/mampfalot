@@ -6,8 +6,7 @@ const { allowMethods, hasBodyValues } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
 const loader = require('../classes/resource-loader')
 
-router.route('/:lunchbreakId').all(allowMethods(['GET', 'POST']))
-router.route('/:lunchbreakId').post(hasBodyValues(['voteEndingTime', 'lunchTime'], 'atLeastOne'))
+router.route('/:lunchbreakId').all(allowMethods(['GET']))
 router.route('/:lunchbreakId/comments').all(allowMethods(['GET', 'POST']))
 router.route('/:lunchbreakId/comments').post(hasBodyValues(['comment'], 'all'))
 router.route('/:lunchbreakId/participants').all(allowMethods(['GET', 'POST']))
@@ -18,16 +17,6 @@ router.route('/:lunchbreakId').get(asyncMiddleware(async (req, res, next) => {
 	const { user, lunchbreak } = res.locals
 	await user.can.readLunchbreak(lunchbreak)
 	res.send(res.locals.lunchbreak)
-}))
-
-router.route('/:lunchbreakId').post(asyncMiddleware(async (req, res, next) => {
-	const { user, lunchbreak } = res.locals
-
-	if(req.body.voteEndingTime) { lunchbreak.voteEndingTime = req.body.voteEndingTime }
-	if(req.body.lunchTime) { lunchbreak.lunchTime = req.body.lunchTime }
-
-	await user.can.updateLunchbreak(lunchbreak)
-	res.send(await lunchbreak.save())
 }))
 
 router.route('/:lunchbreakId/comments').get(asyncMiddleware(async (req, res, next) => {

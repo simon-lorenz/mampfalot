@@ -48,7 +48,7 @@ const ENDPOINTS = [
 	},
 	{
 		url: '/lunchbreaks/1',
-		methods: ['GET', 'POST'],
+		methods: ['GET'],
 		public: false
 	},
 	{
