@@ -2,8 +2,8 @@
 
 process.env.NODE_ENV = 'test'
 
+const testServer = require('./helpers/test-server')
 const request = require('supertest')('http://localhost:5001/api')
-const app = require('./../app')
 const setup = require('./setup')
 const users = require('./data').users
 const chai = require('chai')
@@ -34,32 +34,29 @@ request.getMethodByString = function(method, url) {
 }
 
 describe('The mampfalot api', function () {
-	let server
 	const bearerToken = []
 	this.timeout(10000)
 
 	before(async () => {
 		await setup.resetData()
-		server = app.listen(5001)
+		testServer.start(5001)
 
-		let res
 		for (const user of users) {
-			res = await request
+			const res = await request
 				.get('/auth')
 				.auth(user.username, user.password)
 			bearerToken[user.id] = `Bearer ${res.body.token}`
 		}
 
-		server.close()
+		testServer.close()
 	})
 
 	beforeEach(async () => {
-		server = app.listen(5001)
+		testServer.start(5001)
 	})
 
-	afterEach((done) => {
-		server.close()
-		done()
+	afterEach(async () => {
+		testServer.close()
 	})
 
 	it('responds to /', (done) => {
