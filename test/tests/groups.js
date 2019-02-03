@@ -8,8 +8,8 @@ module.exports = (request, bearerToken) => {
 		describe('POST', () => {
 			const newGroup = {
 				name: 'My cool group',
-				defaultLunchTime: '12:30:00',
-				defaultVoteEndingTime: '12:00:00',
+				lunchTime: '12:30:00',
+				voteEndingTime: '12:00:00',
 				utcOffset: 60,
 				pointsPerDay: 20,
 				maxPointsPerVote: 10,
@@ -39,11 +39,11 @@ module.exports = (request, bearerToken) => {
 					.expect(200)
 					.expect(res => {
 						const group = res.body
-						group.should.have.all.keys(['id', 'name', 'defaultLunchTime', 'defaultVoteEndingTime', 'utcOffset', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote', 'lunchbreaks', 'members', 'places', 'invitations'])
+						group.should.have.all.keys(['id', 'name', 'lunchTime', 'voteEndingTime', 'utcOffset', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote', 'lunchbreaks', 'members', 'places', 'invitations'])
 						group.should.have.property('id')
 						group.should.have.property('name').equal(newGroup.name)
-						group.should.have.property('defaultLunchTime').equal(newGroup.defaultLunchTime)
-						group.should.have.property('defaultVoteEndingTime').equal(newGroup.defaultVoteEndingTime)
+						group.should.have.property('lunchTime').equal(newGroup.lunchTime)
+						group.should.have.property('voteEndingTime').equal(newGroup.voteEndingTime)
 						group.should.have.property('utcOffset').equal(newGroup.utcOffset)
 						group.should.have.property('pointsPerDay').equal(newGroup.pointsPerDay)
 						group.should.have.property('maxPointsPerVote').equal(newGroup.maxPointsPerVote)
@@ -100,8 +100,8 @@ module.exports = (request, bearerToken) => {
 
 							group.should.be.an('object')
 							group.should.have.property('name').equal('Group_1')
-							group.should.have.property('defaultLunchTime').equal('12:30:00')
-							group.should.have.property('defaultVoteEndingTime').equal('12:25:00')
+							group.should.have.property('lunchTime').equal('12:30:00')
+							group.should.have.property('voteEndingTime').equal('12:25:00')
 							group.should.have.property('pointsPerDay').equal(100)
 							group.should.have.property('maxPointsPerVote').equal(70)
 							group.should.have.property('minPointsPerVote').equal(30)
@@ -160,8 +160,8 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization:  bearerToken[1] })
 						.send({
 							name: 'New name',
-							defaultLunchTime: '14:00:00',
-							defaultVoteEndingTime: '13:30:00',
+							lunchTime: '14:00:00',
+							voteEndingTime: '13:30:00',
 							pointsPerDay: 300,
 							maxPointsPerVote: 100,
 							minPointsPerVote: 50
@@ -230,20 +230,20 @@ module.exports = (request, bearerToken) => {
 						.expect(200)
 				})
 
-				it('fails if defaultVoteEndingTime is greater than defaultLunchTime', (done) => {
+				it('fails if voteEndingTime is greater than lunchTime', (done) => {
 					request
 						.post('/groups/1')
 						.set({ Authorization: bearerToken[1] })
 						.send({
-							defaultVoteEndingTime: '13:00:00',
-							defaultLunchTime: '12:30:00'
+							voteEndingTime: '13:00:00',
+							lunchTime: '12:30:00'
 						})
 						.expect(400)
 						.expect(res => {
 							const expectedError = {
 								field: 'timeValidator',
 								value: null,
-								message: 'defaultVoteEndingTime has to be less than defaultLunchTime.'
+								message: 'voteEndingTime has to be less than lunchTime.'
 							}
 							errorHelper.checkValidationError(res.body, expectedError)
 						})
@@ -384,8 +384,8 @@ module.exports = (request, bearerToken) => {
 						.set( { Authorization: bearerToken[1] })
 						.send({
 							name: 'New name',
-							defaultLunchTime: '14:00:00',
-							defaultVoteEndingTime: '13:30:00',
+							lunchTime: '14:00:00',
+							voteEndingTime: '13:30:00',
 							utcOffset: -120,
 							pointsPerDay: 300,
 							maxPointsPerVote: 100,
@@ -393,11 +393,11 @@ module.exports = (request, bearerToken) => {
 						})
 						.expect(200, (err, res) => {
 							const group = res.body
-							group.should.have.all.keys(['id', 'name', 'defaultLunchTime', 'defaultVoteEndingTime', 'utcOffset', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote', 'lunchbreaks', 'members', 'places', 'invitations'])
+							group.should.have.all.keys(['id', 'name', 'lunchTime', 'voteEndingTime', 'utcOffset', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote', 'lunchbreaks', 'members', 'places', 'invitations'])
 							group.should.have.property('id').equal(1)
 							group.should.have.property('name').equal('New name')
-							group.should.have.property('defaultLunchTime').equal('14:00:00')
-							group.should.have.property('defaultVoteEndingTime').equal('13:30:00')
+							group.should.have.property('lunchTime').equal('14:00:00')
+							group.should.have.property('voteEndingTime').equal('13:30:00')
 							group.should.have.property('utcOffset').equal(-120)
 							group.should.have.property('pointsPerDay').equal(300)
 							group.should.have.property('maxPointsPerVote').equal(100)
@@ -416,8 +416,8 @@ module.exports = (request, bearerToken) => {
 						.set( { Authorization: bearerToken[1] })
 						.send({
 							name: 'New name',
-							defaultLunchTime: '14:00:00',
-							defaultVoteEndingTime: '13:30:00',
+							lunchTime: '14:00:00',
+							voteEndingTime: '13:30:00',
 							pointsPerDay: '300',
 							maxPointsPerVote: '100',
 							minPointsPerVote: '50'
@@ -427,8 +427,8 @@ module.exports = (request, bearerToken) => {
 							const group = res.body
 							group.should.have.property('id').equal(1)
 							group.should.have.property('name').equal('New name')
-							group.should.have.property('defaultLunchTime').equal('14:00:00')
-							group.should.have.property('defaultVoteEndingTime').equal('13:30:00')
+							group.should.have.property('lunchTime').equal('14:00:00')
+							group.should.have.property('voteEndingTime').equal('13:30:00')
 							group.should.have.property('pointsPerDay').equal(300)
 							group.should.have.property('maxPointsPerVote').equal(100)
 							group.should.have.property('minPointsPerVote').equal(50)

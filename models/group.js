@@ -11,12 +11,12 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.STRING,
 			allowNull: false
 		},
-		defaultLunchTime: {
+		lunchTime: {
 			type: DataTypes.TIME,
 			allowNull: false,
 			defaultValue: '12:30:00'
 		},
-		defaultVoteEndingTime: {
+		voteEndingTime: {
 			type: DataTypes.TIME,
 			allowNull: false,
 			defaultValue: '12:20:00'
@@ -99,8 +99,8 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		validate: {
 			timeValidator() {
-				if (this.defaultLunchTime < this.defaultVoteEndingTime) {
-					throw new Error('defaultVoteEndingTime has to be less than defaultLunchTime.')
+				if (this.lunchTime < this.voteEndingTime) {
+					throw new Error('voteEndingTime has to be less than lunchTime.')
 				}
 			}
 		}

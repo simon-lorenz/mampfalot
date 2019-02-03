@@ -87,7 +87,7 @@ module.exports = (sequelize, DataTypes) => {
 		const participantId = votes[0].participantId
 
 		const config = await Group.findOne({
-			attributes: ['id', 'defaultVoteEndingTime', 'utcOffset', 'minPointsPerVote', 'maxPointsPerVote', 'pointsPerDay'],
+			attributes: ['id', 'voteEndingTime', 'utcOffset', 'minPointsPerVote', 'maxPointsPerVote', 'pointsPerDay'],
 			include: [
 				{
 					model: Lunchbreak,
@@ -111,9 +111,9 @@ module.exports = (sequelize, DataTypes) => {
 
 		// Lookup the groups voteEndingTime
 		const voteEndingTime = new Date()
-		voteEndingTime.setUTCHours(config.defaultVoteEndingTime.split(':')[0])
-		voteEndingTime.setUTCMinutes(config.defaultVoteEndingTime.split(':')[1])
-		voteEndingTime.setUTCSeconds(config.defaultVoteEndingTime.split(':')[2])
+		voteEndingTime.setUTCHours(config.voteEndingTime.split(':')[0])
+		voteEndingTime.setUTCMinutes(config.voteEndingTime.split(':')[1])
+		voteEndingTime.setUTCSeconds(config.voteEndingTime.split(':')[2])
 
 		if (clientTime > voteEndingTime) {
 			throw new RequestError('The end of voting has been reached, therefore no new votes will be accepted.')
