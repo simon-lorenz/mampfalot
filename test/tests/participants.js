@@ -59,7 +59,6 @@ module.exports = (request, bearerToken) => {
 							firstVote.should.have.property('place')
 							participant.should.have.property('lunchbreakId').equal(1)
 							participant.should.have.property('userId').equal(1)
-							participant.should.have.property('lunchTimeSuggestion')
 							participant.should.not.have.property('amountSpent')
 						})
 						.end(done)

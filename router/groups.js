@@ -8,8 +8,9 @@ const { asyncMiddleware } = require('../util/util')
 const loader = require('../classes/resource-loader')
 
 router.route('/').all(allowMethods(['GET', 'POST']))
+router.route('/').post(hasBodyValues(['name'], 'all'))
 router.route('/:groupId').all(allowMethods(['GET', 'POST', 'DELETE']))
-router.route('/:groupId').post(hasBodyValues(['name', 'defaultLunchTime', 'defaultVoteEndingTime', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote'], 'atLeastOne'))
+router.route('/:groupId').post(hasBodyValues(['name', 'lunchTime', 'voteEndingTime', 'utcOffset', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote'], 'atLeastOne'))
 router.route('/:groupId/invitations').all(allowMethods(['GET', 'POST', 'DELETE']))
 router.route('/:groupId/invitations').post(hasBodyValues(['to'], 'all'))
 router.route('/:groupId/invitations').delete(hasQueryValues(['to'], 'all'))
@@ -37,8 +38,9 @@ router.route('/').get((req, res, next) => {
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	const result = await Group.create({
 		name: req.body.name,
-		defaultLunchTime: req.body.defaultLunchTime,
-		defaultVoteEndingTime: req.body.defaultVoteEndingTime,
+		lunchTime: req.body.lunchTime,
+		voteEndingTime: req.body.voteEndingTime,
+		utcOffset: req.body.utcOffset,
 		pointsPerDay: parseInt(req.body.pointsPerDay),
 		maxPointsPerVote: parseInt(req.body.maxPointsPerVote),
 		minPointsPerVote: parseInt(req.body.minPointsPerVote)
@@ -108,11 +110,14 @@ router.route('/:groupId').post((req, res, next) => {
 	if (req.body.name) {
 		group.name = req.body.name
 	}
-	if (req.body.defaultLunchTime) {
-		group.defaultLunchTime = req.body.defaultLunchTime
+	if (req.body.lunchTime) {
+		group.lunchTime = req.body.lunchTime
 	}
-	if (req.body.defaultVoteEndingTime) {
-		group.defaultVoteEndingTime = req.body.defaultVoteEndingTime
+	if (req.body.voteEndingTime) {
+		group.voteEndingTime = req.body.voteEndingTime
+	}
+	if (req.body.utcOffset) {
+		group.utcOffset = parseInt(req.body.utcOffset)
 	}
 	if (req.body.pointsPerDay) {
 		group.pointsPerDay = parseInt(req.body.pointsPerDay)
@@ -276,22 +281,18 @@ router.route('/:groupId/lunchbreaks').get(asyncMiddleware(async (req, res, next)
 }))
 
 router.route('/:groupId/lunchbreaks').post(asyncMiddleware(async (req, res, next) => {
-	const { user, group } = res.locals
+	const { user } = res.locals
 
 	const lunchbreak = Lunchbreak.build({
 		groupId: req.params.groupId,
-		date: req.body.date,
-		lunchTime: req.body.lunchTime,
-		voteEndingTime: req.body.voteEndingTime
+		date: req.body.date
 	})
 
 	await user.can.createLunchbreak(lunchbreak)
 
 	res.send(await Lunchbreak.create({
 		groupId: parseInt(req.params.groupId),
-		date: req.body.date,
-		lunchTime: req.body.lunchTime || group.defaultLunchTime,
-		voteEndingTime: req.body.voteEndingTime || group.defaultVoteEndingTime
+		date: req.body.date
 	}))
 }))
 

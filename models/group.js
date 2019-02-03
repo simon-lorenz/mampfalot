@@ -11,15 +11,35 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.STRING,
 			allowNull: false
 		},
-		defaultLunchTime: {
+		lunchTime: {
 			type: DataTypes.TIME,
 			allowNull: false,
 			defaultValue: '12:30:00'
 		},
-		defaultVoteEndingTime: {
+		voteEndingTime: {
 			type: DataTypes.TIME,
 			allowNull: false,
 			defaultValue: '12:20:00'
+		},
+		utcOffset: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			defaultValue: 0,
+			validate: {
+				min: {
+					args: -720,
+					msg: 'utcOffset cannot be less than -720'
+				},
+				max: {
+					args: 720,
+					msg: 'utcOffset cannot be greater than 720'
+				},
+				validOffset: function (value) {
+					if (value % 60 !== 0) {
+						throw new Error('This is not a valid UTC offset.')
+					}
+				}
+			}
 		},
 		pointsPerDay: {
 			type: DataTypes.INTEGER,
@@ -79,8 +99,8 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		validate: {
 			timeValidator() {
-				if (this.defaultLunchTime < this.defaultVoteEndingTime) {
-					throw new Error('defaultVoteEndingTime has to be less than defaultLunchTime.')
+				if (this.lunchTime < this.voteEndingTime) {
+					throw new Error('voteEndingTime has to be less than lunchTime.')
 				}
 			}
 		}

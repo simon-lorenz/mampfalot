@@ -14,6 +14,7 @@ const data = require('./data')
 
 module.exports = {
 	async resetData() {
+		process.env.SEEDING = 'true'
 		await db.sync({ force: true })
 
 		try {
@@ -39,6 +40,8 @@ module.exports = {
 			await db.query('SELECT setval(\'participants_id_seq\', (SELECT MAX(id) from "participants"));')
 			await db.query('SELECT setval(\'votes_id_seq\', (SELECT MAX(id) from "votes"));')
 			await db.query('SELECT setval(\'comments_id_seq\', (SELECT MAX(id) from "comments"));')
+
+			process.env.SEEDING = ''
 		} catch (error) {
 			console.log(error)
 			throw error

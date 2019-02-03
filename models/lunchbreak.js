@@ -25,21 +25,6 @@ module.exports = (sequelize, DataTypes) => {
 				name: 'oneLuchbreakPerDayPerGroup',
 				msg: 'A lunchbreak at this date already exists.'
 			}
-		},
-		lunchTime: {
-			type: DataTypes.TIME,
-			allowNull: false
-		},
-		voteEndingTime: {
-			type: DataTypes.TIME,
-			allowNull: false,
-			validate: {
-				compareWithLunchTime(value) {
-					if (value > this.lunchTime) {
-						throw new Error('voteEndingTime cannot be greater than lunchTime.')
-					}
-				}
-			}
 		}
 	}, {
 		tableName: 'lunchbreaks',

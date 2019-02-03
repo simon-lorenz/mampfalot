@@ -49,8 +49,6 @@ module.exports = (request, bearerToken) => {
 							lunchbreak.should.have.property('id').equal(1)
 							lunchbreak.should.have.property('groupId').equal(1)
 							lunchbreak.should.have.property('date').equal('2018-06-25')
-							lunchbreak.should.have.property('lunchTime').equal('12:30:00')
-							lunchbreak.should.have.property('voteEndingTime').equal('12:25:00')
 							lunchbreak.should.have.property('comments')
 							lunchbreak.should.have.property('participants')
 							const firstParticipant = lunchbreak.participants[0]
@@ -58,92 +56,6 @@ module.exports = (request, bearerToken) => {
 							const firstVote = firstParticipant.votes[0]
 							firstVote.should.have.property('place')
 							firstParticipant.should.have.property('user')
-						})
-						.end(done)
-				})
-			})
-
-			describe('POST', () => {
-				beforeEach(async () => {
-					await setup.resetData()
-				})
-
-				it('fails if the user is no group admin', (done) => {
-					request
-						.post('/lunchbreaks/1')
-						.set({ Authorization: bearerToken[2] })
-						.send({ voteEndingTime: '10:00:00' })
-						.expect(403)
-						.expect(res => {
-							const expectedError = {
-								resource: 'Lunchbreak',
-								id: 1,
-								operation: 'UPDATE'
-							}
-							errorHelper.checkAuthorizationError(res.body, expectedError)
-						})
-						.end(done)
-				})
-
-				it('requires at least one parameter', (done) => {
-					request
-						.post('/lunchbreaks/1')
-						.set({ Authorization: bearerToken[1] })
-						.expect(400)
-						.expect(res => {
-							errorHelper.checkRequestError(res.body)
-						})
-						.end(done)
-				})
-
-				it('fails if voteEndingTime is greater than lunchTime', (done) => {
-					request
-						.post('/lunchbreaks/1')
-						.set({ Authorization: bearerToken[1] })
-						.send({
-							voteEndingTime: '13:00:00',
-							lunchTime: '12:59:00'
-						})
-						.expect(400)
-						.expect(res => {
-							const expectedError = {
-								field: 'voteEndingTime',
-								value: '13:00:00',
-								message: 'voteEndingTime cannot be greater than lunchTime.'
-							}
-							errorHelper.checkValidationError(res.body, expectedError)
-						})
-						.end(done)
-				})
-
-				it('doesn\'t update the date', (done) => {
-					request
-						.post('/lunchbreaks/1')
-						.set({ Authorization: bearerToken[1] })
-						.send({ date: '31.12.2019' })
-						.expect(400)
-						.expect(res => {
-							errorHelper.checkRequestError(res.body)
-						})
-						.end(done)
-				})
-
-				it('updates a lunchbreak successfully', (done) => {
-					const newTimes = {
-						voteEndingTime: '12:55:00',
-						lunchTime: '13:00:00'
-					}
-
-					request
-						.post('/lunchbreaks/1')
-						.set({ Authorization: bearerToken[1] })
-						.send(newTimes)
-						.expect(200)
-						.expect(res => {
-							const lunchbreak = res.body
-							lunchbreak.should.have.property('id').equal(1)
-							lunchbreak.should.have.property('voteEndingTime').equal(newTimes.voteEndingTime)
-							lunchbreak.should.have.property('lunchTime').equal(newTimes.lunchTime)
 						})
 						.end(done)
 				})
@@ -171,7 +83,6 @@ module.exports = (request, bearerToken) => {
 								firstParticipant.should.have.property('id').equal(1)
 								firstParticipant.should.have.property('lunchbreakId').equal(1)
 								firstParticipant.should.have.property('userId').equal(1)
-								firstParticipant.should.have.property('lunchTimeSuggestion')
 								firstParticipant.should.not.have.property('amountSpent')
 							})
 							.end(done)

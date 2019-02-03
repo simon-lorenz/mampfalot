@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "engines": {
-    "node": "8.11.3"
+    "node": "10.15.1"
   },
   "scripts": {
     "lint": "./node_modules/.bin/eslint . --ext .js",
@@ -44,6 +44,7 @@
     "chai": "^4.1.2",
     "eslint": "^5.11.1",
     "mocha": "^5.2.0",
-    "supertest": "^3.1.0"
+    "supertest": "^3.1.0",
+    "timekeeper": "^2.1.2"
   }
 }

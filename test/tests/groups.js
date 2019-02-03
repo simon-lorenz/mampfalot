@@ -8,8 +8,9 @@ module.exports = (request, bearerToken) => {
 		describe('POST', () => {
 			const newGroup = {
 				name: 'My cool group',
-				defaultLunchTime: '12:30:00',
-				defaultVoteEndingTime: '12:00:00',
+				lunchTime: '12:30:00',
+				voteEndingTime: '12:00:00',
+				utcOffset: 60,
 				pointsPerDay: 20,
 				maxPointsPerVote: 10,
 				minPointsPerVote: 5
@@ -17,6 +18,17 @@ module.exports = (request, bearerToken) => {
 
 			beforeEach(async () => {
 				await setup.resetData()
+			})
+
+			it('fails if required values are missing', async () => {
+				await request
+					.post('/groups')
+					.set({ Authorization: bearerToken[1] })
+					.expect(400)
+					.expect(res => {
+						const MESSAGE = 'This request has to provide all of the following body values: name'
+						errorHelper.checkRequestError(res.body, MESSAGE)
+					})
 			})
 
 			it('sucessfully creates a group', (done) => {
@@ -27,10 +39,12 @@ module.exports = (request, bearerToken) => {
 					.expect(200)
 					.expect(res => {
 						const group = res.body
+						group.should.have.all.keys(['id', 'name', 'lunchTime', 'voteEndingTime', 'utcOffset', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote', 'lunchbreaks', 'members', 'places', 'invitations'])
 						group.should.have.property('id')
 						group.should.have.property('name').equal(newGroup.name)
-						group.should.have.property('defaultLunchTime').equal(newGroup.defaultLunchTime)
-						group.should.have.property('defaultVoteEndingTime').equal(newGroup.defaultVoteEndingTime)
+						group.should.have.property('lunchTime').equal(newGroup.lunchTime)
+						group.should.have.property('voteEndingTime').equal(newGroup.voteEndingTime)
+						group.should.have.property('utcOffset').equal(newGroup.utcOffset)
 						group.should.have.property('pointsPerDay').equal(newGroup.pointsPerDay)
 						group.should.have.property('maxPointsPerVote').equal(newGroup.maxPointsPerVote)
 						group.should.have.property('minPointsPerVote').equal(newGroup.minPointsPerVote)
@@ -86,8 +100,8 @@ module.exports = (request, bearerToken) => {
 
 							group.should.be.an('object')
 							group.should.have.property('name').equal('Group_1')
-							group.should.have.property('defaultLunchTime').equal('12:30:00')
-							group.should.have.property('defaultVoteEndingTime').equal('12:25:00')
+							group.should.have.property('lunchTime').equal('12:30:00')
+							group.should.have.property('voteEndingTime').equal('12:25:00')
 							group.should.have.property('pointsPerDay').equal(100)
 							group.should.have.property('maxPointsPerVote').equal(70)
 							group.should.have.property('minPointsPerVote').equal(30)
@@ -146,8 +160,8 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization:  bearerToken[1] })
 						.send({
 							name: 'New name',
-							defaultLunchTime: '14:00:00',
-							defaultVoteEndingTime: '13:30:00',
+							lunchTime: '14:00:00',
+							voteEndingTime: '13:30:00',
 							pointsPerDay: 300,
 							maxPointsPerVote: 100,
 							minPointsPerVote: 50
@@ -216,20 +230,20 @@ module.exports = (request, bearerToken) => {
 						.expect(200)
 				})
 
-				it('fails if defaultVoteEndingTime is greater than defaultLunchTime', (done) => {
+				it('fails if voteEndingTime is greater than lunchTime', (done) => {
 					request
 						.post('/groups/1')
 						.set({ Authorization: bearerToken[1] })
 						.send({
-							defaultVoteEndingTime: '13:00:00',
-							defaultLunchTime: '12:30:00'
+							voteEndingTime: '13:00:00',
+							lunchTime: '12:30:00'
 						})
 						.expect(400)
 						.expect(res => {
 							const expectedError = {
 								field: 'timeValidator',
 								value: null,
-								message: 'defaultVoteEndingTime has to be less than defaultLunchTime.'
+								message: 'voteEndingTime has to be less than lunchTime.'
 							}
 							errorHelper.checkValidationError(res.body, expectedError)
 						})
@@ -316,25 +330,75 @@ module.exports = (request, bearerToken) => {
 						.end(done)
 				})
 
+				it('fails if utcOffset is greater than 720', async () => {
+					await request
+						.post('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.send({ utcOffset: 721 })
+						.expect(400)
+						.expect(res => {
+							const expectedError = {
+								field: 'utcOffset',
+								value: 721,
+								message: 'utcOffset cannot be greater than 720'
+							}
+							errorHelper.checkValidationError(res.body, expectedError)
+						})
+				})
+
+				it('fails if utcOffset is less than -720', async () => {
+					await request
+						.post('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.send({ utcOffset: -721 })
+						.expect(400)
+						.expect(res => {
+							const expectedError = {
+								field: 'utcOffset',
+								value: -721,
+								message: 'utcOffset cannot be less than -720'
+							}
+							errorHelper.checkValidationError(res.body, expectedError)
+						})
+				})
+
+				it('fails if utcOffset is not a multiple of 60', async () => {
+					await request
+						.post('/groups/1')
+						.set({ Authorization: bearerToken[1] })
+						.send({ utcOffset: 61 })
+						.expect(400)
+						.expect(res => {
+							const expectedError = {
+								field: 'utcOffset',
+								value: 61,
+								message: 'This is not a valid UTC offset.'
+							}
+							errorHelper.checkValidationError(res.body, expectedError)
+						})
+				})
+
 				it('updates a group successfully', (done) => {
 					request
 						.post('/groups/1')
 						.set( { Authorization: bearerToken[1] })
 						.send({
 							name: 'New name',
-							defaultLunchTime: '14:00:00',
-							defaultVoteEndingTime: '13:30:00',
+							lunchTime: '14:00:00',
+							voteEndingTime: '13:30:00',
+							utcOffset: -120,
 							pointsPerDay: 300,
 							maxPointsPerVote: 100,
 							minPointsPerVote: 50
 						})
 						.expect(200, (err, res) => {
 							const group = res.body
-							group.should.have.all.keys(['id', 'name', 'defaultLunchTime', 'defaultVoteEndingTime', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote', 'lunchbreaks', 'members', 'places', 'invitations'])
+							group.should.have.all.keys(['id', 'name', 'lunchTime', 'voteEndingTime', 'utcOffset', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote', 'lunchbreaks', 'members', 'places', 'invitations'])
 							group.should.have.property('id').equal(1)
 							group.should.have.property('name').equal('New name')
-							group.should.have.property('defaultLunchTime').equal('14:00:00')
-							group.should.have.property('defaultVoteEndingTime').equal('13:30:00')
+							group.should.have.property('lunchTime').equal('14:00:00')
+							group.should.have.property('voteEndingTime').equal('13:30:00')
+							group.should.have.property('utcOffset').equal(-120)
 							group.should.have.property('pointsPerDay').equal(300)
 							group.should.have.property('maxPointsPerVote').equal(100)
 							group.should.have.property('minPointsPerVote').equal(50)
@@ -352,8 +416,9 @@ module.exports = (request, bearerToken) => {
 						.set( { Authorization: bearerToken[1] })
 						.send({
 							name: 'New name',
-							defaultLunchTime: '14:00:00',
-							defaultVoteEndingTime: '13:30:00',
+							lunchTime: '14:00:00',
+							voteEndingTime: '13:30:00',
+							utcOffset: '120',
 							pointsPerDay: '300',
 							maxPointsPerVote: '100',
 							minPointsPerVote: '50'
@@ -363,8 +428,9 @@ module.exports = (request, bearerToken) => {
 							const group = res.body
 							group.should.have.property('id').equal(1)
 							group.should.have.property('name').equal('New name')
-							group.should.have.property('defaultLunchTime').equal('14:00:00')
-							group.should.have.property('defaultVoteEndingTime').equal('13:30:00')
+							group.should.have.property('lunchTime').equal('14:00:00')
+							group.should.have.property('voteEndingTime').equal('13:30:00')
+							group.should.have.property('utcOffset').equal(120)
 							group.should.have.property('pointsPerDay').equal(300)
 							group.should.have.property('maxPointsPerVote').equal(100)
 							group.should.have.property('minPointsPerVote').equal(50)
@@ -786,8 +852,6 @@ module.exports = (request, bearerToken) => {
 								const firstLunchbreak = data[0]
 								firstLunchbreak.should.have.property('id').equal(1)
 								firstLunchbreak.should.have.property('date').equal('2018-06-25')
-								firstLunchbreak.should.have.property('lunchTime').equal('12:30:00')
-								firstLunchbreak.should.have.property('voteEndingTime').equal('12:25:00')
 
 								done()
 							})
@@ -808,8 +872,6 @@ module.exports = (request, bearerToken) => {
 								lunchbreak.should.be.an('object')
 								lunchbreak.should.have.property('id').equal(3)
 								lunchbreak.should.have.property('date').equal('2018-06-26')
-								lunchbreak.should.have.property('lunchTime').equal('12:30:00')
-								lunchbreak.should.have.property('voteEndingTime').equal('12:25:00')
 							})
 							.end(done)
 					})
@@ -841,27 +903,6 @@ module.exports = (request, bearerToken) => {
 							.end(done)
 					})
 
-					it('fails if the user provides times and is no admin', (done) => {
-						request
-							.post('/groups/1/lunchbreaks')
-							.set({ Authorization: bearerToken[2] })
-							.send({
-								date: '2018-06-30',
-								lunchTime: '12:00:00',
-								voteEndingTime: '11:59:00'
-							})
-							.expect(403)
-							.expect(res => {
-								const expectedError = {
-									resource: 'Lunchbreak',
-									id: null,
-									operation: 'CREATE'
-								}
-								errorHelper.checkAuthorizationError(res.body, expectedError)
-							})
-							.end(done)
-					})
-
 					it('creates a new lunchbreak successfully when user is no admin', (done) => {
 						request
 							.post('/groups/1/lunchbreaks')
@@ -873,47 +914,8 @@ module.exports = (request, bearerToken) => {
 								lunchbreak.should.have.property('id')
 								lunchbreak.should.have.property('groupId').equal(1)
 								lunchbreak.should.have.property('date').equal('2018-06-30')
-								lunchbreak.should.have.property('lunchTime').equal('12:30:00')
-								lunchbreak.should.have.property('voteEndingTime').equal('12:25:00')
 							})
 							.end(done)
-					})
-
-					it('creates a new lunchbreak successfully when user is admin', (done) => {
-						request
-							.post('/groups/1/lunchbreaks')
-							.set({ Authorization: bearerToken[1] })
-							.send({
-								date: '2018-06-30',
-								lunchTime: '12:00:00',
-								voteEndingTime: '11:59:00'
-							})
-							.expect(200, (err, res) => {
-								const newLunchbreak = res.body
-								newLunchbreak.should.have.property('id')
-								newLunchbreak.should.have.property('groupId').equal(1)
-								newLunchbreak.should.have.property('date').equal('2018-06-30')
-								newLunchbreak.should.have.property('lunchTime').equal('12:00:00')
-								newLunchbreak.should.have.property('voteEndingTime').equal('11:59:00')
-								done()
-							})
-					})
-
-					it('creates a new lunchbreak with default values if none are provided', (done) => {
-						request
-							.post('/groups/1/lunchbreaks')
-							.set({ Authorization: bearerToken[2] })
-							.send({
-								date: '2018-06-30'
-							})
-							.expect(200, (err, res) => {
-								const newLunchbreak = res.body
-								newLunchbreak.should.have.property('id')
-								newLunchbreak.should.have.property('date').equal('2018-06-30')
-								newLunchbreak.should.have.property('lunchTime').equal('12:30:00')
-								newLunchbreak.should.have.property('voteEndingTime').equal('12:25:00')
-								done()
-							})
 					})
 
 					it('fails if no date is provided', (done) => {
@@ -927,27 +929,6 @@ module.exports = (request, bearerToken) => {
 							})
 							.end(done)
 					})
-
-					it('fails if voteEndingTime is greater than lunchTime', (done) => {{
-						request
-							.post('/groups/1/lunchbreaks')
-							.set({ Authorization: bearerToken[1] })
-							.send({
-								date: '2018-06-30',
-								lunchTime: '12:30:00',
-								voteEndingTime: '12:31:00'
-							})
-							.expect(400)
-							.expect(res => {
-								const expectedError = {
-									field: 'voteEndingTime',
-									value: '12:31:00',
-									message: 'voteEndingTime cannot be greater than lunchTime.'
-								}
-								errorHelper.checkValidationError(res.body, expectedError)
-							})
-							.end(done)
-					}})
 
 					it('fails if a lunchbreak at this date exists', (done) => {
 						request

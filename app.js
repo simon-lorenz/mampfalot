@@ -12,6 +12,27 @@ const { initUser, verifyToken } = require('./util/middleware')
 const { AuthenticationError, AuthorizationError, NotFoundError } = require('./classes/errors')
 const { MethodNotAllowedError, ValidationError, RequestError, ServerError } = require('./classes/errors')
 
+// Enable time-manipulation for testing purposes
+app.use((req, res, next) => {
+	if (process.env.NODE_ENV === 'test') {
+		const tk = require('timekeeper')
+		if (process.env.TIME !== '') {
+			const tk = require('timekeeper')
+			const simulatedTime = process.env.TIME
+			const newSystemTime = new Date()
+
+			newSystemTime.setUTCHours(simulatedTime.split(':')[0])
+			newSystemTime.setUTCMinutes(simulatedTime.split(':')[1])
+			newSystemTime.setUTCSeconds(simulatedTime.split(':')[2])
+
+			tk.freeze(newSystemTime)
+		} else {
+			tk.reset()
+		}
+	}
+	next()
+})
+
 app.use(cors())
 app.use(helmet())
 

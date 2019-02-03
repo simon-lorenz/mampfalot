@@ -937,14 +937,7 @@ module.exports = (request, bearerToken) => {
 
 								const group = groups[0]
 
-								group.should.be.an('object')
-								group.should.have.property('id')
-								group.should.have.property('name')
-								group.should.have.property('defaultLunchTime')
-								group.should.have.property('defaultVoteEndingTime')
-								group.should.have.property('pointsPerDay')
-								group.should.have.property('maxPointsPerVote')
-								group.should.have.property('minPointsPerVote')
+								group.should.have.all.keys(['id', 'name', 'lunchTime', 'voteEndingTime', 'utcOffset', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote', 'lunchbreaks', 'members', 'places', 'invitations'])
 								group.should.have.property('members').which.is.an('array').with.lengthOf(2)
 								group.should.have.property('lunchbreaks').which.is.an('array')
 								group.should.have.property('places').which.is.an('array')
