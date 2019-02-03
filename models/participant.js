@@ -27,9 +27,6 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		amountSpent: {
 			type: DataTypes.DECIMAL
-		},
-		lunchTimeSuggestion: {
-			type: DataTypes.TIME
 		}
 	}, {
 		tableName: 'participants',

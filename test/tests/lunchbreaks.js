@@ -171,7 +171,6 @@ module.exports = (request, bearerToken) => {
 								firstParticipant.should.have.property('id').equal(1)
 								firstParticipant.should.have.property('lunchbreakId').equal(1)
 								firstParticipant.should.have.property('userId').equal(1)
-								firstParticipant.should.have.property('lunchTimeSuggestion')
 								firstParticipant.should.not.have.property('amountSpent')
 							})
 							.end(done)
