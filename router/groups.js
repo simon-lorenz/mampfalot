@@ -117,7 +117,7 @@ router.route('/:groupId').post((req, res, next) => {
 		group.voteEndingTime = req.body.voteEndingTime
 	}
 	if (req.body.utcOffset) {
-		group.utcOffset = req.body.utcOffset
+		group.utcOffset = parseInt(req.body.utcOffset)
 	}
 	if (req.body.pointsPerDay) {
 		group.pointsPerDay = parseInt(req.body.pointsPerDay)

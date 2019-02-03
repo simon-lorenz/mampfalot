@@ -418,6 +418,7 @@ module.exports = (request, bearerToken) => {
 							name: 'New name',
 							lunchTime: '14:00:00',
 							voteEndingTime: '13:30:00',
+							utcOffset: '120',
 							pointsPerDay: '300',
 							maxPointsPerVote: '100',
 							minPointsPerVote: '50'
@@ -429,6 +430,7 @@ module.exports = (request, bearerToken) => {
 							group.should.have.property('name').equal('New name')
 							group.should.have.property('lunchTime').equal('14:00:00')
 							group.should.have.property('voteEndingTime').equal('13:30:00')
+							group.should.have.property('utcOffset').equal(120)
 							group.should.have.property('pointsPerDay').equal(300)
 							group.should.have.property('maxPointsPerVote').equal(100)
 							group.should.have.property('minPointsPerVote').equal(50)
