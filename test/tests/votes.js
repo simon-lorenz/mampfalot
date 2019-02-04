@@ -10,7 +10,7 @@ module.exports = (request, bearerToken) => {
 			let newVotes
 
 			beforeEach(async () => {
-				testServer.restart(5001, '11:24:59') // UTC-Time! Group_1 has an offset of +60 Minutes.
+				testServer.restart(5001, '11:24:59', '25.06.2018') // UTC-Time! Group_1 has an offset of +60 Minutes.
 				newVotes = [
 					{
 						participantId: 1,
@@ -288,7 +288,26 @@ module.exports = (request, bearerToken) => {
 			})
 
 			it('fails if the groups voteEndingTime is reached', async () => {
-				testServer.restart(5001, '11:25:01') // UTC-Time! Group_1 has an offset of +60 Minutes.
+				console.log('reached')
+				testServer.restart(5001, '11:25:01', '25.06.2018') // UTC-Time! Group_1 has an offset of +60 Minutes.
+				await request
+					.post('/votes')
+					.set({ Authorization: bearerToken[1] })
+					.send([{
+						participantId: 1,
+						placeId: 1,
+						points: 40
+					}])
+					.expect(400)
+					.expect(res => {
+						const MESSAGE = 'The end of voting has been reached, therefore no new votes will be accepted.'
+						errorHelper.checkRequestError(res.body, MESSAGE)
+					})
+			})
+
+			it('fails if the voteEndingTime isn\'t reached, but the lunchbreak is in the past', async () => {
+				console.log('past')
+				testServer.restart(5001, '11:24:59', '26.06.2018')
 				await request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
