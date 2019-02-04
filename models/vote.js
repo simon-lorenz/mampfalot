@@ -86,24 +86,24 @@ module.exports = (sequelize, DataTypes) => {
 
 		const participantId = votes[0].participantId
 
-		const config = await Group.findOne({
-			attributes: ['id', 'voteEndingTime', 'utcOffset', 'minPointsPerVote', 'maxPointsPerVote', 'pointsPerDay'],
+		const lunchbreak = await Lunchbreak.findOne({
+			attributes: ['groupId', 'date'],
 			include: [
 				{
-					model: Lunchbreak,
+					model: Participant,
 					attributes: [],
-					include: [
-						{
-							model: Participant,
-							attributes: [],
-							where: {
-								id: participantId
-							}
-						}
-					]
+					where: {
+						id: participantId
+					}
+				},
+				{
+					model: Group,
+					attributes: ['id', 'voteEndingTime', 'utcOffset', 'minPointsPerVote', 'maxPointsPerVote', 'pointsPerDay']
 				}
 			]
 		})
+
+		const config = lunchbreak.group
 
 		// Calculate client time
 		const clientTime = new Date()
@@ -111,6 +111,9 @@ module.exports = (sequelize, DataTypes) => {
 
 		// Lookup the groups voteEndingTime
 		const voteEndingTime = new Date()
+		voteEndingTime.setUTCFullYear(lunchbreak.date.split('-')[0])
+		voteEndingTime.setUTCMonth(lunchbreak.date.split('-')[1])
+		voteEndingTime.setUTCDate(lunchbreak.date.split('-')[2])
 		voteEndingTime.setUTCHours(config.voteEndingTime.split(':')[0])
 		voteEndingTime.setUTCMinutes(config.voteEndingTime.split(':')[1])
 		voteEndingTime.setUTCSeconds(config.voteEndingTime.split(':')[2])
