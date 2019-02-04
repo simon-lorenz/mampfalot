@@ -112,7 +112,7 @@ module.exports = (sequelize, DataTypes) => {
 		// Lookup the groups voteEndingTime
 		const voteEndingTime = new Date()
 		voteEndingTime.setUTCFullYear(lunchbreak.date.split('-')[0])
-		voteEndingTime.setUTCMonth(lunchbreak.date.split('-')[1])
+		voteEndingTime.setUTCMonth(Number(lunchbreak.date.split('-')[1]) - 1)
 		voteEndingTime.setUTCDate(lunchbreak.date.split('-')[2])
 		voteEndingTime.setUTCHours(config.voteEndingTime.split(':')[0])
 		voteEndingTime.setUTCMinutes(config.voteEndingTime.split(':')[1])

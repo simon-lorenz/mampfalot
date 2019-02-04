@@ -28,7 +28,7 @@ app.use((req, res, next) => {
 			if (process.env.DATE !== '') {
 				const simulatedDate = process.env.DATE
 				newSystemTime.setUTCDate(simulatedDate.split('.')[0])
-				newSystemTime.setUTCMonth(simulatedDate.split('.')[1])
+				newSystemTime.setUTCMonth(Number(simulatedDate.split('.')[1]) - 1)
 				newSystemTime.setUTCFullYear(simulatedDate.split('.')[2])
 			}
 
