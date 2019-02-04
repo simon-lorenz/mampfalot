@@ -33,6 +33,25 @@ request.getMethodByString = function(method, url) {
 	}
 }
 
+describe('The test server', () => {
+	it('mocks date and time correctly', async ()  => {
+		testServer.start(5001, '09:22:33', '05.02.2019')
+		await require('supertest')('http://localhost:5001')
+			.get('/utc-system-time')
+			.expect(res => {
+				const systemTime = res.body
+				systemTime.should.have.all.keys(['year', 'month', 'day', 'hour', 'minute', 'second'])
+				systemTime.year.should.be.equal(2019)
+				systemTime.month.should.be.equal(1) // UTC-Months are zero based!
+				systemTime.day.should.be.equal(5)
+				systemTime.hour.should.be.equal(9)
+				systemTime.minute.should.be.equal(22)
+				systemTime.second.should.be.equal(33)
+			})
+		testServer.close()
+	})
+})
+
 describe('The mampfalot api', function () {
 	const bearerToken = []
 	this.timeout(10000)

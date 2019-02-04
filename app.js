@@ -50,6 +50,22 @@ app.use(bodyParser.urlencoded({
 	extended: false
 }))
 
+app.get('/utc-system-time', (req, res, next) => {
+	if (process.env.NODE_ENV === 'test') {
+		const systemTime = new Date()
+		res.send({
+			year: systemTime.getFullYear(),
+			month: systemTime.getUTCMonth(),
+			day: systemTime.getUTCDate(),
+			hour: systemTime.getUTCHours(),
+			minute: systemTime.getUTCMinutes(),
+			second: systemTime.getUTCSeconds()
+		})
+	} else {
+		next()
+	}
+})
+
 app.get('/api', (req, res) => {
 	res.send({
 		message: 'This is the mampfalot-api! Please authenticate yourself for data access.'
