@@ -118,6 +118,12 @@ module.exports = (sequelize, DataTypes) => {
 		voteEndingTime.setUTCMinutes(config.voteEndingTime.split(':')[1])
 		voteEndingTime.setUTCSeconds(config.voteEndingTime.split(':')[2])
 
+		if (process.env.LOG_LEVEL === 'debug') {
+			console.log('ClientTime: ' +  clientTime)
+			console.log('VoteEndingTime: ' +  voteEndingTime)
+			console.log('User can vote: ' + !(clientTime > voteEndingTime))
+		}
+
 		if (clientTime > voteEndingTime) {
 			throw new RequestError('The end of voting has been reached, therefore no new votes will be accepted.')
 		}
