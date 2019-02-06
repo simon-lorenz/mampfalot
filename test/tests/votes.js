@@ -288,7 +288,6 @@ module.exports = (request, bearerToken) => {
 			})
 
 			it('fails if the groups voteEndingTime is reached', async () => {
-				console.log('reached')
 				testServer.restart(5001, '11:25:01', '25.06.2018') // UTC-Time! Group_1 has an offset of +60 Minutes.
 				await request
 					.post('/votes')
@@ -306,7 +305,6 @@ module.exports = (request, bearerToken) => {
 			})
 
 			it('fails if the voteEndingTime isn\'t reached, but the lunchbreak is in the past', async () => {
-				console.log('past')
 				testServer.restart(5001, '11:24:59', '26.06.2018')
 				await request
 					.post('/votes')
