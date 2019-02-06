@@ -119,9 +119,9 @@ module.exports = (sequelize, DataTypes) => {
 		voteEndingTime.setUTCSeconds(config.voteEndingTime.split(':')[2])
 
 		if (process.env.LOG_LEVEL === 'debug') {
-			console.log('ClientTime: ' +  clientTime)
-			console.log('VoteEndingTime: ' +  voteEndingTime)
-			console.log('User can vote: ' + !(clientTime > voteEndingTime))
+			console.log(`ClientTime: ${clientTime}`)
+			console.log(`VoteEndingTime: ${voteEndingTime}`)
+			console.log(`User can vote: ${!(clientTime > voteEndingTime)}`)
 		}
 
 		if (clientTime > voteEndingTime) {

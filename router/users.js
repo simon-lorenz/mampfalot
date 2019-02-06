@@ -342,7 +342,7 @@ router.route('/:userId/invitations').delete(asyncMiddleware(async (req, res, nex
 	const { user } = res.locals
 	const userResource = res.locals.resources.user
 	const groupId = Number(req.query.groupId)
-	const accept = req.query.accept == 'true'
+	const accept = req.query.accept === 'true'
 
 	const invitation = await Invitation.findOne({
 		where: {
