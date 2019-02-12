@@ -1,12 +1,21 @@
 language: node_js
+
+os:
+  - linux
+  - windows
+
 node_js:
 - 10.15.1
+
 services:
 - postgresql
+
 before_install:
 - psql -c 'create database mampfalot;' -U postgres
+
 before_script:
 - npm run lint
+
 deploy:
   provider: heroku
   api_key:
