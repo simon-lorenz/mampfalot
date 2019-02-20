@@ -1,13 +1,28 @@
 language: node_js
+
+os:
+  - linux
+  - windows
+
+matrix:
+  allow_failures:
+    - os: windows
+
 node_js:
 - 10.15.1
+
 services:
 - postgresql
+
 before_install:
 - psql -c 'create database mampfalot;' -U postgres
+
 before_script:
 - npm run lint
+
 deploy:
+  on:
+    condition: $TRAVIS_OS_NAME = linux
   provider: heroku
   api_key:
     secure: tMWmkTmeuRcGUOwn9rm7b5YOgEyujZLN2wyEUWUWWi1RmGa0vKTl0PjcmYR5r8tUgTF9azAs7pBaGVVKXT4/FyazDH8GzIpkryyhGl9RR0gHWf2X/iv7mQfx2XMiI87NIzU7bZF/nm6hb5KjYhBY5gGmz2IO/d74Qh+k58eNC+Dr3LClLeXIEoSa48gtpG9p1eRVc6RQlUpryy9ul8mQ+EXJKocksqBjzbEeMw8BBQDSJ27XVZ7W1YrS+I1jU9tbNOyqRnrSJNHnGX0Sjp4JxkVgqgGihe7yBxt9pfnZXKkkIO7/81cWlyH7Wwl40PEHy54O0E+WUUtKrv1rIkDll7cA2pGgd3Muem16zeEKaUncpnrxEieN5NLxlQ7U+9sRusln7TpkK/QLZQDFAmELnkTSPNG6Qy17SLjnyp2xx+ReanMMQtcXpvOciSUZSOlLzEdOaVDe2LvJ5wqQA3C5cP3NUx0gHw/EO03FHYgA5GygZFJFxixnwg7ghDp5h14S+yXbWvLnjw/5xdREkwjA4waQiittk7sPhltMHCzIxvHwSYepZX02NmOv+JvFFh08rkDjDM6uHb8iletO6M4epdFQXtzLmEiCH/oxCIrGWDivb/OLG1wAtRl7bSBOcTJ5prWOr+qgDvmynkO/OlIKOW6MDqUxOqz/xg0OD5QGxq4=

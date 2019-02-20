@@ -8,25 +8,26 @@
     "ecmaVersion": 2017
   },
   "rules": {
-    "arrow-spacing": "warn",
+    "arrow-spacing": "error",
     "eol-last": ["error", "always"],
+    "eqeqeq": ["error"],
     "indent": ["error", "tab", { "SwitchCase": 1 }],
     "linebreak-style": ["error", "unix"],
     "no-console": "off",
     "no-eval": "error",
     "no-this-before-super":"error",
     "no-throw-literal": "error",
-    "no-trailing-spaces": "warn",
+    "no-trailing-spaces": "error",
     "no-unused-vars": ["error", { "argsIgnorePattern": "next" }],
-    "no-useless-return": "warn",
+    "no-useless-return": "error",
     "no-var": "error",
-    "object-curly-spacing": ["warn", "always"],
+    "object-curly-spacing": ["error", "always"],
     "one-var": ["error", "never"],
-    "prefer-const": "warn",
-    "prefer-template": "warn",
+    "prefer-const": "error",
+    "prefer-template": "error",
     "quotes": ["error", "single"],
     "semi": ["error", "never"],
     "strict": ["error", "global"],
-    "template-curly-spacing": ["warn", "never"]
+    "template-curly-spacing": ["error", "never"]
   }
 }

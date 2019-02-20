@@ -36,7 +36,9 @@ class ResourceLoader {
 				{
 					model: Lunchbreak,
 					limit: parseInt(req.query.lunchbreakLimit) || 25,
-					order: ['id']
+					order: [
+						['date', 'DESC']
+					]
 				},
 				{
 					model: User,
