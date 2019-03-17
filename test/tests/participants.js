@@ -153,7 +153,7 @@ module.exports = (request, bearerToken) => {
 						.expect(200)
 				})
 
-				it('deletes associated lunchbreak if not participants left', async () => {
+				it('deletes associated lunchbreak if no participants left', async () => {
 					await request
 						.delete('/participants/3')
 						.set({ Authorization: bearerToken[3] })
