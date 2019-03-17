@@ -50,6 +50,24 @@ module.exports = (sequelize, DataTypes) => {
 			throw new RequestError('The end of voting has been reached, therefore this participant cannot be deleted.')
 	})
 
+	Participant.afterDestroy(async (instance) => {
+		const Lunchbreak = sequelize.models.Lunchbreak
+		const lunchbreak = await Lunchbreak.findOne({
+			include: [
+				{
+					model: Participant
+				}
+			],
+			where: {
+				id: instance.lunchbreakId
+			}
+		})
+
+		if (lunchbreak.participants.length === 0) {
+			await lunchbreak.destroy()
+		}
+	})
+
 	Participant.associate = function (models) {
 		models.Participant.belongsTo(models.User, { foreignKey: 'userId' })
 		models.Participant.belongsTo(models.Lunchbreak, { foreignKey: 'lunchbreakId' })
