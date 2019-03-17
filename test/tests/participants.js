@@ -152,6 +152,19 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[1] })
 						.expect(200)
 				})
+
+				it('deletes associated lunchbreak if not participants left', async () => {
+					await request
+						.delete('/participants/3')
+						.set({ Authorization: bearerToken[3] })
+						.expect(204)
+
+					await request
+						.get('/lunchbreaks/2')
+						.set({ Authorization: bearerToken[3] })
+						.expect(404)
+				})
+
 			})
 
 			describe('/votes', () => {
