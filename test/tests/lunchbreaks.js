@@ -2,6 +2,7 @@
 
 const setup = require('../setup')
 const errorHelper = require('../helpers/errors')
+const testServer = require('../helpers/test-server')
 
 module.exports = (request, bearerToken) => {
 	return describe('/lunchbreaks', () => {
@@ -91,6 +92,7 @@ module.exports = (request, bearerToken) => {
 
 				describe('POST', () => {
 					beforeEach(async () => {
+						testServer.restart(5001, '11:24:59', '25.06.2018')
 						await setup.resetData()
 					})
 
@@ -136,6 +138,18 @@ module.exports = (request, bearerToken) => {
 								errorHelper.checkValidationError(res.body, expectedError)
 							})
 							.end(done)
+					})
+
+					it('fails if voteEndingTime is reached', async () => {
+						testServer.restart(5001, '11:25:01', '25.06.2018')
+						await request
+							.post('/lunchbreaks/1/participants')
+							.set({ Authorization: bearerToken[2] })
+							.expect(400)
+							.expect(res => {
+								const MESSAGE = 'The end of voting has been reached, therefore you cannot participate anymore.'
+								errorHelper.checkRequestError(res.body, MESSAGE)
+							})
 					})
 
 					it('successfully adds a participant', (done) => {

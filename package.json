@@ -26,7 +26,6 @@
   "author": "Simon Lorenz",
   "license": "ISC",
   "dependencies": {
-    "@google-cloud/storage": "^2.3.4",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.2",
     "cors": "^2.8.4",
@@ -38,7 +37,7 @@
     "morgan": "^1.9.1",
     "nodemailer": "^4.6.8",
     "pg": "^6.0.0",
-    "sequelize": "5.0.0-beta.13"
+    "sequelize": "^5.3.1"
   },
   "devDependencies": {
     "chai": "^4.1.2",

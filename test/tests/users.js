@@ -1064,6 +1064,29 @@ module.exports = (request, bearerToken) => {
 							})
 					})
 
+					it('selects a random color for the new group member', async () => {
+						await request
+							.delete('/users/3/invitations')
+							.query({ groupId: 1, accept: true })
+							.set({ Authorization: bearerToken[3] })
+							.expect(204)
+
+						await request
+							.get('/groups/1')
+							.set({ Authorization: bearerToken[3] })
+							.expect(200)
+							.expect(res => {
+								const group = res.body
+
+								for (const member of group.members) {
+									if (member.id === 3) {
+										const colors = ['#ffa768', '#e0dbff', '#f5e97d', '#ffa1b7', '#948bf0', '#a8f08d']
+										colors.should.include(member.config.color)
+									}
+								}
+							})
+					})
+
 					it('successfully rejects an invitation', async () => {
 						await request
 							.delete('/users/3/invitations')

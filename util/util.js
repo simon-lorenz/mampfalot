@@ -30,6 +30,51 @@ module.exports = {
 				resolve(buff.toString('hex'))
 			})
 		})
+	},
+
+	/**
+	 * Checks if the voteEndingTime of a lunchbreak
+	 * is reached
+	 * @param {number} lunchbreakId
+	 * @returns {boolean}
+	 */
+	async voteEndingTimeReached(lunchbreakId) {
+		const { Lunchbreak, Group } = require('../models')
+
+		const lunchbreak = await Lunchbreak.findOne({
+			attributes: ['date'],
+			where: {
+				id: lunchbreakId
+			}
+		})
+
+		const config = await Group.findOne({
+			attributes: ['voteEndingTime', 'utcOffset'],
+			include: [
+				{
+					model: Lunchbreak,
+					attributes: [],
+					where: {
+						id: lunchbreakId
+					}
+				}
+			]
+		})
+
+		// Calculate client time
+		const clientTime = new Date()
+		clientTime.setUTCMinutes(clientTime.getUTCMinutes() + config.utcOffset)
+
+		// Lookup the groups voteEndingTime
+		const voteEndingTime = new Date()
+		voteEndingTime.setUTCFullYear(lunchbreak.date.split('-')[0])
+		voteEndingTime.setUTCMonth(Number(lunchbreak.date.split('-')[1]) - 1)
+		voteEndingTime.setUTCDate(lunchbreak.date.split('-')[2])
+		voteEndingTime.setUTCHours(config.voteEndingTime.split(':')[0])
+		voteEndingTime.setUTCMinutes(config.voteEndingTime.split(':')[1])
+		voteEndingTime.setUTCSeconds(config.voteEndingTime.split(':')[2])
+
+		return clientTime > voteEndingTime
 	}
 
 }

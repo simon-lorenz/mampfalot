@@ -1,6 +1,7 @@
 'use strict'
 
 const { ValidationError, RequestError } = require('../classes/errors')
+const { voteEndingTimeReached } = require('../util/util')
 
 module.exports = (sequelize, DataTypes) => {
 	const { Group, Participant, Lunchbreak, Place } = sequelize.models
@@ -86,66 +87,48 @@ module.exports = (sequelize, DataTypes) => {
 
 		const participantId = votes[0].participantId
 
-		const lunchbreak = await Lunchbreak.findOne({
-			attributes: ['groupId', 'date'],
+		const participant = await Participant.findOne({
+			where: {
+				id: participantId
+			},
 			include: [
 				{
-					model: Participant,
-					attributes: [],
-					where: {
-						id: participantId
-					}
-				},
-				{
-					model: Group,
-					attributes: ['id', 'voteEndingTime', 'utcOffset', 'minPointsPerVote', 'maxPointsPerVote', 'pointsPerDay']
+					model: Lunchbreak,
+					attributes: ['id'],
+					include: [
+						{
+							model: Group,
+							attributes: ['id', 'voteEndingTime', 'utcOffset', 'minPointsPerVote', 'maxPointsPerVote', 'pointsPerDay']
+						}
+					]
 				}
 			]
 		})
 
-		const config = lunchbreak.group
-
-		// Calculate client time
-		const clientTime = new Date()
-		clientTime.setUTCMinutes(clientTime.getUTCMinutes() + config.utcOffset)
-
-		// Lookup the groups voteEndingTime
-		const voteEndingTime = new Date()
-		voteEndingTime.setUTCFullYear(lunchbreak.date.split('-')[0])
-		voteEndingTime.setUTCMonth(Number(lunchbreak.date.split('-')[1]) - 1)
-		voteEndingTime.setUTCDate(lunchbreak.date.split('-')[2])
-		voteEndingTime.setUTCHours(config.voteEndingTime.split(':')[0])
-		voteEndingTime.setUTCMinutes(config.voteEndingTime.split(':')[1])
-		voteEndingTime.setUTCSeconds(config.voteEndingTime.split(':')[2])
-
-		if (process.env.LOG_LEVEL === 'debug') {
-			console.log(`ClientTime: ${clientTime}`)
-			console.log(`VoteEndingTime: ${voteEndingTime}`)
-			console.log(`User can vote: ${!(clientTime > voteEndingTime)}`)
-		}
-
-		if (clientTime > voteEndingTime) {
+		if (await voteEndingTimeReached(participant.lunchbreak.id)) {
 			throw new RequestError('The end of voting has been reached, therefore no new votes will be accepted.')
 		}
+
+		const group = participant.lunchbreak.group
 
 		const placeIds = []
 		let sum = 0
 		for (const vote of votes) {
 			const points = parseInt(vote.points)
-			if (points > config.maxPointsPerVote) {
+			if (points > group.maxPointsPerVote) {
 				const item = {
 					field: 'points',
 					value: points,
-					message: `Points exceeds maxPointsPerVote (${config.maxPointsPerVote}).`
+					message: `Points exceeds maxPointsPerVote (${group.maxPointsPerVote}).`
 				}
 				throw new ValidationError([item])
 			}
 
-			if (points < config.minPointsPerVote) {
+			if (points < group.minPointsPerVote) {
 				const item = {
 					field: 'points',
 					value: points,
-					message: `Points deceeds minPointsPerVote (${config.minPointsPerVote}).`
+					message: `Points deceeds minPointsPerVote (${group.minPointsPerVote}).`
 				}
 				throw new ValidationError([item])
 			}
@@ -154,11 +137,11 @@ module.exports = (sequelize, DataTypes) => {
 			placeIds.push(vote.placeId)
 		}
 
-		if (sum > config.pointsPerDay) {
+		if (sum > group.pointsPerDay) {
 			const item = {
 				field: 'points',
 				value: sum,
-				message: `Sum of points exceeds pointsPerDay (${config.pointsPerDay}).`
+				message: `Sum of points exceeds pointsPerDay (${group.pointsPerDay}).`
 			}
 			throw new ValidationError([item])
 		}

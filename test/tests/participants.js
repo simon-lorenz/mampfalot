@@ -2,6 +2,7 @@
 
 const setup = require('../setup')
 const errorHelper = require('../helpers/errors')
+const testServer = require('../helpers/test-server')
 
 module.exports = (request, bearerToken) => {
 	return describe('/participants', () => {
@@ -67,6 +68,7 @@ module.exports = (request, bearerToken) => {
 
 			describe('DELETE', () => {
 				beforeEach(async () => {
+					testServer.restart(5001, '11:24:59', '25.06.2018')
 					await setup.resetData()
 				})
 
@@ -84,6 +86,18 @@ module.exports = (request, bearerToken) => {
 							errorHelper.checkAuthorizationError(res.body, expectedError)
 						})
 						.end(done)
+				})
+
+				it('fails if the voteEndingTime is reached', async () => {
+					testServer.restart(5001, '12:25:01', '25.06.2018')
+					await request
+						.delete('/participants/1')
+						.set({ Authorization: bearerToken[1] })
+						.expect(400)
+						.expect(res => {
+							const MESSAGE = 'The end of voting has been reached, therefore this participant cannot be deleted.'
+							errorHelper.checkRequestError(res.body, MESSAGE)
+						})
 				})
 
 				it('deletes a participant successfully', async () => {
@@ -138,6 +152,19 @@ module.exports = (request, bearerToken) => {
 						.set({ Authorization: bearerToken[1] })
 						.expect(200)
 				})
+
+				it('deletes associated lunchbreak if no participants left', async () => {
+					await request
+						.delete('/participants/3')
+						.set({ Authorization: bearerToken[3] })
+						.expect(204)
+
+					await request
+						.get('/lunchbreaks/2')
+						.set({ Authorization: bearerToken[3] })
+						.expect(404)
+				})
+
 			})
 
 			describe('/votes', () => {
