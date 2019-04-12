@@ -1,31 +1,24 @@
 language: node_js
-
 os:
-  - linux
-  - windows
-
+- linux
+- windows
 matrix:
   allow_failures:
-    - os: windows
-
+  - os: windows
 node_js:
 - 10.15.1
-
 services:
 - postgresql
-
 before_install:
 - psql -c 'create database mampfalot;' -U postgres
-
 before_script:
 - npm run lint
-
 deploy:
   on:
-    condition: $TRAVIS_OS_NAME = linux
+    condition: "$TRAVIS_OS_NAME = linux"
   provider: heroku
   api_key:
-    secure: tMWmkTmeuRcGUOwn9rm7b5YOgEyujZLN2wyEUWUWWi1RmGa0vKTl0PjcmYR5r8tUgTF9azAs7pBaGVVKXT4/FyazDH8GzIpkryyhGl9RR0gHWf2X/iv7mQfx2XMiI87NIzU7bZF/nm6hb5KjYhBY5gGmz2IO/d74Qh+k58eNC+Dr3LClLeXIEoSa48gtpG9p1eRVc6RQlUpryy9ul8mQ+EXJKocksqBjzbEeMw8BBQDSJ27XVZ7W1YrS+I1jU9tbNOyqRnrSJNHnGX0Sjp4JxkVgqgGihe7yBxt9pfnZXKkkIO7/81cWlyH7Wwl40PEHy54O0E+WUUtKrv1rIkDll7cA2pGgd3Muem16zeEKaUncpnrxEieN5NLxlQ7U+9sRusln7TpkK/QLZQDFAmELnkTSPNG6Qy17SLjnyp2xx+ReanMMQtcXpvOciSUZSOlLzEdOaVDe2LvJ5wqQA3C5cP3NUx0gHw/EO03FHYgA5GygZFJFxixnwg7ghDp5h14S+yXbWvLnjw/5xdREkwjA4waQiittk7sPhltMHCzIxvHwSYepZX02NmOv+JvFFh08rkDjDM6uHb8iletO6M4epdFQXtzLmEiCH/oxCIrGWDivb/OLG1wAtRl7bSBOcTJ5prWOr+qgDvmynkO/OlIKOW6MDqUxOqz/xg0OD5QGxq4=
+    secure: D01XZuvtPgVk3rofDy+Zg0zxSWlVFGobDzCOkbneRenFKFQE5FXY2tOzFRlLXR6i/m8gYbRNevZVlj4Hem7OhsR/isMu2QSc5JvqwFeaamGwythFBVv0bMuAVzW9oXTG8R9KhqTfvIR0HaXxV3BpuNC4xYV9Fsrbq6G32KZPKyRaaZRfShy5wm1uLE+eg4R4tNXmK5C1N9+Is1GzcKTUZBVaUWgR+5qqGumaSAJoWgzn77H77DLbn9CUE+4A27Xvb1R18wQzzQDxmcPiCIAzlm0XrY4Qyf/Jr2s/8LKCI54wlz+Jn8wfyDa+JTqIuqi6HDkUWht8q0QOda3AzNQLQW+c30bL3YuHwl1YeWxDRHn7T2Tnfxa2GN+qqacIbDHxbQ4TVLkFIzSWyyfBiFvbI1v+LBdfPRzdAFe3qohqffJRD/kOG9TcKJxFtFueHnBSYjuXuoEDFM/UjgXawd5Ynjk+485N8tusidc4yw/vNcEzm3wnouG9y/S32/tuwTr+A8sZOrsZ7H75I0WqKsZ8yjSXqskXMJwprzkelbJUNa4v0kdWn3oOTN871c8CQLVXbKGxwQ1MhheNXoBvPcL1U64a8/0742MMyibAsHGw250kTKwpOT3KOaS6efzb6OuaLeCMhc4wF5GIRsUne+m3WISCDo0rvlekghR8QV14Ngo=
   app:
     master: mampfalot
     dev: mampfalot-beta
