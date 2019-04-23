@@ -58,7 +58,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 
 	await user.can.createVoteCollection(participant)
 
-	const oldVotes = await Vote.findAll({ where: { participantId }})
+	const oldVotes = await Vote.findAll({ where: { participantId } })
 
 	await Vote.bulkCreate(votes, { validate: true })
 
