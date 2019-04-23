@@ -57,8 +57,14 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	}
 
 	await user.can.createVoteCollection(participant)
-	await Vote.destroy({ where: { participantId } })
+
+	const oldVotes = await Vote.findAll({ where: { participantId }})
+
 	await Vote.bulkCreate(votes, { validate: true })
+
+	for(const vote of oldVotes) {
+		await vote.destroy()
+	}
 
 	res.send(await Vote.findAll({
 		where: { participantId },

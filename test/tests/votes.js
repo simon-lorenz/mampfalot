@@ -289,6 +289,12 @@ module.exports = (request, bearerToken) => {
 
 			it('fails if the groups voteEndingTime is reached', async () => {
 				testServer.restart(5001, '11:25:01', '25.06.2018') // UTC-Time! Group_1 has an offset of +60 Minutes.
+
+				const oldVotes = await request
+					.get('/participants/1/votes')
+					.set({ Authorization: bearerToken[1] })
+					.then(res => res.body)
+
 				await request
 					.post('/votes')
 					.set({ Authorization: bearerToken[1] })
@@ -302,6 +308,12 @@ module.exports = (request, bearerToken) => {
 						const MESSAGE = 'The end of voting has been reached, therefore no new votes will be accepted.'
 						errorHelper.checkRequestError(res.body, MESSAGE)
 					})
+
+				// Are the votes still the same as before?
+				await request
+					.get('/participants/1/votes')
+					.set({ Authorization: bearerToken[1] })
+					.expect(res => res.body.should.be.eql(oldVotes))
 			})
 
 			it('fails if the voteEndingTime isn\'t reached, but the lunchbreak is in the past', async () => {
@@ -454,6 +466,7 @@ module.exports = (request, bearerToken) => {
 
 			describe('DELETE', () => {
 				beforeEach(async () => {
+					await testServer.restart(5001, '11:24:59', '25.06.2018') // UTC-Time! Group_1 has an offset of +60 Minutes.
 					await setup.resetData()
 				})
 
