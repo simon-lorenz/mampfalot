@@ -1,0 +1,1274 @@
+openapi: 3.0.0
+
+info:
+  version: '1.0.0'
+  title: 'Mampfalot API'
+  description: 'The api for https://mampfalot.app'
+  contact:
+    name: Simon Lorenz
+    url: https://simon-lorenz.net
+    email: dev@simon-lorenz.net
+
+tags:
+  - name: Authentication
+  - name: Comment
+  - name: Group
+  - name: Lunchbreak
+  - name: Member
+  - name: Place
+  - name: User
+  - name: User (Unauthenticated)
+
+servers:
+  - url: https://mampfalot.herokuapps.com/api
+
+paths:
+
+  /authenticate:
+
+    get:
+      tags:
+        - Authentication
+      summary: Authenticate and obtain a json web token.
+      description: For successful authentication the user must be verified.
+      security:
+        - basicAuth: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: A base64 encoded string of username:password
+          schema:
+            type: string
+            format: base64 encoded username:password
+          required: true
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+
+  /users/{username}:
+
+    parameters:
+      - $ref: '#/components/parameters/username'
+
+    post:
+      tags:
+        - User (Unauthenticated)
+      summary: Sign up a new user.
+      description: After signup a verification email is sent to the user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        204:
+          description: Ok
+
+  /users/{username}/verify:
+
+    parameters:
+      - $ref: '#/components/parameters/username'
+
+    get:
+      tags:
+        - User (Unauthenticated)
+      summary: Request a new verification email.
+      description: If the user is already verified, the server will respond with a RequestError.
+      responses:
+        204:
+          description: Ok
+        400:
+          $ref: '#/components/responses/ClientError'
+
+    post:
+      tags:
+        - User (Unauthenticated)
+      summary: Finalize the verification process.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+              required:
+                - token
+      responses:
+        204:
+          description: Ok
+        400:
+          $ref: '#/components/responses/ClientError'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+
+  /users/{username}/forgot-password:
+
+    parameters:
+      - $ref: '#/components/parameters/username'
+
+    get:
+      tags:
+        - User (Unauthenticated)
+      summary: Request a new password reset email.
+      responses:
+        204:
+          description: Ok
+
+    post:
+      tags:
+        - User (Unauthenticated)
+      summary: Finalize the password reset process.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                password:
+                  type: string
+                  minimum: 3
+                  maximum: 255
+                  pattern: ^[a-z-_0-9]*$
+              required:
+                - token
+                - password
+      responses:
+        204:
+          description: Ok
+        400:
+          $ref: '#/components/responses/ClientError'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+
+  /users/{username}/forgot-username:
+
+    parameters:
+      - $ref: '#/components/parameters/username'
+
+    get:
+      tags:
+        - User (Unauthenticated)
+      summary: Request a new username reminder email.
+      responses:
+        204:
+          description: Ok
+
+  /users/me:
+
+    get:
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      summary: Get the currently authenticated user.
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+
+    post:
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      summary: Update the currently authenticated user.
+      description: Note - If you want to change the password, you have to provide the current password in the body.
+                   To do so, add the field "currentPassword".
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        204:
+          description: Ok
+        400:
+          $ref: '#/components/responses/ClientError'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+
+    delete:
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      summary: Delete the currently authenticated user.
+      responses:
+        204:
+          description: Ok
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+
+  /users/me/groups:
+
+    get:
+      tags:
+        - Group
+      security:
+        - bearerAuth: []
+      summary: Obtain all groups the current user is a member of.
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+
+  /users/me/invitations:
+
+    get:
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      summary: Get a collection of all groups the user is invited to.
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invitation'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+
+    delete:
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      summary: Accept or reject a invitation.
+      parameters:
+        - name: accept
+          in: query
+          required: true
+          schema:
+            type: boolean
+            enum:
+              - true
+              - false
+          description: Do you want to accept or reject this invitation?
+      responses:
+        204:
+          description: Ok
+        400:
+          $ref: '#/components/responses/ClientError'
+
+  /users/me/participations:
+
+    get:
+      parameters:
+        - name: from
+          in: query
+          required: true
+          description: A date in formatted as YYYY-MM-DD
+          schema:
+            type: string
+            example: '2018-02-25'
+        - name: to
+          in: query
+          required: true
+          description: A date in formatted as YYYY-MM-DD
+          schema:
+            type: string
+            example: '2018-02-25'
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      summary: Get a list of Participations between two dates.
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Participation'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+
+  /groups/{groupId}:
+
+    parameters:
+      - $ref: '#/components/parameters/groupId'
+
+    post:
+      tags:
+        - Group
+      security:
+        - bearerAuth: []
+      summary: Create a new group.
+      description: The creating user will automatically be added as group administrator.
+      requestBody:
+        description: A JSON object containing group information
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Group'
+      responses:
+        201:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        400:
+          $ref: '#/components/responses/ClientError'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+    put:
+      tags:
+        - Group
+      security:
+        - bearerAuth: []
+      summary: Update a existing group.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Group'
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        400:
+          $ref: '#/components/responses/ClientError'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      tags:
+        - Group
+      security:
+        - bearerAuth: []
+      summary: Delete a group.
+      description: To delete a group you have to be an administrator of this group.
+      responses:
+        204:
+          description: Ok
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+  /groups/{groupId}/places:
+
+    parameters:
+      - $ref: '#/components/parameters/groupId'
+
+    post:
+      tags:
+        - Place
+      security:
+        - bearerAuth: []
+      summary: Create a new place.
+      description: Requires group admin rights.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Place'
+      responses:
+        201:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Place'
+        400:
+          $ref: '#/components/responses/ClientError'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+  /groups/{groupId}/places/{placeId}:
+
+    parameters:
+      - $ref: '#/components/parameters/groupId'
+      - $ref: '#/components/parameters/placeId'
+
+    put:
+      tags:
+        - Place
+      security:
+        - bearerAuth: []
+      summary: Update a single place.
+      description: Requires group admin rights.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Place'
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Place'
+        400:
+          $ref: '#/components/responses/ClientError'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      tags:
+        - Place
+      security:
+        - bearerAuth: []
+      summary: Delete a place.
+      description: Requires group admin rights.
+      responses:
+        204:
+          description: Ok
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+  /groups/{groupId}/members/{username}:
+
+    parameters:
+      - $ref: '#/components/parameters/groupId'
+      - $ref: '#/components/parameters/username'
+
+    put:
+      tags:
+        - Member
+      security:
+        - bearerAuth: []
+      summary: Update a single group member.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupMember'
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMember'
+        400:
+          $ref: '#/components/responses/ClientError'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      tags:
+        - Member
+      security:
+        - bearerAuth: []
+      summary: Remove a group member.
+      responses:
+        204:
+          description: Ok
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+  /groups/{groupId}/invitations:
+
+    parameters:
+      - $ref: '#/components/parameters/groupId'
+
+    get:
+      tags:
+        - Member
+      security:
+        - bearerAuth: []
+      summary: Returns a collection of all current invitations.
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invitation'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+  /groups/{groupId}/invitations/{username}:
+
+    parameters:
+      - $ref: '#/components/parameters/groupId'
+      - $ref: '#/components/parameters/username'
+
+    post:
+      tags:
+        - Member
+      security:
+        - bearerAuth: []
+      summary: Invite a user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Invitation'
+      responses:
+        201:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+        400:
+          $ref: '#/components/responses/ClientError'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      tags:
+        - Member
+      security:
+        - bearerAuth: []
+      summary: Withdraw an invitation.
+      responses:
+        204:
+          description: Ok
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+  /groups/{groupId}/lunchbreaks:
+
+    parameters:
+      - $ref: '#/components/parameters/groupId'
+
+    get:
+      summary: Get lunchbreaks between two dates.
+      tags:
+        - Lunchbreak
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: from
+          in: query
+          description: A date formatted as YYYY-MM-DD
+          required: true
+          schema:
+            type: string
+            example: '2018-02-25'
+        - name: to
+          in: query
+          description: A date formatted as YYYY-MM-DD
+          required: true
+          schema:
+            type: string
+            example: '2018-12-31'
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Lunchbreak'
+        400:
+          $ref: '#/components/responses/ClientError'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+    post:
+      tags:
+        - Lunchbreak
+      security:
+        - bearerAuth: []
+      summary: Create a lunchbreak for today.
+      description: This request will create a new lunchbreak for the current day, if the voteEndingTime is not reached.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Lunchbreak'
+      responses:
+        201:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lunchbreak'
+        400:
+          $ref: '#/components/responses/ClientError'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+  /groups/{groupId}/lunchbreaks/{date}:
+
+    parameters:
+      - $ref: '#/components/parameters/groupId'
+      - $ref: '#/components/parameters/date'
+
+    get:
+      tags:
+        - Lunchbreak
+      security:
+        - bearerAuth: []
+      summary: Get a lunchbreak at a given date.
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lunchbreak'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+  /groups/{groupId}/lunchbreaks/{date}/absence:
+
+    parameters:
+      - $ref: '#/components/parameters/groupId'
+      - $ref: '#/components/parameters/date'
+
+    post:
+      tags:
+        - Lunchbreak
+      security:
+        - bearerAuth: []
+      summary: Mark the user as absent.
+      description: If the user is already participating, this request will delete the participation!
+      responses:
+        204:
+          description: Ok
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      tags:
+        - Lunchbreak
+      security:
+        - bearerAuth: []
+      summary: Remove the absent flag for the user.
+      responses:
+        204:
+          description: Ok
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+  /groups/{groupId}/lunchbreaks/{date}/participation:
+
+    parameters:
+      - $ref: '#/components/parameters/groupId'
+      - $ref: '#/components/parameters/date'
+
+    post:
+      tags:
+        - Lunchbreak
+      security:
+        - bearerAuth: []
+      summary: Particpate at this lunchbreak.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Participation'
+      responses:
+        201:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Participation'
+        400:
+          $ref: '#/components/responses/ClientError'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      tags:
+        - Lunchbreak
+      security:
+        - bearerAuth: []
+      summary: Delete the participation.
+      responses:
+        204:
+          description: Ok
+        400:
+          $ref: '#/components/responses/ClientError'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+  /groups/{groupId}/lunchbreaks/{date}/comments:
+
+    parameters:
+      - $ref: '#/components/parameters/groupId'
+      - $ref: '#/components/parameters/date'
+
+    post:
+      tags:
+        - Comment
+      security:
+        - bearerAuth: []
+      summary: Post a new comment.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Comment'
+      responses:
+        201:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        400:
+          $ref: '#/components/responses/ClientError'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+  /groups/{groupId}/lunchbreaks/{date}/comments/{commentId}:
+
+    parameters:
+      - $ref: '#/components/parameters/groupId'
+      - $ref: '#/components/parameters/date'
+      - $ref: '#/components/parameters/commentId'
+
+    put:
+      tags:
+        - Comment
+      security:
+        - bearerAuth: []
+      summary: Update a comment.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Comment'
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        400:
+          $ref: '#/components/responses/ClientError'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      tags:
+        - Comment
+      security:
+        - bearerAuth: []
+      summary: Delete a single comment.
+      responses:
+        204:
+          description: Ok
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+components:
+
+  parameters:
+
+    groupId:
+      in: path
+      name: groupId
+      description: The id of a group.
+      required: true
+      schema:
+        type: integer
+
+    placeId:
+      in: path
+      name: placeId
+      description: The id of a place.
+      required: true
+      schema:
+        type: integer
+
+    username:
+      in: path
+      name: username
+      required: true
+      schema:
+        type: string
+        example: maxmustermann
+
+    date:
+      name: date
+      in: path
+      description: A date formatted as YYYY-MM-DD
+      required: true
+      schema:
+        type: string
+        example: '2018-02-25'
+
+    commentId:
+      name: commentId
+      in: path
+      description: The id of a comment.
+      required: true
+      schema:
+        type: integer
+
+  responses:
+
+    AuthenticationError:
+      description: Authentication failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AuthenticationError'
+
+    AuthorizationError:
+      description: You do not have the necessary permissions for this operation.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AuthorizationError'
+
+    ClientError:
+      description: The request was malformed or contained invalid values.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/RequestError'
+              - $ref: '#/components/schemas/ValidationError'
+
+    NotFoundError:
+      description: The requested resource could not be found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotFoundError'
+
+  schemas:
+
+    AuthenticationError:
+      type: object
+      properties:
+        type:
+          type: string
+          example: AuthenticationError
+        message:
+          type: string
+          example: Access token is missing or invalid
+
+    AuthorizationError:
+      type: object
+      properties:
+        type:
+          type: string
+          example: AuthorizationError
+        resource:
+          type: string
+        id:
+          type: integer
+        operation:
+          type: string
+        message:
+          type: string
+          example: You do not have the necessary permissions for this operation.
+
+    NotFoundError:
+      type: object
+      properties:
+        type:
+          type: string
+          example: NotFoundError
+        message:
+          type: string
+          example: The requested resource could not be found.
+
+    RequestError:
+      type: object
+      properties:
+        type:
+          type: string
+          example: RequestError
+        message:
+          type: string
+
+    ValidationError:
+      type: object
+      properties:
+        type:
+          type: string
+          example: ValidationError
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: name
+              value:
+                oneOf:
+                  - type: string
+                  - type: number
+                  - type: boolean
+              message:
+                type: string
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          writeOnly: true
+        author:
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/GroupMember'
+        text:
+          type: string
+        createdAt:
+          type: string
+          format: datetime
+          readOnly: true
+        updatedAt:
+          type: string
+          format: datetime
+          readOnly: true
+      required:
+        - username
+        - text
+
+    Group:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 11
+          readOnly: true
+        places:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/Place'
+        members:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/GroupMember'
+        name:
+          type: string
+          example: Pausenwurst
+        lunchTime:
+          type: string
+          example: '12:30:00'
+          default: '12:30:00'
+        voteEndingTime:
+          type: string
+          example: '12:25:00'
+          default: '12:25:00'
+        utcOffset:
+          type: integer
+          example: 60
+          default: 0
+        pointsPerDay:
+          type: integer
+          example: 100
+          default: 100
+        maxPointsPerVote:
+          type: integer
+          example: 80
+          default: 100
+        minPointsPerVote:
+          type: integer
+          example: 20
+          default: 10
+      required:
+        - name
+
+    GroupMember:
+      type: object
+      properties:
+        user:
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/User'
+        color:
+          type: string
+          example: 80D8FF
+        isAdmin:
+          type: boolean
+          example: true
+
+    Invitation:
+      type: object
+      properties:
+        from:
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/Group'
+        to:
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/User'
+
+    Lunchbreak:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 5
+          readOnly: true
+        date:
+          type: string
+          format: date
+          example: 2019-04-30
+          readOnly: true
+        group:
+          type: integer
+          example: 25
+          readOnly: true
+        participants:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/Participant'
+        absent:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/GroupMember'
+        responseless:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/GroupMember'
+        comments:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/Comment'
+
+    Participant:
+      type: object
+      properties:
+        member:
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/GroupMember'
+        votes:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/Vote'
+
+    Participation:
+      type: object
+      description: This object differs from the Participant type as it contains the spent amount.
+                   A Participation is eventually a private resource for the user only, while Participants are publicly visible.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        votes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vote'
+        result:
+          $ref: '#/components/schemas/Place'
+        amountSpent:
+          type: number
+          format: currency
+          nullable: true
+          example: 7.95
+
+    Place:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 29
+          readOnly: true
+        group:
+          type: integer
+          example: 12
+          readOnly: true
+        name:
+          type: string
+          example: 'Burger King'
+        foodType:
+          type: string
+          example: 'Fast-Food'
+      required:
+        - name
+        - foodType
+
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+          example: simonlorenz
+          minimum: 3
+          maximum: 255
+          pattern: ^[a-z-_0-9]*$
+        firstName:
+          type: string
+          nullable: true
+          example: Simon
+        lastName:
+          type: string
+          nullable: true
+          example: Lorenz
+        email:
+          type: string
+          writeOnly: true
+          format: email
+        password:
+          type: string
+          writeOnly: true
+          minimum: 8
+          maximum: 255
+      required:
+        - username
+        - email
+        - password
+
+    Vote:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        place:
+          $ref: '#/components/schemas/Place'
+        points:
+          type: integer
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+    basicAuth:
+      type: http
+      scheme: basic
