@@ -71,7 +71,7 @@ describe('/users', () => {
 				.expect(204)
 
 			await request
-				.get('/auth')
+				.get('/authenticate')
 				.auth(newUser.username, newUser.password)
 				.expect(401)
 				.expect(res => {
@@ -89,7 +89,7 @@ describe('/users', () => {
 				.expect(204)
 
 			await request
-				.get('/auth')
+				.get('/authenticate')
 				.auth(newUser.username, newUser.password)
 				.expect(401)
 				.expect(res => {
@@ -528,7 +528,7 @@ describe('/users', () => {
 
 			it('verifies a user successfully', async () => {
 				await request
-					.get('/auth')
+					.get('/authenticate')
 					.auth('to-be-verified', 'verifyme')
 					.expect(401)
 					.expect(res => {
@@ -541,7 +541,7 @@ describe('/users', () => {
 					.expect(204)
 
 				await request
-					.get('/auth')
+					.get('/authenticate')
 					.auth('to-be-verified', 'verifyme')
 					.expect(200)
 			})
@@ -706,7 +706,7 @@ describe('/users', () => {
 					})
 
 				await request
-					.get('/auth')
+					.get('/authenticate')
 					.auth('fancy-new-name', 'hurdurdur')
 					.expect(200)
 			})
@@ -744,7 +744,7 @@ describe('/users', () => {
 					})
 
 				await request
-					.get('/auth')
+					.get('/authenticate')
 					.auth('fancy-new-name', '123456')
 					.expect(200)
 			})

@@ -12,7 +12,7 @@ class TokenHelper {
 	async getToken(username) {
 		const user = this.findUser(username)
 		const token = await request
-			.get('/auth')
+			.get('/authenticate')
 			.auth(user.username, user.password)
 			.then(res => res.body.token)
 		return `Bearer ${token}`

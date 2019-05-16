@@ -2,7 +2,7 @@
 
 const ENDPOINTS = [
 	{
-		url: '/auth',
+		url: '/authenticate',
 		methods: ['GET'],
 		public: true
 	},

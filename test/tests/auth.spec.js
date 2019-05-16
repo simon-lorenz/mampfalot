@@ -1,8 +1,8 @@
 const errorHelper = require('../utils/errors')
 const { AuthenticationErrorTypes } = require('../utils/errors')
-const request = require('supertest')('http://localhost:5001/api/auth')
+const request = require('supertest')('http://localhost:5001/api/authenticate')
 
-describe('/auth', () => {
+describe('/authenticate', () => {
 	describe('GET', () => {
 		it('authenticates a user with correct credentials', async () => {
 			await request

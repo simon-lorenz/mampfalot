@@ -74,7 +74,7 @@ app.get('/api', (req, res) => {
 
 // Router
 const router = {
-	auth: require('./router/auth'),
+	authenticate: require('./router/authenticate'),
 	groups: require('./router/groups'),
 	places: require('./router/places'),
 	users: require('./router/users'),
@@ -84,7 +84,7 @@ const router = {
 	comments: require('./router/comments')
 }
 
-app.use('/api/auth', router.auth)
+app.use('/api/authenticate', router.authenticate)
 app.use('/api/users', router.users)
 
 app.use('/api/groups', [verifyToken, initUser], router.groups)
