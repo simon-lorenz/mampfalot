@@ -1,37 +1,9 @@
-'use strict'
-
-process.env.NODE_ENV = 'test'
-
-const testServer = require('./helpers/test-server')
+const testServer = require('../utils/test-server')
 const request = require('supertest')('http://localhost:5001/api')
-const setup = require('./setup')
-const users = require('./data').users
-const chai = require('chai')
-const endpoints = require('./helpers/endpoints')
-const errorHelper = require('./helpers/errors')
-const { AuthenticationErrorTypes } = require('./helpers/errors')
-
-chai.should()
-
-request.getMethodByString = function(method, url) {
-	switch (method) {
-		case 'GET':
-			return this.get(url)
-
-		case 'POST':
-			return this.post(url)
-
-		case 'PUT':
-			return this.put(url)
-
-		case 'DELETE':
-			return this.delete(url)
-
-		default:
-			throw new Error(`Unsupported method: ${method}`)
-
-	}
-}
+const TokenHelper = require('../utils/token-helper')
+const endpoints = require('../utils/endpoints')
+const errorHelper = require('../utils/errors')
+const { AuthenticationErrorTypes } = require('../utils/errors')
 
 describe('The test server', () => {
 	it('mocks date and time correctly', async ()  => {
@@ -52,40 +24,16 @@ describe('The test server', () => {
 	})
 })
 
-describe('The mampfalot api', function () {
-	const bearerToken = []
-	this.timeout(10000)
+describe('The mampfalot api', () => {
 
-	before(async () => {
-		await setup.resetData()
-		testServer.start(5001)
-
-		for (const user of users) {
-			const res = await request
-				.get('/auth')
-				.auth(user.username, user.password)
-			bearerToken[user.id] = `Bearer ${res.body.token}`
-		}
-
-		testServer.close()
-	})
-
-	beforeEach(async () => {
-		testServer.start(5001)
-	})
-
-	afterEach(async () => {
-		testServer.close()
-	})
-
-	it('responds to /', (done) => {
-		request
+	it('responds to /', async () => {
+		await request
 			.get('/')
-			.expect(200, done)
+			.expect(200)
 	})
 
-	it('404s unkown routes', (done) => {
-		request
+	it('404s unkown routes', async () => {
+		await request
 			.get('/foo')
 			.expect(404)
 			.expect(res => {
@@ -93,26 +41,38 @@ describe('The mampfalot api', function () {
 				error.should.have.property('type').which.is.equal('NotFoundError')
 				error.should.have.property('message').which.is.equal('This route could not be found.')
 			})
-			.end(done)
 	})
 
-	it('does not send the "x-powered-by" header', (done) => {
-		request
+	it('does not send the "x-powered-by" header', async () => {
+		await request
 			.get('/')
 			.expect(res => {
 				const headers = res.headers
 				headers.should.not.have.property('x-powered-by')
 			})
-			.end(done)
 	})
 
 	it('requires authentication for all protected endpoints', async () => {
+		const requestByMethodString = (method, url) => {
+			switch (method) {
+				case 'GET':
+					return request.get(url)
+				case 'POST':
+					return request.post(url)
+				case 'PUT':
+					return request.put(url)
+				case 'DELETE':
+					return request.delete(url)
+				default:
+					throw new Error(`Unsupported method: ${method}`)
+			}
+		}
+
 		const PROTECTED_ENDPOINTS = endpoints.getProtected()
 		const errors = []
 		for (const endpoint of PROTECTED_ENDPOINTS) {
 			for (const method of endpoint.methods) {
-				await request
-					.getMethodByString(method, endpoint.url)
+				await requestByMethodString(method, endpoint.url)
 					.expect(401)
 					.expect(res => {
 						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.AUTHENTICTAION_REQUIRED)
@@ -128,16 +88,15 @@ describe('The mampfalot api', function () {
 		}
 	})
 
-	it('fails if token is invalid', (done) => {
-		const invalid = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6NSwibmFtZSI6Ik1heCBNdXN0ZXJtYW5uIiwiZW1haWwiOiJtdXN0ZXJtYW5uQGdtYWlsLmNvbSIsImlhdCI6MTUzNjc1Njk3MCwiZXhwIjoxNTM2NzYwNTg5LCJqdGkiOiI2YTA5OTY1Ny03MmRlLTQyOGMtOWE2NS00MDQ5N2FmZjY5YjcifQ.Ym0pnoafK1bpBKq_ohqPKyx0mITa_YfkIaHey94wXgQ'
-		request
+	it('fails if token is invalid', async () => {
+		const invalid = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6NSwibmFtZSI6Ik1heCBNdXN0ZXJtYW5uIiwiZW1haWwiOiJtdXN0ZXJtYW5uQGdtYWlsLmNvbSIsImlhdCI6MTUzNjc1Njk3MCwiZXhwIjoxNTM2NzYwNTg5LCJqdGkiOiI2YTA5OTY1Ny03MmRlLTQyOGMtOWE2NS00MDQ5N2FmZjY5YjcifQ.Ym0pnoafK1bpBKq_ohqPKyx0mITa_YfkIaHey94wXgQ'
+		await request
 			.get('/users/5')
 			.set({ Authorization: invalid })
 			.expect(401)
 			.expect(res => {
 				errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.INVALID_TOKEN)
 			})
-			.end(done)
 	})
 
 	it('returns correct MethodNotAllowedErrors for all routes', async () => {
@@ -146,7 +105,7 @@ describe('The mampfalot api', function () {
 		for (const endpoint of ENDPOINTS) {
 			await request
 				.patch(endpoint.url)
-				.set({ Authorization: bearerToken[1] })
+				.set({ Authorization: await TokenHelper.getToken('maxmustermann') })
 				.expect(405)
 				.expect(res => {
 					errorHelper.checkMethodNotAllowedError(res.body, 'PATCH', endpoint.methods)
@@ -158,13 +117,4 @@ describe('The mampfalot api', function () {
 
 		if (errors.length > 0) { throw new Error (`\n${errors.join('\n')}` ) }
 	})
-
-	require('./tests/users')(request, bearerToken)
-	require('./tests/auth')(request, bearerToken)
-	require('./tests/groups')(request, bearerToken)
-	require('./tests/places')(request, bearerToken)
-	require('./tests/lunchbreaks')(request, bearerToken)
-	require('./tests/participants')(request, bearerToken)
-	require('./tests/votes')(request, bearerToken)
-	require('./tests/comments')(request, bearerToken)
 })

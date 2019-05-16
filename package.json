@@ -8,7 +8,7 @@
   },
   "scripts": {
     "lint": "./node_modules/.bin/eslint . --ext .js",
-    "test": "mocha test/index.js --exit",
+    "test": "mocha",
     "test-auth": "npm run test -- -g /auth",
     "test-users": "npm run test -- -g /users",
     "test-groups": "npm run test -- -g /groups",
@@ -42,7 +42,8 @@
   "devDependencies": {
     "chai": "^4.1.2",
     "eslint": "^5.11.1",
-    "mocha": "^5.2.0",
+    "mocha": "^6.1.4",
+    "mocha-clean": "^1.0.0",
     "supertest": "^3.1.0",
     "timekeeper": "^2.1.2"
   }
