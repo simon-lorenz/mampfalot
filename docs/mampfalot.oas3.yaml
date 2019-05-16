@@ -1121,10 +1121,14 @@ components:
     Invitation:
       type: object
       properties:
-        from:
+        group:
           readOnly: true
           allOf:
             - $ref: '#/components/schemas/Group'
+        from:
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/User'
         to:
           readOnly: true
           allOf:
