@@ -6,6 +6,7 @@ const { allowMethods } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
 const { ValidationError, RequestError } = require('../classes/errors')
 const loader = require('../classes/resource-loader')
+const user = require('../classes/user')
 
 router.route('/').all(allowMethods(['POST']))
 router.route('/:voteId').all(allowMethods(['GET', 'DELETE']))
@@ -37,8 +38,6 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 		}
 		return next(new ValidationError([item]))
 	}
-
-	const { user } = res.locals
 
 	const participant = await Participant.findOne({
 		where: {
@@ -75,14 +74,14 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 router.param('voteId', asyncMiddleware(loader.loadVote))
 
 router.route('/:voteId').get(asyncMiddleware(async (req, res, next) => {
-	const { vote, user } = res.locals
+	const { vote } = res.locals
 
 	await user.can.readVote(vote)
 	res.send(vote)
 }))
 
 router.route('/:voteId').delete(asyncMiddleware(async (req, res, next) => {
-	const { vote, user } = res.locals
+	const { vote } = res.locals
 
 	await user.can.deleteVote(vote)
 	await vote.destroy()

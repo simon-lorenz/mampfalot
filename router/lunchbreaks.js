@@ -5,6 +5,7 @@ const { Comment, Participant } = require('../models')
 const { allowMethods, hasBodyValues } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
 const loader = require('../classes/resource-loader')
+const user = require('../classes/user')
 
 router.route('/:lunchbreakId').all(allowMethods(['GET']))
 router.route('/:lunchbreakId/comments').all(allowMethods(['GET', 'POST']))
@@ -14,23 +15,21 @@ router.route('/:lunchbreakId/participants').all(allowMethods(['GET', 'POST']))
 router.param('lunchbreakId', asyncMiddleware(loader.loadLunchbreak))
 
 router.route('/:lunchbreakId').get(asyncMiddleware(async (req, res, next) => {
-	const { user, lunchbreak } = res.locals
+	const { lunchbreak } = res.locals
 	await user.can.readLunchbreak(lunchbreak)
 	res.send(res.locals.lunchbreak)
 }))
 
 router.route('/:lunchbreakId/comments').get(asyncMiddleware(async (req, res, next) => {
-	const { user, lunchbreak } = res.locals
+	const { lunchbreak } = res.locals
 	await user.can.readLunchbreak(lunchbreak)
 	res.send(lunchbreak.comments)
 }))
 
 router.route('/:lunchbreakId/comments').post(asyncMiddleware(async (req, res, next) => {
-	const { user } = res.locals
-
 	const comment = Comment.build({
 		lunchbreakId: res.locals.lunchbreak.id,
-		userId: res.locals.user.id,
+		userId: user.id,
 		comment: req.body.comment
 	})
 
@@ -44,8 +43,6 @@ router.route('/:lunchbreakId/participants').get((req, res, next) => {
 })
 
 router.route('/:lunchbreakId/participants').post(asyncMiddleware(async (req, res, next) => {
-	const { user } = res.locals
-
 	const participant = Participant.build({
 		userId: user.id,
 		lunchbreakId: parseInt(req.params.lunchbreakId)

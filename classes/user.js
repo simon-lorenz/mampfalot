@@ -4,20 +4,57 @@ const ResourceAccessControl = require('../classes/resource-access-control')
 const UserModel = require('../models').User
 const GroupModel = require('../models').Group
 const { AuthenticationError } = require('./errors')
+const jwt = require('jsonwebtoken')
 
 class User {
 
-	constructor(id) {
-		this.id = id
+	constructor() {
 		this.can = new ResourceAccessControl(this)
+		this.groups = []
+
+		this.init = async (req, res, next) => {
+			const token = this.getTokenFromAuthorizationHeader(req)
+			const payload = this.verifyToken(token)
+			await this.setId(payload.id)
+			next()
+		}
+	}
+
+	async setId(id) {
+		this.id = id
+		await this.loadGroups()
 	}
 
 	/**
-	 * Retrieves necessary data about this
-	 * user from the database.
+	 * Returns the jwt from the authorization header of a request.
+	 * If the request contains no authorization header, this function will throw an AuthenticationError.
+	 * @param {string} request
+	 * @return {string} A jwt
+	 * @throws  {AuthenticationError}
 	 */
-	async init() {
-		const finder = {
+	getTokenFromAuthorizationHeader(request) {
+		const authorizationHeader = request.headers['authorization']
+		if (authorizationHeader)
+			return authorizationHeader.split(' ')[1]
+		else
+			throw new AuthenticationError('This request requires authentication.')
+	}
+
+	/**
+	 * Verifies a jwt and returns the content.
+	 * @param {string} token A jwt
+	 * @returns {object}
+	 */
+	verifyToken(token) {
+		try {
+			return jwt.verify(token, process.env.SECRET_KEY)
+		} catch (error) {
+			throw new AuthenticationError('The provided token is invalid.')
+		}
+	}
+
+	async loadGroups() {
+		const userGroups = await UserModel.findOne({
 			attributes: [],
 			where: {
 				id: this.id
@@ -30,49 +67,34 @@ class User {
 					as: 'config'
 				}
 			}]
-		}
+		}, { raw: true })
 
-		const record = await UserModel.findOne(finder, { raw: true })
-
-		if (record) {
-			this.groups = record.groups
+		if (userGroups) {
+			this.groups = userGroups.groups
 		} else {
 			throw new AuthenticationError('This user does not exist anymore.')
 		}
 	}
 
+	/**
+	 * @param {number} groupId
+	 */
 	isGroupAdmin(groupId) {
-		for (const group of this.groups) {
-			if (group.id === parseInt(groupId)) {
-				return group.config.isAdmin
-			}
-		}
-		return false
+		const group = this.groups.find(group => group.id === groupId)
+
+		if (group)
+			return group.config.isAdmin
+		else
+			return false
 	}
 
+	/**
+	 * @param {number} groupId
+	 */
 	isGroupMember(groupId) {
-		for (const group of this.groups) {
-			if (group.id === parseInt(groupId)) {
-				return true
-			}
-		}
-		return false
-	}
-
-	getGroupIds(adminOnly = false) {
-		const groupIds = []
-		for (const group of this.groups) {
-			if (adminOnly) {
-				if (group.config.isAdmin) {
-					groupIds.push(group.id)
-				}
-			} else {
-				groupIds.push(group.id)
-			}
-		}
-		return groupIds
+		return this.groups.find(group => group.id === groupId) !== undefined
 	}
 
 }
 
-module.exports = User
+module.exports = new User()

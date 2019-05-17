@@ -1,22 +1,8 @@
 'use strict'
 
-const jwt = require('jsonwebtoken')
-const { RequestError, MethodNotAllowedError, AuthenticationError } = require('../classes/errors')
-const User = require('../classes/user')
+const { RequestError, MethodNotAllowedError } = require('../classes/errors')
 
 module.exports = {
-	initUser: async function (req, res, next) {
-		const id = res.locals.token.id
-
-		try {
-			res.locals.user = new User(id)
-			await res.locals.user.init()
-			next()
-		} catch (error) {
-			next(error)
-		}
-	},
-
 	/**
 	 * Checks if the body of a request has all
 	 * required values.
@@ -101,22 +87,5 @@ module.exports = {
 				next(new MethodNotAllowedError(req.method, methods))
 			}
 		}
-	},
-
-	verifyToken(req, res, next) {
-		const authorizationHeader = req.headers['authorization']
-
-		if (!authorizationHeader) return next(new AuthenticationError('This request requires authentication.'))
-
-		const token = authorizationHeader.split(' ')[1]
-
-		jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
-			if (err) {
-				return next(new AuthenticationError('The provided token is invalid.'))
-			} else {
-				res.locals.token = decoded
-				next()
-			}
-		})
 	}
 }

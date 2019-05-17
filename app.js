@@ -8,7 +8,8 @@ const cors = require('cors')
 const helmet = require('helmet')
 const morgan = require('morgan')
 const Promise = require('bluebird')
-const { initUser, verifyToken } = require('./util/middleware')
+const { asyncMiddleware } = require('./util/util')
+const user = require('./classes/user')
 const { AuthenticationError, AuthorizationError, NotFoundError } = require('./classes/errors')
 const { MethodNotAllowedError, ValidationError, RequestError, ServerError } = require('./classes/errors')
 
@@ -87,12 +88,12 @@ const router = {
 app.use('/api/authenticate', router.authenticate)
 app.use('/api/users', router.users)
 
-app.use('/api/groups', [verifyToken, initUser], router.groups)
-app.use('/api/places', [verifyToken, initUser], router.places)
-app.use('/api/votes', [verifyToken, initUser], router.votes)
-app.use('/api/lunchbreaks', [verifyToken, initUser], router.lunchbreaks)
-app.use('/api/participants', [verifyToken, initUser], router.participants)
-app.use('/api/comments', [verifyToken, initUser], router.comments)
+app.use('/api/groups', [asyncMiddleware(user.init)], router.groups)
+app.use('/api/places', [asyncMiddleware(user.init)], router.places)
+app.use('/api/votes', [asyncMiddleware(user.init)], router.votes)
+app.use('/api/lunchbreaks', [asyncMiddleware(user.init)], router.lunchbreaks)
+app.use('/api/participants', [asyncMiddleware(user.init)], router.participants)
+app.use('/api/comments', [asyncMiddleware(user.init)], router.comments)
 
 // Handle request errors
 app.use((err, req, res, next) => {

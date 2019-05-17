@@ -6,6 +6,7 @@ const { Place, Group, User, GroupMembers, Lunchbreak, Invitation } = require('..
 const { allowMethods, hasBodyValues, hasQueryValues } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
 const loader = require('../classes/resource-loader')
+const user = require('../classes/user')
 
 router.route('/').all(allowMethods(['GET', 'POST']))
 router.route('/').post(hasBodyValues(['name'], 'all'))
@@ -24,7 +25,7 @@ router.route('/:groupId/places').post(hasBodyValues(['foodType', 'name'], 'all')
 router.route('/').get((req, res, next) => {
 	Group
 		.scope({
-			method: ['ofUser', res.locals.user]
+			method: ['ofUser', user]
 		})
 		.findAll()
 		.then(groups => {
@@ -48,7 +49,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 
 	await GroupMembers.create({
 		groupId: result.id,
-		userId: res.locals.user.id,
+		userId: user.id,
 		isAdmin: true
 	})
 
@@ -99,7 +100,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 router.param('groupId', asyncMiddleware(loader.loadGroup))
 
 router.route('/:groupId').get(asyncMiddleware(async (req, res, next) => {
-	const { user, group } = res.locals
+	const { group } = res.locals
 	await user.can.readGroup(group)
 	res.send(group)
 }))
@@ -132,21 +133,21 @@ router.route('/:groupId').post((req, res, next) => {
 	next()
 })
 router.route('/:groupId').post(asyncMiddleware(async (req, res, next) => {
-	const { group, user } = res.locals
+	const { group } = res.locals
 
 	await user.can.updateGroup(group)
 	res.send(await group.save())
 }))
 
 router.route('/:groupId').delete(asyncMiddleware(async (req, res, next) => {
-	const { group, user } = res.locals
+	const { group } = res.locals
 	await user.can.deleteGroup(group)
 	await group.destroy()
 	res.status(204).send()
 }))
 
 router.route('/:groupId/invitations').get(asyncMiddleware(async (req, res, next) => {
-	const { user, group } = res.locals
+	const { group } = res.locals
 	await user.can.readInvitationCollection(group)
 
 	const invitations = await Invitation.findAll({
@@ -176,7 +177,7 @@ router.route('/:groupId/invitations').get(asyncMiddleware(async (req, res, next)
 }))
 
 router.route('/:groupId/invitations').post(asyncMiddleware(async (req, res, next) => {
-	const { user, group } = res.locals
+	const { group } = res.locals
 
 	const invitation = await Invitation.build({
 		groupId: group.id,
@@ -231,14 +232,14 @@ router.route('/:groupId/invitations').post(asyncMiddleware(async (req, res, next
 
 router.route('/:groupId/invitations').delete(asyncMiddleware(loader.loadInvitation))
 router.route('/:groupId/invitations').delete(asyncMiddleware(async (req, res, next) => {
-	const { user, invitation } = res.locals
+	const { invitation } = res.locals
 	await user.can.deleteInvitation(invitation)
 	await invitation.destroy()
 	res.status(204).send()
 }))
 
 router.route('/:groupId/members').get(asyncMiddleware(async (req, res, next) => {
-	const { user, group } = res.locals
+	const { group } = res.locals
 	await user.can.readGroupMemberCollection(group)
 	res.send(group.members)
 }))
@@ -246,7 +247,7 @@ router.route('/:groupId/members').get(asyncMiddleware(async (req, res, next) => 
 router.route('/:groupId/members/:userId').all(asyncMiddleware(loader.loadMember))
 
 router.route('/:groupId/members/:userId').post(asyncMiddleware(async (req, res, next) => {
-	const { user, member } = res.locals
+	const { member } = res.locals
 
 	await user.can.updateGroupMember(member, req.body.isAdmin)
 
@@ -260,7 +261,7 @@ router.route('/:groupId/members/:userId').post(asyncMiddleware(async (req, res, 
 }))
 
 router.route('/:groupId/members/:userId').delete(asyncMiddleware(async (req, res, next) => {
-	const { user, member } = res.locals
+	const { member } = res.locals
 
 	await user.can.deleteGroupMember(member)
 	await res.locals.member.destroy()
@@ -268,7 +269,7 @@ router.route('/:groupId/members/:userId').delete(asyncMiddleware(async (req, res
 }))
 
 router.route('/:groupId/lunchbreaks').get(asyncMiddleware(async (req, res, next) => {
-	const { user, group } = res.locals
+	const { group } = res.locals
 
 	await user.can.readGroup(group)
 
@@ -281,10 +282,8 @@ router.route('/:groupId/lunchbreaks').get(asyncMiddleware(async (req, res, next)
 }))
 
 router.route('/:groupId/lunchbreaks').post(asyncMiddleware(async (req, res, next) => {
-	const { user } = res.locals
-
 	const lunchbreak = Lunchbreak.build({
-		groupId: req.params.groupId,
+		groupId: Number(req.params.groupId),
 		date: req.body.date
 	})
 
@@ -301,8 +300,6 @@ router.route('/:groupId/places').get((req, res) => {
 })
 
 router.route('/:groupId/places').post(asyncMiddleware(async (req, res, next) => {
-	const { user } = res.locals
-
 	const place = Place.build({
 		groupId: parseInt(req.params.groupId),
 		foodType: req.body.foodType,

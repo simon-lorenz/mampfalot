@@ -4,12 +4,13 @@ const router = require('express').Router()
 const bcrypt = require('bcryptjs')
 const { Op } = require('sequelize')
 const { User, Group, Place, Lunchbreak, GroupMembers, Invitation } = require('../models')
-const { allowMethods, hasQueryValues, initUser, hasBodyValues, verifyToken } = require('../util/middleware')
+const { allowMethods, hasQueryValues, hasBodyValues } = require('../util/middleware')
 const { AuthenticationError, NotFoundError, RequestError } = require('../classes/errors')
 const { asyncMiddleware, generateRandomToken }  = require('../util/util')
 const Mailer = require('../classes/mailer')
 const mailer = new Mailer()
 const loader = require('../classes/resource-loader')
+const user = require('../classes/user')
 
 router.route('/').all(allowMethods(['GET', 'POST']))
 router.route('/').get(hasQueryValues(['username'], 'all'))
@@ -188,7 +189,8 @@ router.route('/forgot-username').get(async (req, res, next) => {
 
 	res.status(204).send()
 })
-router.use([verifyToken, initUser])
+
+router.use([asyncMiddleware(user.init)])
 
 router.route('/:userId').all(allowMethods(['GET', 'POST', 'DELETE']))
 router.route('/:userId').post(hasBodyValues(['username', 'firstName', 'lastName', 'email', 'password'], 'atLeastOne'))
@@ -199,7 +201,6 @@ router.route('/:userId/invitations').delete(hasQueryValues(['groupId', 'accept']
 router.param('userId', asyncMiddleware(loader.loadUser))
 
 router.route('/:userId').get(asyncMiddleware(async (req, res, next) => {
-	const user = res.locals.user
 	const userResource = res.locals.resources.user
 	await user.can.readUser(userResource)
 	userResource.password = undefined
@@ -210,7 +211,6 @@ router.route('/:userId').get(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/:userId').post(asyncMiddleware(async (req, res, next) => {
-	const user = res.locals.user
 	const userResource = res.locals.resources.user
 
 	if (req.body.password) {
@@ -239,7 +239,6 @@ router.route('/:userId').post(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/:userId').delete(asyncMiddleware(async (req, res, next) => {
-	const user = res.locals.user
 	const userResource = res.locals.resources.user
 
 	await user.can.deleteUser(userResource)
@@ -248,7 +247,6 @@ router.route('/:userId').delete(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/:userId/groups').get(asyncMiddleware(async (req, res, next) => {
-	const user = res.locals.user
 	const userResource = res.locals.resources.user
 
 	await user.can.readGroupCollection(userResource)
@@ -308,7 +306,6 @@ router.route('/:userId/groups').get(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/:userId/invitations').get(asyncMiddleware(async (req, res, next) => {
-	const { user } = res.locals
 	const userResource = res.locals.resources.user
 	await user.can.readInvitationCollectionOfUser(userResource)
 
@@ -339,7 +336,6 @@ router.route('/:userId/invitations').get(asyncMiddleware(async (req, res, next) 
 }))
 
 router.route('/:userId/invitations').delete(asyncMiddleware(async (req, res, next) => {
-	const { user } = res.locals
 	const userResource = res.locals.resources.user
 	const groupId = Number(req.query.groupId)
 	const accept = req.query.accept === 'true'
