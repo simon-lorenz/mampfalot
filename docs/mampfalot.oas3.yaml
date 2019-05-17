@@ -1107,16 +1107,24 @@ components:
     GroupMember:
       type: object
       properties:
-        user:
-          readOnly: true
-          allOf:
-            - $ref: '#/components/schemas/User'
-        color:
+        username:
           type: string
-          example: 80D8FF
-        isAdmin:
-          type: boolean
-          example: true
+          readOnly: true
+        firstName:
+          type: string
+          readOnly: true
+        lastName:
+          type: string
+          readOnly: true
+        config:
+          type: object
+          properties:
+            color:
+              type: string
+              example: 80D8FF
+            isAdmin:
+              type: boolean
+              example: true
 
     Invitation:
       type: object
