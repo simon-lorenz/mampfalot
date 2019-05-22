@@ -93,32 +93,23 @@ class ResourceAccessControl {
 	}
 
 	async createInvitation(invitation) {
-		if (!this.user.isGroupMember(invitation.groupId)) {
+		if (!this.user.isGroupAdmin(invitation.groupId)) {
 			throw new AuthorizationError('Invitation', null, 'CREATE')
 		}
 	}
 
 	async deleteInvitation(invitation) {
-		if (this.user.isGroupMember(invitation.groupId)) {
-			if (!this.user.isGroupAdmin(invitation.groupId)) {
-				if (this.user.id !== invitation.fromId) {
-					throw new AuthorizationError('Invitation', null, 'DELETE')
-				}
-			}
-		} else {
-			if (this.user.id !== invitation.toId) {
-				throw new AuthorizationError('Invitation', null, 'DELETE')
-			}
-		}
+		if (!this.user.isGroupAdmin(invitation.groupId))
+			throw new AuthorizationError('Invitation', null, 'DELETE')
 	}
 
-	async updateGroupMember(member) {
+	async updateGroupMember(member, username) {
 		const gainsAdminRights = member.isAdmin && !member.previous('isAdmin')
 		const losesAdminRights = !member.isAdmin && member.previous('isAdmin')
 
 		if (this.user.id === member.userId || this.user.isGroupAdmin(member.groupId)) {
 			if (gainsAdminRights && !this.user.isGroupAdmin(member.groupId)) {
-				throw new AuthorizationError('GroupMember', member.userId, 'UPDATE')
+				throw new AuthorizationError('GroupMember', username, 'UPDATE')
 			}
 
 			if (losesAdminRights) {
@@ -130,17 +121,17 @@ class ResourceAccessControl {
 				})
 
 				if (admins.length === 1) {
-					const err = new AuthorizationError('GroupMember', member.userId, 'UPDATE')
+					const err = new AuthorizationError('GroupMember', username, 'UPDATE')
 					err.message = 'This user is the last admin of this group and cannot revoke his rights.'
 					throw err
 				}
 			}
 		} else {
-			throw new AuthorizationError('GroupMember', member.userId, 'UPDATE')
+			throw new AuthorizationError('GroupMember', username, 'UPDATE')
 		}
 	}
 
-	async deleteGroupMember(member) {
+	async deleteGroupMember(member, username) {
 		if (this.user.id === member.userId || this.user.isGroupAdmin(member.groupId)) {
 			if (member.isAdmin) {
 				const admins = await GroupMembers.findAll({
@@ -151,13 +142,13 @@ class ResourceAccessControl {
 				})
 
 				if (admins.length === 1 && admins[0].userId === member.userId) {
-					const err = new AuthorizationError('GroupMember', member.userId, 'DELETE')
+					const err = new AuthorizationError('GroupMember', username, 'DELETE')
 					err.message = 'You are the last administrator of this group and cannot leave the group.'
 					throw err
 				}
 			}
 		} else {
-			throw new AuthorizationError('GroupMember', member.userId, 'DELETE')
+			throw new AuthorizationError('GroupMember', username, 'DELETE')
 		}
 	}
 

@@ -17,99 +17,145 @@ class ResourceLoader {
 		else { next(new NotFoundError('Comment', commentId)) }
 	}
 
-	/**
-	 * Loads a group resource into res.locals.group.
-	 * This middleware requires the request to have the param 'groupId'.
-	 * If the resource can not be found, a NotFoundError is passed to next()
-	 */
-	async loadGroup(req, res, next) {
-		const groupId = parseInt(req.params.groupId)
-		res.locals.group = await Group.findByPk(groupId, {
+	async getUserIdByUsername(username) {
+		const user = await User.findOne({
+			attributes: ['id'],
+			where: {
+				username
+			}
+		})
+
+		if (user)
+			return user.id
+		else
+			throw new NotFoundError('User', username)
+	}
+
+	async getUsernameById(userId) {
+		const user = await User.findOne({
+			attributes: ['username'],
+			where: {
+				id: userId
+			}
+		})
+
+		if (user)
+			return user.username
+		else
+			throw new NotFoundError('User', userId)
+	}
+
+	async loadUserById(userId) {
+		const user = await User.findByPk(userId, {
+			attributes: ['username', 'firstName', 'lastName']
+		})
+
+		if (user)
+			return user
+		else
+			throw NotFoundError('User', userId)
+	}
+
+	async loadUserWithEmail(userId) {
+		return await User.findOne({
+			attributes: ['username', 'firstName', 'lastName', 'email'],
+			where: {
+				id: userId
+			}
+		})
+	}
+
+	async loadGroupById(id) {
+		const group = await Group.findByPk(id, {
 			include: [
 				{
 					model: Place,
-					attributes: {
-						exclude: ['groupId']
-					},
-					order: ['id']
-				},
-				{
-					model: Lunchbreak,
-					limit: parseInt(req.query.lunchbreakLimit) || 25,
-					order: [
-						['date', 'DESC']
-					]
+					attributes: ['id', 'name', 'foodType']
 				},
 				{
 					model: User,
-					attributes: ['id', 'username', 'firstName', 'lastName'],
+					attributes: ['username', 'firstName', 'lastName'],
 					as: 'members',
 					through: {
 						as: 'config',
 						attributes: ['color', 'isAdmin']
 					}
 				},
+			]
+		})
+
+		if (group)
+			return group
+		else
+			throw new NotFoundError('Group', id)
+	}
+
+	async loadInvitation(groupId, toId) {
+		const invitation = await Invitation.findOne({
+			attributes: [],
+			where: {
+				toId, groupId
+			},
+			include: [
 				{
-					model: Invitation,
-					attributes: ['groupId'],
+					model: Group,
 					include: [
 						{
-							model: Group,
-							attributes: ['id', 'name']
+							model: Place,
+							attributes: ['id', 'name', 'foodType']
 						},
 						{
 							model: User,
-							as: 'from',
-							attributes: ['id', 'username', 'firstName', 'lastName']
-						},
-						{
-							model: User,
-							as: 'to',
-							attributes: ['id', 'username', 'firstName', 'lastName']
+							attributes: ['username', 'firstName', 'lastName'],
+							as: 'members',
+							through: {
+								as: 'config',
+								attributes: ['color', 'isAdmin']
+							}
 						}
 					]
+				},
+				{
+					model: User,
+					as: 'from',
+					attributes: ['username', 'firstName', 'lastName']
+				},
+				{
+					model: User,
+					as: 'to',
+					attributes: ['username', 'firstName', 'lastName']
 				}
 			]
 		})
 
-		if (!res.locals.group) {
-			next(new NotFoundError('Group', groupId))
-		} else {
-			next()
-		}
-	}
-
-	async loadInvitation(req, res, next) {
-		const to = Number(req.query.to)
-		const groupId = Number(req.params.groupId)
-
-		res.locals.invitation = await Invitation.findOne({
-			where: { groupId, toId: to }
-		})
-
-		if (res.locals.invitation) {
-			next()
-		} else {
+		if (invitation)
+			return invitation
+		else
 			throw new NotFoundError('Invitation', null)
-		}
 	}
 
-	/**
-	 * Loads a group member resource into res.locals.member.
-	 * This middleware requires the request to have the params 'groupId' and 'userId'.
-	 * If the resource can not be found, a NotFoundError is passed to next()
-	 */
-	async loadMember(req, res, next) {
-		const groupId = parseInt(req.params.groupId)
-		const userId = parseInt(req.params.userId)
-		res.locals.member = await GroupMembers.findOne({
-			where: { groupId, userId }
+	async loadMember(groupId, username) {
+		const member = User.findOne({
+			attributes: ['username', 'firstName', 'lastName'],
+			where: {
+				username
+			},
+			include: [
+				{
+					model: GroupMembers,
+					as: 'config',
+					attributes: ['isAdmin', 'color'],
+					where: {
+						groupId
+					}
+				}
+			]
 		})
 
-		if (res.locals.member) {
-			next()
+		if (member) {
+			return member
 		} else {
-			throw new NotFoundError('GroupMember', userId)
+			throw new NotFoundError('GroupMember', username)
 		}
 	}
 
@@ -118,10 +164,12 @@ class ResourceLoader {
 	 * This middleware requires the request to have the param 'lunchbreakId'.
 	 * If the resource can not be found, a NotFoundError is passed to next()
 	 */
-	async loadLunchbreak (req, res, next) {
-		const lunchbreakId = parseInt(req.params.lunchbreakId)
-
-		res.locals.lunchbreak = await Lunchbreak.findByPk(lunchbreakId, {
+	async loadLunchbreak (groupId, date) {
+		const lunchbreak = await Lunchbreak.findOne({
+			where: {
+				groupId: groupId,
+				date: date
+			},
 			include: [
 				{
 					model:Participant,
@@ -131,23 +179,27 @@ class ResourceLoader {
 					include: [
 						{
 							model:Vote,
-							include: [ Place ]
-						},
-						{
-							model: User
-						}]
+							attributes: ['id', 'points'],
+							include: [
+								{
+									model: Place,
+									attributes: ['id', 'name', 'foodType']
+								}
+							]
+						}
+					]
 				},
 				{
-					model: Comment
+					model: Comment,
+					attributes: ['id', ['comment', 'text'], 'createdAt', 'updatedAt']
 				}
 			]
 		})
 
-		if (res.locals.lunchbreak) {
-			next()
-		} else {
-			next(new NotFoundError('Lunchbreak', lunchbreakId))
-		}
+		if (lunchbreak)
+			return lunchbreak
+		else
+			throw new NotFoundError('Lunchbreak', null)
 	}
 
 	/**

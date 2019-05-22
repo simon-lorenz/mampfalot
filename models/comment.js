@@ -43,6 +43,7 @@ module.exports = (sequelize, DataTypes) => {
 	Comment.associate = function (models) {
 		models.Comment.belongsTo(models.Lunchbreak, { foreignKey: 'lunchbreakId' })
 		models.Comment.belongsTo(models.User, { foreignKey: 'userId' })
+		// models.Comment.belongsTo(models.GroupMembers, { as: 'author', foreignKey: 'userId' })
 	}
 
 	return Comment

@@ -1,5 +1,6 @@
 --file ./test/mocha-globals.js
 --timeout 10000
 --require mocha-clean
+--reporter list
 "test/**/*.spec.js"
 --exit

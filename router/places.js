@@ -8,9 +8,9 @@ const loader = require('../classes/resource-loader')
 const user = require('../classes/user')
 
 router.route('/').all(allowMethods(['POST']))
-router.route('/').post(hasBodyValues(['groupId', 'foodType', 'name'], 'all'))
+router.route('/').post(hasBodyValues(['foodType', 'name'], 'all'))
 router.route('/:placeId').all(allowMethods(['GET', 'POST', 'DELETE']))
-router.route('/:placeId').post(hasBodyValues(['foodType', 'name'], 'atLeastOne'))
+router.route('/:placeId').post(hasBodyValues(['foodType', 'name'], 'all'))
 
 router.route('/').post((req, res, next) => {
 	res.locals.place = Place.build({
@@ -26,7 +26,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 
 	await user.can.createPlace(place)
 	await place.save()
-	res.send(place)
+	res.send({ id: place.id, name: place.name, foodType: place.foodType })
 }))
 
 router.param('placeId', asyncMiddleware(loader.loadPlace))
@@ -42,11 +42,12 @@ router.route('/:placeId').post(asyncMiddleware(async (req, res, next) => {
 	const { place } = res.locals
 	const { foodType, name } = req.body
 
-	if (foodType !== undefined) place.foodType = foodType
-	if (name !== undefined) place.name = name
+	place.foodType = foodType
+	place.name = name
 
 	await user.can.updatePlace(place)
-	res.send(await place.save())
+	await place.save()
+	res.send({ id: place.id, name: place.name, foodType: place.foodType })
 }))
 
 router.route('/:placeId').delete(asyncMiddleware(async (req, res, next) => {

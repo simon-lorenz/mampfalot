@@ -3,9 +3,114 @@ const errorHelper = require('../utils/errors')
 const testServer = require('../utils/test-server')
 const request = require('supertest')('http://localhost:5001/api')
 const TokenHelper = require('../utils/token-helper')
+const testData = require('../utils/scripts/test-data')
 
-describe('/lunchbreaks', () => {
-	describe('/:lunchbreakId', () => {
+describe('Lunchbreak', () => {
+
+	describe('/groups/:groupId/lunchbreaks', () => {
+		describe('GET', () => {
+			before(async () => {
+				await setupDatabase()
+			})
+
+			it('requires query values from and to', async () => {
+				await request
+					.get('/groups/1/lunchbreaks')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(400)
+					.expect(res => {
+						errorHelper.checkRequiredQueryValues(res.body, ['from', 'to'], true)
+					})
+			})
+
+			it('fails if to is greater than from')
+
+			it('treats the query dates as inclusive values')
+
+			it('sends a valid lunchbreak collection', async () => {
+				await request
+					.get('/groups/1/lunchbreaks')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.query({ from: '2018-01-01', to: '2018-12-31' })
+					.expect(200)
+					.expect(res => {
+						res.body.should.be.deep.eql(testData.getLunchbreaks(1))
+					})
+			})
+		})
+
+		describe('POST', () => {
+			beforeEach(async () => {
+				await setupDatabase()
+			})
+
+			it('fails if user is not member of the group', async () => {
+				await request
+					.post('/groups/1/lunchbreaks')
+					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.send({
+						date: '2018-06-30',
+						lunchTime: '13:00:00',
+						voteEndingTime: '12:59:00'
+					})
+					.expect(403)
+					.expect(res =>  {
+						const expectedError = {
+							resource: 'Lunchbreak',
+							id: null,
+							operation: 'CREATE'
+						}
+						errorHelper.checkAuthorizationError(res.body, expectedError)
+					})
+			})
+
+			it('creates a new lunchbreak successfully when user is no admin', async () => {
+				await request
+					.post('/groups/1/lunchbreaks')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send({ date: '2018-06-30' })
+					.expect(200)
+					.expect(res => {
+						const lunchbreak = res.body
+						lunchbreak.should.have.property('id')
+						lunchbreak.should.have.property('groupId').equal(1)
+						lunchbreak.should.have.property('date').equal('2018-06-30')
+					})
+			})
+
+			it('fails if no date is provided', async () => {
+				await request
+					.post('/groups/1/lunchbreaks')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send({})
+					.expect(400)
+					.expect(res => {
+						errorHelper.checkRequestError(res.body)
+					})
+			})
+
+			it('fails if a lunchbreak at this date exists', async () => {
+				await request
+					.post('/groups/1/lunchbreaks')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send({
+						date: '2018-06-25'
+					})
+					.expect(400)
+					.expect(res => {
+						const expectedError = {
+							field: 'date',
+							value: '2018-06-25',
+							message: 'A lunchbreak at this date already exists.'
+						}
+
+						errorHelper.checkValidationError(res.body, expectedError)
+					})
+			})
+		})
+	})
+
+	describe('/groups/:groupId/lunchbreaks/:date', () => {
 		describe('GET', () => {
 			before(async() => {
 				await setupDatabase()
@@ -13,17 +118,17 @@ describe('/lunchbreaks', () => {
 
 			it('returns NotFoundError', async () => {
 				await request
-					.get('/lunchbreaks/99')
+					.get('/groups/1/lunchbreaks/2018-06-30')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(404)
 					.expect(res => {
-						errorHelper.checkNotFoundError(res.body, 'Lunchbreak', 99)
+						errorHelper.checkNotFoundError(res.body, 'Lunchbreak', null)
 					})
 			})
 
 			it('fails if user isn\'t a group member', async () => {
 				await request
-					.get('/lunchbreaks/1')
+					.get('/groups/1/lunchbreaks/2018-06-25')
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
 					.expect(403)
 					.expect(res => {
@@ -39,29 +144,20 @@ describe('/lunchbreaks', () => {
 
 			it('sends a correct lunchbreak resource', async () => {
 				await request
-					.get('/lunchbreaks/1')
+					.get('/groups/1/lunchbreaks/2018-06-25')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.expect(200)
 					.expect(res => {
-						const lunchbreak = res.body
-						lunchbreak.should.have.property('id').equal(1)
-						lunchbreak.should.have.property('groupId').equal(1)
-						lunchbreak.should.have.property('date').equal('2018-06-25')
-						lunchbreak.should.have.property('comments')
-						lunchbreak.should.have.property('participants')
-						const firstParticipant = lunchbreak.participants[0]
-						firstParticipant.should.have.property('votes')
-						const firstVote = firstParticipant.votes[0]
-						firstVote.should.have.property('place')
-						firstParticipant.should.have.property('user')
+						res.body.should.be.deep.eql(testData.getLunchbreak(1, '2018-06-25'))
 					})
 			})
 		})
+	})
 
-		describe('DELETE', () => {
-			it('Implement tests')
-		})
+})
 
+describe('/lunchbreaks', () => {
+	describe('/:lunchbreakId', () => {
 		describe('/participants', () => {
 			describe('GET', () => {
 				before(async () => {

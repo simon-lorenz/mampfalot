@@ -87,5 +87,13 @@ module.exports = {
 				next(new MethodNotAllowedError(req.method, methods))
 			}
 		}
+	},
+
+	convertParamToNumber(param) {
+		return (req, res, next) => {
+			req.params[param] = Number(req.params[param])
+			next()
+		}
 	}
+
 }

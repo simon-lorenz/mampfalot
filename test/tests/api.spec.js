@@ -1,9 +1,10 @@
 const testServer = require('../utils/test-server')
 const request = require('supertest')('http://localhost:5001/api')
 const TokenHelper = require('../utils/token-helper')
-const endpoints = require('../utils/endpoints')
 const errorHelper = require('../utils/errors')
 const { AuthenticationErrorTypes } = require('../utils/errors')
+const SwaggerParser = require('swagger-parser')
+const APIContract = require('../utils/openapi-helper')
 
 describe('The test server', () => {
 	it('mocks date and time correctly', async ()  => {
@@ -25,6 +26,12 @@ describe('The test server', () => {
 })
 
 describe('The mampfalot api', () => {
+
+	before(() => APIContract.parse())
+
+	it('has a valid openapi contract', async () => {
+		await SwaggerParser.validate('./docs/mampfalot.oas3.yaml')
+	})
 
 	it('responds to /', async () => {
 		await request
@@ -53,39 +60,31 @@ describe('The mampfalot api', () => {
 	})
 
 	it('requires authentication for all protected endpoints', async () => {
-		const requestByMethodString = (method, url) => {
-			switch (method) {
-				case 'GET':
-					return request.get(url)
-				case 'POST':
-					return request.post(url)
-				case 'PUT':
-					return request.put(url)
-				case 'DELETE':
-					return request.delete(url)
-				default:
-					throw new Error(`Unsupported method: ${method}`)
-			}
-		}
+		await APIContract.parse()
 
-		const PROTECTED_ENDPOINTS = endpoints.getProtected()
+		const urls = APIContract.getUrls()
 		const errors = []
-		for (const endpoint of PROTECTED_ENDPOINTS) {
-			for (const method of endpoint.methods) {
-				await requestByMethodString(method, endpoint.url)
-					.expect(401)
-					.expect(res => {
-						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.AUTHENTICTAION_REQUIRED)
-					})
-					.catch(err => {
-						errors.push(`${method} ${endpoint.url}: ${err.message}`)
-					})
+
+		for (const url of urls) {
+			const methods = APIContract.getMethods(url)
+			for (const method of methods) {
+				if (APIContract.requiresBearerToken(url, method) === false)
+					continue
+
+				const testableUrl = APIContract.replaceParams(url)
+
+				try {
+					const res = await request[method](testableUrl)
+					res.status.should.be.eql(401)
+					errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.AUTHENTICTAION_REQUIRED)
+				} catch (error) {
+					errors.push(`${method} ${testableUrl}: ${error.message}`)
+				}
 			}
 		}
 
-		if (errors.length > 0) {
+		if (errors.length > 0)
 			throw new Error(`\n${errors.join('\n')}`)
-		}
 	})
 
 	it('fails if token is invalid', async () => {
@@ -100,21 +99,24 @@ describe('The mampfalot api', () => {
 	})
 
 	it('returns correct MethodNotAllowedErrors for all routes', async () => {
-		const ENDPOINTS = endpoints.getAll()
+		const urls = APIContract.getUrls()
 		const errors = []
-		for (const endpoint of ENDPOINTS) {
+
+		for (const url of urls) {
+			const methods = APIContract.getMethods(url)
 			await request
-				.patch(endpoint.url)
+				.patch(url)
 				.set({ Authorization: await TokenHelper.getToken('maxmustermann') })
 				.expect(405)
 				.expect(res => {
-					errorHelper.checkMethodNotAllowedError(res.body, 'PATCH', endpoint.methods)
+					errorHelper.checkMethodNotAllowedError(res.body, 'PATCH', methods.map(method => method.toUpperCase()))
 				})
 				.catch((err) => {
-					errors.push(`${endpoint.url}: ${err.message}`)
+					errors.push(`${url}: ${err.message}`)
 				})
 		}
 
-		if (errors.length > 0) { throw new Error (`\n${errors.join('\n')}` ) }
+		if (errors.length > 0)
+			throw new Error (`\n${errors.join('\n')}` )
 	})
 })

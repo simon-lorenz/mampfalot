@@ -5,17 +5,17 @@ info:
   title: 'Mampfalot API'
   description: 'The api for https://mampfalot.app'
   contact:
-    name: Simon Lorenz
-    url: https://simon-lorenz.net
-    email: dev@simon-lorenz.net
+    email: mail@mampfalot.app
 
 tags:
   - name: Authentication
   - name: Comment
   - name: Group
+  - name: Group Member
+  - name: Invitation
   - name: Lunchbreak
-  - name: Member
   - name: Place
+  - name: Participation
   - name: User
   - name: User (Unauthenticated)
 
@@ -55,16 +55,16 @@ paths:
         401:
           $ref: '#/components/responses/AuthenticationError'
 
-  /users/{username}:
-
-    parameters:
-      - $ref: '#/components/parameters/username'
+  /users:
 
     post:
       tags:
         - User (Unauthenticated)
       summary: Sign up a new user.
       description: After signup a verification email is sent to the user.
+                   If the email-address is already known, the user receives
+                   a reminder e-mail with his/her username.
+                   If the username is already taken, a 400 error will be returned.
       requestBody:
         required: true
         content:
@@ -74,6 +74,8 @@ paths:
       responses:
         204:
           description: Ok
+        400:
+          $ref: '#/components/responses/ClientError'
 
   /users/{username}/verify:
 
@@ -90,6 +92,8 @@ paths:
           description: Ok
         400:
           $ref: '#/components/responses/ClientError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
 
     post:
       tags:
@@ -113,6 +117,8 @@ paths:
           $ref: '#/components/responses/ClientError'
         401:
           $ref: '#/components/responses/AuthenticationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
 
   /users/{username}/forgot-password:
 
@@ -126,6 +132,8 @@ paths:
       responses:
         204:
           description: Ok
+        404:
+          $ref: '#/components/responses/NotFoundError'
 
     post:
       tags:
@@ -155,11 +163,18 @@ paths:
           $ref: '#/components/responses/ClientError'
         401:
           $ref: '#/components/responses/AuthenticationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
 
-  /users/{username}/forgot-username:
+  /users/{email}/forgot-username:
 
     parameters:
-      - $ref: '#/components/parameters/username'
+      - name: email
+        in: path
+        required: true
+        schema:
+          type: string
+          format: email
 
     get:
       tags:
@@ -187,14 +202,14 @@ paths:
         401:
           $ref: '#/components/responses/AuthenticationError'
 
-    post:
+    put:
       tags:
         - User
       security:
         - bearerAuth: []
       summary: Update the currently authenticated user.
-      description: Note - If you want to change the password, you have to provide the current password in the body.
-                   To do so, add the field "currentPassword".
+      description: It's not necessary to include the "password" field in the request body.
+                   If you do so (to change the password), please also add the field "currentPassword".
       requestBody:
         required: true
         content:
@@ -215,6 +230,15 @@ paths:
       security:
         - bearerAuth: []
       summary: Delete the currently authenticated user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currentPassword:
+                  type: string
       responses:
         204:
           description: Ok
@@ -245,10 +269,10 @@ paths:
 
     get:
       tags:
-        - User
+        - Invitation
       security:
         - bearerAuth: []
-      summary: Get a collection of all groups the user is invited to.
+      summary: Get a collection of all current Invitations.
       responses:
         200:
           description: Ok
@@ -261,9 +285,14 @@ paths:
         401:
           $ref: '#/components/responses/AuthenticationError'
 
+  /users/me/invitations/{groupId}:
+
+    parameters:
+      - $ref: '#/components/parameters/groupId'
+
     delete:
       tags:
-        - User
+        - Invitation
       security:
         - bearerAuth: []
       summary: Accept or reject a invitation.
@@ -302,7 +331,7 @@ paths:
             type: string
             example: '2018-02-25'
       tags:
-        - User
+        - Participation
       security:
         - bearerAuth: []
       summary: Get a list of Participations between two dates.
@@ -322,6 +351,26 @@ paths:
 
     parameters:
       - $ref: '#/components/parameters/groupId'
+
+    get:
+      tags:
+        - Group
+      security:
+        - bearerAuth: []
+      summary: Get a single group resource.
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
 
     post:
       tags:
@@ -490,10 +539,12 @@ paths:
 
     put:
       tags:
-        - Member
+        - Group Member
       security:
         - bearerAuth: []
       summary: Update a single group member.
+      description: If the requesting user is a group member, he/she can only change their own color.
+                   A group admin can change the color of other group members and grant or revoke admin rights.
       requestBody:
         required: true
         content:
@@ -518,10 +569,11 @@ paths:
 
     delete:
       tags:
-        - Member
+        - Group Member
       security:
         - bearerAuth: []
       summary: Remove a group member.
+      description: This request requires group admin rights.
       responses:
         204:
           description: Ok
@@ -539,10 +591,11 @@ paths:
 
     get:
       tags:
-        - Member
+        - Invitation
       security:
         - bearerAuth: []
       summary: Returns a collection of all current invitations.
+      description: This request requires group admin rights.
       responses:
         200:
           description: Ok
@@ -567,10 +620,11 @@ paths:
 
     post:
       tags:
-        - Member
+        - Invitation
       security:
         - bearerAuth: []
       summary: Invite a user.
+      description: This request requires group admin rights.
       requestBody:
         required: true
         content:
@@ -595,10 +649,11 @@ paths:
 
     delete:
       tags:
-        - Member
+        - Invitation
       security:
         - bearerAuth: []
       summary: Withdraw an invitation.
+      description: This request requires group admin rights.
       responses:
         204:
           description: Ok
@@ -660,12 +715,6 @@ paths:
         - bearerAuth: []
       summary: Create a lunchbreak for today.
       description: This request will create a new lunchbreak for the current day, if the voteEndingTime is not reached.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Lunchbreak'
       responses:
         201:
           description: Ok
@@ -716,10 +765,10 @@ paths:
 
     post:
       tags:
-        - Lunchbreak
+        - Participation
       security:
         - bearerAuth: []
-      summary: Mark the user as absent.
+      summary: Mark the current user as absent.
       description: If the user is already participating, this request will delete the participation!
       responses:
         204:
@@ -733,10 +782,10 @@ paths:
 
     delete:
       tags:
-        - Lunchbreak
+        - Participation
       security:
         - bearerAuth: []
-      summary: Remove the absent flag for the user.
+      summary: Remove the absent flag for the current user.
       responses:
         204:
           description: Ok
@@ -755,7 +804,7 @@ paths:
 
     post:
       tags:
-        - Lunchbreak
+        - Participation
       security:
         - bearerAuth: []
       summary: Particpate at this lunchbreak.
@@ -783,7 +832,7 @@ paths:
 
     delete:
       tags:
-        - Lunchbreak
+        - Participation
       security:
         - bearerAuth: []
       summary: Delete the participation.
@@ -981,8 +1030,6 @@ components:
           example: AuthorizationError
         resource:
           type: string
-        id:
-          type: integer
         operation:
           type: string
         message:
@@ -1154,10 +1201,6 @@ components:
           format: date
           example: 2019-04-30
           readOnly: true
-        group:
-          type: integer
-          example: 25
-          readOnly: true
         participants:
           type: array
           readOnly: true
@@ -1219,10 +1262,6 @@ components:
           type: integer
           example: 29
           readOnly: true
-        group:
-          type: integer
-          example: 12
-          readOnly: true
         name:
           type: string
           example: 'Burger King'
@@ -1252,7 +1291,6 @@ components:
           example: Lorenz
         email:
           type: string
-          writeOnly: true
           format: email
         password:
           type: string
@@ -1270,10 +1308,15 @@ components:
         id:
           type: integer
           readOnly: true
-        place:
-          $ref: '#/components/schemas/Place'
+        placeId:
+          type: integer
+          writeOnly: true
         points:
           type: integer
+        place:
+          readOnly: true
+          allOf:
+          - $ref: '#/components/schemas/Place'
 
   securitySchemes:
     bearerAuth:
