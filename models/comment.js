@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
 			allowNull: false,
 			onDelete: 'CASCADE'
 		},
-		userId: {
+		memberId: {
 			type: DataTypes.INTEGER,
 			allowNull: true,
 			onDelete: 'SET NULL'
@@ -42,7 +42,7 @@ module.exports = (sequelize, DataTypes) => {
 
 	Comment.associate = function (models) {
 		models.Comment.belongsTo(models.Lunchbreak, { foreignKey: 'lunchbreakId' })
-		models.Comment.belongsTo(models.User, { foreignKey: 'userId' })
+		models.Comment.belongsTo(models.GroupMembers, { foreignKey: 'memberId', as: 'author' })
 		// models.Comment.belongsTo(models.GroupMembers, { as: 'author', foreignKey: 'userId' })
 	}
 

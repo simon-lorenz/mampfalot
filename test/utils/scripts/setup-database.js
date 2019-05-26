@@ -34,6 +34,7 @@ module.exports = async function resetData() {
 		// The following lines update the serials sequence value to prevent these conflicts.
 		await db.query('SELECT setval(\'users_id_seq\', (SELECT MAX(id) from "users"));')
 		await db.query('SELECT setval(\'groups_id_seq\', (SELECT MAX(id) from "groups"));')
+		await db.query('SELECT setval(\'group_members_id_seq\', (SELECT MAX(id) from "group_members"));')
 		await db.query('SELECT setval(\'invitations_id_seq\', (SELECT MAX(id) from "invitations"));')
 		await db.query('SELECT setval(\'places_id_seq\', (SELECT MAX(id) from "places"));')
 		await db.query('SELECT setval(\'lunchbreaks_id_seq\', (SELECT MAX(id) from "lunchbreaks"));')

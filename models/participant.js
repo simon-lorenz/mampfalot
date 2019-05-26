@@ -16,16 +16,16 @@ module.exports = (sequelize, DataTypes) => {
 			onDelete: 'CASCADE',
 			unique: {
 				name:'participateOnceOnly',
-				msg: 'This user already participates.'
+				msg: 'This member already participates.'
 			}
 		},
-		userId: {
+		memberId: {
 			type: DataTypes.INTEGER,
 			allowNull: true,
 			onDelete: 'SET NULL',
 			unique: {
 				name:'participateOnceOnly',
-				msg: 'This user already participates.'
+				msg: 'This member already participates.'
 			}
 		},
 		amountSpent: {
@@ -69,7 +69,7 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	Participant.associate = function (models) {
-		models.Participant.belongsTo(models.User, { foreignKey: 'userId' })
+		models.Participant.belongsTo(models.GroupMembers, { foreignKey: 'memberId' })
 		models.Participant.belongsTo(models.Lunchbreak, { foreignKey: 'lunchbreakId' })
 		models.Participant.hasMany(models.Vote, { foreignKey: 'participantId' })
 	}

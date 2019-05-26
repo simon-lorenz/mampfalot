@@ -1,18 +1,21 @@
 module.exports = {
 	groupMembers: [
 		{
+			id: 1,
 			groupId: 1,
 			userId: 1,
 			isAdmin: true,
 			color: '#90ba3e'
 		},
 		{
+			id: 2,
 			groupId: 1,
 			userId: 2,
 			isAdmin: false,
 			color: '#24c4ee'
 		},
 		{
+			id: 3,
 			groupId: 2,
 			userId: 3,
 			isAdmin: true,

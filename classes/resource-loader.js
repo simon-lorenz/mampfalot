@@ -191,7 +191,13 @@ class ResourceLoader {
 				},
 				{
 					model: Comment,
-					attributes: ['id', ['comment', 'text'], 'createdAt', 'updatedAt']
+					attributes: ['id', ['comment', 'text'], 'createdAt', 'updatedAt'],
+					include: [
+						{
+							model: GroupMembers,
+							as: 'author'
+						}
+					]
 				}
 			]
 		})
@@ -221,7 +227,7 @@ class ResourceLoader {
 				{
 					model: Vote,
 					include: [Place]
-				}, User, Lunchbreak
+				}, GroupMembers, Lunchbreak
 			]
 		})
 

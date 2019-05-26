@@ -2,6 +2,11 @@
 
 module.exports = (sequelize, DataTypes) => {
 	const GroupMembers = sequelize.define('GroupMembers', {
+		id: {
+			type: DataTypes.INTEGER,
+			primaryKey: true,
+			autoIncrement: true
+		},
 		userId: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
