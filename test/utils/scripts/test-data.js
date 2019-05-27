@@ -82,36 +82,42 @@ module.exports = {
 		{
 			id: 1,
 			lunchbreakId: 1,
-			userId: 1,
+			memberId: 1,
 			comment: 'Dies ist ein erster Kommentar von Max Mustermann',
+			createdAt: '2019-05-27 12:47:23.108+02',
+			updatedAt: '2019-05-27 12:47:23.108+02'
 		},
 		{
 			id: 2,
 			lunchbreakId: 1,
-			userId: 1,
-			comment: 'Dies ist ein zweiter Kommentar von Max Mustermann'
+			memberId: 1,
+			comment: 'Dies ist ein zweiter Kommentar von Max Mustermann',
+			createdAt: '2019-05-27 12:50:23.108+02',
+			updatedAt: '2019-05-27 12:50:23.108+02'
 		},
 		{
 			id: 3,
 			lunchbreakId: 1,
-			userId: 2,
-			comment: 'Dies der erste Kommentar von John Doe'
+			memberId: 2,
+			comment: 'Dies der erste Kommentar von John Doe',
+			createdAt: '2019-05-27 12:52:23.108+02',
+			updatedAt: '2019-05-27 12:53:45.108+02'
 		}
 	],
 	participants: [
 		{
 			id: 1,
-			userId: 1,
+			memberId: 1,
 			lunchbreakId: 1
 		},
 		{
 			id: 2,
-			userId: 2,
+			memberId: 2,
 			lunchbreakId: 1
 		},
 		{
 			id: 3,
-			userId: 3,
+			memberId: 3,
 			lunchbreakId: 2
 		}
 	],
@@ -234,7 +240,6 @@ module.exports = {
 		}
 	],
 	getGroup: function (id) {
-		// console.log(this.groups)
 		const group = this.groups.find(group => group.id === id)
 
 		group.members = []
@@ -281,9 +286,9 @@ module.exports = {
 	getPassword(username) {
 		return this.users.find(user => user.username === username).password
 	},
-	getGroupMember: function(groupId, userId) {
-		const member = this.groupMembers.find(member => member.userId === userId && member.groupId === groupId)
-		const user = this.getUser(userId)
+	getGroupMember: function(memberId) {
+		const member = this.groupMembers.find(member => member.id === memberId)
+		const user = this.getUser(member.userId)
 		return {
 			username: user.username,
 			firstName: user.firstName,
@@ -309,7 +314,7 @@ module.exports = {
 	getAllGroupMembers: function(groupId) {
 		const members = this.groupMembers.filter(member => member.groupId === groupId)
 		return members.map(member => {
-			return this.getGroupMember(member.groupId, member.userId)
+			return this.getGroupMember(member.id)
 		})
 	},
 	getLunchbreaks: function(groupId) {
@@ -319,26 +324,26 @@ module.exports = {
 	getGroupIdForLunchbreak: function(lunchbreakId) {
 		return this.lunchbreaks.find(lunchbreak => lunchbreak.id === lunchbreakId).groupId
 	},
-	getParticipant: function(userId, lunchbreakId) {
-		const participant = this.participants.find(participant => participant.userId === userId && participant.lunchbreakId === lunchbreakId)
-		const groupId = this.getGroupIdForLunchbreak(participant.lunchbreakId)
+	getParticipant: function(memberId, lunchbreakId) {
+		const participant = this.participants.find(participant => participant.memberId === memberId && participant.lunchbreakId === lunchbreakId)
 		return {
-			member: this.getGroupMember(groupId, participant.userId),
+			member: this.getGroupMember(participant.memberId),
 			votes: this.getVotesOfParticipant(participant.id)
 		}
 	},
 	getParticipants: function(lunchbreakId) {
 		const participants = this.participants.filter(participant => participant.lunchbreakId === lunchbreakId)
-		return participants.map(participant => this.getParticipant(participant.userId, participant.lunchbreakId))
+		return participants.map(participant => this.getParticipant(participant.memberId, participant.lunchbreakId))
 	},
 	getLunchbreak: function(groupId, date) {
 		const lunchbreak = this.lunchbreaks.find(lunchbreak => lunchbreak.groupId === groupId && lunchbreak.date === date)
+		const participants = this.getParticipants(lunchbreak.id)
+		const responseless = this.getAllGroupMembers(lunchbreak.groupId).filter(member => participants.find(p => p.member.id === member.id) === undefined)
 		return {
 			id: lunchbreak.id,
 			date: lunchbreak.date,
-			participants: this.getParticipants(lunchbreak.id),
-			absent: [],
-			responseless: this.getAllGroupMembers(lunchbreak.groupId),
+			participants,
+			responseless,
 			comments: this.getCommentsOfLunchbreak(lunchbreak.id)
 		}
 	},
@@ -348,12 +353,12 @@ module.exports = {
 	},
 	getComment: function(commentId) {
 		const comment = this.comments.find(comment => comment.id === commentId)
-		const groupId = this.getGroupIdForLunchbreak(comment.lunchbreakId)
 		return {
 			id: comment.id,
 			text: comment.comment,
-			author: this.getGroupMember(groupId, comment.userId)
-			// TODO Timestamps?
+			author: this.getGroupMember(comment.memberId),
+			createdAt: new Date(comment.createdAt).toISOString(),
+			updatedAt: new Date(comment.updatedAt).toISOString()
 		}
 	},
 	getUser: function(userId) {

@@ -148,7 +148,26 @@ describe('Lunchbreak', () => {
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.expect(200)
 					.expect(res => {
-						res.body.should.be.deep.eql(testData.getLunchbreak(1, '2018-06-25'))
+						res.body.should.be.equalInAnyOrder(testData.getLunchbreak(1, '2018-06-25'))
+						res.body.comments.should.be.sortedBy('createdAt', { descending: true })
+					})
+
+				await request
+					.get('/groups/2/lunchbreaks/2018-06-25')
+					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.expect(200)
+					.expect(res => {
+						res.body.should.be.equalInAnyOrder(testData.getLunchbreak(2, '2018-06-25'))
+						res.body.comments.should.be.sortedBy('createdAt', { descending: true })
+					})
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-06-26')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.expect(200)
+					.expect(res => {
+						res.body.should.be.equalInAnyOrder(testData.getLunchbreak(1, '2018-06-26'))
+						res.body.comments.should.be.sortedBy('createdAt', { descending: true })
 					})
 			})
 		})

@@ -105,9 +105,6 @@ module.exports = (sequelize, DataTypes) => {
 	User.associate = function (models) {
 		models.User.hasMany(models.Invitation, { foreignKey: 'fromId' })
 		models.User.hasMany(models.Invitation, { foreignKey: 'toId' })
-		models.User.hasMany(models.Comment, { foreignKey: 'userId' })
-		models.User.hasMany(models.Participant, { foreignKey: 'userId' })
-		models.User.hasOne(models.GroupMembers, { as: 'config', foreignKey: 'userId' })
 		models.User.belongsToMany(models.Group, {
 			through: models.GroupMembers,
 			foreignKey: 'userId'

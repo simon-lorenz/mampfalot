@@ -173,10 +173,18 @@ class ResourceLoader {
 			include: [
 				{
 					model:Participant,
-					attributes: {
-						exclude: ['amountSpent']
-					},
+					attributes: ['id'],
 					include: [
+						{
+							model: GroupMembers,
+							as: 'member',
+							include: [
+								{
+									model: User,
+									attributes: ['username', 'firstName', 'lastName']
+								}
+							]
+						},
 						{
 							model:Vote,
 							attributes: ['id', 'points'],
@@ -195,10 +203,19 @@ class ResourceLoader {
 					include: [
 						{
 							model: GroupMembers,
-							as: 'author'
+							as: 'author',
+							include: [
+								{
+									model: User,
+									attributes: ['username', 'firstName', 'lastName']
+								}
+							]
 						}
 					]
 				}
+			],
+			order: [
+				[Comment, 'createdAt', 'DESC']
 			]
 		})
 

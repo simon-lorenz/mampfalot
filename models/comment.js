@@ -40,10 +40,8 @@ module.exports = (sequelize, DataTypes) => {
 		}
 	})
 
-	Comment.associate = function (models) {
-		models.Comment.belongsTo(models.Lunchbreak, { foreignKey: 'lunchbreakId' })
+	Comment.associate = function(models) {
 		models.Comment.belongsTo(models.GroupMembers, { foreignKey: 'memberId', as: 'author' })
-		// models.Comment.belongsTo(models.GroupMembers, { as: 'author', foreignKey: 'userId' })
 	}
 
 	return Comment

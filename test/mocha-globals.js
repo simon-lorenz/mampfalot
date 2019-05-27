@@ -5,6 +5,16 @@
 process.env.NODE_ENV = 'test'
 
 /**
+ * Chai plugins
+ */
+const chai = require('chai')
+const deepEqualInAnyOrder = require('deep-equal-in-any-order')
+const chaiSorted = require('chai-sorted')
+
+chai.use(deepEqualInAnyOrder)
+chai.use(chaiSorted)
+
+/**
  * Require the should style here so we don't need to do this in every single test file.
  */
 require('chai').should()
