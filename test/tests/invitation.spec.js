@@ -120,7 +120,7 @@ describe('Invitation', () => {
 				await request
 					.post('/groups/1/invitations/björn_tietgen')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.expect(200)
+					.expect(201)
 					.expect(res => {
 						const expected = {
 							group: testData.getGroup(1),

@@ -23,9 +23,52 @@ describe('Lunchbreak', () => {
 					})
 			})
 
-			it('fails if to is greater than from')
+			it('fails if from and to are not in the same year', async () => {
+				await request
+					.get('/groups/1/lunchbreaks')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.query({ from: '2018-01-01', to: '2019-01-01' })
+					.expect(400)
+					.expect(res => {
+						const expectedMessage = 'The query values from and to have to be in the same year.'
+						errorHelper.checkRequestError(res.body, expectedMessage)
+					})
+			})
 
-			it('treats the query dates as inclusive values')
+			it('fails if from is greater than to', async () => {
+				await request
+					.get('/groups/1/lunchbreaks')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.query({ from: '2018-01-02', to: '2018-01-01' })
+					.expect(400)
+					.expect(res => {
+						const expectedMessage = 'The given timespan is invalid.'
+						errorHelper.checkRequestError(res.body, expectedMessage)
+					})
+			})
+
+			it('fails if from is equal to', async () => {
+				await request
+					.get('/groups/1/lunchbreaks')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.query({ from: '2018-01-01', to: '2018-01-01' })
+					.expect(400)
+					.expect(res => {
+						const expectedMessage = 'The given timespan is invalid.'
+						errorHelper.checkRequestError(res.body, expectedMessage)
+					})
+			})
+
+			it('treats the query dates as inclusive values', async () => {
+				await request
+					.get('/groups/1/lunchbreaks')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.query({ from: '2018-06-25', to: '2018-06-26' })
+					.expect(200)
+					.expect(res => {
+						res.body.should.be.an('array').with.lengthOf(2)
+					})
+			})
 
 			it('sends a valid lunchbreak collection', async () => {
 				await request
@@ -34,7 +77,7 @@ describe('Lunchbreak', () => {
 					.query({ from: '2018-01-01', to: '2018-12-31' })
 					.expect(200)
 					.expect(res => {
-						res.body.should.be.deep.eql(testData.getLunchbreaks(1))
+						res.body.should.be.equalInAnyOrder(testData.getLunchbreaks(1))
 					})
 			})
 		})
@@ -48,11 +91,6 @@ describe('Lunchbreak', () => {
 				await request
 					.post('/groups/1/lunchbreaks')
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
-					.send({
-						date: '2018-06-30',
-						lunchTime: '13:00:00',
-						voteEndingTime: '12:59:00'
-					})
 					.expect(403)
 					.expect(res =>  {
 						const expectedError = {
@@ -68,39 +106,30 @@ describe('Lunchbreak', () => {
 				await request
 					.post('/groups/1/lunchbreaks')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
-					.send({ date: '2018-06-30' })
-					.expect(200)
+					.expect(201)
 					.expect(res => {
 						const lunchbreak = res.body
-						lunchbreak.should.have.property('id')
-						lunchbreak.should.have.property('groupId').equal(1)
-						lunchbreak.should.have.property('date').equal('2018-06-30')
+						lunchbreak.should.have.all.keys(testData.getLunchbreakKeys())
+						const expectedDate = new Date().toISOString().substring(0, 10)
+						lunchbreak.date.should.be.eql(expectedDate)
 					})
 			})
 
-			it('fails if no date is provided', async () => {
+			it('fails if a lunchbreak for today already exists', async () => {
 				await request
 					.post('/groups/1/lunchbreaks')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
-					.send({})
-					.expect(400)
-					.expect(res => {
-						errorHelper.checkRequestError(res.body)
-					})
-			})
+					.expect(201)
 
-			it('fails if a lunchbreak at this date exists', async () => {
 				await request
 					.post('/groups/1/lunchbreaks')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
-					.send({
-						date: '2018-06-25'
-					})
 					.expect(400)
 					.expect(res => {
+						const expectedDate = new Date().toISOString().substring(0, 10)
 						const expectedError = {
 							field: 'date',
-							value: '2018-06-25',
+							value: expectedDate,
 							message: 'A lunchbreak at this date already exists.'
 						}
 

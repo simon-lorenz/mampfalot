@@ -1,7 +1,7 @@
 'use strict'
 
 const router = require('express').Router()
-const { Place, Lunchbreak } = require('../models')
+const { Place } = require('../models')
 const { allowMethods, hasBodyValues, hasQueryValues, convertParamToNumber } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
 const user = require('../classes/user')
@@ -25,7 +25,7 @@ router.route('/:groupId/places').post(hasBodyValues(['foodType', 'name'], 'all')
 
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	const values = req.body
-	res.send(await GroupController.createGroup(values))
+	res.status(201).send(await GroupController.createGroup(values))
 }))
 
 router.param('groupId', convertParamToNumber('groupId'))
@@ -56,7 +56,7 @@ router.route('/:groupId/invitations').get(asyncMiddleware(async (req, res, next)
 
 router.route('/:groupId/invitations/:username').post(asyncMiddleware(async (req, res, next) => {
 	const { groupId, username } = req.params
-	res.send(await InvitationController.inviteUser(groupId, username))
+	res.status(201).send(await InvitationController.inviteUser(groupId, username))
 }))
 
 router.route('/:groupId/invitations/:username').delete(asyncMiddleware(async (req, res, next) => {
@@ -78,33 +78,6 @@ router.route('/:groupId/members/:username').delete(asyncMiddleware(async (req, r
 
 router.use('/:groupId/lunchbreaks', LunchbreakRouter)
 
-// router.route('/:groupId/lunchbreaks').get(asyncMiddleware(async (req, res, next) => {
-// 	const { group } = res.locals
-
-// 	await user.can.readGroup(group)
-
-// 	const finder = {}
-// 	finder.where = {}
-// 	if (req.params.groupId) finder.where.groupId = req.params.groupId
-// 	if (req.query.date) finder.where.date = req.query.date
-
-// 	res.send(await Lunchbreak.findAll(finder))
-// }))
-
-// router.route('/:groupId/lunchbreaks').post(asyncMiddleware(async (req, res, next) => {
-// 	const lunchbreak = Lunchbreak.build({
-// 		groupId: Number(req.params.groupId),
-// 		date: req.body.date
-// 	})
-
-// 	await user.can.createLunchbreak(lunchbreak)
-
-// 	res.send(await Lunchbreak.create({
-// 		groupId: parseInt(req.params.groupId),
-// 		date: req.body.date
-// 	}))
-// }))
-
 router.route('/:groupId/places').get((req, res) => {
 	res.send(res.locals.group.places)
 })
@@ -117,7 +90,7 @@ router.route('/:groupId/places').post(asyncMiddleware(async (req, res, next) => 
 	})
 
 	await user.can.createPlace(place)
-	res.send(await place.save())
+	res.status(201).send(await place.save())
 }))
 
 module.exports = router

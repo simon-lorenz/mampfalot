@@ -312,7 +312,7 @@ paths:
         400:
           $ref: '#/components/responses/ClientError'
 
-  /users/me/participations:
+  /users/me/participations/{groupId}:
 
     get:
       parameters:
@@ -330,6 +330,7 @@ paths:
           schema:
             type: string
             example: '2018-02-25'
+        - $ref: '#/components/parameters/groupId'
       tags:
         - Participation
       security:
@@ -1199,7 +1200,7 @@ components:
         date:
           type: string
           format: date
-          example: 2019-04-30
+          example: '2019-04-30'
           readOnly: true
         participants:
           type: array
@@ -1240,20 +1241,24 @@ components:
       description: This object differs from the Participant type as it contains the spent amount.
                    A Participation is eventually a private resource for the user only, while Participants are publicly visible.
       properties:
-        id:
-          type: integer
+        date:
+          type: string
+          format: date
+          example: '2018-02-25'
           readOnly: true
         votes:
           type: array
           items:
             $ref: '#/components/schemas/Vote'
         result:
-          $ref: '#/components/schemas/Place'
+          nullable: true
+          allOf:
+          - $ref: '#/components/schemas/Place'
         amountSpent:
           type: number
           format: currency
           nullable: true
-          example: 7.95
+          example: 7.5
 
     Place:
       type: object
@@ -1308,15 +1313,12 @@ components:
         id:
           type: integer
           readOnly: true
-        placeId:
-          type: integer
-          writeOnly: true
+          example: 15
         points:
           type: integer
+          example: 70
         place:
-          readOnly: true
-          allOf:
-          - $ref: '#/components/schemas/Place'
+          $ref: '#/components/schemas/Place'
 
   securitySchemes:
     bearerAuth:

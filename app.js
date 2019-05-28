@@ -81,7 +81,6 @@ const router = {
 	users: require('./router/users'),
 	votes: require('./router/votes'),
 	lunchbreaks: require('./router/lunchbreaks'),
-	participants: require('./router/participants'),
 	comments: require('./router/comments')
 }
 
@@ -92,7 +91,6 @@ app.use('/api/groups', [asyncMiddleware(user.init)], router.groups)
 app.use('/api/places', [asyncMiddleware(user.init)], router.places)
 app.use('/api/votes', [asyncMiddleware(user.init)], router.votes)
 app.use('/api/lunchbreaks', [asyncMiddleware(user.init)], router.lunchbreaks)
-app.use('/api/participants', [asyncMiddleware(user.init)], router.participants)
 app.use('/api/comments', [asyncMiddleware(user.init)], router.comments)
 
 // Handle request errors

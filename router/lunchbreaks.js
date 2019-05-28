@@ -4,6 +4,7 @@ const router = require('express').Router({ mergeParams: true })
 const { allowMethods, hasQueryValues } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
 const LunchbreakController = require('../controllers/lunchbreak-controller')
+const ParticipationRouter = require('./participation')
 
 router.route('/').all(allowMethods(['GET', 'POST']))
 router.route('/').get(hasQueryValues(['from', 'to'], 'all'))
@@ -15,13 +16,16 @@ router.route('/').get(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
-	res.send()
+	const { groupId, date } = req.params
+	res.status(201).send(await LunchbreakController.createLunchbreak(groupId, date))
 }))
 
 router.route('/:date').get(asyncMiddleware(async (req, res, next) => {
 	const { groupId, date } = req.params
 	res.send(await LunchbreakController.getLunchbreak(groupId, date))
 }))
+
+router.use('/:date/participation', ParticipationRouter)
 
 
 

@@ -37,7 +37,7 @@ describe('Group', () => {
 					.post('/groups')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(newGroup)
-					.expect(200)
+					.expect(201)
 					.expect(res => {
 						const group = res.body
 						group.should.have.all.keys(testData.getGroupKeys())
@@ -52,7 +52,7 @@ describe('Group', () => {
 					.post('/groups')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(newGroup)
-					.expect(200)
+					.expect(201)
 					.then(res => {
 						const member = res.body.members[0]
 						member.should.have.all.keys(testData.getGroupMemberKeys())

@@ -2,6 +2,7 @@
 
 const { Comment, Group, Place, Lunchbreak, User, GroupMembers, Participant, Vote, Invitation } = require('../models')
 const { NotFoundError } = require('./errors')
+const Op = require('sequelize').Op
 
 class ResourceLoader {
 
@@ -223,6 +224,65 @@ class ResourceLoader {
 			return lunchbreak
 		else
 			throw new NotFoundError('Lunchbreak', null)
+	}
+
+	async loadLunchbreaks(groupId, from, to) {
+		const lunchbreaks = await Lunchbreak.findAll({
+			where: {
+				groupId: groupId,
+				date: {
+					[Op.between]: [from, to]
+				}
+			},
+			include: [
+				{
+					model:Participant,
+					attributes: ['id'],
+					include: [
+						{
+							model: GroupMembers,
+							as: 'member',
+							include: [
+								{
+									model: User,
+									attributes: ['username', 'firstName', 'lastName']
+								}
+							]
+						},
+						{
+							model:Vote,
+							attributes: ['id', 'points'],
+							include: [
+								{
+									model: Place,
+									attributes: ['id', 'name', 'foodType']
+								}
+							]
+						}
+					]
+				},
+				{
+					model: Comment,
+					attributes: ['id', ['comment', 'text'], 'createdAt', 'updatedAt'],
+					include: [
+						{
+							model: GroupMembers,
+							as: 'author',
+							include: [
+								{
+									model: User,
+									attributes: ['username', 'firstName', 'lastName']
+								}
+							]
+						}
+					]
+				}
+			],
+			order: [
+				[Comment, 'createdAt', 'DESC']
+			]
+		})
+		return lunchbreaks
 	}
 
 	/**

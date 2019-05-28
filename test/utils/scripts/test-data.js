@@ -74,8 +74,7 @@ module.exports = {
 		{
 			id: 3,
 			groupId: 1,
-			date: '2018-06-26',
-			result: 1
+			date: '2018-06-26'
 		}
 	],
 	comments: [
@@ -108,17 +107,23 @@ module.exports = {
 		{
 			id: 1,
 			memberId: 1,
-			lunchbreakId: 1
+			lunchbreakId: 1,
+			resultId: 4,
+			amountSpent: 12.50
 		},
 		{
 			id: 2,
 			memberId: 2,
-			lunchbreakId: 1
+			lunchbreakId: 1,
+			resultId: null,
+			amountSpent: null
 		},
 		{
 			id: 3,
 			memberId: 3,
-			lunchbreakId: 2
+			lunchbreakId: 2,
+			resultId: null,
+			amountSpent: null
 		}
 	],
 	votes: [
@@ -244,7 +249,7 @@ module.exports = {
 
 		group.members = []
 		const members = this.groupMembers.filter(member => member.groupId === id)
-		members.forEach(member => group.members.push(this.getGroupMember(member.groupId, member.userId)))
+		members.forEach(member => group.members.push(this.getGroupMember(member.id)))
 
 		group.places = []
 		const places = this.places.filter(place => place.groupId === id)
@@ -282,6 +287,9 @@ module.exports = {
 	},
 	getUserKeysWithEmail: function() {
 		return Object.keys(this.getUserWithEmail(1))
+	},
+	getLunchbreakKeys: function() {
+		return Object.keys(this.getLunchbreak(1, '2018-06-25'))
 	},
 	getPassword(username) {
 		return this.users.find(user => user.username === username).password
@@ -330,6 +338,19 @@ module.exports = {
 			member: this.getGroupMember(participant.memberId),
 			votes: this.getVotesOfParticipant(participant.id)
 		}
+	},
+	getParticipationsOf: function(username, groupId) {
+		const userId = this.users.find(user => user.username === username).id
+		const memberId = this.groupMembers.find(member => member.userId === userId && member.groupId === groupId).id
+		const participations = this.participants.filter(participant => participant.memberId === memberId)
+		return participations.map((participation) => {
+			return {
+				date: this.lunchbreaks.find(lunchbreak => lunchbreak.id === participation.lunchbreakId).date,
+				votes: this.getVotesOfParticipant(participation.id),
+				result: participation.resultId ? this.getPlace(participation.resultId) : null,
+				amountSpent: participation.amountSpent
+			}
+		})
 	},
 	getParticipants: function(lunchbreakId) {
 		const participants = this.participants.filter(participant => participant.lunchbreakId === lunchbreakId)

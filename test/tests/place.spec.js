@@ -99,7 +99,7 @@ describe('Place', () => {
 					.post(`/groups/${newPlace.groupId}/places`)
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(newPlace)
-					.expect(200)
+					.expect(201)
 					.expect(res => {
 						const place = res.body
 						place.should.have.all.keys(testData.getPlaceKeys())

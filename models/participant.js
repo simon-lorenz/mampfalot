@@ -28,8 +28,18 @@ module.exports = (sequelize, DataTypes) => {
 				msg: 'This member already participates.'
 			}
 		},
+		resultId: {
+			type: DataTypes.INTEGER,
+			allowNull: true,
+			onDelete: 'SET NULL'
+		},
 		amountSpent: {
-			type: DataTypes.DECIMAL
+			type: DataTypes.DECIMAL(10, 2),
+			get() {
+				// Parsing as float, because sequelize would return a string.
+				// See https://github.com/sequelize/sequelize/issues/8019
+				return parseFloat(this.getDataValue('amountSpent'))
+			}
 		}
 	}, {
 		tableName: 'participants',
@@ -47,7 +57,7 @@ module.exports = (sequelize, DataTypes) => {
 
 	Participant.beforeDestroy(async (instance) => {
 		if (await voteEndingTimeReached(instance.lunchbreakId))
-			throw new RequestError('The end of voting has been reached, therefore this participant cannot be deleted.')
+			throw new RequestError('The end of voting has been reached, therefore this participation cannot be deleted.')
 	})
 
 	Participant.afterDestroy(async (instance) => {
@@ -72,6 +82,7 @@ module.exports = (sequelize, DataTypes) => {
 		models.Participant.belongsTo(models.GroupMembers, { foreignKey: 'memberId', as: 'member' })
 		models.Participant.belongsTo(models.Lunchbreak, { foreignKey: 'lunchbreakId' })
 		models.Participant.hasMany(models.Vote, { foreignKey: 'participantId' })
+		models.Participant.belongsTo(models.Place, { foreignKey: 'resultId', as: 'result' })
 	}
 
 	return Participant
