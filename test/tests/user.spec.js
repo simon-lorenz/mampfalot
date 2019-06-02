@@ -652,39 +652,39 @@ describe('User', () => {
 					.get('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(res => {
-						res.body.members.should.be.deep.eql([ testData.getGroupMember(1, 1) ])
+						res.body.members.should.be.deep.eql([ testData.getGroupMember(1) ])
 					})
 			})
 
-			it('sets the foreign key on all associated comments to null', async () => {
+			it('sets the username on associated comments to null', async () => {
 				await request
 					.delete('/users/me')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.expect(204)
 
 				await request
-					.get('/comments/3')
+					.get('/groups/1/lunchbreaks/2018-06-25/comments/3')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(200)
 					.expect(res => {
 						const comment = res.body
-						comment.should.have.property('userId').equal(null)
+						comment.should.have.property('username').equal(null)
 					})
 			})
 
-			it('sets the foreign key on all associated participants to null', async () => {
+			it('sets the member property on associated participants to null', async () => {
 				await request
 					.delete('/users/me')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.expect(204)
 
 				await request
-					.get('/participants/2')
+					.get('/groups/1/lunchbreaks/2018-06-25')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(200)
 					.expect(res => {
-						const participant = res.body
-						participant.should.have.property('userId').equal(null)
+						const participants = res.body.participants
+						participants.should.deep.include({ member: null, votes: [] })
 					})
 			})
 		})

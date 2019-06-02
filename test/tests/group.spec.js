@@ -32,6 +32,8 @@ describe('Group', () => {
 					})
 			})
 
+			it('fails if pointsPerDay, maxPointsPerVote or minPointsPerVote is not a number between 1 and 1000')
+
 			it('sucessfully creates a group', async () => {
 				await request
 					.post('/groups')
@@ -42,8 +44,8 @@ describe('Group', () => {
 						const group = res.body
 						group.should.have.all.keys(testData.getGroupKeys())
 						Object.keys(newGroup).forEach(key => group[key].should.be.eql(newGroup[key]))
-						group.places.should.be.an('array')
-						group.members.should.be.an('array')
+						group.places.should.be.an('array').with.lengthOf(0)
+						group.members.should.be.an('array').with.lengthOf(0)
 					})
 			})
 

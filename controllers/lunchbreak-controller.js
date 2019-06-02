@@ -8,12 +8,11 @@ const { RequestError } = require('../classes/errors')
 class LunchbreakController {
 
 	convertComment(comment) {
-		return {
-			id: comment.id,
-			text: comment.text,
-			createdAt: comment.createdAt,
-			updatedAt: comment.updatedAt,
-			author: {
+		function getAuthor(comment) {
+			if (comment.author === null)
+				return null
+
+			return {
 				username: comment.author.user.username,
 				firstName: comment.author.user.firstName,
 				lastName: comment.author.user.lastName,
@@ -23,11 +22,22 @@ class LunchbreakController {
 				}
 			}
 		}
+
+		return {
+			id: comment.id,
+			text: comment.text,
+			createdAt: comment.createdAt,
+			updatedAt: comment.updatedAt,
+			author: getAuthor(comment)
+		}
 	}
 
 	convertParticipant(participant) {
-		return {
-			member: {
+		function getMember(participant) {
+			if (participant.member === null)
+				return null
+
+			return {
 				username: participant.member.user.username,
 				firstName: participant.member.user.firstName,
 				lastName: participant.member.user.lastName,
@@ -35,7 +45,11 @@ class LunchbreakController {
 					color: participant.member.color,
 					isAdmin: participant.member.isAdmin
 				}
-			},
+			}
+		}
+
+		return {
+			member: getMember(participant),
 			votes: participant.votes
 		}
 	}

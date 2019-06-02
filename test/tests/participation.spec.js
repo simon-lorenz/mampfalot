@@ -73,7 +73,20 @@ describe('Participation', () => {
 	describe('/groups/:groupId/lunchbreaks/:date/participation', () => {
 
 		describe('POST', () => {
+			let payload
+
 			beforeEach(async () => {
+				payload = {
+					votes: [
+						{
+							points: 70,
+							place: testData.getPlace(1)
+						}
+					],
+					result: 2,
+					amountSpent: 12
+				}
+
 				testServer.start(5001, '11:24:59', '25.06.2018')
 				await setupDatabase()
 			})
@@ -88,9 +101,81 @@ describe('Participation', () => {
 					})
 			})
 
+			it('fails if user is no group member', async () => {
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-25/participation')
+					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.send(payload)
+					.expect(403)
+					.expect(res => {
+						const expectedError = {
+							resoucre: 'Participation',
+							value: null,
+							operation: 'CREATE'
+						}
+						errorHelper.checkAuthorizationError(res.body, expectedError)
+					})
+			})
+
+			it('fails if voteEndingTime is reached', async () => {
+				testServer.start(5001, '11:25:01', '25.06.2018')
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-25/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(400)
+					.expect(res => {
+						const message = 'The end of voting has been reached, therefore you cannot participate anymore.'
+						errorHelper.checkRequestError(res.body, message)
+					})
+			})
+
+			it('fails if the voteEndingTime isn\'t reached, but the lunchbreak lies in the past')
+
 			it('accepts null for result and amountSpent')
 
-			it('todo: vote checks...')
+			it('fails if the result place id does not belong to the group')
+
+			it('fails if not all votes have the required properties')
+
+			it('fails if two votes share the same place name')
+
+			it('fails if at least one vote has more points than maxPointsPerVote')
+
+			it('fails if at least one vote has less points than minPointsPerVote')
+
+			it('fails if at least one vote contains a place name, that does not exist for this group')
+
+			it('fails if the sum of points is greater than maxPointsPerDay')
+
+			it('fails if points are not a number')
+
+			it('overrides a previous participation')
+
+			it('successfully creates a participation', async () => {
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-25/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(201)
+					.expect(res => {
+						const participation = res.body
+						participation.should.have.all.keys(testData.getParticipationKeys())
+						participation.votes.should.be.deep.eql(payload.votes)
+						participation.result.should.be.deep.eql(testData.getPlace(payload.result))
+						participation.amountSpent.should.be.eql(payload.amountSpent)
+					})
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-06-25')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.expect(200)
+					.expect(res => {
+						const participants = res.body.participants
+						if (participants.find(participant => participant.member.username === 'johndoe1') === undefined)
+							throw new Error('The participation was not created.')
+					})
+			})
 		})
 
 		describe('DELETE', () => {
