@@ -10,7 +10,9 @@ router.route('/').all(allowMethods(['POST', 'DELETE']))
 router.post('/', hasBodyValues(['amountSpent', 'result', 'votes'], 'all'))
 
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
-	res.send('TODO')
+	const { groupId, date } = req.params
+	const participation = req.body
+	res.status(201).send(await ParticipationController.createParticipation(groupId, date, participation))
 }))
 
 router.route('/').delete(asyncMiddleware(async (req, res, next) => {

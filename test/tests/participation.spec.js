@@ -130,9 +130,46 @@ describe('Participation', () => {
 					})
 			})
 
-			it('fails if the voteEndingTime isn\'t reached, but the lunchbreak lies in the past')
+			it('fails if the voteEndingTime isn\'t reached, but the lunchbreak lies in the past', async () => {
+				testServer.start(5001, '11:24:00', '26.06.2018')
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-25/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(400)
+					.expect(res => {
+						const message = 'The end of voting has been reached, therefore you cannot participate anymore.'
+						errorHelper.checkRequestError(res.body, message)
+					})
+			})
 
-			it('accepts null for result and amountSpent')
+			it('accepts null for result and amountSpent', async () => {
+				payload.result = null
+				payload.amountSpent = null
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-25/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(201)
+					.expect(res => {
+						const participation = res.body
+						participation.result.should.be.eql(null)
+						participation.amountSpent.should.be.eql(null)
+					})
+			})
+
+			it('accepts a empty array of votes', async () => {
+				payload.votes = []
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-25/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(201)
+					.expect(res => {
+						const participation = res.body
+						participation.votes.should.be.eql([])
+					})
+			})
 
 			it('fails if the result place id does not belong to the group')
 
@@ -153,12 +190,15 @@ describe('Participation', () => {
 			it('overrides a previous participation')
 
 			it('successfully creates a participation', async () => {
+				testServer.start(5001, '11:24:59', '26.06.2018')
+
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-25/participation')
+					.post('/groups/1/lunchbreaks/2018-06-26/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(payload)
 					.expect(201)
 					.expect(res => {
+						console.log(res.body)
 						const participation = res.body
 						participation.should.have.all.keys(testData.getParticipationKeys())
 						participation.votes.should.be.deep.eql(payload.votes)

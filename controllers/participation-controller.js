@@ -2,7 +2,7 @@
 
 const user = require('../classes/user')
 const { Participant, GroupMembers, Lunchbreak, Vote, Place } = require('../models')
-const { NotFoundError, RequestError } = require('../classes/errors')
+const { NotFoundError, RequestError, AuthorizationError } = require('../classes/errors')
 const { Op } = require('sequelize')
 
 class ParticipationLoader {
@@ -101,6 +101,37 @@ class ParticipationController {
 			delete participation.lunchbreak
 			return participation
 		})
+	}
+
+	async createParticipation(groupId, date, values) {
+		const lunchbreak = await Lunchbreak.findOne({
+			attributes: ['id'],
+			where: {
+				date, groupId
+			}
+		})
+
+		const member = await GroupMembers.findOne({
+			attributes: ['id'],
+			where: {
+				groupId,
+				userId: user.id
+			}
+		})
+
+		if (member === null)
+			throw new AuthorizationError('Participation', null, 'CREATE')
+
+		const participation = Participant.build({
+			lunchbreakId: lunchbreak.id,
+			memberId: member.id,
+			result: values.result,
+			amountSpent: values.amountSpent
+		})
+
+		await participation.save()
+
+		// TODO: Create votes and return complete participation resource
 	}
 
 }
