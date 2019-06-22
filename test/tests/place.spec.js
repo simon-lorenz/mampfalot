@@ -112,7 +112,7 @@ describe('Place', () => {
 	})
 
 	describe('/groups/:groupId/places/:placeId', () => {
-		describe('POST', () => {
+		describe('PUT', () => {
 			let updatedPlace
 
 			beforeEach(async () => {
@@ -125,7 +125,7 @@ describe('Place', () => {
 
 			it('requires group admin rights', async () => {
 				await request
-					.post('/groups/1/places/1')
+					.put('/groups/1/places/1')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(updatedPlace)
 					.expect(403)
@@ -141,7 +141,7 @@ describe('Place', () => {
 
 			it('updates a new place correctly', async () => {
 				await request
-					.post('/groups/1/places/1')
+					.put('/groups/1/places/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(updatedPlace)
 					.expect(200)
@@ -156,7 +156,7 @@ describe('Place', () => {
 
 			it('sends 400 if no name and foodType is provided', async () => {
 				await request
-					.post('/groups/1/places/1')
+					.put('/groups/1/places/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(400)
 					.expect(res => {
@@ -168,7 +168,7 @@ describe('Place', () => {
 			it('fails if the foodType is empty', async () => {
 				updatedPlace.foodType = ''
 				await request
-					.post('/groups/1/places/1')
+					.put('/groups/1/places/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(updatedPlace)
 					.expect(400)
@@ -185,7 +185,7 @@ describe('Place', () => {
 			it('fails if the name is empty', async () => {
 				updatedPlace.name = ''
 				await request
-					.post('/groups/1/places/1')
+					.put('/groups/1/places/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(updatedPlace)
 					.expect(400)
@@ -202,7 +202,7 @@ describe('Place', () => {
 			it('fails if the name is a duplicate', async () => {
 				updatedPlace.name = 'AsiaFood'
 				await request
-					.post('/groups/1/places/1')
+					.put('/groups/1/places/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(updatedPlace)
 					.expect(400)
@@ -276,19 +276,30 @@ describe('Place', () => {
 					.expect(200)
 			})
 
-			it('sets associated lunchbreak results to null', async () => {
+			it('sets associated participation results to null', async () => {
 				await request
-					.delete('/gropus/1/places/1')
+					.get('/users/me/participations/1')
+					.query({ from: '2018-06-24', to: '2018-06-25' })
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+					.expect(res => {
+						const participation = res.body.find(p => p.date === '2018-06-25')
+						participation.should.have.property('result').not.eql(null)
+					})
+
+				await request
+					.delete('/groups/1/places/4')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(204)
 
 				await request
-					.get('/lunchbreaks/3')
+					.get('/users/me/participations/1')
+					.query({ from: '2018-06-24', to: '2018-06-25' })
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(200)
 					.expect(res => {
-						const lunchbreak = res.body
-						lunchbreak.should.have.property('result').equal(null)
+						const participation = res.body.find(p => p.date === '2018-06-25')
+						participation.should.have.property('result').eql(null)
 					})
 			})
 		})

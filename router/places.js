@@ -9,8 +9,8 @@ const user = require('../classes/user')
 
 router.route('/').all(allowMethods(['POST']))
 router.route('/').post(hasBodyValues(['foodType', 'name'], 'all'))
-router.route('/:placeId').all(allowMethods(['GET', 'POST', 'DELETE']))
-router.route('/:placeId').post(hasBodyValues(['foodType', 'name'], 'all'))
+router.route('/:placeId').all(allowMethods(['PUT', 'DELETE']))
+router.route('/:placeId').put(hasBodyValues(['foodType', 'name'], 'all'))
 
 router.route('/').post((req, res, next) => {
 	res.locals.place = Place.build({
@@ -26,7 +26,7 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 
 	await user.can.createPlace(place)
 	await place.save()
-	res.send({ id: place.id, name: place.name, foodType: place.foodType })
+	res.status(201).send({ id: place.id, name: place.name, foodType: place.foodType })
 }))
 
 router.param('placeId', asyncMiddleware(loader.loadPlace))
@@ -38,7 +38,7 @@ router.route('/:placeId').get(asyncMiddleware(async (req, res, next) => {
 	res.send(place)
 }))
 
-router.route('/:placeId').post(asyncMiddleware(async (req, res, next) => {
+router.route('/:placeId').put(asyncMiddleware(async (req, res, next) => {
 	const { place } = res.locals
 	const { foodType, name } = req.body
 
