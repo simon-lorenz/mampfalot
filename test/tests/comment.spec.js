@@ -223,11 +223,12 @@ describe('Comment', () => {
 					.expect(204)
 
 				await request
-					.get('/groups/1/lunchbreaks/2018-06-25/comments/1')
+					.get('/groups/1/lunchbreaks/2018-06-25')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.expect(404)
 					.expect(res => {
-						errorHelper.checkNotFoundError(res.body, 'Comment', 1)
+						const comments = res.body.comments
+						if (comments.find(comment => comment.id === 1))
+							throw new Error('Comment was not deleted!')
 					})
 			})
 
