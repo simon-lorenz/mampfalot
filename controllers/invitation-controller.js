@@ -135,6 +135,11 @@ class InvitationController {
 				for (const item of error.errors) {
 					if (item.path === 'toId') item.path = 'to'
 					if (item.path === 'fromId') item.path = 'from'
+
+					if (item.message === 'This user is already invited.') {
+						item.path = 'username'
+						item.value = username
+					}
 				}
 			}
 			throw error

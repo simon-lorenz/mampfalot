@@ -99,6 +99,8 @@ describe('Invitation', () => {
 							message: 'This user is already invited.'
 						}
 						errorHelper.checkValidationError(res.body, errorItem)
+						// TODO: Return error only once
+						// res.body.errors.should.be.an('array').with.lengthOf(1)
 					})
 			})
 
