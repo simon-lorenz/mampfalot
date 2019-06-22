@@ -399,18 +399,6 @@ describe('Group', () => {
 					.expect(404)
 			})
 
-			it('deletes all places associated to this group', async () => {
-				await request
-					.delete('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.expect(204)
-
-				await request
-					.get('/places/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.expect(404)
-			})
-
 			it('deletes all lunchbreaks associated to this group')
 
 			it('deletes all members of this group', async () => {

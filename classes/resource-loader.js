@@ -316,28 +316,6 @@ class ResourceLoader {
 	}
 
 	/**
-	 * Loads a place resource into res.locals.place.
-	 * This middleware requires the request to have the param 'placeId'.
-	 * If the resource can not be found, a NotFoundError is passed to next()
-	 */
-	async loadPlace (req, res, next) {
-		const placeId = parseInt(req.params.placeId)
-		res.locals.place = await Place.findByPk(placeId, {
-			include: [
-				{
-					model: Group
-				}
-			]
-		})
-
-		if (res.locals.place) {
-			next()
-		} else {
-			next(new NotFoundError('Place', placeId))
-		}
-	}
-
-	/**
 	 * Loads a user resource into res.locals.resources.user.
 	 * This middleware requires the request to have the param 'userId'.
 	 * If the resource can not be found, a NotFoundError is passed to next()
