@@ -1,9 +1,8 @@
 'use strict'
 
 const router = require('express').Router({ mergeParams: true })
-const { allowMethods, hasBodyValues } = require('../util/middleware')
+const { allowMethods, hasBodyValues, convertParamToNumber } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
-const loader = require('../classes/resource-loader')
 const user = require('../classes/user')
 const CommentController = require('../controllers/comment-controller')
 
@@ -14,16 +13,14 @@ router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	res.status(201).send(await CommentController.createComment(groupId, date, req.body))
 }))
 
+router.param('commentId', convertParamToNumber('commentId'))
+
 router.route('/:commentId').all(allowMethods(['PUT', 'DELETE']))
 
-router.param('commentId', asyncMiddleware(loader.loadComment))
-
-router.route('/:commentId').post(asyncMiddleware(async (req, res, next) => {
-	const { comment } = res.locals
-
-	comment.comment = req.body.comment
-	await user.can.updateComment(comment)
-	res.send(await comment.save())
+router.route('/:commentId').put(hasBodyValues(['text'], 'all'))
+router.route('/:commentId').put(asyncMiddleware(async (req, res, next) => {
+	const { commentId } = req.params
+	res.send(await CommentController.updateComment(commentId, req.body))
 }))
 
 router.route('/:commentId').delete(asyncMiddleware(async (req, res, next) => {

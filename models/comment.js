@@ -17,17 +17,17 @@ module.exports = (sequelize, DataTypes) => {
 			allowNull: true,
 			onDelete: 'SET NULL'
 		},
-		comment: {
+		text: {
 			type: DataTypes.TEXT,
 			allowNull: false,
 			validate: {
 				notEmpty: {
 					args: true,
-					msg: 'comment cannot be empty.'
+					msg: 'text cannot be empty.'
 				},
 				notNull: {
 					args: true,
-					msg: 'comment cannot be null.'
+					msg: 'text cannot be null.'
 				}
 			}
 		}

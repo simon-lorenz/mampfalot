@@ -30,13 +30,13 @@ class ResourceAccessControl {
 	}
 
 	async updateComment(comment) {
-		if (comment.userId !== this.user.id) {
+		if (comment.author.username !== this.user.username) {
 			throw new AuthorizationError('Comment', comment.id, 'UPDATE')
 		}
 	}
 
 	async deleteComment(comment) {
-		if (comment.userId !== this.user.id) {
+		if (comment.author.username !== this.user.username) {
 			throw new AuthorizationError('Comment', comment.id, 'DELETE')
 		}
 	}

@@ -1,13 +1,14 @@
 'use strict'
 
 const { Comment, Lunchbreak, GroupMembers, User } = require('../models')
+const { NotFoundError } = require('../classes/errors')
 const user = require('../classes/user')
 
 class CommentController {
 
-	async getComment(id) {
-		let result = await Comment.findByPk(id, {
-			attributes: ['id', 'lunchbreakId', ['comment', 'text'], 'createdAt', 'updatedAt'],
+	async loadComment(id) {
+		const comment = await Comment.findByPk(id, {
+			attributes: ['id', 'lunchbreakId', 'text', 'createdAt', 'updatedAt'],
 			include: [
 				{
 					model: GroupMembers,
@@ -17,25 +18,35 @@ class CommentController {
 			]
 		})
 
-		await user.can.readComment(result)
+		if (comment === null)
+			throw new NotFoundError('Comment', id)
+		else
+			return comment
+	}
 
-		result = result.toJSON()
-
+	formatComment(comment) {
+		comment = comment.toJSON()
 		return {
-			id: result.id,
-			text: result.text,
-			createdAt: result.createdAt,
-			updatedAt: result.updatedAt,
+			id: comment.id,
+			text: comment.text,
+			createdAt: comment.createdAt,
+			updatedAt: comment.updatedAt,
 			author: {
-				username: result.author.user.username,
-				firstName: result.author.user.firstName,
-				lastName: result.author.user.lastName,
+				username: comment.author.user.username,
+				firstName: comment.author.user.firstName,
+				lastName: comment.author.user.lastName,
 				config: {
-					color: result.author.color,
-					isAdmin: result.author.isAdmin
+					color: comment.author.color,
+					isAdmin: comment.author.isAdmin
 				}
 			}
 		}
+	}
+
+	async getComment(id) {
+		const comment = await this.loadComment(id)
+		await user.can.readComment(comment)
+		return this.formatComment(comment)
 	}
 
 	async createComment(groupId, date, values) {
@@ -58,7 +69,7 @@ class CommentController {
 		const comment = Comment.build({
 			lunchbreakId: lunchbreak.id,
 			memberId: member.id,
-			comment: values.text
+			text: values.text
 		})
 
 		await user.can.createComment(comment)
@@ -66,6 +77,14 @@ class CommentController {
 		const { id } = await comment.save()
 
 		return await this.getComment(id)
+	}
+
+	async updateComment(commentId, values) {
+		const comment = await this.loadComment(commentId)
+		await user.can.updateComment(this.formatComment(comment))
+		comment.text = values.text
+		await comment.save()
+		return await this.getComment(commentId)
 	}
 
 }

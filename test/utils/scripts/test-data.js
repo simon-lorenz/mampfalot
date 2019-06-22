@@ -82,7 +82,7 @@ module.exports = {
 			id: 1,
 			lunchbreakId: 1,
 			memberId: 1,
-			comment: 'Dies ist ein erster Kommentar von Max Mustermann',
+			text: 'Dies ist ein erster Kommentar von Max Mustermann',
 			createdAt: '2019-05-27 12:47:23.108+02',
 			updatedAt: '2019-05-27 12:47:23.108+02'
 		},
@@ -90,7 +90,7 @@ module.exports = {
 			id: 2,
 			lunchbreakId: 1,
 			memberId: 1,
-			comment: 'Dies ist ein zweiter Kommentar von Max Mustermann',
+			text: 'Dies ist ein zweiter Kommentar von Max Mustermann',
 			createdAt: '2019-05-27 12:50:23.108+02',
 			updatedAt: '2019-05-27 12:50:23.108+02'
 		},
@@ -98,7 +98,7 @@ module.exports = {
 			id: 3,
 			lunchbreakId: 1,
 			memberId: 2,
-			comment: 'Dies der erste Kommentar von John Doe',
+			text: 'Dies der erste Kommentar von John Doe',
 			createdAt: '2019-05-27 12:52:23.108+02',
 			updatedAt: '2019-05-27 12:53:45.108+02'
 		}

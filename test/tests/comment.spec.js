@@ -38,9 +38,26 @@ describe('Comment', () => {
 					.expect(400)
 					.expect(res => {
 						const expectedError = {
-							field: 'comment',
+							field: 'text',
 							value: newComment.text,
-							message: 'comment cannot be empty.'
+							message: 'text cannot be empty.'
+						}
+						errorHelper.checkValidationError(res.body, expectedError)
+					})
+			})
+
+			it('fails if comment is null', async () => {
+				newComment.text = null
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-25/comments')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(newComment)
+					.expect(400)
+					.expect(res => {
+						const expectedError = {
+							field: 'text',
+							value: null,
+							message: 'text cannot be null.'
 						}
 						errorHelper.checkValidationError(res.body, expectedError)
 					})
@@ -85,6 +102,7 @@ describe('Comment', () => {
 				await request
 					.put('/groups/1/lunchbreaks/2018-06-25/comments/1')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send({ text: 'new text!' })
 					.expect(403)
 					.expect(res => {
 						const expectedError = {
@@ -97,33 +115,44 @@ describe('Comment', () => {
 					})
 			})
 
-			it('fails if no new comment is provided', async () => {
+			it('requires text in body', async () => {
 				await request
 					.put('/groups/1/lunchbreaks/2018-06-25/comments/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(400)
 					.expect(res => {
+						errorHelper.checkRequiredBodyValues(res.body, ['text'], true)
+					})
+			})
+
+			it('fails if text is null', async () => {
+				await request
+					.put('/groups/1/lunchbreaks/2018-06-25/comments/1')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({ text: null })
+					.expect(400)
+					.expect(res => {
 						const expectedError = {
-							field: 'comment',
+							field: 'text',
 							value: null,
-							message: 'comment cannot be null.'
+							message: 'text cannot be null.'
 						}
 
 						errorHelper.checkValidationError(res.body, expectedError)
 					})
 			})
 
-			it('fails if new comment is empty', async () => {
+			it('fails if text is empty', async () => {
 				await request
 					.put('/groups/1/lunchbreaks/2018-06-25/comments/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send({ comment: '' })
+					.send({ text: '' })
 					.expect(400)
 					.expect(res => {
 						const expectedError = {
-							field: 'comment',
+							field: 'text',
 							value: '',
-							message: 'comment cannot be empty.'
+							message: 'text cannot be empty.'
 						}
 						errorHelper.checkValidationError(res.body, expectedError)
 					})
@@ -131,8 +160,9 @@ describe('Comment', () => {
 
 			it('fails if comment does not exist', async () => {
 				await request
-					.put('/comments/99')
+					.put('/groups/1/lunchbreaks/2018-06-25/comments/99')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({ text: 'new text' })
 					.expect(404)
 					.expect(res => {
 						errorHelper.checkNotFoundError(res.body, 'Comment', 99)
@@ -143,13 +173,13 @@ describe('Comment', () => {
 				await request
 					.put('/groups/1/lunchbreaks/2018-06-25/comments/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send({ comment: 'New comment text!' })
+					.send({ text: 'New comment text!' })
 					.expect(200)
 					.expect(res => {
 						const comment = res.body
-						comment.should.have.property('id').equal(1)
-						comment.should.have.property('userId').equal(1)
-						comment.should.have.property('comment').equal('New comment text!')
+						comment.should.have.all.keys(testData.getCommentKeys())
+						comment.author.should.be.deep.eql(testData.getGroupMember(1))
+						comment.text.should.be.equal('New comment text!')
 					})
 			})
 		})

@@ -21,7 +21,12 @@ class User {
 	}
 
 	async setId(id) {
-		this.id = id
+		const me = await UserModel.findByPk(id, {
+			attributes: ['id', 'username']
+		})
+
+		this.id = me.id
+		this.username = me.username
 		await this.loadGroups()
 	}
 
