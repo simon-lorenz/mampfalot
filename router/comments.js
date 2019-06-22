@@ -3,7 +3,6 @@
 const router = require('express').Router({ mergeParams: true })
 const { allowMethods, hasBodyValues, convertParamToNumber } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
-const user = require('../classes/user')
 const CommentController = require('../controllers/comment-controller')
 
 router.route('/').all(allowMethods(['POST']))
@@ -24,10 +23,8 @@ router.route('/:commentId').put(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.route('/:commentId').delete(asyncMiddleware(async (req, res, next) => {
-	const { comment } = res.locals
-
-	await user.can.deleteComment(comment)
-	await comment.destroy()
+	const { commentId } = req.params
+	await CommentController.deleteComment(commentId)
 	res.status(204).send()
 }))
 

@@ -87,6 +87,12 @@ class CommentController {
 		return await this.getComment(commentId)
 	}
 
+	async deleteComment(commentId) {
+		const comment = await this.loadComment(commentId)
+		await user.can.deleteComment(this.formatComment(comment))
+		await comment.destroy()
+	}
+
 }
 
 module.exports = new CommentController()
