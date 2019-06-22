@@ -45,7 +45,7 @@ describe('Group', () => {
 						group.should.have.all.keys(testData.getGroupKeys())
 						Object.keys(newGroup).forEach(key => group[key].should.be.eql(newGroup[key]))
 						group.places.should.be.an('array').with.lengthOf(0)
-						group.members.should.be.an('array').with.lengthOf(0)
+						group.members.should.be.an('array').with.lengthOf(1)
 					})
 			})
 
@@ -411,17 +411,7 @@ describe('Group', () => {
 					.expect(404)
 			})
 
-			it('deletes all lunchbreaks associated to this group', async () => {
-				await request
-					.delete('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.expect(204)
-
-				await request
-					.get('/lunchbreaks/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.expect(404)
-			})
+			it('deletes all lunchbreaks associated to this group')
 
 			it('deletes all members of this group', async () => {
 				const members = await request
