@@ -399,6 +399,29 @@ describe('Group', () => {
 					.expect(404)
 			})
 
+			it('deletes all participations associated to this group', async () => {
+				await request
+					.get('/users/me/participations/1')
+					.query({ from: '2018-01-01', to: '2018-12-31' })
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.then(res => {
+						res.body.should.be.an('array').length.which.is.above(0)
+					})
+
+				await request
+					.delete('/groups/1')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(204)
+
+				await request
+					.get('/users/me/participations/1')
+					.query({ from: '2018-01-01', to: '2018-12-31' })
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.then(res => {
+						res.body.should.be.an('array').with.lengthOf(0)
+					})
+			})
+
 			it('deletes all lunchbreaks associated to this group')
 
 			it('deletes all members of this group', async () => {
