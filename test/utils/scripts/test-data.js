@@ -376,7 +376,7 @@ module.exports = {
 		const comment = this.comments.find(comment => comment.id === commentId)
 		return {
 			id: comment.id,
-			text: comment.comment,
+			text: comment.text,
 			author: this.getGroupMember(comment.memberId),
 			createdAt: new Date(comment.createdAt).toISOString(),
 			updatedAt: new Date(comment.updatedAt).toISOString()

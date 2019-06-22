@@ -663,12 +663,12 @@ describe('User', () => {
 					.expect(204)
 
 				await request
-					.get('/groups/1/lunchbreaks/2018-06-25/comments/3')
+					.get('/groups/1/lunchbreaks/2018-06-25')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(200)
 					.expect(res => {
-						const comment = res.body
-						comment.should.have.property('username').equal(null)
+						const comment = res.body.comments.find(c => c.id === 3)
+						comment.should.have.property('author').eql(null)
 					})
 			})
 
