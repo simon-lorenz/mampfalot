@@ -35,7 +35,7 @@ describe('Invitation', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(200)
 					.expect(res => {
-						res.body.should.be.deep.eql(testData.getInvitations(1))
+						res.body.should.be.equalInAnyOrder(testData.getInvitations(1))
 					})
 			})
 		})
@@ -130,7 +130,7 @@ describe('Invitation', () => {
 							to: testData.getUser(4)
 						}
 
-						res.body.should.be.deep.eql(expected)
+						res.body.should.be.equalInAnyOrder(expected)
 					})
 			})
 
@@ -220,7 +220,7 @@ describe('Invitation', () => {
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
 					.expect(200)
 					.expect(res => {
-						res.body.should.be.deep.eql(testData.getInvitationsOfUser(3))
+						res.body.should.be.equalInAnyOrder(testData.getInvitationsOfUser(3))
 					})
 			})
 

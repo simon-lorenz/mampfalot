@@ -86,7 +86,7 @@ describe('Group', () => {
 					.get('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(200)
-					.expect(res => res.body.should.be.deep.equal(testData.getGroup(1)))
+					.expect(res => res.body.should.be.equalInAnyOrder(testData.getGroup(1)))
 			})
 
 			it('sends 403 if user isn\'t a group member', async () => {
@@ -464,7 +464,7 @@ describe('Group', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(200)
 					.expect(res => {
-						res.body.should.be.deep.eql(testData.getGroupsOfUser(1))
+						res.body.should.be.equalInAnyOrder(testData.getGroupsOfUser(1))
 					})
 
 				await request
@@ -472,7 +472,7 @@ describe('Group', () => {
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.expect(200)
 					.expect(res => {
-						res.body.should.be.deep.eql(testData.getGroupsOfUser(2))
+						res.body.should.be.equalInAnyOrder(testData.getGroupsOfUser(2))
 					})
 
 				await request
@@ -480,7 +480,7 @@ describe('Group', () => {
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
 					.expect(200)
 					.expect(res => {
-						res.body.should.be.deep.eql(testData.getGroupsOfUser(3))
+						res.body.should.be.equalInAnyOrder(testData.getGroupsOfUser(3))
 					})
 			})
 		})
