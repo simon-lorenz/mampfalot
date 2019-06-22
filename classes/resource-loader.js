@@ -200,7 +200,7 @@ class ResourceLoader {
 				},
 				{
 					model: Comment,
-					attributes: ['id', ['comment', 'text'], 'createdAt', 'updatedAt'],
+					attributes: ['id', 'text', 'createdAt', 'updatedAt'],
 					include: [
 						{
 							model: GroupMembers,
@@ -263,7 +263,7 @@ class ResourceLoader {
 				},
 				{
 					model: Comment,
-					attributes: ['id', ['comment', 'text'], 'createdAt', 'updatedAt'],
+					attributes: ['id', 'text', 'createdAt', 'updatedAt'],
 					include: [
 						{
 							model: GroupMembers,
