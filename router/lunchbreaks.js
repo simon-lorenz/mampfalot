@@ -5,6 +5,7 @@ const { allowMethods, hasQueryValues } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
 const LunchbreakController = require('../controllers/lunchbreak-controller')
 const ParticipationRouter = require('./participation')
+const CommentRouter = require('./comments')
 
 router.route('/').all(allowMethods(['GET', 'POST']))
 router.route('/').get(hasQueryValues(['from', 'to'], 'all'))
@@ -26,12 +27,10 @@ router.route('/:date').get(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.use('/:date/participation', ParticipationRouter)
-
+router.use('/:date/comments', CommentRouter)
 
 
 // router.route('/:lunchbreakId').all(allowMethods(['GET']))
-// router.route('/:lunchbreakId/comments').all(allowMethods(['GET', 'POST']))
-// router.route('/:lunchbreakId/comments').post(hasBodyValues(['comment'], 'all'))
 // router.route('/:lunchbreakId/participants').all(allowMethods(['GET', 'POST']))
 
 // router.param('lunchbreakId', asyncMiddleware(loader.loadLunchbreak))
@@ -46,18 +45,6 @@ router.use('/:date/participation', ParticipationRouter)
 // 	const { lunchbreak } = res.locals
 // 	await user.can.readLunchbreak(lunchbreak)
 // 	res.send(lunchbreak.comments)
-// }))
-
-// router.route('/:lunchbreakId/comments').post(asyncMiddleware(async (req, res, next) => {
-// 	const comment = Comment.build({
-// 		lunchbreakId: res.locals.lunchbreak.id,
-// 		userId: user.id,
-// 		comment: req.body.comment
-// 	})
-
-// 	await user.can.createComment(comment)
-
-// 	res.send(await comment.save())
 // }))
 
 // router.route('/:lunchbreakId/participants').get((req, res, next) => {

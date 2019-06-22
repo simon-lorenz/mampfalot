@@ -2,6 +2,7 @@ const setupDatabase = require('../utils/scripts/setup-database')
 const errorHelper = require('../utils/errors')
 const request = require('supertest')('http://localhost:5001/api')
 const TokenHelper = require('../utils/token-helper')
+const testData = require('../utils/scripts/test-data')
 
 describe('Comment', () => {
 
@@ -11,15 +12,15 @@ describe('Comment', () => {
 
 			beforeEach(async () => {
 				newComment = {
-					comment: 'Hey ho, let\'s go!'
+					text: 'Hey ho, let\'s go!'
 				}
 				await setupDatabase()
 			})
 
 			it('fails if no comment is provided', async () => {
-				newComment.comment = undefined
+				newComment.text = undefined
 				await request
-					.post('/groups/1/lunchbreak/2018-06-25/comments')
+					.post('/groups/1/lunchbreaks/2018-06-25/comments')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(newComment)
 					.expect(400)
@@ -29,16 +30,16 @@ describe('Comment', () => {
 			})
 
 			it('fails if comment is empty', async () => {
-				newComment.comment = ''
+				newComment.text = ''
 				await request
-					.post('/groups/1/lunchbreak/2018-06-25/comments')
+					.post('/groups/1/lunchbreaks/2018-06-25/comments')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(newComment)
 					.expect(400)
 					.expect(res => {
 						const expectedError = {
 							field: 'comment',
-							value: newComment.comment,
+							value: newComment.text,
 							message: 'comment cannot be empty.'
 						}
 						errorHelper.checkValidationError(res.body, expectedError)
@@ -48,30 +49,27 @@ describe('Comment', () => {
 			it('inserts a userId depending on the token, not the body userId', async () => {
 				newComment.userId = 3
 				await request
-					.post('/groups/1/lunchbreak/2018-06-25/comments')
+					.post('/groups/1/lunchbreaks/2018-06-25/comments')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(newComment)
-					.expect(200)
+					.expect(201)
 					.expect(res => {
 						const comment = res.body
-						comment.should.have.property('userId').equal(2)
+						comment.author.username.should.be.eql('johndoe1')
 					})
 			})
 
 			it('successfully adds a comment', async () => {
 				await request
-					.post('/groups/1/lunchbreak/2018-06-25/comments')
+					.post('/groups/1/lunchbreaks/2018-06-25/comments')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(newComment)
-					.expect(200)
+					.expect(201)
 					.expect(res => {
 						const comment = res.body
-						comment.should.have.property('id')
-						comment.should.have.property('userId').equal(2)
-						comment.should.have.property('lunchbreakId').equal(1)
-						comment.should.have.property('comment').equal(newComment.comment)
-						comment.should.have.property('createdAt')
-						comment.should.have.property('updatedAt')
+						comment.should.have.all.keys(testData.getCommentKeys())
+						comment.author.should.be.deep.eql(testData.getGroupMember(2))
+						comment.text.should.be.eql(newComment.text)
 					})
 			})
 		})
@@ -222,7 +220,7 @@ describe('Comment', () => {
 					.expect(204)
 
 				await request
-					.get('/groups/1/lunchbreak/2018-06-25')
+					.get('/groups/1/lunchbreaks/2018-06-25')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(200)
 			})

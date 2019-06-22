@@ -382,6 +382,9 @@ module.exports = {
 			updatedAt: new Date(comment.updatedAt).toISOString()
 		}
 	},
+	getCommentKeys: function() {
+		return Object.keys(this.getComment(1))
+	},
 	getUser: function(userId) {
 		const user = this.users.find(user => user.id === userId)
 		return {
