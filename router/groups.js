@@ -6,19 +6,18 @@ const { allowMethods, hasBodyValues, convertParamToNumber } = require('../util/m
 const { asyncMiddleware } = require('../util/util')
 const user = require('../classes/user')
 const GroupController = require('../controllers/group-controller')
-const InvitationController = require('../controllers/invitation-controller')
 const PlaceRouter = require('./places')
 const LunchbreakRouter = require('./lunchbreaks')
 const GroupMemberRouter = require('./group-members')
+const InvitationRouter = require('./invitiations')
 
 router.route('/').all(allowMethods(['POST']))
 router.route('/').post(hasBodyValues(['name'], 'all'))
 router.route('/:groupId').all(allowMethods(['GET', 'PUT', 'DELETE']))
 router.route('/:groupId').put(hasBodyValues(['name', 'lunchTime', 'voteEndingTime', 'utcOffset', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote'], 'atLeastOne'))
-router.route('/:groupId/invitations').all(allowMethods(['GET']))
-router.route('/:groupId/invitations/:username').all(allowMethods(['POST', 'DELETE']))
 
 router.use('/:groupId/members', GroupMemberRouter)
+router.use('/:groupId/invitations', InvitationRouter)
 
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	const values = req.body
@@ -45,22 +44,6 @@ router.route('/:groupId').delete(asyncMiddleware(async (req, res, next) => {
 }))
 
 router.use('/:groupId/places', PlaceRouter)
-
-router.route('/:groupId/invitations').get(asyncMiddleware(async (req, res, next) => {
-	const { groupId } = req.params
-	res.send(await InvitationController.getInvitations(groupId))
-}))
-
-router.route('/:groupId/invitations/:username').post(asyncMiddleware(async (req, res, next) => {
-	const { groupId, username } = req.params
-	res.status(201).send(await InvitationController.inviteUser(groupId, username))
-}))
-
-router.route('/:groupId/invitations/:username').delete(asyncMiddleware(async (req, res, next) => {
-	const { groupId, username } = req.params
-	await InvitationController.withdrawInvitation(groupId, username)
-	res.status(204).send()
-}))
 
 router.use('/:groupId/lunchbreaks', LunchbreakRouter)
 
