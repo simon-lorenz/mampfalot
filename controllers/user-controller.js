@@ -5,8 +5,7 @@ const { AuthorizationError, AuthenticationError, RequestError, NotFoundError } =
 const ResourceLoader = require('../classes/resource-loader')
 const { User } = require('../models')
 const bcrypt = require('bcryptjs')
-const Mailer = require('../classes/mailer')
-const mailer = new Mailer()
+const mailer = require('../util/mailer')
 const { generateRandomToken }  = require('../util/util')
 const { Op } = require('sequelize')
 
