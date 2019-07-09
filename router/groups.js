@@ -2,7 +2,7 @@
 
 const router = require('express').Router()
 const { Place } = require('../models')
-const { allowMethods, hasBodyValues, hasQueryValues, convertParamToNumber } = require('../util/middleware')
+const { allowMethods, hasBodyValues, convertParamToNumber } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
 const user = require('../classes/user')
 const GroupController = require('../controllers/group-controller')
@@ -13,15 +13,12 @@ const LunchbreakRouter = require('./lunchbreaks')
 
 router.route('/').all(allowMethods(['POST']))
 router.route('/').post(hasBodyValues(['name'], 'all'))
-router.route('/:groupId').all(allowMethods(['GET', 'POST', 'DELETE']))
-router.route('/:groupId').post(hasBodyValues(['name', 'lunchTime', 'voteEndingTime', 'utcOffset', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote'], 'atLeastOne'))
-router.route('/:groupId/invitations').all(allowMethods(['GET', 'POST', 'DELETE']))
-router.route('/:groupId/invitations').post(hasBodyValues(['to'], 'all'))
-router.route('/:groupId/invitations').delete(hasQueryValues(['to'], 'all'))
+router.route('/:groupId').all(allowMethods(['GET', 'PUT', 'DELETE']))
+router.route('/:groupId').put(hasBodyValues(['name', 'lunchTime', 'voteEndingTime', 'utcOffset', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote'], 'atLeastOne'))
+router.route('/:groupId/invitations').all(allowMethods(['GET']))
+router.route('/:groupId/invitations/:username').all(allowMethods(['POST', 'DELETE']))
 router.route('/:groupId/members').all(allowMethods(['GET']))
 router.route('/:groupId/members/:username').all(allowMethods(['PUT', 'DELETE']))
-router.route('/:groupId/places').all(allowMethods(['GET', 'POST']))
-router.route('/:groupId/places').post(hasBodyValues(['foodType', 'name'], 'all'))
 
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	const values = req.body
@@ -35,7 +32,7 @@ router.route('/:groupId').get(asyncMiddleware(async (req, res, next) => {
 	res.send(await GroupController.getGroupById(groupId))
 }))
 
-router.route('/:groupId').post(asyncMiddleware(async (req, res, next) => {
+router.route('/:groupId').put(asyncMiddleware(async (req, res, next) => {
 	const { groupId } = req.params
 	const values = req.body
 	res.send(await GroupController.updateGroup(groupId, values))

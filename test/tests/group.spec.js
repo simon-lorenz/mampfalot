@@ -115,14 +115,14 @@ describe('Group', () => {
 			})
 		})
 
-		describe('POST', () => {
+		describe('PUT', () => {
 			beforeEach(async () => {
 				await setupDatabase()
 			})
 
 			it('fails with 404 if group doesn\'t exist', async () => {
 				await request
-					.post('/groups/99')
+					.put('/groups/99')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({ name: 'New name' })
 					.expect(404)
@@ -133,7 +133,7 @@ describe('Group', () => {
 
 			it('fails with 403 if the user is no group admin', async () => {
 				await request
-					.post('/groups/1')
+					.put('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send({ name: 'New name' })
 					.expect(403)
@@ -149,7 +149,7 @@ describe('Group', () => {
 
 			it('requires at least one parameter', async () => {
 				await request
-					.post('/groups/1')
+					.put('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send()
 					.expect(400)
@@ -160,7 +160,7 @@ describe('Group', () => {
 
 			it('fails if pointsPerDay less than maxPointsPerVote', async () => {
 				await request
-					.post('/groups/1')
+					.put('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({
 						pointsPerDay: 69,
@@ -179,7 +179,7 @@ describe('Group', () => {
 
 			it('fails if voteEndingTime is greater than lunchTime', async () => {
 				await request
-					.post('/groups/1')
+					.put('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({
 						voteEndingTime: '13:00:00',
@@ -198,7 +198,7 @@ describe('Group', () => {
 
 			it('fails if minPointsPerVote is greater than maxPointsPerVote', async () => {
 				await request
-					.post('/groups/1')
+					.put('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({
 						minPointsPerVote: 50,
@@ -217,7 +217,7 @@ describe('Group', () => {
 
 			it('fails if maxPointsPerVote is less than minPointsPerVote', async () => {
 				await request
-					.post('/groups/1')
+					.put('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({
 						minPointsPerVote: 30,
@@ -236,7 +236,7 @@ describe('Group', () => {
 
 			it('fails if maxPointsPerVote is greater than pointsPerDay', async () => {
 				await request
-					.post('/groups/1')
+					.put('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({
 						pointsPerDay: 30,
@@ -255,7 +255,7 @@ describe('Group', () => {
 
 			it('fails if minPointsPerVote is greater than pointsPerDay', async () => {
 				await request
-					.post('/groups/1')
+					.put('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({
 						minPointsPerVote: 101,
@@ -274,7 +274,7 @@ describe('Group', () => {
 
 			it('fails if utcOffset is greater than 720', async () => {
 				await request
-					.post('/groups/1')
+					.put('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({ utcOffset: 721 })
 					.expect(400)
@@ -290,7 +290,7 @@ describe('Group', () => {
 
 			it('fails if utcOffset is less than -720', async () => {
 				await request
-					.post('/groups/1')
+					.put('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({ utcOffset: -721 })
 					.expect(400)
@@ -306,7 +306,7 @@ describe('Group', () => {
 
 			it('fails if utcOffset is not a multiple of 60', async () => {
 				await request
-					.post('/groups/1')
+					.put('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({ utcOffset: 61 })
 					.expect(400)
@@ -332,7 +332,7 @@ describe('Group', () => {
 				}
 
 				await request
-					.post('/groups/1')
+					.put('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(data)
 					.expect(200)
@@ -345,7 +345,7 @@ describe('Group', () => {
 
 			it('converts string numbers into integers', async () => {
 				await request
-					.post('/groups/1')
+					.put('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({
 						name: 'New name',

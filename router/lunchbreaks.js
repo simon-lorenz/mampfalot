@@ -9,6 +9,7 @@ const CommentRouter = require('./comments')
 
 router.route('/').all(allowMethods(['GET', 'POST']))
 router.route('/').get(hasQueryValues(['from', 'to'], 'all'))
+router.route('/:date').all(allowMethods(['GET']))
 
 router.route('/').get(asyncMiddleware(async (req, res, next) => {
 	const { from, to } = req.query

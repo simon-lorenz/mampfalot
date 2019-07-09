@@ -348,30 +348,7 @@ paths:
         401:
           $ref: '#/components/responses/AuthenticationError'
 
-  /groups/{groupId}:
-
-    parameters:
-      - $ref: '#/components/parameters/groupId'
-
-    get:
-      tags:
-        - Group
-      security:
-        - bearerAuth: []
-      summary: Get a single group resource.
-      responses:
-        200:
-          description: Ok
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Group'
-        401:
-          $ref: '#/components/responses/AuthenticationError'
-        403:
-          $ref: '#/components/responses/AuthorizationError'
-        404:
-          $ref: '#/components/responses/NotFoundError'
+  /groups:
 
     post:
       tags:
@@ -398,6 +375,32 @@ paths:
           $ref: '#/components/responses/ClientError'
         401:
           $ref: '#/components/responses/AuthenticationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+
+  /groups/{groupId}:
+
+    parameters:
+      - $ref: '#/components/parameters/groupId'
+
+    get:
+      tags:
+        - Group
+      security:
+        - bearerAuth: []
+      summary: Get a single group resource.
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
         404:
           $ref: '#/components/responses/NotFoundError'
 
@@ -758,44 +761,44 @@ paths:
         404:
           $ref: '#/components/responses/NotFoundError'
 
-  /groups/{groupId}/lunchbreaks/{date}/absence:
+  # /groups/{groupId}/lunchbreaks/{date}/absence:
 
-    parameters:
-      - $ref: '#/components/parameters/groupId'
-      - $ref: '#/components/parameters/date'
+  #   parameters:
+  #     - $ref: '#/components/parameters/groupId'
+  #     - $ref: '#/components/parameters/date'
 
-    post:
-      tags:
-        - Participation
-      security:
-        - bearerAuth: []
-      summary: Mark the current user as absent.
-      description: If the user is already participating, this request will delete the participation!
-      responses:
-        204:
-          description: Ok
-        401:
-          $ref: '#/components/responses/AuthenticationError'
-        403:
-          $ref: '#/components/responses/AuthorizationError'
-        404:
-          $ref: '#/components/responses/NotFoundError'
+  #   post:
+  #     tags:
+  #       - Participation
+  #     security:
+  #       - bearerAuth: []
+  #     summary: Mark the current user as absent.
+  #     description: If the user is already participating, this request will delete the participation!
+  #     responses:
+  #       204:
+  #         description: Ok
+  #       401:
+  #         $ref: '#/components/responses/AuthenticationError'
+  #       403:
+  #         $ref: '#/components/responses/AuthorizationError'
+  #       404:
+  #         $ref: '#/components/responses/NotFoundError'
 
-    delete:
-      tags:
-        - Participation
-      security:
-        - bearerAuth: []
-      summary: Remove the absent flag for the current user.
-      responses:
-        204:
-          description: Ok
-        401:
-          $ref: '#/components/responses/AuthenticationError'
-        403:
-          $ref: '#/components/responses/AuthorizationError'
-        404:
-          $ref: '#/components/responses/NotFoundError'
+  #   delete:
+  #     tags:
+  #       - Participation
+  #     security:
+  #       - bearerAuth: []
+  #     summary: Remove the absent flag for the current user.
+  #     responses:
+  #       204:
+  #         description: Ok
+  #       401:
+  #         $ref: '#/components/responses/AuthenticationError'
+  #       403:
+  #         $ref: '#/components/responses/AuthorizationError'
+  #       404:
+  #         $ref: '#/components/responses/NotFoundError'
 
   /groups/{groupId}/lunchbreaks/{date}/participation:
 
