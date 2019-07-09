@@ -31,7 +31,35 @@ module.exports = (sequelize, DataTypes) => {
 		resultId: {
 			type: DataTypes.INTEGER,
 			allowNull: true,
-			onDelete: 'SET NULL'
+			onDelete: 'SET NULL',
+			validate: {
+				async belongsToGroup () {
+					if (this.resultId === null) return
+
+					const { Group, Lunchbreak, Place } = sequelize.models
+
+					const group = await Group.findOne({
+						attributes: ['id'],
+						include: [
+							{
+								model: Lunchbreak,
+								where: {
+									id: this.lunchbreakId
+								}
+							},
+							{
+								model: Place,
+								where: {
+									id: this.resultId
+								}
+							}
+						]
+					})
+
+					if (!group)
+						throw new Error('This place does not belong to the associated group.')
+				}
+			}
 		},
 		amountSpent: {
 			type: DataTypes.DECIMAL(10, 2),
@@ -48,11 +76,6 @@ module.exports = (sequelize, DataTypes) => {
 			singular: 'participant',
 			plural: 'participants'
 		}
-	})
-
-	Participant.beforeCreate(async (instance) => {
-		if (await voteEndingTimeReached(instance.lunchbreakId))
-			throw new RequestError('The end of voting has been reached, therefore you cannot participate anymore.')
 	})
 
 	Participant.beforeDestroy(async (instance) => {

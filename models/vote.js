@@ -67,8 +67,8 @@ module.exports = (sequelize, DataTypes) => {
 				notNull: {
 					msg: 'Points cannot be null.'
 				},
-				isNumeric: {
-					msg: 'Points has to be numeric.'
+				isInt: {
+					msg: 'Points must be an integer.'
 				}
 			}
 		}
@@ -151,7 +151,7 @@ module.exports = (sequelize, DataTypes) => {
 				const item = {
 					field: 'placeId',
 					value: placeIds[i],
-					message: 'Two votes had the same placeId.'
+					message: 'Votes must have different places.'
 				}
 				throw new ValidationError([item])
 			}

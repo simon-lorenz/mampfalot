@@ -83,7 +83,7 @@ describe('Participation', () => {
 							place: testData.getPlace(1)
 						}
 					],
-					result: 2,
+					result: testData.getPlace(2),
 					amountSpent: 12
 				}
 
@@ -147,21 +147,21 @@ describe('Participation', () => {
 				payload.result = null
 				payload.amountSpent = null
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-25/participation')
+					.post('/groups/1/lunchbreaks/2018-06-26/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(payload)
 					.expect(201)
 					.expect(res => {
 						const participation = res.body
-						participation.result.should.be.eql(null)
-						participation.amountSpent.should.be.eql(null)
+						participation.should.have.property('result').which.is.eql(null)
+						participation.should.have.property('amountSpent').which.is.eql(null)
 					})
 			})
 
 			it('accepts a empty array of votes', async () => {
 				payload.votes = []
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-25/participation')
+					.post('/groups/1/lunchbreaks/2018-06-26/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(payload)
 					.expect(201)
@@ -171,23 +171,238 @@ describe('Participation', () => {
 					})
 			})
 
-			it('fails if the result place id does not belong to the group')
+			it('fails if the result place id does not belong to the group', async () => {
+				testServer.start(5001, '11:24:59', '26.06.2018')
 
-			it('fails if not all votes have the required properties')
+				payload.result = testData.getPlace(5)
 
-			it('fails if two votes share the same place name')
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(400)
+					.expect(res => {
+						const expected = {
+							field: 'resultId',
+							value: payload.result.id,
+							message: 'This place does not belong to the associated group.'
+						}
+						errorHelper.checkValidationError(res.body, expected)
+					})
+			})
 
-			it('fails if at least one vote has more points than maxPointsPerVote')
+			it('fails if not all votes have a place specified', async () => {
+				testServer.start(5001, '11:24:59', '26.06.2018')
 
-			it('fails if at least one vote has less points than minPointsPerVote')
+				payload.votes.push({ points: 30 })
 
-			it('fails if at least one vote contains a place name, that does not exist for this group')
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(400)
+					.expect(res => {
+						const expected = {
+							field: 'placeId',
+							value: null,
+							message: 'placeId cannot be null.'
+						}
+						errorHelper.checkValidationError(res.body, expected)
+					})
+			})
 
-			it('fails if the sum of points is greater than maxPointsPerDay')
+			it('fails if not all votes have points specified', async () => {
+				testServer.start(5001, '11:24:59', '26.06.2018')
 
-			it('fails if points are not a number')
+				payload.votes.push({ place: testData.getPlace(2) })
 
-			it('overrides a previous participation')
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(400)
+					.expect(res => {
+						const expected = {
+							field: 'points',
+							value: null,
+							message: 'Points cannot be null.'
+						}
+						errorHelper.checkValidationError(res.body, expected)
+					})
+			})
+
+			it('fails if two votes share the same place name', async () => {
+				testServer.start(5001, '11:24:59', '26.06.2018')
+
+				payload.votes.push({ points: 30, place: testData.getPlace(1) })
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(400)
+					.expect(res => {
+						const expected = {
+							field: 'placeId',
+							value: payload.votes[0].place.id,
+							message: 'Votes must have different places.'
+						}
+						errorHelper.checkValidationError(res.body, expected)
+
+					})
+			})
+
+			it('fails if at least one vote has more points than maxPointsPerVote', async () => {
+				testServer.start(5001, '11:24:59', '26.06.2018')
+
+				payload.votes[0].points = 71
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(400)
+					.expect(res => {
+						const expected = {
+							field: 'points',
+							value: payload.votes[0].points,
+							message: 'Points exceeds maxPointsPerVote (70).'
+						}
+						errorHelper.checkValidationError(res.body, expected)
+
+					})
+			})
+
+			it('fails if at least one vote has less points than minPointsPerVote', async () => {
+				testServer.start(5001, '11:24:59', '26.06.2018')
+
+				payload.votes[0].points = 29
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(400)
+					.expect(res => {
+						const expected = {
+							field: 'points',
+							value: payload.votes[0].points,
+							message: 'Points deceeds minPointsPerVote (30).'
+						}
+						errorHelper.checkValidationError(res.body, expected)
+
+					})
+			})
+
+			it('fails if at least one vote contains a place name, that does not exist for this group', async () => {
+				testServer.start(5001, '11:24:59', '26.06.2018')
+
+				payload.votes.push({ points: 30, place: testData.getPlace(5) })
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(400)
+					.expect(res => {
+						const expected = {
+							field: 'placeId',
+							value: payload.votes[1].place.id,
+							message: 'This placeId does not belong to the associated group.'
+						}
+						errorHelper.checkValidationError(res.body, expected)
+
+					})
+			})
+
+			it('fails if the sum of points is greater than pointsPerDay', async () => {
+				testServer.start(5001, '11:24:59', '26.06.2018')
+
+				payload.votes.push({ points: 70, place: testData.getPlace(2) })
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(400)
+					.expect(res => {
+						const expected = {
+							field: 'points',
+							value: payload.votes[0].points + payload.votes[1].points,
+							message: 'Sum of points exceeds pointsPerDay (100).'
+						}
+						errorHelper.checkValidationError(res.body, expected)
+
+					})
+			})
+
+			it('fails if points are not a number', async () => {
+				testServer.start(5001, '11:24:59', '26.06.2018')
+
+				payload.votes[0].points = 'abc'
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(400)
+					.expect(res => {
+						const expected = {
+							field: 'points',
+							value: payload.votes[0].points,
+							message: 'Points must be an integer.'
+						}
+						errorHelper.checkValidationError(res.body, expected)
+
+					})
+			})
+
+			it('fails if points are float', async () => {
+				testServer.start(5001, '11:24:59', '26.06.2018')
+
+				payload.votes[0].points = 30.5
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(400)
+					.expect(res => {
+						const expected = {
+							field: 'points',
+							value: payload.votes[0].points,
+							message: 'Points must be an integer.'
+						}
+						errorHelper.checkValidationError(res.body, expected)
+
+					})
+			})
+
+			it('overrides a previous participation', async () => {
+				testServer.start(5001, '11:24:59', '25.06.2018')
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-25/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(201)
+					.expect(res => {
+						const participation = res.body
+						participation.should.have.all.keys(testData.getParticipationKeys())
+						participation.result.should.be.deep.eql(testData.getPlace(payload.result.id))
+						participation.amountSpent.should.be.eql(payload.amountSpent)
+					})
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-06-25')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.expect(200)
+					.expect(res => {
+						const participants = res.body.participants
+						if (participants.find(participant => participant.member.username === 'johndoe1') === undefined)
+							throw new Error('The participation was not created.')
+					})
+			})
 
 			it('successfully creates a participation', async () => {
 				testServer.start(5001, '11:24:59', '26.06.2018')
@@ -198,16 +413,14 @@ describe('Participation', () => {
 					.send(payload)
 					.expect(201)
 					.expect(res => {
-						console.log(res.body)
 						const participation = res.body
 						participation.should.have.all.keys(testData.getParticipationKeys())
-						participation.votes.should.be.deep.eql(payload.votes)
-						participation.result.should.be.deep.eql(testData.getPlace(payload.result))
+						participation.result.should.be.deep.eql(testData.getPlace(payload.result.id))
 						participation.amountSpent.should.be.eql(payload.amountSpent)
 					})
 
 				await request
-					.get('/groups/1/lunchbreaks/2018-06-25')
+					.get('/groups/1/lunchbreaks/2018-06-26')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.expect(200)
 					.expect(res => {

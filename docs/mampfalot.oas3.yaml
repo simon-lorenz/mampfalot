@@ -1255,8 +1255,17 @@ components:
             $ref: '#/components/schemas/Vote'
         result:
           nullable: true
-          allOf:
-          - $ref: '#/components/schemas/Place'
+          type: object
+          properties:
+            id:
+              type: number
+              example: 12
+            name:
+              type: string
+              example: 'VIP Döner'
+            foodType:
+              type: string
+              example: 'Döner'
         amountSpent:
           type: number
           format: currency

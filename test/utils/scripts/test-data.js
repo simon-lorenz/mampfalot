@@ -352,6 +352,9 @@ module.exports = {
 			}
 		})
 	},
+	getParticipationKeys: function() {
+		return Object.keys(this.getParticipationsOf('maxmustermann', 1)[0])
+	},
 	getParticipants: function(lunchbreakId) {
 		const participants = this.participants.filter(participant => participant.lunchbreakId === lunchbreakId)
 		return participants.map(participant => this.getParticipant(participant.memberId, participant.lunchbreakId))
