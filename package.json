@@ -37,7 +37,7 @@
     "morgan": "^1.9.1",
     "nodemailer": "^4.6.8",
     "pg": "^6.0.0",
-    "sequelize": "^5.3.1"
+    "sequelize": "^5.9.0"
   },
   "devDependencies": {
     "chai": "^4.1.2",
