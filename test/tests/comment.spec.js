@@ -208,7 +208,7 @@ describe('Comment', () => {
 
 			it('fails if comment does not exist', async () => {
 				await request
-					.delete('/comments/99')
+					.delete('/groups/1/lunchbreaks/2018-06-25/comments/99')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(404)
 					.expect(res => {

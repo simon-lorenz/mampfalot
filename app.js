@@ -77,21 +77,12 @@ app.get('/api', (req, res) => {
 const router = {
 	authenticate: require('./router/authenticate'),
 	groups: require('./router/groups'),
-	places: require('./router/places'),
-	users: require('./router/users'),
-	votes: require('./router/votes'),
-	lunchbreaks: require('./router/lunchbreaks'),
-	comments: require('./router/comments')
+	users: require('./router/users')
 }
 
 app.use('/api/authenticate', router.authenticate)
 app.use('/api/users', router.users)
-
 app.use('/api/groups', [asyncMiddleware(user.init)], router.groups)
-app.use('/api/places', [asyncMiddleware(user.init)], router.places)
-app.use('/api/votes', [asyncMiddleware(user.init)], router.votes)
-app.use('/api/lunchbreaks', [asyncMiddleware(user.init)], router.lunchbreaks)
-app.use('/api/comments', [asyncMiddleware(user.init)], router.comments)
 
 // Handle request errors
 app.use((err, req, res, next) => {
