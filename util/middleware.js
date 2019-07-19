@@ -1,7 +1,7 @@
 'use strict'
 
-const jwt = require('jsonwebtoken')
-const { AuthenticationError, RequestError, MethodNotAllowedError } = require('../classes/errors')
+const { RequestError, MethodNotAllowedError } = require('../classes/errors')
+const { verifyToken, getTokenFromAuthorizationHeader } = require('./authentication')
 const User = require('../classes/user')
 const CommentController = require('../controllers/comment-controller')
 const GroupController = require('../controllers/group-controller')
@@ -11,34 +11,6 @@ const LunchbreakController = require('../controllers/lunchbreak-controller')
 const ParticipationController = require('../controllers/participation-controller')
 const PlaceController = require('../controllers/place-controller')
 const UserController = require('../controllers/user-controller')
-
-/**
- * Returns the jwt from the authorization header of a request.
- * If the request contains no authorization header, this function will throw an AuthenticationError.
- * @param {string} request
- * @return {string} A jwt
- * @throws  {AuthenticationError}
- */
-function getTokenFromAuthorizationHeader(request) {
-	const authorizationHeader = request.headers['authorization']
-	if (authorizationHeader)
-		return authorizationHeader.split(' ')[1]
-	else
-		throw new AuthenticationError('This request requires authentication.')
-}
-
-/**
- * Verifies a jwt and returns the content.
- * @param {string} token A jwt
- * @returns {object}
- */
-function verifyToken(token) {
-	try {
-		return jwt.verify(token, process.env.SECRET_KEY)
-	} catch (error) {
-		throw new AuthenticationError('The provided token is invalid.')
-	}
-}
 
 module.exports = {
 	/**
