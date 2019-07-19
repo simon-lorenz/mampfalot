@@ -4,20 +4,12 @@ const ResourceAccessControl = require('../classes/resource-access-control')
 const UserModel = require('../models').User
 const GroupModel = require('../models').Group
 const { AuthenticationError } = require('./errors')
-const jwt = require('jsonwebtoken')
 
 class User {
 
 	constructor() {
 		this.can = new ResourceAccessControl(this)
 		this.groups = []
-
-		this.init = async (req, res, next) => {
-			const token = this.getTokenFromAuthorizationHeader(req)
-			const payload = this.verifyToken(token)
-			await this.setId(payload.id)
-			next()
-		}
 	}
 
 	async setId(id) {
@@ -28,34 +20,6 @@ class User {
 		this.id = me.id
 		this.username = me.username
 		await this.loadGroups()
-	}
-
-	/**
-	 * Returns the jwt from the authorization header of a request.
-	 * If the request contains no authorization header, this function will throw an AuthenticationError.
-	 * @param {string} request
-	 * @return {string} A jwt
-	 * @throws  {AuthenticationError}
-	 */
-	getTokenFromAuthorizationHeader(request) {
-		const authorizationHeader = request.headers['authorization']
-		if (authorizationHeader)
-			return authorizationHeader.split(' ')[1]
-		else
-			throw new AuthenticationError('This request requires authentication.')
-	}
-
-	/**
-	 * Verifies a jwt and returns the content.
-	 * @param {string} token A jwt
-	 * @returns {object}
-	 */
-	verifyToken(token) {
-		try {
-			return jwt.verify(token, process.env.SECRET_KEY)
-		} catch (error) {
-			throw new AuthenticationError('The provided token is invalid.')
-		}
 	}
 
 	async loadGroups() {
@@ -102,4 +66,4 @@ class User {
 
 }
 
-module.exports = new User()
+module.exports = User

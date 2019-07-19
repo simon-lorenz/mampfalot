@@ -2,20 +2,23 @@
 
 const { Group, GroupMembers, Place, User } = require('../models')
 const ResourceLoader = require('../classes/resource-loader')
-const user = require('../classes/user')
 const { AuthorizationError } = require('../classes/errors')
 const { Op } = require('sequelize')
 
 class GroupController {
 
+	constructor(user) {
+		this.user = user
+	}
+
 	async getGroupById(id) {
 		const group = await ResourceLoader.loadGroupById(id)
-		await user.can.readGroup(group)
+		await this.user.can.readGroup(group)
 		return group
 	}
 
 	async getGroupsByUser(userId) {
-		if (user.id !== userId)
+		if (this.user.id !== userId)
 			throw new AuthorizationError('GroupCollection', null, 'READ')
 
 		// The problem here is to find all groups of which our user is a member of and
@@ -71,7 +74,7 @@ class GroupController {
 
 		await GroupMembers.create({
 			groupId: newGroup.id,
-			userId: user.id,
+			userId: this.user.id,
 			isAdmin: true
 		})
 
@@ -81,7 +84,7 @@ class GroupController {
 	async updateGroup(id, values) {
 		const group = await this.getGroupById(id)
 
-		await user.can.updateGroup(group)
+		await this.user.can.updateGroup(group)
 
 		await group.update({
 			name: values.name,
@@ -98,10 +101,10 @@ class GroupController {
 
 	async deleteGroup(id) {
 		const group = await this.getGroupById(id)
-		await user.can.deleteGroup(group)
+		await this.user.can.deleteGroup(group)
 		await group.destroy()
 	}
 
 }
 
-module.exports = new GroupController()
+module.exports = GroupController

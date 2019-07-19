@@ -1,9 +1,12 @@
 'use strict'
 
-const user = require('../classes/user')
 const { Place } = require('../models')
 
 class PlaceController {
+
+	constructor(user) {
+		this.user = user
+	}
 
 	async createPlace(groupId, values) {
 		const place = Place.build({
@@ -11,7 +14,7 @@ class PlaceController {
 			foodType: values.foodType,
 			name: values.name
 		})
-		await user.can.createPlace(place)
+		await this.user.can.createPlace(place)
 		await place.save()
 		return {
 			id: place.id,
@@ -22,7 +25,7 @@ class PlaceController {
 
 	async updatePlace(id, values) {
 		const place = await Place.findByPk(id)
-		await user.can.updatePlace(place)
+		await this.user.can.updatePlace(place)
 		place.foodType = values.foodType,
 		place.name = values.name
 		await place.save()
@@ -35,10 +38,10 @@ class PlaceController {
 
 	async deletePlace(id) {
 		const place = await Place.findByPk(id)
-		await user.can.deletePlace(place)
+		await this.user.can.deletePlace(place)
 		await place.destroy()
 	}
 
 }
 
-module.exports = new PlaceController
+module.exports = PlaceController

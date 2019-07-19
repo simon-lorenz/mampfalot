@@ -2,9 +2,12 @@
 
 const { Comment, Lunchbreak, GroupMembers, User } = require('../models')
 const { NotFoundError } = require('../classes/errors')
-const user = require('../classes/user')
 
 class CommentController {
+
+	constructor(user) {
+		this.user = user
+	}
 
 	async loadComment(id) {
 		const comment = await Comment.findByPk(id, {
@@ -45,7 +48,7 @@ class CommentController {
 
 	async getComment(id) {
 		const comment = await this.loadComment(id)
-		await user.can.readComment(comment)
+		await this.user.can.readComment(comment)
 		return this.formatComment(comment)
 	}
 
@@ -62,7 +65,7 @@ class CommentController {
 			attributes: ['id'],
 			where: {
 				groupId,
-				userId: user.id
+				userId: this.user.id
 			}
 		})
 
@@ -72,7 +75,7 @@ class CommentController {
 			text: values.text
 		})
 
-		await user.can.createComment(comment)
+		await this.user.can.createComment(comment)
 
 		const { id } = await comment.save()
 
@@ -81,7 +84,7 @@ class CommentController {
 
 	async updateComment(commentId, values) {
 		const comment = await this.loadComment(commentId)
-		await user.can.updateComment(this.formatComment(comment))
+		await this.user.can.updateComment(this.formatComment(comment))
 		comment.text = values.text
 		await comment.save()
 		return await this.getComment(commentId)
@@ -89,10 +92,10 @@ class CommentController {
 
 	async deleteComment(commentId) {
 		const comment = await this.loadComment(commentId)
-		await user.can.deleteComment(this.formatComment(comment))
+		await this.user.can.deleteComment(this.formatComment(comment))
 		await comment.destroy()
 	}
 
 }
 
-module.exports = new CommentController()
+module.exports = CommentController

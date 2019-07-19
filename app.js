@@ -9,7 +9,7 @@ const helmet = require('helmet')
 const morgan = require('morgan')
 const Promise = require('bluebird')
 const { asyncMiddleware } = require('./util/util')
-const user = require('./classes/user')
+const { initializeControllers, initializeUser } = require('./util/middleware')
 const { AuthenticationError, AuthorizationError, NotFoundError } = require('./classes/errors')
 const { MethodNotAllowedError, ValidationError, RequestError, ServerError } = require('./classes/errors')
 
@@ -82,7 +82,7 @@ const router = {
 
 app.use('/api/authenticate', router.authenticate)
 app.use('/api/users', router.users)
-app.use('/api/groups', [asyncMiddleware(user.init)], router.groups)
+app.use('/api/groups', [asyncMiddleware(initializeUser), initializeControllers], router.groups)
 
 // Handle request errors
 app.use((err, req, res, next) => {

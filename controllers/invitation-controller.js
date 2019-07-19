@@ -1,6 +1,5 @@
 'use strict'
 
-const user = require('../classes/user')
 const { Invitation, User, Group, Place, GroupMembers } = require('../models')
 const GroupController = require('./group-controller')
 const Sequelize = require('sequelize')
@@ -9,9 +8,14 @@ const ResourceLoader = require('../classes/resource-loader')
 
 class InvitationController {
 
+	constructor(user) {
+		this.user = user
+	}
+
 	async getInvitations(groupId) {
-		const group = await GroupController.getGroupById(groupId)
-		await user.can.readInvitationCollection(group)
+		const groupController = new GroupController(this.user)
+		const group = await groupController.getGroupById(groupId)
+		await this.user.can.readInvitationCollection(group)
 
 		const invitations = await Invitation.findAll({
 			attributes: [],
@@ -71,7 +75,7 @@ class InvitationController {
 		return await Invitation.findAll({
 			attributes: [],
 			where: {
-				toId: user.id
+				toId: this.user.id
 			},
 			include: [
 				{
@@ -119,11 +123,11 @@ class InvitationController {
 
 		const invitation = await Invitation.build({
 			groupId: id,
-			fromId: user.id,
+			fromId: this.user.id,
 			toId: invitedUser.id
 		})
 
-		await user.can.createInvitation(invitation)
+		await this.user.can.createInvitation(invitation)
 
 		try {
 			await invitation.save()
@@ -167,7 +171,7 @@ class InvitationController {
 		if (!invitation)
 			throw new NotFoundError('Invitation')
 
-		await user.can.deleteInvitation(invitation)
+		await this.user.can.deleteInvitation(invitation)
 		await invitation.destroy()
 	}
 
@@ -206,4 +210,4 @@ class InvitationController {
 	}
 }
 
-module.exports = new InvitationController()
+module.exports = InvitationController

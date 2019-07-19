@@ -1,10 +1,14 @@
 'use strict'
 
-const user = require('../classes/user')
 const { GroupMembers } = require('../models')
 const ResourceLoader = require('../classes/resource-loader')
 
 class GroupMemberController {
+
+	constructor(user) {
+		this.user = user
+	}
+
 	async removeMember(groupId, username) {
 		const member = await GroupMembers.findOne({
 			where: {
@@ -13,7 +17,7 @@ class GroupMemberController {
 			}
 		})
 
-		await user.can.deleteGroupMember(member, username)
+		await this.user.can.deleteGroupMember(member, username)
 		await member.destroy()
 	}
 
@@ -31,7 +35,7 @@ class GroupMemberController {
 		if (values.color !== undefined)
 			member.color = values.color
 
-		await user.can.updateGroupMember(member, username)
+		await this.user.can.updateGroupMember(member, username)
 
 		await member.save()
 
@@ -40,4 +44,4 @@ class GroupMemberController {
 
 }
 
-module.exports = new GroupMemberController()
+module.exports = GroupMemberController

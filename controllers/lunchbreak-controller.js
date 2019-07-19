@@ -1,11 +1,14 @@
 'use strict'
 
 const ResourceLoader = require('../classes/resource-loader')
-const user = require('../classes/user')
 const { Lunchbreak } = require('../models')
 const { RequestError } = require('../classes/errors')
 
 class LunchbreakController {
+
+	constructor(user) {
+		this.user = user
+	}
 
 	convertComment(comment) {
 		function getAuthor(comment) {
@@ -97,7 +100,7 @@ class LunchbreakController {
 			return lunchbreak.participants.find(p => p.member.username === member.username) === undefined
 		})
 
-		await user.can.readLunchbreak(lunchbreak)
+		await this.user.can.readLunchbreak(lunchbreak)
 
 		delete lunchbreak.groupId
 
@@ -107,11 +110,11 @@ class LunchbreakController {
 	async createLunchbreak(groupId) {
 		const today = new Date().toISOString().substring(0, 10)
 		const lunchbreak = await Lunchbreak.build({ groupId, date: today })
-		await user.can.createLunchbreak(lunchbreak)
+		await this.user.can.createLunchbreak(lunchbreak)
 		await lunchbreak.save()
 		return await this.getLunchbreak(groupId, today)
 	}
 
 }
 
-module.exports = new LunchbreakController()
+module.exports = LunchbreakController

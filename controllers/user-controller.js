@@ -1,6 +1,5 @@
 'use strict'
 
-const user = require('../classes/user')
 const { AuthorizationError, AuthenticationError, RequestError, NotFoundError } = require('../classes/errors')
 const ResourceLoader = require('../classes/resource-loader')
 const { User } = require('../models')
@@ -11,15 +10,19 @@ const { Op } = require('sequelize')
 
 class UserController {
 
+	constructor(user) {
+		this.user = user
+	}
+
 	async getUser(userId) {
-		if (userId !== user.id)
+		if (userId !== this.user.id)
 			throw new AuthorizationError('User', userId, 'READ')
 
 		return await ResourceLoader.loadUserWithEmail(userId)
 	}
 
-	async createUser(values) {
-		// Is this email already known?
+	static async createUser(values) {
+		// Is this email already known?W
 		const existingUser = await User.findOne({
 			attributes: ['id', 'email', 'username', 'firstName', 'verified'],
 			where: {
@@ -56,14 +59,14 @@ class UserController {
 	}
 
 	async deleteUser(userId) {
-		if (userId !== user.id)
+		if (userId !== this.user.id)
 			throw new AuthorizationError('User', userId, 'DELETE')
 
 		await User.destroy({ where: { id: userId } })
 	}
 
 	async updateUser(userId, values) {
-		if (userId !== user.id)
+		if (userId !== this.user.id)
 			throw new AuthorizationError('User', userId, 'UPDATE')
 
 		const userResource = await User.findOne({
@@ -101,7 +104,7 @@ class UserController {
 		return await ResourceLoader.loadUserWithEmail(userId)
 	}
 
-	async initializeVerificationProcess(username) {
+	static async initializeVerificationProcess(username) {
 		const user = await User.findOne({
 			attributes: ['id', 'username', 'firstName', 'lastName', 'email', 'verificationToken', 'verified'],
 			where: {
@@ -123,7 +126,7 @@ class UserController {
 		await mailer.sendWelcomeMail(user.email, user.username, verificationToken, user.firstName)
 	}
 
-	async finalizeVerificationProcess(username, token) {
+	static async finalizeVerificationProcess(username, token) {
 		const user = await User.findOne({
 			attributes: ['id', 'verificationToken', 'verified'],
 			where: {
@@ -149,7 +152,7 @@ class UserController {
 		await user.save()
 	}
 
-	async initializePasswordResetProcess(username) {
+	static async initializePasswordResetProcess(username) {
 		const user = await User.findOne({ where: { username } })
 
 		if (!user)
@@ -167,7 +170,7 @@ class UserController {
 		await mailer.sendPasswordResetMail(user.email, user.username, token, user.firstName)
 	}
 
-	async finalizePasswordResetProcess(username, token, newPassword) {
+	static async finalizePasswordResetProcess(username, token, newPassword) {
 		const user = await User.unscoped().findOne({
 			where: {
 				username: username,
@@ -192,7 +195,7 @@ class UserController {
 		await user.save()
 	}
 
-	async initializeUsernameReminderProcess(email) {
+	static async initializeUsernameReminderProcess(email) {
 		const user = await User.findOne({
 			attributes: ['email', 'username', 'firstName'],
 			where: { email }
@@ -213,5 +216,5 @@ class UserController {
 	}
 }
 
-module.exports = new UserController()
+module.exports = UserController
 

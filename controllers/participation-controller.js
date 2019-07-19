@@ -1,6 +1,5 @@
 'use strict'
 
-const user = require('../classes/user')
 const { Participant, GroupMembers, Lunchbreak, Vote, Place } = require('../models')
 const { NotFoundError, RequestError, AuthorizationError } = require('../classes/errors')
 const { Op } = require('sequelize')
@@ -97,8 +96,12 @@ class ParticipationLoader {
 
 class ParticipationController {
 
+	constructor(user) {
+		this.user = user
+	}
+
 	async deleteParticipation(groupId, date) {
-		const participation = await ParticipationLoader.loadParticipation(groupId, date, user.id)
+		const participation = await ParticipationLoader.loadParticipation(groupId, date, this.user.id)
 		await participation.destroy()
 	}
 
@@ -112,7 +115,7 @@ class ParticipationController {
 		if (from.getFullYear() !== to.getFullYear())
 			throw new RequestError('The query values from and to have to be in the same year.')
 
-		const participations = await ParticipationLoader.loadParticipations(groupId, from, to, user.id)
+		const participations = await ParticipationLoader.loadParticipations(groupId, from, to, this.user.id)
 		return participations.map(participation => {
 			participation = participation.toJSON()
 			participation.date = participation.lunchbreak.date
@@ -136,7 +139,7 @@ class ParticipationController {
 			attributes: ['id'],
 			where: {
 				groupId,
-				userId: user.id
+				userId: this.user.id
 			}
 		})
 
@@ -146,7 +149,7 @@ class ParticipationController {
 		let participation
 
 		try {
-			participation = await ParticipationLoader.loadParticipation(groupId, date, user.id)
+			participation = await ParticipationLoader.loadParticipation(groupId, date, this.user.id)
 			participation.resultId = values.result ? values.result.id : null
 			participation.amountSpent = values.amountSpent
 		} catch (error) {
@@ -171,7 +174,7 @@ class ParticipationController {
 
 		await Vote.bulkCreate(values.votes, { validate: true })
 
-		let result = await ParticipationLoader.loadParticipation(groupId, date, user.id)
+		let result = await ParticipationLoader.loadParticipation(groupId, date, this.user.id)
 
 		result = result.toJSON()
 		result.date = result.lunchbreak.date
@@ -185,4 +188,4 @@ class ParticipationController {
 
 }
 
-module.exports = new ParticipationController()
+module.exports = ParticipationController

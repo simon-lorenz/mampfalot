@@ -3,7 +3,6 @@
 const router = require('express').Router({ mergeParams: true })
 const { allowMethods, hasQueryValues } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
-const LunchbreakController = require('../controllers/lunchbreak-controller')
 const ParticipationRouter = require('./participation')
 const CommentRouter = require('./comments')
 
@@ -14,53 +13,23 @@ router.route('/:date').all(allowMethods(['GET']))
 router.route('/').get(asyncMiddleware(async (req, res, next) => {
 	const { from, to } = req.query
 	const { groupId } = req.params
+	const { LunchbreakController } = res.locals.controllers
 	res.send(await LunchbreakController.getLunchbreaks(groupId, from, to))
 }))
 
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
 	const { groupId, date } = req.params
+	const { LunchbreakController } = res.locals.controllers
 	res.status(201).send(await LunchbreakController.createLunchbreak(groupId, date))
 }))
 
 router.route('/:date').get(asyncMiddleware(async (req, res, next) => {
 	const { groupId, date } = req.params
+	const { LunchbreakController } = res.locals.controllers
 	res.send(await LunchbreakController.getLunchbreak(groupId, date))
 }))
 
 router.use('/:date/participation', ParticipationRouter)
 router.use('/:date/comments', CommentRouter)
-
-
-// router.route('/:lunchbreakId').all(allowMethods(['GET']))
-// router.route('/:lunchbreakId/participants').all(allowMethods(['GET', 'POST']))
-
-// router.param('lunchbreakId', asyncMiddleware(loader.loadLunchbreak))
-
-// router.route('/:lunchbreakId').get(asyncMiddleware(async (req, res, next) => {
-// 	const { lunchbreak } = res.locals
-// 	await user.can.readLunchbreak(lunchbreak)
-// 	res.send(res.locals.lunchbreak)
-// }))
-
-// router.route('/:lunchbreakId/comments').get(asyncMiddleware(async (req, res, next) => {
-// 	const { lunchbreak } = res.locals
-// 	await user.can.readLunchbreak(lunchbreak)
-// 	res.send(lunchbreak.comments)
-// }))
-
-// router.route('/:lunchbreakId/participants').get((req, res, next) => {
-// 	res.send(res.locals.lunchbreak.participants)
-// })
-
-// router.route('/:lunchbreakId/participants').post(asyncMiddleware(async (req, res, next) => {
-// 	const participant = Participant.build({
-// 		userId: user.id,
-// 		lunchbreakId: parseInt(req.params.lunchbreakId)
-// 	})
-
-// 	await user.can.createParticipant(participant)
-
-// 	res.send(await participant.save())
-// }))
 
 module.exports = router
