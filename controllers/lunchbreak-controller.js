@@ -53,7 +53,10 @@ class LunchbreakController {
 
 		return {
 			member: getMember(participant),
-			votes: participant.votes
+			votes: participant.votes.map(vote => {
+				delete vote.id
+				return vote
+			})
 		}
 	}
 

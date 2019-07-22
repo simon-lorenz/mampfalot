@@ -1325,10 +1325,6 @@ components:
     Vote:
       type: object
       properties:
-        id:
-          type: integer
-          readOnly: true
-          example: 15
         points:
           type: integer
           example: 70

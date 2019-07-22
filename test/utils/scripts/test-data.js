@@ -310,7 +310,6 @@ module.exports = {
 	getVote: function(voteId) {
 		const vote = this.votes.find(vote => vote.id === voteId)
 		return {
-			id: vote.id,
 			points: vote.points,
 			place: this.getPlace(vote.placeId)
 		}

@@ -118,9 +118,15 @@ class ParticipationController {
 		const participations = await ParticipationLoader.loadParticipations(groupId, from, to, this.user.id)
 		return participations.map(participation => {
 			participation = participation.toJSON()
-			participation.date = participation.lunchbreak.date
-			delete participation.lunchbreak
-			return participation
+			return {
+				date: participation.lunchbreak.date,
+				result: participation.result,
+				amountSpent: participation.amountSpent,
+				votes: participation.votes.map(vote => {
+					delete vote.id
+					return vote
+				})
+			}
 		})
 	}
 
