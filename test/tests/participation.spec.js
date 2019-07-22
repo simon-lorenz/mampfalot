@@ -383,7 +383,7 @@ describe('Participation', () => {
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-25/participation')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(payload)
 					.expect(201)
 					.expect(res => {
@@ -391,11 +391,12 @@ describe('Participation', () => {
 						participation.should.have.all.keys(testData.getParticipationKeys())
 						participation.result.should.be.deep.eql(testData.getPlace(payload.result.id))
 						participation.amountSpent.should.be.eql(payload.amountSpent)
+						participation.votes.should.be.deep.eql(payload.votes)
 					})
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-25')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(200)
 					.expect(res => {
 						const participants = res.body.participants

@@ -178,6 +178,10 @@ class ParticipationController {
 
 		result = result.toJSON()
 		result.date = result.lunchbreak.date
+		result.votes.map(vote => {
+			delete vote.id
+			return vote
+		})
 		delete result.lunchbreak
 		delete result.id
 		delete result.lunchbreakId

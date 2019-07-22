@@ -156,6 +156,12 @@ module.exports = (sequelize, DataTypes) => {
 				throw new ValidationError([item])
 			}
 		}
+
+		await Vote.destroy({
+			where: {
+				participantId: participantId
+			}
+		})
 	})
 
 	Vote.associate = function(models) {
