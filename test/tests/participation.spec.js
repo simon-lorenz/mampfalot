@@ -135,6 +135,43 @@ describe('Participation', () => {
 					.expect(404)
 			})
 
+			it('does not delete older votes if voteEndingTime is reached', async () => {
+				testServer.start(5001, '11:24:59', '01.07.2018')
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(201)
+
+				const votes = await request
+					.get('/groups/1/lunchbreaks/2018-07-01')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.expect(200)
+					.then(res => {
+						const participant = res.body.participants.find(p => p.member.username === 'johndoe1')
+						return participant.votes
+					})
+
+				testServer.start(5001, '11:25:01', '01.07.2018')
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send({ amountSpent: null, result: null, votes: [] })
+					.expect(400)
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-07-01')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.expect(200)
+					.then(res => {
+						const participant = res.body.participants.find(p => p.member.username === 'johndoe1')
+						participant.votes.should.be.deep.eql(votes)
+					})
+
+			})
+
 			it('fails if the date lies in the past', async () => {
 				testServer.start(5001, '11:24:00', '01.07.2018')
 				await request

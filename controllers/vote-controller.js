@@ -1,9 +1,33 @@
 'use strict'
 
 const { Lunchbreak, Participant, Group, Vote } = require('../models')
-const { RequestError, ValidationError } = require('../classes/errors')
-const { voteEndingTimeReached } = require('../util/util')
+const { ValidationError } = require('../classes/errors')
 
+class VoteController {
+
+	/**
+	 * Overrides the votes of a participation, if the provided votes are valid.
+	 * This function does not check the voteEndingTime!
+	 */
+	static async overrideVotes(votes, participantId) {
+		if (votes === [])
+			return await destroyVotesOfParticipant(participantId)
+
+		const config = await getGroupConfig(participantId)
+		checkMinPointsPerVote(votes, config.minPointsPerVote)
+		checkMaxPointsPerVote(votes, config.maxPointsPerVote)
+		checkPointsPerDay(votes, config.pointsPerDay)
+		checkPlaces(votes)
+
+		await destroyVotesOfParticipant(participantId)
+		await Vote.bulkCreate(votes, { validate: true })
+	}
+
+}
+
+/**
+ * @param {number} participantId
+ */
 async function destroyVotesOfParticipant(participantId) {
 	await Vote.destroy({
 		where: {
@@ -12,89 +36,98 @@ async function destroyVotesOfParticipant(participantId) {
 	})
 }
 
-class VoteController {
-
-	static async overrideVotes(votes, participantId) {
-		if (votes === []) {
-			await destroyVotesOfParticipant(participantId)
-			return
-		}
-
-		const participant = await Participant.findOne({
-			where: {
-				id: participantId
-			},
-			include: [
-				{
-					model: Lunchbreak,
-					attributes: ['id'],
-					include: [
-						{
-							model: Group,
-							attributes: ['id', 'voteEndingTime', 'utcOffset', 'minPointsPerVote', 'maxPointsPerVote', 'pointsPerDay']
-						}
-					]
-				}
-			]
-		})
-
-		if (await voteEndingTimeReached(participant.lunchbreak.id)) {
-			throw new RequestError('The end of voting has been reached, therefore no new votes will be accepted.')
-		}
-
-		const group = participant.lunchbreak.group
-
-		const placeIds = []
-		let sum = 0
-		for (const vote of votes) {
-			const points = parseInt(vote.points)
-			if (points > group.maxPointsPerVote) {
-				const item = {
-					field: 'points',
-					value: points,
-					message: `Points exceeds maxPointsPerVote (${group.maxPointsPerVote}).`
-				}
-				throw new ValidationError([item])
+async function getGroupConfig(participantId) {
+	const participant = await Participant.findByPk(participantId, {
+		include: [
+			{
+				model: Lunchbreak,
+				attributes: ['id'],
+				include: [
+					{
+						model: Group,
+						attributes: ['id', 'voteEndingTime', 'utcOffset', 'minPointsPerVote', 'maxPointsPerVote', 'pointsPerDay']
+					}
+				]
 			}
+		]
+	})
 
-			if (points < group.minPointsPerVote) {
-				const item = {
-					field: 'points',
-					value: points,
-					message: `Points deceeds minPointsPerVote (${group.minPointsPerVote}).`
-				}
-				throw new ValidationError([item])
-			}
+	return participant.lunchbreak.group
+}
 
-			sum += points
-			placeIds.push(vote.placeId)
-		}
+/**
+ * Checks if all points are equal or greater than minPointsPerVote
+ * @param {array} votes
+ * @param {number} maxPointsPerVote
+ * @throws {ValidationError}
+ */
+function checkMinPointsPerVote(votes, minPointsPerVote) {
+	const invalidVotes = votes.filter(vote => Number(vote.points) < minPointsPerVote)
 
-		if (sum > group.pointsPerDay) {
-			const item = {
+	if (invalidVotes.length > 0) {
+		throw new ValidationError(invalidVotes.map(vote => {
+			return {
 				field: 'points',
-				value: sum,
-				message: `Sum of points exceeds pointsPerDay (${group.pointsPerDay}).`
+				value: vote.points,
+				message: `Points deceeds minPointsPerVote (${minPointsPerVote}).`
+			}
+		}))
+	}
+}
+
+/**
+ * Checks if all points are equal or less than maxPointsPerVote
+ * @param {array} votes
+ * @param {number} maxPointsPerVote
+ * @throws {ValidationError}
+ */
+function checkMaxPointsPerVote(votes, maxPointsPerVote) {
+	const invalidVotes = votes.filter(vote => Number(vote.points) > maxPointsPerVote)
+
+	if (invalidVotes.length > 0) {
+		throw new ValidationError(invalidVotes.map(vote => {
+			return {
+				field: 'points',
+				value: vote.points,
+				message: `Points exceeds maxPointsPerVote (${maxPointsPerVote}).`
+			}
+		}))
+	}
+}
+
+/**
+ * Checks if the sum of points is equal or less than pointsPerDay.
+ * @throws {ValidationError}
+ */
+function checkPointsPerDay(votes, pointsPerDay) {
+	let sum = 0
+	votes.forEach(vote => sum += Number(vote.points))
+	if (sum > pointsPerDay) {
+		throw new ValidationError([{
+			field: 'points',
+			value: sum,
+			message: `Sum of points exceeds pointsPerDay (${pointsPerDay}).`
+		}])
+	}
+}
+
+/**
+ * Checks for duplicate placeIds.
+ * @throws {ValidationError}
+ */
+function checkPlaces(votes) {
+	const placeIds = votes.map(vote => vote.placeId)
+
+	for (let i = 0; i < placeIds.length; i++) {
+		if (i !== placeIds.indexOf(placeIds[i])) {
+			const item = {
+				field: 'placeId',
+				value: placeIds[i],
+				message: 'Votes must have different places.'
 			}
 			throw new ValidationError([item])
 		}
-
-		for (let i = 0; i < placeIds.length; i++) {
-			if (i !== placeIds.indexOf(placeIds[i])) {
-				const item = {
-					field: 'placeId',
-					value: placeIds[i],
-					message: 'Votes must have different places.'
-				}
-				throw new ValidationError([item])
-			}
-		}
-
-		await destroyVotesOfParticipant(participantId)
-
-		await Vote.bulkCreate(votes, { validate: true })
 	}
-
 }
 
 module.exports = VoteController
