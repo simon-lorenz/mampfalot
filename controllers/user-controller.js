@@ -46,7 +46,7 @@ class UserController {
 
 		const verificationToken = await generateRandomToken(25)
 
-		const user = await User.create({
+		const user = await User.build({
 			username: values.username,
 			firstName: values.firstName,
 			lastName: values.lastName,
@@ -54,6 +54,11 @@ class UserController {
 			password: values.password,
 			verificationToken: await bcrypt.hash(verificationToken, process.env.NODE_ENV === 'test' ? 1 : 12)
 		})
+
+		await user.validate()
+
+		user.password = await bcrypt.hash(user.password, 12)
+		await user.save()
 
 		await mailer.sendWelcomeMail(user.email, user.username, verificationToken, user.firstName)
 	}
@@ -83,7 +88,7 @@ class UserController {
 			if (await this.checkPassword(userResource.username, values.currentPassword) === false)
 				throw new AuthenticationError('The provided credentials are incorrect.')
 			else
-				userResource.password = values.password
+				userResource.password = bcrypt.hashSync(values.password, 12)
 		}
 
 		if (values.username) { userResource.username = values.username }
