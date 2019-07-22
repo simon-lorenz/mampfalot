@@ -87,13 +87,13 @@ describe('Participation', () => {
 					amountSpent: 12
 				}
 
-				testServer.start(5001, '11:24:59', '25.06.2018')
+				testServer.start(5001, '11:24:59', '01.07.2018')
 				await setupDatabase()
 			})
 
 			it('requires body values votes, result and amountSpent', async () => {
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-25/participation')
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(400)
 					.then(res => {
@@ -103,7 +103,7 @@ describe('Participation', () => {
 
 			it('fails if user is no group member', async () => {
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-25/participation')
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
 					.send(payload)
 					.expect(403)
@@ -118,36 +118,64 @@ describe('Participation', () => {
 			})
 
 			it('fails if voteEndingTime is reached', async () => {
-				testServer.start(5001, '11:25:01', '25.06.2018')
+				testServer.start(5001, '11:25:01', '01.07.2018')
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-25/participation')
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(payload)
 					.expect(400)
 					.expect(res => {
-						const message = 'The end of voting has been reached, therefore you cannot participate anymore.'
+						const message = 'The end of voting is reached, therefore you cannot create a new lunchbreak.'
 						errorHelper.checkRequestError(res.body, message)
 					})
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-07-01')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.expect(404)
 			})
 
-			it('fails if the voteEndingTime isn\'t reached, but the lunchbreak lies in the past', async () => {
-				testServer.start(5001, '11:24:00', '26.06.2018')
+			it('fails if the date lies in the past', async () => {
+				testServer.start(5001, '11:24:00', '01.07.2018')
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-25/participation')
+					.post('/groups/1/lunchbreaks/2018-06-30/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(payload)
 					.expect(400)
 					.expect(res => {
-						const message = 'The end of voting has been reached, therefore you cannot participate anymore.'
+						const message = 'Participations can only be created for today.'
 						errorHelper.checkRequestError(res.body, message)
 					})
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-06-30')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.expect(404)
+			})
+
+			it('fails if the date lies in the future', async () => {
+				testServer.start(5001, '11:24:00', '01.07.2018')
+				await request
+					.post('/groups/1/lunchbreaks/2018-07-02/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(400)
+					.expect(res => {
+						const message = 'Participations can only be created for today.'
+						errorHelper.checkRequestError(res.body, message)
+					})
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-07-02')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.expect(404)
 			})
 
 			it('accepts null for result and amountSpent', async () => {
 				payload.result = null
 				payload.amountSpent = null
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(payload)
 					.expect(201)
@@ -161,7 +189,7 @@ describe('Participation', () => {
 			it('accepts a empty array of votes', async () => {
 				payload.votes = []
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(payload)
 					.expect(201)
@@ -172,12 +200,10 @@ describe('Participation', () => {
 			})
 
 			it('fails if the result place id does not belong to the group', async () => {
-				testServer.start(5001, '11:24:59', '26.06.2018')
-
 				payload.result = testData.getPlace(5)
 
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(payload)
 					.expect(400)
@@ -192,12 +218,10 @@ describe('Participation', () => {
 			})
 
 			it('fails if not all votes have a place specified', async () => {
-				testServer.start(5001, '11:24:59', '26.06.2018')
-
 				payload.votes.push({ points: 30 })
 
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(payload)
 					.expect(400)
@@ -212,12 +236,10 @@ describe('Participation', () => {
 			})
 
 			it('fails if not all votes have points specified', async () => {
-				testServer.start(5001, '11:24:59', '26.06.2018')
-
 				payload.votes.push({ place: testData.getPlace(2) })
 
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(payload)
 					.expect(400)
@@ -232,12 +254,10 @@ describe('Participation', () => {
 			})
 
 			it('fails if two votes share the same place name', async () => {
-				testServer.start(5001, '11:24:59', '26.06.2018')
-
 				payload.votes.push({ points: 30, place: testData.getPlace(1) })
 
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(payload)
 					.expect(400)
@@ -253,12 +273,10 @@ describe('Participation', () => {
 			})
 
 			it('fails if at least one vote has more points than maxPointsPerVote', async () => {
-				testServer.start(5001, '11:24:59', '26.06.2018')
-
 				payload.votes[0].points = 71
 
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(payload)
 					.expect(400)
@@ -274,12 +292,10 @@ describe('Participation', () => {
 			})
 
 			it('fails if at least one vote has less points than minPointsPerVote', async () => {
-				testServer.start(5001, '11:24:59', '26.06.2018')
-
 				payload.votes[0].points = 29
 
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(payload)
 					.expect(400)
@@ -295,12 +311,10 @@ describe('Participation', () => {
 			})
 
 			it('fails if at least one vote contains a place name, that does not exist for this group', async () => {
-				testServer.start(5001, '11:24:59', '26.06.2018')
-
 				payload.votes.push({ points: 30, place: testData.getPlace(5) })
 
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(payload)
 					.expect(400)
@@ -316,12 +330,10 @@ describe('Participation', () => {
 			})
 
 			it('fails if the sum of points is greater than pointsPerDay', async () => {
-				testServer.start(5001, '11:24:59', '26.06.2018')
-
 				payload.votes.push({ points: 70, place: testData.getPlace(2) })
 
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(payload)
 					.expect(400)
@@ -337,12 +349,10 @@ describe('Participation', () => {
 			})
 
 			it('fails if points are not a number', async () => {
-				testServer.start(5001, '11:24:59', '26.06.2018')
-
 				payload.votes[0].points = 'abc'
 
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(payload)
 					.expect(400)
@@ -358,12 +368,10 @@ describe('Participation', () => {
 			})
 
 			it('fails if points are float', async () => {
-				testServer.start(5001, '11:24:59', '26.06.2018')
-
 				payload.votes[0].points = 30.5
 
 				await request
-					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(payload)
 					.expect(400)
@@ -405,9 +413,8 @@ describe('Participation', () => {
 					})
 			})
 
-			it('successfully creates a participation', async () => {
-				testServer.start(5001, '11:24:59', '26.06.2018')
-
+			it('successfully creates a participation with lunchbreak existing', async () => {
+				await testServer.start(5001, '11:24:59', '26.06.2018')
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-26/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
@@ -430,6 +437,181 @@ describe('Participation', () => {
 							throw new Error('The participation was not created.')
 					})
 			})
+
+			it('successfully creates a participation without lunchbreak existing', async () => {
+				await request
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(201)
+					.expect(res => {
+						const participation = res.body
+						participation.should.have.all.keys(testData.getParticipationKeys())
+						participation.result.should.be.deep.eql(testData.getPlace(payload.result.id))
+						participation.amountSpent.should.be.eql(payload.amountSpent)
+					})
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-07-01')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.expect(200)
+					.expect(res => {
+						const participants = res.body.participants
+						if (participants.find(participant => participant.member.username === 'johndoe1') === undefined)
+							throw new Error('The participation was not created.')
+					})
+			})
+		})
+
+		describe('PUT', () => {
+			beforeEach(async () => {
+				testServer.start(5001, '11:24:59', '25.06.2018')
+				await setupDatabase()
+			})
+
+			it('returns 404s', async () => {
+				testServer.start(5001, '11:24:59', '01.07.2018')
+				await request
+					.put('/groups/1/lunchbreaks/2018-07-01/participation')
+					.send({
+						votes: []
+					})
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(404)
+			})
+
+			it('requires at least one paramter of votes, result and amountSpent', async () => {
+				await request
+					.put('/groups/1/lunchbreaks/2018-06-25/participation')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(400)
+					.expect(res => {
+						errorHelper.checkRequiredBodyValues(res.body, ['amountSpent', 'result', 'votes'])
+					})
+			})
+
+			it('allows null for result and amountSpent', async () => {
+				await request
+					.put('/groups/1/lunchbreaks/2018-06-25/participation')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						amountSpent: null,
+						result: null
+					})
+					.expect(200)
+					.expect(res => {
+						const participation = res.body
+						participation.should.have.property('result').eql(null)
+						participation.should.have.property('amountSpent').eql(null)
+					})
+			})
+
+			it('ignores new votes if the participation lies in the past', async () => {
+				testServer.start(5001, '11:24:59', '26.06.2018')
+				const newVotes = []
+
+				const votes = await request
+					.get('/groups/1/lunchbreaks/2018-06-25')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.then((res) => {
+						const lunchbreak = res.body
+						return lunchbreak.participants.find(p => p.member.username === 'maxmustermann')
+					})
+					.then(participation => participation.votes)
+
+				votes.should.not.be.deep.eql(newVotes)
+
+				await request
+					.put('/groups/1/lunchbreaks/2018-06-25/participation')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						votes: newVotes
+					})
+					.expect(200)
+					.expect(res => {
+						const participation = res.body
+						participation.votes.should.be.deep.eql(votes)
+					})
+			})
+
+			it('ignores new votes if the voteEndingTime is reached', async () => {
+				testServer.start(5001, '11:25:01', '25.06.2018')
+				const newVotes = []
+
+				const votes = await request
+					.get('/groups/1/lunchbreaks/2018-06-25')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.then((res) => {
+						const lunchbreak = res.body
+						return lunchbreak.participants.find(p => p.member.username === 'maxmustermann')
+					})
+					.then(participation => participation.votes)
+
+				votes.should.not.be.deep.eql(newVotes)
+
+				await request
+					.put('/groups/1/lunchbreaks/2018-06-25/participation')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						votes: newVotes
+					})
+					.expect(200)
+					.expect(res => {
+						const participation = res.body
+						participation.votes.should.be.deep.eql(votes)
+					})
+			})
+
+			it('successfully updates todays participation', async () => {
+				const payload = {
+					votes: [
+						{
+							points: 45,
+							place: testData.getPlace(1)
+						},
+						{
+							points: 55,
+							place: testData.getPlace(2)
+						}
+					],
+					result: testData.getPlace(2),
+					amountSpent: 99.4
+				}
+
+				await request
+					.put('/groups/1/lunchbreaks/2018-06-25/participation')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send(payload)
+					.expect(200)
+					.expect(res => {
+						res.body.should.have.all.keys(testData.getParticipationKeys())
+						res.body.should.have.property('date').deep.eql('2018-06-25')
+						res.body.should.have.property('votes').deep.eql(payload.votes)
+						res.body.should.have.property('amountSpent').deep.eql(payload.amountSpent)
+						res.body.should.have.property('result').deep.eql(payload.result)
+					})
+			})
+
+			it('successfully updates result and amountSpent of a participation in the past', async () => {
+				testServer.start(5001, '11:25:01', '26.06.2018')
+
+				const payload = {
+					result: testData.getPlace(2),
+					amountSpent: 99.4
+				}
+
+				await request
+					.put('/groups/1/lunchbreaks/2018-06-25/participation')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send(payload)
+					.expect(200)
+					.expect(res => {
+						const participation = res.body
+						participation.result.should.be.deep.eql(payload.result)
+						participation.amountSpent.should.be.deep.eql(payload.amountSpent)
+					})
+			})
+
 		})
 
 		describe('DELETE', () => {
@@ -439,7 +621,19 @@ describe('Participation', () => {
 			})
 
 			it('fails if the voteEndingTime is reached', async () => {
-				testServer.start(5001, '12:25:01', '25.06.2018')
+				testServer.start(5001, '11:25:01', '25.06.2018')
+				await request
+					.delete('/groups/1/lunchbreaks/2018-06-25/participation')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(400)
+					.expect(res => {
+						const MESSAGE = 'The end of voting has been reached, therefore this participation cannot be deleted.'
+						errorHelper.checkRequestError(res.body, MESSAGE)
+					})
+			})
+
+			it('fails if the participation lies in the past', async () => {
+				testServer.start(5001, '11:24:59', '26.06.2018')
 				await request
 					.delete('/groups/1/lunchbreaks/2018-06-25/participation')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
@@ -470,7 +664,15 @@ describe('Participation', () => {
 					})
 			})
 
-			it('does not delete the associated lunchbreak', async () => {
+			it('does not delete the associated lunchbreak if other participants exist', async () => {
+				await request
+					.get('/groups/1/lunchbreaks/2018-06-25')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+					.expect(res => {
+						res.body.participants.should.be.an('array').with.lengthOf(2)
+					})
+
 				await request
 					.delete('/groups/1/lunchbreaks/2018-06-25/participation')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
@@ -480,6 +682,79 @@ describe('Participation', () => {
 					.get('/groups/1/lunchbreaks/2018-06-25')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(200)
+					.expect(res => {
+						res.body.participants.should.be.an('array').with.lengthOf(1)
+					})
+			})
+
+			it('does not delete the associated lunchbreak if other comments exist', async () => {
+				await testServer.start(5001, '11:24:59', '01.07.2018')
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						votes: [],
+						result: null,
+						amountSpent: null
+					})
+					.expect(201)
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-07-01/comments')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						text: 'Don\'t delete me!'
+					})
+					.expect(201)
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-07-01')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+
+				await request
+					.delete('/groups/1/lunchbreaks/2018-07-01/participation')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(204)
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-07-01')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+					.expect(res => {
+						res.body.participants.should.be.deep.eql([])
+						res.body.comments.should.be.an('array').with.lengthOf(1)
+					})
+			})
+
+			it('does delete the associated lunchbreak if no other participants or comments exist', async () => {
+				await testServer.start(5001, '11:24:59', '01.07.2018')
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						votes: [],
+						result: null,
+						amountSpent: null
+					})
+					.expect(201)
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-07-01')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+
+				await request
+					.delete('/groups/1/lunchbreaks/2018-07-01/participation')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(204)
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-07-01')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(404)
 			})
 
 			it('does not delete the associated user', async () => {
@@ -492,18 +767,6 @@ describe('Participation', () => {
 					.get('/users/me')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(200)
-			})
-
-			it('deletes associated lunchbreak if no participants left', async () => {
-				await request
-					.delete('/groups/2/lunchbreaks/2018-06-25/participation')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
-					.expect(204)
-
-				await request
-					.get('/groups/2/lunchbreaks/2018-06-25')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
-					.expect(404)
 			})
 		})
 

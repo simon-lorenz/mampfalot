@@ -80,62 +80,6 @@ describe('Lunchbreak', () => {
 					})
 			})
 		})
-
-		describe('POST', () => {
-			beforeEach(async () => {
-				await setupDatabase()
-			})
-
-			it('fails if user is not member of the group', async () => {
-				await request
-					.post('/groups/1/lunchbreaks')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
-					.expect(403)
-					.expect(res =>  {
-						const expectedError = {
-							resource: 'Lunchbreak',
-							id: null,
-							operation: 'CREATE'
-						}
-						errorHelper.checkAuthorizationError(res.body, expectedError)
-					})
-			})
-
-			it('creates a new lunchbreak successfully when user is no admin', async () => {
-				await request
-					.post('/groups/1/lunchbreaks')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
-					.expect(201)
-					.expect(res => {
-						const lunchbreak = res.body
-						lunchbreak.should.have.all.keys(testData.getLunchbreakKeys())
-						const expectedDate = new Date().toISOString().substring(0, 10)
-						lunchbreak.date.should.be.eql(expectedDate)
-					})
-			})
-
-			it('fails if a lunchbreak for today already exists', async () => {
-				await request
-					.post('/groups/1/lunchbreaks')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
-					.expect(201)
-
-				await request
-					.post('/groups/1/lunchbreaks')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
-					.expect(400)
-					.expect(res => {
-						const expectedDate = new Date().toISOString().substring(0, 10)
-						const expectedError = {
-							field: 'date',
-							value: expectedDate,
-							message: 'A lunchbreak at this date already exists.'
-						}
-
-						errorHelper.checkValidationError(res.body, expectedError)
-					})
-			})
-		})
 	})
 
 	describe('/groups/:groupId/lunchbreaks/:date', () => {

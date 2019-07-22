@@ -3,6 +3,7 @@ const errorHelper = require('../utils/errors')
 const request = require('supertest')('http://localhost:5001/api')
 const TokenHelper = require('../utils/token-helper')
 const testData = require('../utils/scripts/test-data')
+const testServer = require('../utils/test-server')
 
 describe('Comment', () => {
 
@@ -73,6 +74,72 @@ describe('Comment', () => {
 					.expect(res => {
 						const comment = res.body
 						comment.author.username.should.be.eql('johndoe1')
+					})
+			})
+
+			it('does not create a lunchbreak if voteEndingTime is reached', async () => {
+				testServer.start(5001, '11:25:01', '01.07.2018')
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-07-01')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(404)
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-07-01/comments')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						text: 'Please create a luchbreak, thanks.'
+					})
+					.expect(400)
+					.expect(res => {
+						errorHelper.checkRequestError(res.body, 'The end of voting is reached, therefore you cannot create a new lunchbreak.')
+					})
+			})
+
+			it('does not create a lunchbreak if the date lies in the past', async () => {
+				testServer.start(5001, '11:25:01', '01.07.2018')
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-06-30')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(404)
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-30/comments')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						text: 'Please create a luchbreak, thanks.'
+					})
+					.expect(400)
+					.expect(res => {
+						errorHelper.checkRequestError(res.body, 'The end of voting is reached, therefore you cannot create a new lunchbreak.')
+					})
+			})
+
+			it('creates a lunchbreak if none exists', async () => {
+				testServer.start(5001, '11:24:59', '01.07.2018')
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-07-01')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(404)
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-07-01/comments')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						text: 'Please create a luchbreak, thanks.'
+					})
+					.expect(201)
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-07-01')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+					.expect(res => {
+						res.body.comments.should.be.an('array').with.lengthOf(1)
+						res.body.comments[0].text.should.be.eql('Please create a luchbreak, thanks.')
 					})
 			})
 
@@ -244,16 +311,92 @@ describe('Comment', () => {
 					.expect(200)
 			})
 
-			it('does not delete the associated lunchbreak', async () => {
+			it('does not delete the associated lunchbreak if there are other participants', async () => {
+				testServer.start(5001, '11:24:59', '01.07.2018')
+
 				await request
-					.delete('/groups/1/lunchbreaks/2018-06-25/comments/1')
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						votes: [],
+						result: null,
+						amountSpent: null
+					})
+					.expect(201)
+
+				const id = await request
+					.post('/groups/1/lunchbreaks/2018-07-01/comments')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						text: 'My new comment.'
+					})
+					.expect(201)
+					.then(res => res.body.id)
+
+
+				await request
+					.delete(`/groups/1/lunchbreaks/2018-07-01/comments/${id}`)
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(204)
 
 				await request
-					.get('/groups/1/lunchbreaks/2018-06-25')
+					.get('/groups/1/lunchbreaks/2018-07-01')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(200)
+			})
+
+			it('does not delete the associated lunchbreak if there are other comments', async () => {
+				testServer.start(5001, '11:24:59', '01.07.2018')
+
+				const id = await request
+					.post('/groups/1/lunchbreaks/2018-07-01/comments')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						text: 'Please create a luchbreak, thanks.'
+					})
+					.expect(201)
+					.then(res => res.body.id)
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-07-01/comments')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						text: 'And do not delete it.'
+					})
+					.expect(201)
+
+				await request
+					.delete(`/groups/1/lunchbreaks/2018-07-01/comments/${id}`)
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(204)
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-07-01')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+			})
+
+			it('does delete the lunchbreak, if there are no other comments or participants', async () => {
+				testServer.start(5001, '11:24:59', '01.07.2018')
+
+				const id = await request
+					.post('/groups/1/lunchbreaks/2018-07-01/comments')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						text: 'Please create a luchbreak, thanks.'
+					})
+					.expect(201)
+					.then(res => res.body.id)
+
+				await request
+					.delete(`/groups/1/lunchbreaks/2018-07-01/comments/${id}`)
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(204)
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-07-01')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(404)
 			})
 		})
 	})

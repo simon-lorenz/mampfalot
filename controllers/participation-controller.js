@@ -3,7 +3,8 @@
 const { Participant, GroupMembers, Lunchbreak, Vote, Place } = require('../models')
 const { NotFoundError, RequestError, AuthorizationError } = require('../classes/errors')
 const { Op } = require('sequelize')
-const { voteEndingTimeReached } = require('../util/util')
+const { voteEndingTimeReached, dateIsToday } = require('../util/util')
+const LunchbreakController = require('./lunchbreak-controller')
 
 class ParticipationLoader {
 
@@ -131,12 +132,33 @@ class ParticipationController {
 	}
 
 	async createParticipation(groupId, date, values) {
-		const lunchbreak = await Lunchbreak.findOne({
+		if (!dateIsToday(date))
+			throw new RequestError('Participations can only be created for today.')
+
+		let lunchbreak = await Lunchbreak.findOne({
 			attributes: ['id'],
 			where: {
 				date, groupId
 			}
 		})
+
+		if (lunchbreak === null) {
+			const lunchbreakController = new LunchbreakController(this.user)
+
+			if (dateIsToday(date) === false)
+				throw new RequestError('The end of voting is reached, therefore you cannot create a new lunchbreak.')
+			else {
+				lunchbreak = await lunchbreakController.createLunchbreak(groupId)
+				if (await voteEndingTimeReached(lunchbreak.id)) {
+					await Lunchbreak.destroy({
+						where: {
+							id: lunchbreak.id
+						}
+					})
+					throw new RequestError('The end of voting is reached, therefore you cannot create a new lunchbreak.')
+				}
+			}
+		}
 
 		if (await voteEndingTimeReached(lunchbreak.id))
 			throw new RequestError('The end of voting has been reached, therefore you cannot participate anymore.')
@@ -180,20 +202,49 @@ class ParticipationController {
 
 		await Vote.bulkCreate(values.votes, { validate: true })
 
-		let result = await ParticipationLoader.loadParticipation(groupId, date, this.user.id)
+		const result = await ParticipationLoader.loadParticipation(groupId, date, this.user.id)
+		return {
+			date: result.lunchbreak.date,
+			votes: result.votes.map(vote => {
+				vote = vote.toJSON()
+				delete vote.id
+				return vote
+			}),
+			result: result.result,
+			amountSpent: result.amountSpent
+		}
+	}
 
-		result = result.toJSON()
-		result.date = result.lunchbreak.date
-		result.votes.map(vote => {
-			delete vote.id
-			return vote
-		})
-		delete result.lunchbreak
-		delete result.id
-		delete result.lunchbreakId
-		delete result.memberId
-		delete result.resultId
-		return result
+	async updateParticipation(groupId, date, values) {
+		const participation = await ParticipationLoader.loadParticipation(groupId, date, this.user.id)
+		if (participation === null)
+			throw new NotFoundError('Participation', null)
+
+		participation.amountSpent = values.amountSpent
+		participation.resultId = values.result ? values.result.id : null
+
+		await participation.save()
+
+		if (values.votes && !await voteEndingTimeReached(participation.lunchbreakId)) {
+			values.votes.map(vote => {
+				vote.participantId = participation.id
+				vote.placeId = vote.place ? vote.place.id : null
+			})
+
+			await Vote.bulkCreate(values.votes, { validate: true })
+		}
+
+		const result = await ParticipationLoader.loadParticipation(groupId, date, this.user.id)
+		return {
+			date: result.lunchbreak.date,
+			votes: result.votes.map(vote => {
+				vote = vote.toJSON()
+				delete vote.id
+				return vote
+			}),
+			result: result.result,
+			amountSpent: result.amountSpent
+		}
 	}
 
 }

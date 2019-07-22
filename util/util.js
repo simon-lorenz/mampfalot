@@ -33,6 +33,15 @@ module.exports = {
 	},
 
 	/**
+	 * Checks if a date matches todays date.
+	 * @param {string} date A date formatted as yyyy-mm-dd
+	 */
+	dateIsToday(date) {
+		const today = new Date().toISOString().substring(0, 10)
+		return date === today
+	},
+
+	/**
 	 * Checks if the voteEndingTime of a lunchbreak
 	 * is reached
 	 * @param {number} lunchbreakId

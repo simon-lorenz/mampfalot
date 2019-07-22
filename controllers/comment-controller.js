@@ -1,7 +1,8 @@
 'use strict'
 
-const { Comment, Lunchbreak, GroupMembers, User } = require('../models')
-const { NotFoundError } = require('../classes/errors')
+const { Comment, Lunchbreak, GroupMembers, User, Participant } = require('../models')
+const { NotFoundError, RequestError } = require('../classes/errors')
+const { dateIsToday, voteEndingTimeReached } = require('../util/util')
 
 class CommentController {
 
@@ -52,14 +53,30 @@ class CommentController {
 		return this.formatComment(comment)
 	}
 
-	async createComment(groupId, date, values) {
-		const lunchbreak = await Lunchbreak.findOne({
+	async createComment(LunchbreakController, groupId, date, values) {
+		let lunchbreak = await Lunchbreak.findOne({
 			attributes: ['id'],
 			where: {
 				groupId,
 				date
 			}
 		})
+
+		if (lunchbreak === null) {
+			if (dateIsToday(date) === false)
+				throw new RequestError('The end of voting is reached, therefore you cannot create a new lunchbreak.')
+			else {
+				lunchbreak = await LunchbreakController.createLunchbreak(groupId)
+				if (await voteEndingTimeReached(lunchbreak.id)) {
+					await Lunchbreak.destroy({
+						where: {
+							id: lunchbreak.id
+						}
+					})
+					throw new RequestError('The end of voting is reached, therefore you cannot create a new lunchbreak.')
+				}
+			}
+		}
 
 		const member = await GroupMembers.findOne({
 			attributes: ['id'],
@@ -94,6 +111,15 @@ class CommentController {
 		const comment = await this.loadComment(commentId)
 		await this.user.can.deleteComment(this.formatComment(comment))
 		await comment.destroy()
+
+		const lunchbreak = await Lunchbreak.findByPk(comment.lunchbreakId, {
+			include: [
+				Participant, Comment
+			]
+		})
+
+		if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0)
+			await lunchbreak.destroy()
 	}
 
 }

@@ -84,11 +84,15 @@ module.exports = (sequelize, DataTypes) => {
 	})
 
 	Participant.afterDestroy(async (instance) => {
-		const Lunchbreak = sequelize.models.Lunchbreak
+		const { Lunchbreak, Comment } = sequelize.models
+
 		const lunchbreak = await Lunchbreak.findOne({
 			include: [
 				{
 					model: Participant
+				},
+				{
+					model: Comment
 				}
 			],
 			where: {
@@ -96,7 +100,7 @@ module.exports = (sequelize, DataTypes) => {
 			}
 		})
 
-		if (lunchbreak.participants.length === 0) {
+		if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0) {
 			await lunchbreak.destroy()
 		}
 	})

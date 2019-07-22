@@ -712,29 +712,6 @@ paths:
         404:
           $ref: '#/components/responses/NotFoundError'
 
-    post:
-      tags:
-        - Lunchbreak
-      security:
-        - bearerAuth: []
-      summary: Create a lunchbreak for today.
-      description: This request will create a new lunchbreak for the current day, if the voteEndingTime is not reached.
-      responses:
-        201:
-          description: Ok
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Lunchbreak'
-        400:
-          $ref: '#/components/responses/ClientError'
-        401:
-          $ref: '#/components/responses/AuthenticationError'
-        403:
-          $ref: '#/components/responses/AuthorizationError'
-        404:
-          $ref: '#/components/responses/NotFoundError'
-
   /groups/{groupId}/lunchbreaks/{date}:
 
     parameters:
@@ -812,6 +789,37 @@ paths:
       security:
         - bearerAuth: []
       summary: Particpate at this lunchbreak.
+      description: This operation is only permitted for today and until voteEndingTime is reached.
+                   If no lunchbreak at this date exists, a new one is created.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Participation'
+      responses:
+        201:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Participation'
+        400:
+          $ref: '#/components/responses/ClientError'
+        401:
+          $ref: '#/components/responses/AuthenticationError'
+        403:
+          $ref: '#/components/responses/AuthorizationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+
+    put:
+      tags:
+        - Participation
+      security:
+        - bearerAuth: []
+      summary: Update the participation (even after voteEndingTime).
+      description: 'Important: Votes are ignored if voteEndingTime is reached.'
       requestBody:
         required: true
         content:
@@ -840,6 +848,8 @@ paths:
       security:
         - bearerAuth: []
       summary: Delete the participation.
+      description: This operation is only permitted for today and until voteEndingTime is reached.
+                   If no other participants and comments exist, the lunchbreak will be deleted.
       responses:
         204:
           description: Ok
@@ -864,6 +874,8 @@ paths:
       security:
         - bearerAuth: []
       summary: Post a new comment.
+      description: This operation is only permitted for existing lunchbreaks and todays lunchbreak.
+                   If no lunchbreak for today exists, a new one is created.
       requestBody:
         required: true
         content:
@@ -883,8 +895,6 @@ paths:
           $ref: '#/components/responses/AuthenticationError'
         403:
           $ref: '#/components/responses/AuthorizationError'
-        404:
-          $ref: '#/components/responses/NotFoundError'
 
   /groups/{groupId}/lunchbreaks/{date}/comments/{commentId}:
 
@@ -927,6 +937,7 @@ paths:
       security:
         - bearerAuth: []
       summary: Delete a single comment.
+      description: If no other comments and participants exist, the lunchbreak will be deleted.
       responses:
         204:
           description: Ok
