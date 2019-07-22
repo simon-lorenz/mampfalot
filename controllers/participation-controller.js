@@ -5,6 +5,7 @@ const { NotFoundError, RequestError, AuthorizationError } = require('../classes/
 const { Op } = require('sequelize')
 const { voteEndingTimeReached, dateIsToday } = require('../util/util')
 const LunchbreakController = require('./lunchbreak-controller')
+const VoteController = require('./vote-controller')
 
 class ParticipationLoader {
 
@@ -212,7 +213,7 @@ class ParticipationController {
 			vote.placeId = vote.place ? vote.place.id : null
 		})
 
-		await Vote.bulkCreate(values.votes, { validate: true })
+		await VoteController.overrideVotes(values.votes, participation.id)
 
 		const result = await ParticipationLoader.loadParticipation(groupId, date, this.user.id)
 		return {
@@ -243,7 +244,7 @@ class ParticipationController {
 				vote.placeId = vote.place ? vote.place.id : null
 			})
 
-			await Vote.bulkCreate(values.votes, { validate: true })
+			await VoteController.overrideVotes(values.votes, participation.id)
 		}
 
 		const result = await ParticipationLoader.loadParticipation(groupId, date, this.user.id)
