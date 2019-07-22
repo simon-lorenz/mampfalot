@@ -1,8 +1,5 @@
 'use strict'
 
-const { RequestError } = require('../classes/errors')
-const { voteEndingTimeReached } = require('../util/util')
-
 module.exports = (sequelize, DataTypes) => {
 	const Participant = sequelize.define('Participant', {
 		id: {
@@ -75,33 +72,6 @@ module.exports = (sequelize, DataTypes) => {
 		name: {
 			singular: 'participant',
 			plural: 'participants'
-		}
-	})
-
-	Participant.beforeDestroy(async (instance) => {
-		if (await voteEndingTimeReached(instance.lunchbreakId))
-			throw new RequestError('The end of voting has been reached, therefore this participation cannot be deleted.')
-	})
-
-	Participant.afterDestroy(async (instance) => {
-		const { Lunchbreak, Comment } = sequelize.models
-
-		const lunchbreak = await Lunchbreak.findOne({
-			include: [
-				{
-					model: Participant
-				},
-				{
-					model: Comment
-				}
-			],
-			where: {
-				id: instance.lunchbreakId
-			}
-		})
-
-		if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0) {
-			await lunchbreak.destroy()
 		}
 	})
 

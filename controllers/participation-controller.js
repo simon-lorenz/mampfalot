@@ -1,6 +1,6 @@
 'use strict'
 
-const { Participant, GroupMembers, Lunchbreak, Vote, Place } = require('../models')
+const { Participant, GroupMembers, Lunchbreak, Vote, Place, Comment } = require('../models')
 const { NotFoundError, RequestError, AuthorizationError } = require('../classes/errors')
 const { Op } = require('sequelize')
 const { voteEndingTimeReached, dateIsToday } = require('../util/util')
@@ -21,7 +21,7 @@ class ParticipationLoader {
 				},
 				{
 					model: Lunchbreak,
-					attributes: ['date'],
+					attributes: ['id', 'date'],
 					where: {
 						date: date,
 						groupId: groupId
@@ -103,7 +103,19 @@ class ParticipationController {
 
 	async deleteParticipation(groupId, date) {
 		const participation = await ParticipationLoader.loadParticipation(groupId, date, this.user.id)
+
+		if (await voteEndingTimeReached(participation.lunchbreak.id))
+			throw new RequestError('The end of voting has been reached, therefore this participation cannot be deleted.')
+
 		await participation.destroy()
+
+		const lunchbreak = await Lunchbreak.findByPk(participation.lunchbreak.id, {
+			include: [ Participant, Comment ]
+		})
+
+		if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0) {
+			await lunchbreak.destroy()
+		}
 	}
 
 	async getParticipations(groupId, from, to) {
