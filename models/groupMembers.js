@@ -50,11 +50,5 @@ module.exports = (sequelize, DataTypes) => {
 		models.GroupMembers.belongsTo(models.User, { foreignKey: 'userId' })
 	}
 
-	GroupMembers.beforeCreate((instance) => {
-		const colors = ['#ffa768', '#e0dbff', '#f5e97d', '#ffa1b7', '#948bf0', '#a8f08d']
-		const randomColor = colors[Math.floor(Math.random() * colors.length)]
-		instance.color = randomColor
-	})
-
 	return GroupMembers
 }

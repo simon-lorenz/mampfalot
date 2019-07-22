@@ -186,9 +186,13 @@ class InvitationController {
 		if (!invitation)
 			throw new NotFoundError('Invitation')
 
+		const colors = ['#ffa768', '#e0dbff', '#f5e97d', '#ffa1b7', '#948bf0', '#a8f08d']
+		const randomColor = colors[Math.floor(Math.random() * colors.length)]
+
 		await GroupMembers.create({
 			groupId: groupId,
 			userId: userId,
+			color: randomColor,
 			isAdmin: false
 		})
 
