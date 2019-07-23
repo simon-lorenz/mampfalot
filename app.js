@@ -13,6 +13,8 @@ const { initializeControllers, initializeUser } = require('./util/middleware')
 const { AuthenticationError, AuthorizationError, NotFoundError } = require('./classes/errors')
 const { MethodNotAllowedError, ValidationError, RequestError, ServerError } = require('./classes/errors')
 
+app.set('trust proxy', true)
+
 // Enable time-manipulation for testing purposes
 app.use((req, res, next) => {
 	if (process.env.NODE_ENV === 'test') {
