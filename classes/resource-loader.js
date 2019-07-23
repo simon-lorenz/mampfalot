@@ -1,22 +1,10 @@
 'use strict'
 
-const { Comment, Group, Place, Lunchbreak, User, GroupMembers, Participant, Vote, Invitation } = require('../models')
+const { Comment, Group, Place, Lunchbreak, User, GroupMembers, Participant, Vote } = require('../models')
 const { NotFoundError } = require('./errors')
 const Op = require('sequelize').Op
 
 class ResourceLoader {
-
-	/**
-	 * Loads a comment resource into res.locals.comment.
-	 * This middleware requires the request to have the param 'commentId'.
-	 * If the resource can not be found, a NotFoundError is passed to next()
-	 */
-	async loadComment(req, res, next) {
-		const commentId = parseInt(req.params.commentId)
-		res.locals.comment = await Comment.findByPk(commentId)
-		if (res.locals.comment) { next() }
-		else { next(new NotFoundError('Comment', commentId)) }
-	}
 
 	async getUserIdByUsername(username) {
 		const user = await User.findOne({
@@ -30,31 +18,6 @@ class ResourceLoader {
 			return user.id
 		else
 			throw new NotFoundError('User', username)
-	}
-
-	async getUsernameById(userId) {
-		const user = await User.findOne({
-			attributes: ['username'],
-			where: {
-				id: userId
-			}
-		})
-
-		if (user)
-			return user.username
-		else
-			throw new NotFoundError('User', userId)
-	}
-
-	async loadUserById(userId) {
-		const user = await User.findByPk(userId, {
-			attributes: ['username', 'firstName', 'lastName']
-		})
-
-		if (user)
-			return user
-		else
-			throw NotFoundError('User', userId)
 	}
 
 	async loadUserWithEmail(userId) {
@@ -89,50 +52,6 @@ class ResourceLoader {
 			return group
 		else
 			throw new NotFoundError('Group', id)
-	}
-
-	async loadInvitation(groupId, toId) {
-		const invitation = await Invitation.findOne({
-			attributes: [],
-			where: {
-				toId, groupId
-			},
-			include: [
-				{
-					model: Group,
-					include: [
-						{
-							model: Place,
-							attributes: ['id', 'name', 'foodType']
-						},
-						{
-							model: User,
-							attributes: ['username', 'firstName', 'lastName'],
-							as: 'members',
-							through: {
-								as: 'config',
-								attributes: ['color', 'isAdmin']
-							}
-						}
-					]
-				},
-				{
-					model: User,
-					as: 'from',
-					attributes: ['username', 'firstName', 'lastName']
-				},
-				{
-					model: User,
-					as: 'to',
-					attributes: ['username', 'firstName', 'lastName']
-				}
-			]
-		})
-
-		if (invitation)
-			return invitation
-		else
-			throw new NotFoundError('Invitation', null)
 	}
 
 	async loadMember(groupId, username) {
@@ -286,36 +205,6 @@ class ResourceLoader {
 	}
 
 	/**
-	 * Loads a participant resource into res.locals.participant.
-	 * This middleware requires the request to have the param 'participantId'.
-	 * If the resource can not be found, a NotFoundError is passed to next()
-	 */
-	async loadParticipant (req, res, next) {
-		const participantId = parseInt(req.params.participantId)
-
-		res.locals.participant = await Participant.findOne({
-			attributes: {
-				exclude: ['amountSpent']
-			},
-			where: {
-				id: participantId
-			},
-			include: [
-				{
-					model: Vote,
-					include: [Place]
-				}, GroupMembers, Lunchbreak
-			]
-		})
-
-		if (res.locals.participant) {
-			next()
-		} else {
-			next(new NotFoundError('Participant', participantId))
-		}
-	}
-
-	/**
 	 * Loads a user resource into res.locals.resources.user.
 	 * This middleware requires the request to have the param 'userId'.
 	 * If the resource can not be found, a NotFoundError is passed to next()
@@ -328,24 +217,6 @@ class ResourceLoader {
 			return next()
 		} else {
 			return next(new NotFoundError('User', userId))
-		}
-	}
-
-	/**
-	 * Loads a vote resource into res.locals.vote.
-	 * This middleware requires the request to have the param 'voteId'.
-	 * If the resource can not be found, a NotFoundError is passed to next()
-	 */
-	async loadVote (req, res, next) {
-		const voteId = parseInt(req.params.voteId)
-		res.locals.vote = await Vote.findByPk(voteId, {
-			include: [ Participant, Place ]
-		})
-
-		if (res.locals.vote) {
-			next()
-		} else {
-			next(new NotFoundError('Vote', voteId))
 		}
 	}
 
