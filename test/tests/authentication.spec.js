@@ -1,35 +1,34 @@
-'use strict'
+const errorHelper = require('../utils/errors')
+const { AuthenticationErrorTypes } = require('../utils/errors')
+const request = require('supertest')('http://localhost:5001/api/authenticate')
 
-const errorHelper = require('../helpers/errors')
-const { AuthenticationErrorTypes } = require('../helpers/errors')
-
-module.exports = (request) => {
-	return describe('/auth', () => {
+describe('Authentication', () => {
+	describe('/authenticate', () => {
 		describe('GET', () => {
-			it('authenticates a user with correct credentials', (done) => {
-				request
-					.get('/auth')
+			it('authenticates a user with correct credentials', async () => {
+				await request
+					.get('/')
 					.auth('maxmustermann', '123456')
-					.expect(200, done)
+					.expect(200)
 			})
 
-			it('authenticates a user with umlauts in his username', (done) => {
-				request
-					.get('/auth')
+			it('authenticates a user with umlauts in his username', async () => {
+				await request
+					.get('/')
 					.auth('björn_tietgen', 'test')
-					.expect(200, done)
+					.expect(200)
 			})
 
-			it('authenticates a user with owasp special chars in his password', (done) => {
-				request
-					.get('/auth')
+			it('authenticates a user with owasp special chars in his password', async () => {
+				await request
+					.get('/')
 					.auth('luisa-rogers', ' !"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
-					.expect(200, done)
+					.expect(200)
 			})
 
-			it('responds with a well formed token', (done) => {
-				request
-					.get('/auth')
+			it('responds with a well formed token', async () => {
+				await request
+					.get('/')
 					.auth('maxmustermann', '123456')
 					.expect(200)
 					.expect(res => {
@@ -40,51 +39,46 @@ module.exports = (request) => {
 						payload.should.have.all.keys(['id', 'exp', 'iat'])
 						payload.id.should.be.equal(1)
 					})
-					.end(done)
 			})
 
-			it('fails with 401 if auth header is missing', (done) => {
-				request
-					.get('/auth')
+			it('fails with 401 if auth header is missing', async () => {
+				await request
+					.get('/')
 					.expect(401)
 					.expect(res => {
 						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.AUTHENTICTAION_REQUIRED)
 					})
-					.end(done)
 			})
 
-			it('fails with 401 on wrong password', (done) => {
-				request
-					.get('/auth')
+			it('fails with 401 on wrong password', async () => {
+				await request
+					.get('/')
 					.auth('maxmustermann', 'wrongPassword')
 					.expect(401)
 					.expect(res => {
 						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.INVALID_CREDENTIALS)
 					})
-					.end(done)
 			})
 
-			it('fails with 401 on unknown username', (done) => {
-				request
-					.get('/auth')
+			it('fails with 401 on unknown username', async () => {
+				await request
+					.get('/')
 					.auth('non-existent-user', 'supersafe')
 					.expect(401)
 					.expect(res => {
 						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.INVALID_CREDENTIALS)
 					})
-					.end(done)
 			})
 
-			it('fails if the user is not verified yet', (done) => {
-				request
-					.get('/auth')
+			it('fails if the user is not verified yet', async () => {
+				await request
+					.get('/')
 					.auth('to-be-verified', 'verifyme')
 					.expect(401)
 					.expect(res => {
 						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.NOT_VERIFIED)
 					})
-					.end(done)
 			})
 		})
 	})
-}
+})

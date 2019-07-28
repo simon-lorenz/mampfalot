@@ -10,13 +10,26 @@ module.exports = (sequelize, DataTypes) => {
 		groupId: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
+			unique: {
+				name: 'uniquePlacePerGroup',
+				args: true,
+				msg: 'A place with this name already exists.'
+			},
 			onDelete: 'CASCADE'
 		},
 		name: {
 			type: DataTypes.STRING,
 			allowNull: false,
+			unique: {
+				name: 'uniquePlacePerGroup',
+				args: true,
+				msg: 'A place with this name already exists.'
+			},
 			validate: {
-				notEmpty: true
+				notEmpty: {
+					args: true,
+					msg: 'name cannot be empty.'
+				}
 			}
 		},
 		foodType: {

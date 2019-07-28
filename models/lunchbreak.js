@@ -13,11 +13,6 @@ module.exports = (sequelize, DataTypes) => {
 			onDelete: 'CASCADE',
 			unique: 'oneLuchbreakPerDayPerGroup'
 		},
-		result: {
-			type: DataTypes.INTEGER,
-			allowNull: true,
-			onDelete: 'SET NULL'
-		},
 		date: {
 			type: DataTypes.DATEONLY,
 			allowNull: false,
@@ -39,7 +34,6 @@ module.exports = (sequelize, DataTypes) => {
 		models.Lunchbreak.belongsTo(models.Group, { foreignKey: 'groupId' })
 		models.Lunchbreak.hasMany(models.Comment, { foreignKey: 'lunchbreakId' })
 		models.Lunchbreak.hasMany(models.Participant, { foreignKey: 'lunchbreakId' })
-		models.Lunchbreak.belongsTo(models.Place, { foreignKey: 'result' })
 	}
 
 	return Lunchbreak

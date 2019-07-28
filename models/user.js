@@ -1,7 +1,5 @@
 'use strict'
 
-const bcrypt = require('bcryptjs')
-
 module.exports = (sequelize, DataTypes) => {
 	const User = sequelize.define('User', {
 		id: {
@@ -105,32 +103,12 @@ module.exports = (sequelize, DataTypes) => {
 	User.associate = function (models) {
 		models.User.hasMany(models.Invitation, { foreignKey: 'fromId' })
 		models.User.hasMany(models.Invitation, { foreignKey: 'toId' })
-		models.User.hasMany(models.Comment, { foreignKey: 'userId' })
-		models.User.hasMany(models.Participant, { foreignKey: 'userId' })
+		models.User.hasOne(models.GroupMembers, { as: 'config', foreignKey: 'userId' })
 		models.User.belongsToMany(models.Group, {
 			through: models.GroupMembers,
 			foreignKey: 'userId'
 		})
 	}
-
-	User.beforeCreate((user) => {
-		user.password = bcrypt.hashSync(user.password, 12)
-	})
-
-	User.beforeBulkCreate(async (instances) => {
-		let rounds
-		process.env.NODE_ENV === 'test' ? rounds = 1 : rounds = 12
-
-		for (const instance of instances) {
-			instance.password = await bcrypt.hash(instance.password, rounds)
-		}
-	})
-
-	User.beforeUpdate((user) => {
-		if (user.changed('password')) {
-			user.password = bcrypt.hashSync(user.password, 12)
-		}
-	})
 
 	return User
 }

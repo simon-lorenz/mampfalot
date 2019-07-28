@@ -251,4 +251,4 @@ class Mailer {
 
 }
 
-module.exports = Mailer
+module.exports = new Mailer()

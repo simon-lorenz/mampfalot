@@ -12,22 +12,22 @@ module.exports = (sequelize, DataTypes) => {
 			allowNull: false,
 			onDelete: 'CASCADE'
 		},
-		userId: {
+		memberId: {
 			type: DataTypes.INTEGER,
 			allowNull: true,
 			onDelete: 'SET NULL'
 		},
-		comment: {
+		text: {
 			type: DataTypes.TEXT,
 			allowNull: false,
 			validate: {
 				notEmpty: {
 					args: true,
-					msg: 'comment cannot be empty.'
+					msg: 'text cannot be empty.'
 				},
 				notNull: {
 					args: true,
-					msg: 'comment cannot be null.'
+					msg: 'text cannot be null.'
 				}
 			}
 		}
@@ -40,9 +40,8 @@ module.exports = (sequelize, DataTypes) => {
 		}
 	})
 
-	Comment.associate = function (models) {
-		models.Comment.belongsTo(models.Lunchbreak, { foreignKey: 'lunchbreakId' })
-		models.Comment.belongsTo(models.User, { foreignKey: 'userId' })
+	Comment.associate = function(models) {
+		models.Comment.belongsTo(models.GroupMembers, { foreignKey: 'memberId', as: 'author' })
 	}
 
 	return Comment

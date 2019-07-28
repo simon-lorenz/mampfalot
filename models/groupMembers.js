@@ -2,6 +2,11 @@
 
 module.exports = (sequelize, DataTypes) => {
 	const GroupMembers = sequelize.define('GroupMembers', {
+		id: {
+			type: DataTypes.INTEGER,
+			primaryKey: true,
+			autoIncrement: true
+		},
 		userId: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
@@ -41,11 +46,9 @@ module.exports = (sequelize, DataTypes) => {
 		timestamps: false
 	})
 
-	GroupMembers.beforeCreate((instance) => {
-		const colors = ['#ffa768', '#e0dbff', '#f5e97d', '#ffa1b7', '#948bf0', '#a8f08d']
-		const randomColor = colors[Math.floor(Math.random() * colors.length)]
-		instance.color = randomColor
-	})
+	GroupMembers.associate = function(models) {
+		models.GroupMembers.belongsTo(models.User, { foreignKey: 'userId' })
+	}
 
 	return GroupMembers
 }

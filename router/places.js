@@ -1,58 +1,30 @@
 'use strict'
 
-const router = require('express').Router()
-const { Place } = require('../models')
+const router = require('express').Router({ mergeParams: true })
 const { allowMethods, hasBodyValues } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
-const loader = require('../classes/resource-loader')
 
 router.route('/').all(allowMethods(['POST']))
-router.route('/').post(hasBodyValues(['groupId', 'foodType', 'name'], 'all'))
-router.route('/:placeId').all(allowMethods(['GET', 'POST', 'DELETE']))
-router.route('/:placeId').post(hasBodyValues(['foodType', 'name'], 'atLeastOne'))
-
-router.route('/').post((req, res, next) => {
-	res.locals.place = Place.build({
-		groupId: req.body.groupId,
-		foodType: req.body.foodType,
-		name: req.body.name
-	})
-	next()
-})
+router.route('/').post(hasBodyValues(['foodType', 'name'], 'all'))
+router.route('/:placeId').all(allowMethods(['PUT', 'DELETE']))
+router.route('/:placeId').put(hasBodyValues(['foodType', 'name'], 'all'))
 
 router.route('/').post(asyncMiddleware(async (req, res, next) => {
-	const { user, place } = res.locals
-
-	await user.can.createPlace(place)
-	await place.save()
-	res.send(place)
+	const { groupId } = req.params
+	const { PlaceController } = res.locals.controllers
+	res.status(201).send(await PlaceController.createPlace(groupId, req.body))
 }))
 
-router.param('placeId', asyncMiddleware(loader.loadPlace))
-
-router.route('/:placeId').get(asyncMiddleware(async (req, res, next) => {
-	const { user, place } = res.locals
-
-	await user.can.readPlace(place)
-	res.send(place)
-}))
-
-router.route('/:placeId').post(asyncMiddleware(async (req, res, next) => {
-	const { user, place } = res.locals
-	const { foodType, name } = req.body
-
-	if (foodType !== undefined) place.foodType = foodType
-	if (name !== undefined) place.name = name
-
-	await user.can.updatePlace(place)
-	res.send(await place.save())
+router.route('/:placeId').put(asyncMiddleware(async (req, res, next) => {
+	const { placeId } = req.params
+	const { PlaceController } = res.locals.controllers
+	res.send(await PlaceController.updatePlace(placeId, req.body))
 }))
 
 router.route('/:placeId').delete(asyncMiddleware(async (req, res, next) => {
-	const { user, place } = res.locals
-
-	await user.can.deletePlace(place)
-	await place.destroy()
+	const { placeId } = req.params
+	const { PlaceController } = res.locals.controllers
+	await PlaceController.deletePlace(placeId)
 	res.status(204).send()
 }))
 

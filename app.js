@@ -8,9 +8,12 @@ const cors = require('cors')
 const helmet = require('helmet')
 const morgan = require('morgan')
 const Promise = require('bluebird')
-const { initUser, verifyToken } = require('./util/middleware')
+const { asyncMiddleware } = require('./util/util')
+const { initializeControllers, initializeUser } = require('./util/middleware')
 const { AuthenticationError, AuthorizationError, NotFoundError } = require('./classes/errors')
 const { MethodNotAllowedError, ValidationError, RequestError, ServerError } = require('./classes/errors')
+
+app.set('trust proxy', true)
 
 // Enable time-manipulation for testing purposes
 app.use((req, res, next) => {
@@ -74,25 +77,14 @@ app.get('/api', (req, res) => {
 
 // Router
 const router = {
-	auth: require('./router/auth'),
+	authenticate: require('./router/authenticate'),
 	groups: require('./router/groups'),
-	places: require('./router/places'),
-	users: require('./router/users'),
-	votes: require('./router/votes'),
-	lunchbreaks: require('./router/lunchbreaks'),
-	participants: require('./router/participants'),
-	comments: require('./router/comments')
+	users: require('./router/users')
 }
 
-app.use('/api/auth', router.auth)
+app.use('/api/authenticate', router.authenticate)
 app.use('/api/users', router.users)
-
-app.use('/api/groups', [verifyToken, initUser], router.groups)
-app.use('/api/places', [verifyToken, initUser], router.places)
-app.use('/api/votes', [verifyToken, initUser], router.votes)
-app.use('/api/lunchbreaks', [verifyToken, initUser], router.lunchbreaks)
-app.use('/api/participants', [verifyToken, initUser], router.participants)
-app.use('/api/comments', [verifyToken, initUser], router.comments)
+app.use('/api/groups', [asyncMiddleware(initializeUser), initializeControllers], router.groups)
 
 // Handle request errors
 app.use((err, req, res, next) => {

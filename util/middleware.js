@@ -1,22 +1,18 @@
 'use strict'
 
-const jwt = require('jsonwebtoken')
-const { RequestError, MethodNotAllowedError, AuthenticationError } = require('../classes/errors')
+const { RequestError, MethodNotAllowedError } = require('../classes/errors')
+const { verifyToken, getTokenFromAuthorizationHeader } = require('./authentication')
 const User = require('../classes/user')
+const CommentController = require('../controllers/comment-controller')
+const GroupController = require('../controllers/group-controller')
+const GroupMemberController = require('../controllers/group-member-controller')
+const InvitationController = require('../controllers/invitation-controller')
+const LunchbreakController = require('../controllers/lunchbreak-controller')
+const ParticipationController = require('../controllers/participation-controller')
+const PlaceController = require('../controllers/place-controller')
+const UserController = require('../controllers/user-controller')
 
 module.exports = {
-	initUser: async function (req, res, next) {
-		const id = res.locals.token.id
-
-		try {
-			res.locals.user = new User(id)
-			await res.locals.user.init()
-			next()
-		} catch (error) {
-			next(error)
-		}
-	},
-
 	/**
 	 * Checks if the body of a request has all
 	 * required values.
@@ -103,20 +99,40 @@ module.exports = {
 		}
 	},
 
-	verifyToken(req, res, next) {
-		const authorizationHeader = req.headers['authorization']
+	convertParamToNumber(param) {
+		return (req, res, next) => {
+			req.params[param] = Number(req.params[param])
+			next()
+		}
+	},
 
-		if (!authorizationHeader) return next(new AuthenticationError('This request requires authentication.'))
+	/**
+	 * Verifies the json web token and initializes the user in res.locals
+	 */
+	async initializeUser(req, res, next) {
+		const user = new User()
+		const token = getTokenFromAuthorizationHeader(req)
+		const payload = verifyToken(token)
+		await user.setId(payload.id)
+		res.locals.user = user
+		next()
+	},
 
-		const token = authorizationHeader.split(' ')[1]
-
-		jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
-			if (err) {
-				return next(new AuthenticationError('The provided token is invalid.'))
-			} else {
-				res.locals.token = decoded
-				next()
-			}
-		})
+	/**
+	 * Initializes res.locals.controllers
+	 */
+	initializeControllers: (req, res, next) => {
+		const { user } = res.locals
+		res.locals.controllers = {}
+		res.locals.controllers.UserController = new UserController(user)
+		res.locals.controllers.CommentController = new CommentController(user)
+		res.locals.controllers.GroupController = new GroupController(user)
+		res.locals.controllers.GroupMemberController = new GroupMemberController(user)
+		res.locals.controllers.InvitationController = new InvitationController(user)
+		res.locals.controllers.LunchbreakController = new LunchbreakController(user)
+		res.locals.controllers.ParticipationController = new ParticipationController(user)
+		res.locals.controllers.PlaceController = new PlaceController(user)
+		res.locals.controllers.UserController = new UserController(user)
+		next()
 	}
 }

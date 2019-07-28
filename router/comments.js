@@ -1,34 +1,32 @@
 'use strict'
 
-const router = require('express').Router()
-const { allowMethods } = require('../util/middleware')
+const router = require('express').Router({ mergeParams: true })
+const { allowMethods, hasBodyValues, convertParamToNumber } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
-const loader = require('../classes/resource-loader')
 
-router.route('/:commentId').all(allowMethods(['GET', 'POST', 'DELETE']))
-
-router.param('commentId', asyncMiddleware(loader.loadComment))
-
-router.route('/:commentId').get(asyncMiddleware(async (req, res, next) => {
-	const { user, comment } = res.locals
-
-	await user.can.readComment(comment)
-	res.send(comment.toJSON())
+router.route('/').all(allowMethods(['POST']))
+router.route('/').post(hasBodyValues(['text'], 'all'))
+router.route('/').post(asyncMiddleware(async (req, res, next) => {
+	const { groupId, date } = req.params
+	const { CommentController, LunchbreakController } = res.locals.controllers
+	res.status(201).send(await CommentController.createComment(LunchbreakController, groupId, date, req.body))
 }))
 
-router.route('/:commentId').post(asyncMiddleware(async (req, res, next) => {
-	const { user, comment } = res.locals
+router.param('commentId', convertParamToNumber('commentId'))
 
-	comment.comment = req.body.comment
-	await user.can.updateComment(comment)
-	res.send(await comment.save())
+router.route('/:commentId').all(allowMethods(['PUT', 'DELETE']))
+
+router.route('/:commentId').put(hasBodyValues(['text'], 'all'))
+router.route('/:commentId').put(asyncMiddleware(async (req, res, next) => {
+	const { commentId } = req.params
+	const { CommentController } = res.locals.controllers
+	res.send(await CommentController.updateComment(commentId, req.body))
 }))
 
 router.route('/:commentId').delete(asyncMiddleware(async (req, res, next) => {
-	const { user, comment } = res.locals
-
-	await user.can.deleteComment(comment)
-	await comment.destroy()
+	const { commentId } = req.params
+	const { CommentController } = res.locals.controllers
+	await CommentController.deleteComment(commentId)
 	res.status(204).send()
 }))
 

@@ -7,17 +7,23 @@ const { AuthenticationError } = require('./errors')
 
 class User {
 
-	constructor(id) {
-		this.id = id
+	constructor() {
 		this.can = new ResourceAccessControl(this)
+		this.groups = []
 	}
 
-	/**
-	 * Retrieves necessary data about this
-	 * user from the database.
-	 */
-	async init() {
-		const finder = {
+	async setId(id) {
+		const me = await UserModel.findByPk(id, {
+			attributes: ['id', 'username']
+		})
+
+		this.id = me.id
+		this.username = me.username
+		await this.loadGroups()
+	}
+
+	async loadGroups() {
+		const userGroups = await UserModel.findOne({
 			attributes: [],
 			where: {
 				id: this.id
@@ -30,47 +36,32 @@ class User {
 					as: 'config'
 				}
 			}]
-		}
+		}, { raw: true })
 
-		const record = await UserModel.findOne(finder, { raw: true })
-
-		if (record) {
-			this.groups = record.groups
+		if (userGroups) {
+			this.groups = userGroups.groups
 		} else {
 			throw new AuthenticationError('This user does not exist anymore.')
 		}
 	}
 
+	/**
+	 * @param {number} groupId
+	 */
 	isGroupAdmin(groupId) {
-		for (const group of this.groups) {
-			if (group.id === parseInt(groupId)) {
-				return group.config.isAdmin
-			}
-		}
-		return false
+		const group = this.groups.find(group => group.id === groupId)
+
+		if (group)
+			return group.config.isAdmin
+		else
+			return false
 	}
 
+	/**
+	 * @param {number} groupId
+	 */
 	isGroupMember(groupId) {
-		for (const group of this.groups) {
-			if (group.id === parseInt(groupId)) {
-				return true
-			}
-		}
-		return false
-	}
-
-	getGroupIds(adminOnly = false) {
-		const groupIds = []
-		for (const group of this.groups) {
-			if (adminOnly) {
-				if (group.config.isAdmin) {
-					groupIds.push(group.id)
-				}
-			} else {
-				groupIds.push(group.id)
-			}
-		}
-		return groupIds
+		return this.groups.find(group => group.id === groupId) !== undefined
 	}
 
 }
