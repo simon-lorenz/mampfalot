@@ -1,6 +1,7 @@
 require('dotenv').load()
 
 const {
+	Absence,
 	User,
 	Group,
 	GroupMembers,
@@ -29,6 +30,7 @@ module.exports = async function resetData() {
 		await Place.bulkCreate(data.places)
 		await Lunchbreak.bulkCreate(data.lunchbreaks)
 		await Participant.bulkCreate(data.participants)
+		await Absence.bulkCreate(data.absences)
 		await Vote.bulkCreate(data.votes)
 		await Comment.bulkCreate(data.comments)
 
@@ -43,6 +45,7 @@ module.exports = async function resetData() {
 		await db.query('SELECT setval(\'places_id_seq\', (SELECT MAX(id) from "places"));')
 		await db.query('SELECT setval(\'lunchbreaks_id_seq\', (SELECT MAX(id) from "lunchbreaks"));')
 		await db.query('SELECT setval(\'participants_id_seq\', (SELECT MAX(id) from "participants"));')
+		await db.query('SELECT setval(\'absences_id_seq\', (SELECT MAX(id) from "absences"));')
 		await db.query('SELECT setval(\'votes_id_seq\', (SELECT MAX(id) from "votes"));')
 		await db.query('SELECT setval(\'comments_id_seq\', (SELECT MAX(id) from "comments"));')
 	} catch (error) {

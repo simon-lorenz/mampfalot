@@ -1,6 +1,6 @@
 'use strict'
 
-const { Participant, GroupMembers, Lunchbreak, Vote, Place, Comment } = require('../models')
+const { Absence, Participant, GroupMembers, Lunchbreak, Vote, Place, Comment } = require('../models')
 const { NotFoundError, RequestError, AuthorizationError } = require('../classes/errors')
 const { Op } = require('sequelize')
 const { voteEndingTimeReached, dateIsToday } = require('../util/util')
@@ -111,10 +111,10 @@ class ParticipationController {
 		await participation.destroy()
 
 		const lunchbreak = await Lunchbreak.findByPk(participation.lunchbreak.id, {
-			include: [ Participant, Comment ]
+			include: [ Participant, Comment, Absence ]
 		})
 
-		if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0) {
+		if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0 && lunchbreak.absences.length === 0) {
 			await lunchbreak.destroy()
 		}
 	}
@@ -207,6 +207,13 @@ class ParticipationController {
 		}
 
 		await participation.save()
+
+		await Absence.destroy({
+			where: {
+				memberId: participation.memberId,
+				lunchbreakId: participation.lunchbreakId
+			}
+		})
 
 		values.votes.map(vote => {
 			vote.participantId = participation.id

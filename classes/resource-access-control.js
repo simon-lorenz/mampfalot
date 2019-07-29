@@ -15,6 +15,18 @@ class ResourceAccessControl {
 		this.user = user
 	}
 
+	async createAbsence(absence) {
+		const lunchbreak = await Lunchbreak.findByPk(absence.lunchbreakId, { attributes: ['groupId'] })
+		if (!this.user.isGroupMember(lunchbreak.groupId))
+			throw new AuthorizationError('Absence', null, 'CREATE')
+	}
+
+	async deleteAbsence(absence) {
+		const lunchbreak = await Lunchbreak.findByPk(absence.lunchbreakId, { attributes: ['groupId'] })
+		if (!this.user.isGroupMember(lunchbreak.groupId))
+			throw new AuthorizationError('Absence', null, 'DELETE')
+	}
+
 	async createComment(comment) {
 		const lunchbreak = await Lunchbreak.findByPk(comment.lunchbreakId, { attributes: ['groupId'] })
 		if (!this.user.isGroupMember(lunchbreak.groupId)) {

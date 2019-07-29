@@ -33,6 +33,7 @@ module.exports = (sequelize, DataTypes) => {
 	Lunchbreak.associate = function (models) {
 		models.Lunchbreak.belongsTo(models.Group, { foreignKey: 'groupId' })
 		models.Lunchbreak.hasMany(models.Comment, { foreignKey: 'lunchbreakId' })
+		models.Lunchbreak.hasMany(models.Absence, { foreignKey: 'lunchbreakId' })
 		models.Lunchbreak.hasMany(models.Participant, { foreignKey: 'lunchbreakId' })
 	}
 

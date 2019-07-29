@@ -3,6 +3,7 @@
 const { RequestError, MethodNotAllowedError } = require('../classes/errors')
 const { verifyToken, getTokenFromAuthorizationHeader } = require('./authentication')
 const User = require('../classes/user')
+const AbsenceController = require('../controllers/absence-controller')
 const CommentController = require('../controllers/comment-controller')
 const GroupController = require('../controllers/group-controller')
 const GroupMemberController = require('../controllers/group-member-controller')
@@ -124,6 +125,7 @@ module.exports = {
 	initializeControllers: (req, res, next) => {
 		const { user } = res.locals
 		res.locals.controllers = {}
+		res.locals.controllers.AbsenceController = new AbsenceController(user)
 		res.locals.controllers.UserController = new UserController(user)
 		res.locals.controllers.CommentController = new CommentController(user)
 		res.locals.controllers.GroupController = new GroupController(user)

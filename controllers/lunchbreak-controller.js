@@ -77,11 +77,25 @@ class LunchbreakController {
 			delete lunchbreak.groupId
 			lunchbreak.comments = lunchbreak.comments.map(comment => this.convertComment(comment))
 			lunchbreak.participants = lunchbreak.participants.map(participant => this.convertParticipant(participant))
+			lunchbreak.absent = lunchbreak.absences.map(absence => {
+				return {
+					username: absence.member.user.username,
+					firstName: absence.member.user.firstName,
+					lastName: absence.member.user.lastName,
+					config: {
+						color: absence.member.color,
+						isAdmin: absence.member.isAdmin,
+					}
+				}
+			})
+			delete lunchbreak.absences
 
 			const group = await ResourceLoader.loadGroupById(groupId)
 			const allMembers = group.members
 			lunchbreak.responseless = allMembers.filter(member => {
-				return lunchbreak.participants.find(p => p.member.username === member.username) === undefined
+				const participates = lunchbreak.participants.find(p => p.member.username === member.username)
+				const absent = lunchbreak.absent.find(absent => absent.username === member.username)
+				return !participates && !absent
 			})
 
 			return lunchbreak
@@ -96,11 +110,25 @@ class LunchbreakController {
 		// Restructuring Comment properties
 		lunchbreak.comments = lunchbreak.comments.map(comment => this.convertComment(comment))
 		lunchbreak.participants = lunchbreak.participants.map(participant => this.convertParticipant(participant))
+		lunchbreak.absent = lunchbreak.absences.map(absence => {
+			return {
+				username: absence.member.user.username,
+				firstName: absence.member.user.firstName,
+				lastName: absence.member.user.lastName,
+				config: {
+					color: absence.member.color,
+					isAdmin: absence.member.isAdmin,
+				}
+			}
+		})
+		delete lunchbreak.absences
 
 		const group = await ResourceLoader.loadGroupById(groupId)
 		const allMembers = group.members
 		lunchbreak.responseless = allMembers.filter(member => {
-			return lunchbreak.participants.find(p => p.member.username === member.username) === undefined
+			const participates = lunchbreak.participants.find(p => p.member.username === member.username)
+			const absent = lunchbreak.absent.find(absent => absent.username === member.username)
+			return !participates && !absent
 		})
 
 		await this.user.can.readLunchbreak(lunchbreak)

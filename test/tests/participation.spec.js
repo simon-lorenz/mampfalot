@@ -450,6 +450,35 @@ describe('Participation', () => {
 					})
 			})
 
+			it('removes an absence', async () => {
+				await testServer.start(5001, '11:24:59', '26.06.2018')
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-06-26')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+					.expect(res => {
+						const absent = res.body.absent
+						if (absent.find(member => member.username === 'maxmustermann') === undefined)
+							throw new Error('No absence found to delete!')
+					})
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send(payload)
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-06-26')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+					.expect(res => {
+						const absent = res.body.absent
+						if (absent.find(member => member.username === 'maxmustermann'))
+							throw new Error('The absence was not deleted.')
+					})
+			})
+
 			it('successfully creates a participation with lunchbreak existing', async () => {
 				await testServer.start(5001, '11:24:59', '26.06.2018')
 				await request
@@ -724,6 +753,40 @@ describe('Participation', () => {
 					})
 			})
 
+			it('does not delete the associated lunchbreak if other absences exist', async () => {
+				testServer.start(5001, '11:24:59', '01.07.2018')
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						votes: [],
+						result: null,
+						amountSpent: null
+					})
+					.expect(201)
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-07-01/absence')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.expect(201)
+
+				await request
+					.delete('/groups/1/lunchbreaks/2018-07-01/participation')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(204)
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-07-01')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+					.expect(res => {
+						const lunchbreak = res.body
+						lunchbreak.should.have.property('absent').which.is.an('array').with.lengthOf(1)
+						lunchbreak.should.have.property('participants').which.is.an('array').with.lengthOf(0)
+					})
+			})
+
 			it('does not delete the associated lunchbreak if other comments exist', async () => {
 				await testServer.start(5001, '11:24:59', '01.07.2018')
 
@@ -765,7 +828,7 @@ describe('Participation', () => {
 					})
 			})
 
-			it('does delete the associated lunchbreak if no other participants or comments exist', async () => {
+			it('does delete the associated lunchbreak if no other participants, absences or comments exist', async () => {
 				await testServer.start(5001, '11:24:59', '01.07.2018')
 
 				await request

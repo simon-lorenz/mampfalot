@@ -1,6 +1,6 @@
 'use strict'
 
-const { Comment, Lunchbreak, GroupMembers, User, Participant } = require('../models')
+const { Absence, Comment, Lunchbreak, GroupMembers, User, Participant } = require('../models')
 const { NotFoundError, RequestError } = require('../classes/errors')
 const { dateIsToday, voteEndingTimeReached } = require('../util/util')
 
@@ -114,11 +114,11 @@ class CommentController {
 
 		const lunchbreak = await Lunchbreak.findByPk(comment.lunchbreakId, {
 			include: [
-				Participant, Comment
+				Participant, Comment, Absence
 			]
 		})
 
-		if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0)
+		if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0 && lunchbreak.absences.length === 0)
 			await lunchbreak.destroy()
 	}
 

@@ -1,4 +1,10 @@
 module.exports = {
+	absences: [
+		{
+			memberId: 1,
+			lunchbreakId: 3
+		}
+	],
 	groupMembers: [
 		{
 			id: 1,
@@ -244,6 +250,14 @@ module.exports = {
 			verificationToken: '$2a$12$1tHI5g0IJm77KrvASnroLeLIHpQGzdCnU2.lZWqDsFCLPVrXTTfkW' // Hash of "valid-token"
 		}
 	],
+	getAbsence(memberId, lunchbreakId) {
+		if (this.absences.find(a => a.memberId === memberId && a.lunchbreakId === lunchbreakId))
+			return this.getGroupMember(memberId)
+	},
+	getAbsences(lunchbreakId) {
+		const absences = this.absences.filter(a => a.lunchbreakId === lunchbreakId)
+		return absences.map(a => this.getAbsence(a.memberId, a.lunchbreakId))
+	},
 	getGroup: function (id) {
 		const group = this.groups.find(group => group.id === id)
 
@@ -361,11 +375,14 @@ module.exports = {
 	getLunchbreak: function(groupId, date) {
 		const lunchbreak = this.lunchbreaks.find(lunchbreak => lunchbreak.groupId === groupId && lunchbreak.date === date)
 		const participants = this.getParticipants(lunchbreak.id)
-		const responseless = this.getAllGroupMembers(lunchbreak.groupId).filter(member => participants.find(p => p.member.id === member.id) === undefined)
+		const absent = this.getAbsences(lunchbreak.id)
+		let responseless = this.getAllGroupMembers(lunchbreak.groupId).filter(member => participants.find(p => p.member.id === member.id) === undefined)
+		responseless = responseless.filter(member => absent.find(absentMember => absentMember.username === member.username) === undefined)
 		return {
 			id: lunchbreak.id,
 			date: lunchbreak.date,
 			participants,
+			absent,
 			responseless,
 			comments: this.getCommentsOfLunchbreak(lunchbreak.id)
 		}
