@@ -361,11 +361,13 @@ module.exports = {
 	getLunchbreak: function(groupId, date) {
 		const lunchbreak = this.lunchbreaks.find(lunchbreak => lunchbreak.groupId === groupId && lunchbreak.date === date)
 		const participants = this.getParticipants(lunchbreak.id)
+		const absent = []
 		const responseless = this.getAllGroupMembers(lunchbreak.groupId).filter(member => participants.find(p => p.member.id === member.id) === undefined)
 		return {
 			id: lunchbreak.id,
 			date: lunchbreak.date,
 			participants,
+			absent,
 			responseless,
 			comments: this.getCommentsOfLunchbreak(lunchbreak.id)
 		}

@@ -1,6 +1,6 @@
 'use strict'
 
-const { Comment, Group, Place, Lunchbreak, User, GroupMembers, Participant, Vote } = require('../models')
+const { Absence, Comment, Group, Place, Lunchbreak, User, GroupMembers, Participant, Vote } = require('../models')
 const { NotFoundError } = require('./errors')
 const Op = require('sequelize').Op
 
@@ -118,6 +118,22 @@ class ResourceLoader {
 					]
 				},
 				{
+					model: Absence,
+					attributes: ['memberId'],
+					include: [
+						{
+							model: GroupMembers,
+							as: 'member',
+							include: [
+								{
+									model: User,
+									attributes: ['username', 'firstName', 'lastName']
+								}
+							]
+						}
+					]
+				},
+				{
 					model: Comment,
 					attributes: ['id', 'text', 'createdAt', 'updatedAt'],
 					include: [
@@ -175,6 +191,22 @@ class ResourceLoader {
 								{
 									model: Place,
 									attributes: ['id', 'name', 'foodType']
+								}
+							]
+						}
+					]
+				},
+				{
+					model: Absence,
+					attributes: ['memberId'],
+					include: [
+						{
+							model: GroupMembers,
+							as: 'member',
+							include: [
+								{
+									model: User,
+									attributes: ['username', 'firstName', 'lastName']
 								}
 							]
 						}

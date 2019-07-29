@@ -345,6 +345,39 @@ describe('Comment', () => {
 					.expect(200)
 			})
 
+			it('does not delete the associated lunchbreak if there are absences', async () => {
+				testServer.start(5001, '11:24:59', '01.07.2018')
+
+				const id = await request
+					.post('/groups/1/lunchbreaks/2018-07-01/comments')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						text: 'delete me!'
+					})
+					.expect(201)
+					.then(res => res.body.id)
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-07-01/absence')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.expect(201)
+
+				await request
+					.delete(`/groups/1/lunchbreaks/2018-07-01/comments/${id}`)
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(204)
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-07-01')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+					.expect(res => {
+						const lunchbreak = res.body
+						lunchbreak.should.have.property('absent').which.is.an('array').with.lengthOf(1)
+						lunchbreak.should.have.property('comments').which.is.an('array').with.lengthOf(0)
+					})
+			})
+
 			it('does not delete the associated lunchbreak if there are other comments', async () => {
 				testServer.start(5001, '11:24:59', '01.07.2018')
 

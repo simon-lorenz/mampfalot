@@ -77,6 +77,18 @@ class LunchbreakController {
 			delete lunchbreak.groupId
 			lunchbreak.comments = lunchbreak.comments.map(comment => this.convertComment(comment))
 			lunchbreak.participants = lunchbreak.participants.map(participant => this.convertParticipant(participant))
+			lunchbreak.absent = lunchbreak.absences.map(absence => {
+				return {
+					username: absence.member.user.username,
+					firstName: absence.member.user.firstName,
+					lastName: absence.member.user.lastName,
+					config: {
+						color: absence.member.color,
+						isAdmin: absence.member.isAdmin,
+					}
+				}
+			})
+			delete lunchbreak.absences
 
 			const group = await ResourceLoader.loadGroupById(groupId)
 			const allMembers = group.members
@@ -96,6 +108,18 @@ class LunchbreakController {
 		// Restructuring Comment properties
 		lunchbreak.comments = lunchbreak.comments.map(comment => this.convertComment(comment))
 		lunchbreak.participants = lunchbreak.participants.map(participant => this.convertParticipant(participant))
+		lunchbreak.absent = lunchbreak.absences.map(absence => {
+			return {
+				username: absence.member.user.username,
+				firstName: absence.member.user.firstName,
+				lastName: absence.member.user.lastName,
+				config: {
+					color: absence.member.color,
+					isAdmin: absence.member.isAdmin,
+				}
+			}
+		})
+		delete lunchbreak.absences
 
 		const group = await ResourceLoader.loadGroupById(groupId)
 		const allMembers = group.members
