@@ -5,7 +5,7 @@ module.exports = (sequelize, DataTypes) => {
 		memberId: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
-			onDelete: 'SET NULL',
+			onDelete: 'CASCADE',
 			unique: {
 				name:'onlyOneAbsencePerLunchbreak',
 				msg: 'This is already marked as absent.'

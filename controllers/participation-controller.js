@@ -208,6 +208,13 @@ class ParticipationController {
 
 		await participation.save()
 
+		await Absence.destroy({
+			where: {
+				memberId: participation.memberId,
+				lunchbreakId: participation.lunchbreakId
+			}
+		})
+
 		values.votes.map(vote => {
 			vote.participantId = participation.id
 			vote.placeId = vote.place ? vote.place.id : null

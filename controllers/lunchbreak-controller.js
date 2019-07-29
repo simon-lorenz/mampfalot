@@ -93,7 +93,9 @@ class LunchbreakController {
 			const group = await ResourceLoader.loadGroupById(groupId)
 			const allMembers = group.members
 			lunchbreak.responseless = allMembers.filter(member => {
-				return lunchbreak.participants.find(p => p.member.username === member.username) === undefined
+				const participates = lunchbreak.participants.find(p => p.member.username === member.username)
+				const absent = lunchbreak.absent.find(absent => absent.username === member.username)
+				return !participates && !absent
 			})
 
 			return lunchbreak
@@ -124,7 +126,9 @@ class LunchbreakController {
 		const group = await ResourceLoader.loadGroupById(groupId)
 		const allMembers = group.members
 		lunchbreak.responseless = allMembers.filter(member => {
-			return lunchbreak.participants.find(p => p.member.username === member.username) === undefined
+			const participates = lunchbreak.participants.find(p => p.member.username === member.username)
+			const absent = lunchbreak.absent.find(absent => absent.username === member.username)
+			return !participates && !absent
 		})
 
 		await this.user.can.readLunchbreak(lunchbreak)

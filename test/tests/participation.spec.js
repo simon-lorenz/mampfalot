@@ -450,6 +450,35 @@ describe('Participation', () => {
 					})
 			})
 
+			it('removes an absence', async () => {
+				await testServer.start(5001, '11:24:59', '26.06.2018')
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-06-26')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+					.expect(res => {
+						const absent = res.body.absent
+						if (absent.find(member => member.username === 'maxmustermann') === undefined)
+							throw new Error('No absence found to delete!')
+					})
+
+				await request
+					.post('/groups/1/lunchbreaks/2018-06-26/participation')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send(payload)
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-06-26')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+					.expect(res => {
+						const absent = res.body.absent
+						if (absent.find(member => member.username === 'maxmustermann'))
+							throw new Error('The absence was not deleted.')
+					})
+			})
+
 			it('successfully creates a participation with lunchbreak existing', async () => {
 				await testServer.start(5001, '11:24:59', '26.06.2018')
 				await request
