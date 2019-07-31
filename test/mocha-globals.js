@@ -5,6 +5,11 @@
 process.env.NODE_ENV = 'test'
 
 /**
+ * Disable logging.
+ */
+process.env.LOG_LEVEL = 'silent'
+
+/**
  * Chai plugins
  */
 const chai = require('chai')

@@ -3,6 +3,8 @@
 const nodemailer = require('nodemailer')
 const handlebars = require('handlebars')
 const fs = require('fs')
+const logger = require('../util/logger')
+const { getRequestId } = require('../util/request-id')
 
 /**
  * Promisifies nodes readFile() function.
@@ -63,8 +65,8 @@ class MailAccount {
 	*/
 	checkConnection() {
 		return this.transport.verify()
-			.then(() => console.log(`[Mailer] Successfully established smtp connection for account ${this.address}`))
-			.catch(() => console.log(`[Mailer] Could not establish smtp connection for account ${this.address}`))
+			.then(() => logger.info({ id: getRequestId() }, `[Mailer] Successfully established smtp connection for account ${this.address}`))
+			.catch(() => logger.error({ id: getRequestId() }, `[Mailer] Could not establish smtp connection for account ${this.address}`))
 	}
 
 	/**
@@ -89,13 +91,14 @@ class MailAccount {
 		if (process.env.NODE_ENV === 'production') {
 			return new Promise((resolve, reject) => {
 				this.transport.sendMail(mail, (err, info) => {
+					logger.info({ id: getRequestId() }, '[Mailer] - Sending email...')
 					if (err) return reject(err)
+					logger.info({ id: getRequestId() }, '[Mailer] - Mail successfully sent!')
 					resolve(info)
 				})
 			})
-		} else if (process.env.NODE_ENV !== 'test') {
-			console.log('This email would get send if the app would run in production mode:')
-			console.log(mail)
+		} else if (process.env.NODE_ENV === 'development') {
+			logger.info({ id: getRequestId(), email: mail }, 'Would send email in production mode.')
 		}
 	}
 
@@ -117,9 +120,9 @@ class Mailer {
 	 * Checks connections of all known accounts.
 	 * Results are logged to the console.
 	 */
-	checkConnections() {
+	async checkConnections() {
 		for (const account of this.accounts) {
-			account.checkConnection()
+			await account.checkConnection()
 		}
 	}
 
