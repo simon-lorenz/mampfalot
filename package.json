@@ -7,7 +7,9 @@
     "node": "10.15.1"
   },
   "scripts": {
-    "lint": "./node_modules/.bin/eslint . --ext .js",
+    "start": "node server",
+    "start:dev": "nodemon server --quiet | pino-pretty -t \"SYS:HH:MM:ss\" -i id,hostname,pid,req,res,responseTime",
+    "lint": "eslint . --ext .js",
     "test": "mocha",
     "test-auth": "npm run test -- -g /auth",
     "test-users": "npm run test -- -g /users",
@@ -28,16 +30,19 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.2",
+    "cls-hooked": "^4.2.2",
     "cors": "^2.8.4",
     "dotenv": "^5.0.1",
     "express": "^4.16.3",
     "handlebars": "^4.1.2",
     "helmet": "^3.13.0",
     "jsonwebtoken": "^8.2.1",
-    "morgan": "^1.9.1",
     "nodemailer": "^4.6.8",
     "pg": "^6.0.0",
-    "sequelize": "^5.9.0"
+    "pino": "^5.13.1",
+    "pino-http": "^4.2.0",
+    "sequelize": "^5.9.0",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "chai": "^4.1.2",
@@ -46,6 +51,8 @@
     "eslint": "^5.11.1",
     "mocha": "^6.1.4",
     "mocha-clean": "^1.0.0",
+    "nodemon": "^1.19.1",
+    "pino-pretty": "^3.2.0",
     "supertest": "^3.1.0",
     "swagger-parser": "^6.0.5",
     "timekeeper": "^2.1.2"

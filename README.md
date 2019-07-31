@@ -11,18 +11,18 @@ An express-based http-api for https://mampfalot.app.
 
 ### Setup
 
-1. Run ```npm install``` to install all dependencies.
+1. Run ```$ npm install``` to install all dependencies.
 2. Create a new postgres database.
 3. In the root directory you'll find a ```.env.example``` file. Copy it and create a new file named ```.env```. Modify the environment variables in it according to your development environment.
-4. Run ```npm start``` to launch the webserver.
+4. Run ```$ npm run start:dev``` to launch the webserver.
 
 ### Testing
 
-This project contains a test suite with integration tests. You can run all of them with ```npm test```. It may take some time to run them all, but you can filter with ```npm test -- -g <RegEx>```.
+This project contains a test suite with integration tests. You can run all of them with ```$ npm test```. It may take some time to run them all, but you can filter with ```$ npm test -- -g <RegEx>```.
 
 ### Linting
 
-Run ESLint with ```npm run lint```.
+Run ESLint with ```$ npm run lint```.
 
 ### Documentation
 

@@ -6,9 +6,10 @@ const Sequelize = require('sequelize')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const helmet = require('helmet')
-const morgan = require('morgan')
 const Promise = require('bluebird')
+const logger = require('./util/logger')
 const { asyncMiddleware } = require('./util/util')
+const { initializeRequestId, getRequestId } = require('./util/request-id')
 const { initializeControllers, initializeUser } = require('./util/middleware')
 const { AuthenticationError, AuthorizationError, NotFoundError } = require('./classes/errors')
 const { MethodNotAllowedError, ValidationError, RequestError, ServerError } = require('./classes/errors')
@@ -44,9 +45,17 @@ app.use((req, res, next) => {
 app.use(cors())
 app.use(helmet())
 
-if (process.env.NODE_ENV !== 'test') {
-	app.use(morgan('common'))
-}
+app.use(initializeRequestId)
+
+app.use(require('pino-http')({
+	logger: logger,
+	serializers: {
+		msg: () => 'Request completed',
+	},
+	genReqId: function() {
+		return getRequestId()
+	}
+}))
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({
@@ -89,6 +98,7 @@ app.use('/api/groups', [asyncMiddleware(initializeUser), initializeControllers],
 // Handle request errors
 app.use((err, req, res, next) => {
 	if (err instanceof RequestError) {
+		logger.warn({ id: getRequestId(), error: err }, 'RequestError')
 		res.status(400).send(err)
 	} else {
 		next(err)
@@ -98,6 +108,7 @@ app.use((err, req, res, next) => {
 // Handle authentication errors
 app.use((err, req, res, next) => {
 	if (err instanceof AuthenticationError) {
+		logger.warn({ id: getRequestId(), error: err }, 'AuthenticationError')
 		res.status(401).send(err)
 	} else {
 		next(err)
@@ -107,6 +118,7 @@ app.use((err, req, res, next) => {
 // Handle authorization errors
 app.use((err, req, res, next) => {
 	if (err instanceof AuthorizationError) {
+		logger.warn({ id: getRequestId(), error: err }, 'AuthorizationError')
 		res.status(403).send(err)
 	} else {
 		next(err)
@@ -116,6 +128,7 @@ app.use((err, req, res, next) => {
 // Handle not found errors
 app.use((err, req, res, next) => {
 	if (err instanceof NotFoundError) {
+		logger.warn({ id: getRequestId(), error: err }, 'NotFoundError')
 		res.status(404).send(err)
 	} else {
 		next(err)
@@ -125,6 +138,7 @@ app.use((err, req, res, next) => {
 // Handle MethodNotAllowedErrors
 app.use((err, req, res, next) => {
 	if (err instanceof MethodNotAllowedError) {
+		logger.warn({ id: getRequestId(), error: err }, 'MethodNotAllowedError')
 		res.status(405).send(err)
 	} else {
 		next(err)
@@ -149,7 +163,6 @@ app.use((err, req, res, next) => {
 		const validationError = new ValidationError()
 		validationError.fromBulkRecordError(bulkRecordError)
 		err = validationError
-		// console.log(JSON.stringify(err))
 	}
 
 	next(err)
@@ -159,6 +172,7 @@ app.use((err, req, res, next) => {
 app.use((err, req, res, next) => {
 	if (err instanceof ValidationError) {
 		res.status(400).send(err)
+		logger.warn({ id: getRequestId(), error: err }, 'ValidationError')
 	} else {
 		next(err)
 	}
@@ -168,6 +182,7 @@ app.use((err, req, res, next) => {
 app.use((err, req, res, next) => {
 	if (err instanceof Sequelize.ForeignKeyConstraintError) {
 		res.status(400).send(err)
+		logger.warn({ id: getRequestId(), error: err }, 'ForeignConstraintError')
 	} else {
 		next(err)
 	}
@@ -176,7 +191,7 @@ app.use((err, req, res, next) => {
 // Handle database errors
 app.use((err, req, res, next) => {
 	if (err instanceof Sequelize.DatabaseError) {
-		console.error(err.toString())
+		logger.error({ id: getRequestId(), error: err }, 'DatabaseError')
 		res.status(500).send(new ServerError())
 	} else {
 		next(err)
@@ -185,16 +200,17 @@ app.use((err, req, res, next) => {
 
 // Handle every other possible error
 app.use((err, req, res, next) => {
-	console.error(err.toString())
+	logger.error({ id: getRequestId(), error: err }, 'Unexpected Error')
 	res.status(500).send(new ServerError())
 })
 
 app.use((req, res, next) => {
-	const error = {
+	const err = {
 		type: 'NotFoundError',
 		message: 'This route could not be found.'
 	}
-	res.status(404).send(error)
+	logger.warn({ id: getRequestId(), error: err }, 'Request to unknown route')
+	res.status(404).send(err)
 })
 
 module.exports = app

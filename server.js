@@ -4,32 +4,36 @@ const app = require('./app')
 const PORT = process.env.PORT || 5000
 const sequelize = require('./models').sequelize
 const mailer = require('./util/mailer')
+const logger = require('./util/logger')
 
-app.listen(PORT, () => {
-	console.log(`[Config] Launched in ${process.env.NODE_ENV} mode.`)
-	console.log(`[Config] Listening to port ${PORT}`)
-	console.log(`[Config] Frontend URL: ${process.env.FRONTEND_BASE_URL}`)
-	console.log('[Database] Trying to connect to the database ...')
-	sequelize.authenticate()
-		.then(() => console.log('[Database] Connection successfully established.'))
-		.then(async () => {
-			try {
-				console.log('[Database] Initializing sync...')
-				await sequelize.sync()
-				console.log('[Database] Sync complete!')
-			} catch (err) {
-				console.log('[Database] Sync failed!')
-				console.error(JSON.stringify(err))
-				console.info('Shutting down...')
-				process.exit()
-			}
-		})
-		.catch((err) => {
-			console.error('[Database] Connection could not be established.')
-			console.error(JSON.stringify(err))
-			console.info('Shutting down...')
+async function start() {
+	logger.info('[Application] Initializing...')
+	logger.info(`[Config] Running in ${process.env.NODE_ENV} mode.`)
+	logger.info(`[Config] Log Level is: ${process.env.LOG_LEVEL}`)
+	logger.info(`[Config] Frontend URL: ${process.env.FRONTEND_BASE_URL}`)
+
+	try {
+		logger.info('[Database] Trying to connect to the database ...')
+		await sequelize.authenticate()
+		logger.info('[Database] Connection successfully established.')
+		logger.info('[Database] Initializing sync...')
+		await sequelize.sync()
+		logger.info('[Database] Sync complete!')
+	} catch (err) {
+		if (err.name === 'SequelizeConnectionError') {
+			logger.error({ error: err }, '[Database] Connection could not be established.')
+			logger.fatal('Shutting down...')
 			process.exit()
-		})
+		} else {
+			logger.error({ error: err }, '[Database] Sync failed!')
+			logger.fatal('Shutting down...')
+			process.exit()
+		}
+	}
 
-	mailer.checkConnections()
-})
+	await mailer.checkConnections()
+
+	app.listen(PORT, () => logger.info(`[Server] Listening to port ${PORT}`))
+}
+
+start()
