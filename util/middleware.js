@@ -1,7 +1,7 @@
 'use strict'
 
 const { RequestError, MethodNotAllowedError } = require('../classes/errors')
-const { verifyToken, getTokenFromAuthorizationHeader } = require('./authentication')
+const { verifySession } = require('./authentication')
 const User = require('../classes/user')
 const AbsenceController = require('../controllers/absence-controller')
 const CommentController = require('../controllers/comment-controller')
@@ -112,9 +112,8 @@ module.exports = {
 	 */
 	async initializeUser(req, res, next) {
 		const user = new User()
-		const token = getTokenFromAuthorizationHeader(req)
-		const payload = verifyToken(token)
-		await user.setId(payload.id)
+		const id = await verifySession(req, res)
+		await user.setId(id)
 		res.locals.user = user
 		next()
 	},

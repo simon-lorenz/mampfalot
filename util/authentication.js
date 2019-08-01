@@ -1,9 +1,9 @@
 'use strict'
 
-const jwt = require('jsonwebtoken')
 const { AuthenticationError } = require('../classes/errors')
-const { User } = require('../models')
+const { User, Session } = require('../models')
 const bcrypt = require('bcryptjs')
+const uuidv4 = require('uuid/v4')
 
 /**
  * Decodes a basic authorization header and returns the credentials.
@@ -28,10 +28,12 @@ function extractBasicCredentialsFromHeader(authorizationHeader) {
 }
 
 /**
- * Returns an access token if the credentials are correct and the user is verified.
+ * Throws errors, if the credentials do not match or the user is not verified.
+ * @param {string} username
+ * @param {string} password
+ * @throws {AuthenticationError}
  */
-async function checkCredentialsAndGenerateToken(username, password) {
-	// TODO: Split this function into checkCredentials, checkVerified and generateToken
+async function checkCredentials(username, password) {
 	const user = await User.unscoped().findOne({
 		where: {
 			username: username
@@ -49,41 +51,60 @@ async function checkCredentialsAndGenerateToken(username, password) {
 	const passwordMatch = await bcrypt.compare(password, user.password)
 	if (!passwordMatch)
 		throw new AuthenticationError('The provided credentials are incorrect.')
-
-	return jwt.sign({ id: user.id }, process.env.SECRET_KEY, { expiresIn: '10h' })
 }
 
 /**
- * Returns the jwt from the authorization header of a request.
- * If the request contains no authorization header, this function will throw an AuthenticationError.
- * @param {string} request
- * @return {string} A jwt
- * @throws  {AuthenticationError}
+ * Creates a new session token, writes it to the database and returns it.
+ * @param {string} username
+ * @param {integer} [expiresIn] After which amount of time (in minutes) should this session expire? Default: No Expiration.
+ * @returns {string} A uuid/v4 session token
  */
-function getTokenFromAuthorizationHeader(request) {
-	const authorizationHeader = request.headers['authorization']
-	if (authorizationHeader)
-		return authorizationHeader.split(' ')[1]
-	else
+async function initializeSession(username, expiresIn) {
+	const user = await User.findOne({
+		attributes: ['id'],
+		where: {
+			username
+		}
+	})
+
+	// TODO: Expiry
+
+	const session = await Session.create({
+		userId: user.id,
+		token: uuidv4()
+	})
+	return session.token
+}
+
+/**
+ * Checks if the session id is still valid and returns the associated userId.
+	* @param {*} req
+	* @returns {number} userId
+	* @throws {AuthenticationError}
+	*/
+async function verifySession(req, res) {
+	if (!req.cookies.session)
 		throw new AuthenticationError('This request requires authentication.')
-}
 
-/**
- * Verifies a jwt and returns the content.
- * @param {string} token A jwt
- * @returns {object}
- */
-function verifyToken(token) {
-	try {
-		return jwt.verify(token, process.env.SECRET_KEY)
-	} catch (error) {
-		throw new AuthenticationError('The provided token is invalid.')
+	const session = await Session.findOne({
+		attributes: ['userId'],
+		where: {
+			token: req.cookies.session
+			// TODO: Expiry
+		}
+	})
+
+	if (session === null) {
+		res.clearCookie('session')
+		throw new AuthenticationError('The provided session is invalid.')
 	}
+	else
+		return session.userId
 }
 
 module.exports = {
-	checkCredentialsAndGenerateToken,
-	getTokenFromAuthorizationHeader,
+	checkCredentials,
 	extractBasicCredentialsFromHeader,
-	verifyToken
+	verifySession,
+	initializeSession
 }

@@ -4,6 +4,7 @@ require('dotenv').load()
 const app = require('express')()
 const Sequelize = require('sequelize')
 const bodyParser = require('body-parser')
+const cookieParser = require('cookie-parser')
 const cors = require('cors')
 const helmet = require('helmet')
 const Promise = require('bluebird')
@@ -55,6 +56,8 @@ app.use(morgan('short', {
 		}
 	}
 }))
+
+app.use(cookieParser())
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({
