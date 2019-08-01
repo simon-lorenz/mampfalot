@@ -26,18 +26,16 @@ describe('Authentication', () => {
 					.expect(200)
 			})
 
-			it('responds with a well formed token', async () => {
+			it('responds with a session cookie', async () => {
 				await request
 					.get('/')
 					.auth('maxmustermann', '123456')
 					.expect(200)
 					.expect(res => {
-						const token = res.body.token
-						const tokenPayload = token.split('.')[1]
-						let payload = Buffer.from(tokenPayload, 'base64').toString()
-						payload = JSON.parse(payload)
-						payload.should.have.all.keys(['id', 'exp', 'iat'])
-						payload.id.should.be.equal(1)
+						res.headers['set-cookie'].should.be.an('array').with.lengthOf(1)
+						const sessionCookie = res.headers['set-cookie'][0]
+						sessionCookie.split('=')[0].should.be.equal('session')
+						sessionCookie.split('=')[1].should.not.be.empty
 					})
 			})
 

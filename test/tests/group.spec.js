@@ -2,7 +2,7 @@ const setupDatabase = require('../utils/scripts/setup-database')
 const testData = require('../utils/scripts/test-data')
 const errorHelper = require('../utils/errors')
 const request = require('supertest')('http://localhost:5001/api')
-const TokenHelper = require('../utils/token-helper')
+const SessionHelper = require('../utils/session-helper')
 
 describe('Group', () => {
 	describe('/groups', () => {
@@ -24,7 +24,7 @@ describe('Group', () => {
 			it('fails if required values are missing', async () => {
 				await request
 					.post('/groups')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(400)
 					.expect(res => {
 						const MESSAGE = 'This request has to provide all of the following body values: name'
@@ -37,7 +37,7 @@ describe('Group', () => {
 			it('sucessfully creates a group', async () => {
 				await request
 					.post('/groups')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send(newGroup)
 					.expect(201)
 					.expect(res => {
@@ -52,7 +52,7 @@ describe('Group', () => {
 			it('adds the creating user as group admin', async () => {
 				await request
 					.post('/groups')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send(newGroup)
 					.expect(201)
 					.then(res => {
@@ -69,7 +69,7 @@ describe('Group', () => {
 		it('sends a 404 if the group does not exist', async () => {
 			await request
 				.get('/groups/99')
-				.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+				.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 				.expect(404)
 				.expect(res => {
 					errorHelper.checkNotFoundError(res.body, 'Group', 99)
@@ -84,7 +84,7 @@ describe('Group', () => {
 			it('sends a valid group-resource', async () => {
 				await request
 					.get('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 					.expect(res => res.body.should.be.equalInAnyOrder(testData.getGroup(1)))
 			})
@@ -92,7 +92,7 @@ describe('Group', () => {
 			it('sends 403 if user isn\'t a group member', async () => {
 				await request
 					.get('/groups/2')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(403)
 					.expect(res => {
 						const expectedError = {
@@ -107,7 +107,7 @@ describe('Group', () => {
 			it('sends 404 if group doesn\'t exist', async () => {
 				await request
 					.get('/groups/99')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 					.expect(res => {
 						errorHelper.checkNotFoundError(res.body, 'Group', 99)
@@ -123,7 +123,7 @@ describe('Group', () => {
 			it('fails with 404 if group doesn\'t exist', async () => {
 				await request
 					.put('/groups/99')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({ name: 'New name' })
 					.expect(404)
 					.expect(res => {
@@ -134,7 +134,7 @@ describe('Group', () => {
 			it('fails with 403 if the user is no group admin', async () => {
 				await request
 					.put('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.send({ name: 'New name' })
 					.expect(403)
 					.expect(res => {
@@ -150,7 +150,7 @@ describe('Group', () => {
 			it('requires at least one parameter', async () => {
 				await request
 					.put('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send()
 					.expect(400)
 					.expect(res => {
@@ -161,7 +161,7 @@ describe('Group', () => {
 			it('fails if pointsPerDay less than maxPointsPerVote', async () => {
 				await request
 					.put('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({
 						pointsPerDay: 69,
 						maxPointsPerVote: 70
@@ -180,7 +180,7 @@ describe('Group', () => {
 			it('fails if voteEndingTime is greater than lunchTime', async () => {
 				await request
 					.put('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({
 						voteEndingTime: '13:00:00',
 						lunchTime: '12:30:00'
@@ -199,7 +199,7 @@ describe('Group', () => {
 			it('fails if minPointsPerVote is greater than maxPointsPerVote', async () => {
 				await request
 					.put('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({
 						minPointsPerVote: 50,
 						maxPointsPerVote: 40
@@ -218,7 +218,7 @@ describe('Group', () => {
 			it('fails if maxPointsPerVote is less than minPointsPerVote', async () => {
 				await request
 					.put('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({
 						minPointsPerVote: 30,
 						maxPointsPerVote: 29
@@ -237,7 +237,7 @@ describe('Group', () => {
 			it('fails if maxPointsPerVote is greater than pointsPerDay', async () => {
 				await request
 					.put('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({
 						pointsPerDay: 30,
 						maxPointsPerVote: 31
@@ -256,7 +256,7 @@ describe('Group', () => {
 			it('fails if minPointsPerVote is greater than pointsPerDay', async () => {
 				await request
 					.put('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({
 						minPointsPerVote: 101,
 						pointsPerDay: 100
@@ -275,7 +275,7 @@ describe('Group', () => {
 			it('fails if utcOffset is greater than 720', async () => {
 				await request
 					.put('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({ utcOffset: 721 })
 					.expect(400)
 					.expect(res => {
@@ -291,7 +291,7 @@ describe('Group', () => {
 			it('fails if utcOffset is less than -720', async () => {
 				await request
 					.put('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({ utcOffset: -721 })
 					.expect(400)
 					.expect(res => {
@@ -307,7 +307,7 @@ describe('Group', () => {
 			it('fails if utcOffset is not a multiple of 60', async () => {
 				await request
 					.put('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({ utcOffset: 61 })
 					.expect(400)
 					.expect(res => {
@@ -333,7 +333,7 @@ describe('Group', () => {
 
 				await request
 					.put('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send(data)
 					.expect(200)
 					.expect(res => {
@@ -346,7 +346,7 @@ describe('Group', () => {
 			it('converts string numbers into integers', async () => {
 				await request
 					.put('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({
 						name: 'New name',
 						lunchTime: '14:00:00',
@@ -375,7 +375,7 @@ describe('Group', () => {
 			it('requires admin rights', async () => {
 				await request
 					.delete('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(403)
 					.expect(res => {
 						const expectedError = {
@@ -390,12 +390,12 @@ describe('Group', () => {
 			it('deletes a group successfully', async () => {
 				await request
 					.delete('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				await request
 					.get('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 			})
 
@@ -403,20 +403,20 @@ describe('Group', () => {
 				await request
 					.get('/users/me/participations/1')
 					.query({ from: '2018-01-01', to: '2018-12-31' })
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.then(res => {
 						res.body.should.be.an('array').length.which.is.above(0)
 					})
 
 				await request
 					.delete('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				await request
 					.get('/users/me/participations/1')
 					.query({ from: '2018-01-01', to: '2018-12-31' })
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.then(res => {
 						res.body.should.be.an('array').with.lengthOf(0)
 					})
@@ -427,18 +427,18 @@ describe('Group', () => {
 			it('deletes all members of this group', async () => {
 				const members = await request
 					.get('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.then(res => res.body.members)
 
 				await request
 					.delete('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				for (const member of members) {
 					await request
 						.get('/users/me/groups')
-						.set(await TokenHelper.getAuthorizationHeader(member.username))
+						.set('cookie', await SessionHelper.getSessionCookie(member.username))
 						.then(res => {
 							if (res.body.find(group => group.id === 1))
 								throw new Error('User is still a member of group 1')
@@ -449,12 +449,12 @@ describe('Group', () => {
 			it('deletes all associated invitatons', async () => {
 				await request
 					.delete('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				await request
 					.get('/users/me/invitations')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(res => {
 						const invitations = res.body
 						invitations.should.be.an('array').with.lengthOf(0)
@@ -472,7 +472,7 @@ describe('Group', () => {
 			it('sends a correct group collection', async () => {
 				await request
 					.get('/users/me/groups')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 					.expect(res => {
 						res.body.should.be.equalInAnyOrder(testData.getGroupsOfUser(1))
@@ -480,7 +480,7 @@ describe('Group', () => {
 
 				await request
 					.get('/users/me/groups')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(200)
 					.expect(res => {
 						res.body.should.be.equalInAnyOrder(testData.getGroupsOfUser(2))
@@ -488,7 +488,7 @@ describe('Group', () => {
 
 				await request
 					.get('/users/me/groups')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(200)
 					.expect(res => {
 						res.body.should.be.equalInAnyOrder(testData.getGroupsOfUser(3))
@@ -514,7 +514,7 @@ describe('Group', () => {
 // 		it('sends a valid place collection', async () => {
 // 			await request
 // 				.get('/groups/1/places')
-// 				.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+// 				.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 // 				.expect(200)
 // 				.expect(res => {
 // 					const collection = res.body
@@ -543,7 +543,7 @@ describe('Group', () => {
 // 		it('requires group admin rights', async () => {
 // 			await request
 // 				.post('/groups/1/places')
-// 				.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+// 				.set(await SessionHelper.getAuthorizationHeader('johndoe1'))
 // 				.send(newPlace)
 // 				.expect(403)
 // 				.expect(res => {
@@ -560,7 +560,7 @@ describe('Group', () => {
 // 			newPlace.foodType = ''
 // 			await request
 // 				.post('/groups/1/places')
-// 				.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+// 				.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 // 				.send(newPlace)
 // 				.expect(400)
 // 				.expect(res => {
@@ -576,7 +576,7 @@ describe('Group', () => {
 // 		it('creates a new place correctly', async () => {
 // 			await request
 // 				.post('/groups/1/places')
-// 				.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+// 				.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 // 				.send(newPlace)
 // 				.expect(200)
 // 				.expect(response => {
@@ -591,7 +591,7 @@ describe('Group', () => {
 // 		it('sends 400 if no name and foodType is provided', async () => {
 // 			await request
 // 				.post('/groups/1/places')
-// 				.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+// 				.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 // 				.send( {} )
 // 				.expect(400)
 // 				.expect(res => {

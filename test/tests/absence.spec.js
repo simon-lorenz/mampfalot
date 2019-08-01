@@ -1,7 +1,7 @@
 const setupDatabase = require('../utils/scripts/setup-database')
 const errorHelper = require('../utils/errors')
 const request = require('supertest')('http://localhost:5001/api')
-const TokenHelper = require('../utils/token-helper')
+const SessionHelper = require('../utils/session-helper')
 const testData = require('../utils/scripts/test-data')
 const testServer = require('../utils/test-server')
 
@@ -19,12 +19,12 @@ describe('Absence', () => {
 			it('marks a user as absent', async() => {
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-25/absence')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(201)
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-25')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.then(res => res.body)
 					.then(lunchbreak => {
 						lunchbreak.absent.should.be.deep.equal([
@@ -37,17 +37,17 @@ describe('Absence', () => {
 				testServer.start(5001, '11:24:59', '01.07.2018')
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/absence')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(201)
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 					.expect(res => {
 						res.body.absent.should.be.deep.equal([
@@ -59,17 +59,17 @@ describe('Absence', () => {
 			it('does not allow duplicates, but fails graciously', async () => {
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-25/absence')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(201)
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-25/absence')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(201)
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-25')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.then(res => res.body)
 					.then(lunchbreak => {
 						lunchbreak.absent.should.be.deep.equal([
@@ -81,7 +81,7 @@ describe('Absence', () => {
 			it('fails if the user is not a group member', async () => {
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-25/absence')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(403)
 					.expect(res => {
 						errorHelper.checkAuthorizationError(res.body, {
@@ -95,12 +95,12 @@ describe('Absence', () => {
 			it('removes a participation', async () => {
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-25/absence')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(201)
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-25')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 					.expect(res => {
 						const lunchbreak = res.body
@@ -114,14 +114,14 @@ describe('Absence', () => {
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/absence')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(201)
 
 				testServer.start(5001, '11:25:01', '01.07.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/absence')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(400)
 					.expect(res => {
 						errorHelper.checkRequestError(res.body, 'The end of voting has been reached, therefore you cannot mark yourself as absent.')
@@ -133,7 +133,7 @@ describe('Absence', () => {
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/absence')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(400)
 					.expect(res => {
 						errorHelper.checkRequestError(res.body, 'The end of voting is reached, therefore you cannot create a new lunchbreak.')
@@ -141,7 +141,7 @@ describe('Absence', () => {
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 			})
 
@@ -150,7 +150,7 @@ describe('Absence', () => {
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/absence')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(400)
 					.expect(res => {
 						errorHelper.checkRequestError(res.body, 'Absences can only be created for today.')
@@ -158,12 +158,12 @@ describe('Absence', () => {
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-02')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 			})
 
@@ -172,7 +172,7 @@ describe('Absence', () => {
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/absence')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(400)
 					.expect(res => {
 						errorHelper.checkRequestError(res.body, 'Absences can only be created for today.')
@@ -180,12 +180,12 @@ describe('Absence', () => {
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-30')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 			})
 
@@ -201,17 +201,17 @@ describe('Absence', () => {
 			it('removes an absence', async () => {
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-25/absence')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(201)
 
 				await request
 					.delete('/groups/1/lunchbreaks/2018-06-25/absence')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-25/')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 					.then(res => res.body)
 					.then(lunchbreak => lunchbreak.absent.should.be.an('array').with.lengthOf(0))
@@ -220,14 +220,14 @@ describe('Absence', () => {
 			it('fails if voteEndingTime is reached', async () => {
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-25/absence')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(201)
 
 				testServer.start(5001, '11:25:01', '25.06.2018')
 
 				await request
 					.delete('/groups/1/lunchbreaks/2018-06-25/absence')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(400)
 					.then(res => res.body)
 					.then(error => {
@@ -238,14 +238,14 @@ describe('Absence', () => {
 			it('fails if the date lies in the past', async () => {
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-25/absence')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(201)
 
 				testServer.start(5001, '11:24:59', '26.06.2018')
 
 				await request
 					.delete('/groups/1/lunchbreaks/2018-06-25/absence')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(400)
 					.then(res => res.body)
 					.then(error => {
@@ -258,22 +258,22 @@ describe('Absence', () => {
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/absence')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(201)
 
 				await request
 					.delete('/groups/1/lunchbreaks/2018-07-01/absence')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 			})
 

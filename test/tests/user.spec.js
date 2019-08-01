@@ -5,7 +5,7 @@ const errorHelper = require('../utils/errors')
 const { AuthenticationErrorTypes } = require('../utils/errors')
 const util = require('../utils/util')
 const request = require('supertest')('http://localhost:5001/api')
-const TokenHelper = require('../utils/token-helper')
+const SessionHelper = require('../utils/session-helper')
 const testData = require('../utils/scripts/test-data')
 
 describe('User', () => {
@@ -71,7 +71,7 @@ describe('User', () => {
 			it('requires body values', async () => {
 				await request
 					.post('/users')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({})
 					.expect(400)
 					.expect(res => {
@@ -487,7 +487,7 @@ describe('User', () => {
 			it('returns a valid user resource for Max Mustermann', async () => {
 				await request
 					.get('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 					.expect(res => {
 						res.body.should.be.deep.eql(testData.getUserWithEmail(1))
@@ -497,7 +497,7 @@ describe('User', () => {
 			it('returns a valid user resource for Philipp Loten', async () => {
 				await request
 					.get('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(200)
 					.expect(res => {
 						res.body.should.be.deep.eql(testData.getUserWithEmail(3))
@@ -513,7 +513,7 @@ describe('User', () => {
 			it('fails with 400 if not all parameters are provided', async () => {
 				await request
 					.put('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(400)
 					.expect(res => {
 						errorHelper.checkRequestError(res.body, 'This request has to provide all of the following body values: username, firstName, lastName, email')
@@ -525,7 +525,7 @@ describe('User', () => {
 				payload.password = 'my-new-password-123'
 				await request
 					.put('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send(payload)
 					.expect(400)
 					.expect(res => {
@@ -539,7 +539,7 @@ describe('User', () => {
 				payload.currentPassword = 'wrongPassword'
 				await request
 					.put('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send(payload)
 					.expect(401)
 					.expect(res => {
@@ -550,7 +550,7 @@ describe('User', () => {
 			it('updates a user correctly', async () => {
 				await request
 					.put('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({
 						username: 'fancy-new-name',
 						firstName: 'Neuer',
@@ -582,7 +582,7 @@ describe('User', () => {
 
 				await request
 					.put('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send(payload)
 					.expect(200)
 					.expect(res => {
@@ -598,7 +598,7 @@ describe('User', () => {
 
 				await request
 					.put('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send(payload)
 					.expect(200)
 					.expect(res => {
@@ -610,7 +610,7 @@ describe('User', () => {
 			it('does not hash the password again if it has not changed', async () => {
 				await request
 					.put('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({
 						username: 'fancy-new-name',
 						firstName: 'Neuer',
@@ -634,7 +634,7 @@ describe('User', () => {
 			it('deletes an existing user', async () => {
 				await request
 					.delete('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(204)
 
 				await request
@@ -645,12 +645,12 @@ describe('User', () => {
 			it('deletes all group memberships of this user', async () => {
 				await request
 					.delete('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(204)
 
 				await request
 					.get('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(res => {
 						res.body.members.should.be.deep.eql([ testData.getGroupMember(1) ])
 					})
@@ -659,12 +659,12 @@ describe('User', () => {
 			it('sets the username on associated comments to null', async () => {
 				await request
 					.delete('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(204)
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-25')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 					.expect(res => {
 						const comment = res.body.comments.find(c => c.id === 3)
@@ -675,12 +675,12 @@ describe('User', () => {
 			it('sets the member property on associated participants to null', async () => {
 				await request
 					.delete('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(204)
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-25')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 					.expect(res => {
 						const participants = res.body.participants

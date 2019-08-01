@@ -191,7 +191,7 @@ paths:
       tags:
         - User
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Get the currently authenticated user.
       responses:
         200:
@@ -207,7 +207,7 @@ paths:
       tags:
         - User
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Update the currently authenticated user.
       description: It's not necessary to include the "password" field in the request body.
                    If you do so (to change the password), please also add the field "currentPassword".
@@ -229,7 +229,7 @@ paths:
       tags:
         - User
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Delete the currently authenticated user.
       requestBody:
         required: true
@@ -252,7 +252,7 @@ paths:
       tags:
         - Group
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Obtain all groups the current user is a member of.
       responses:
         200:
@@ -272,7 +272,7 @@ paths:
       tags:
         - Invitation
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Get a collection of all current Invitations.
       responses:
         200:
@@ -295,7 +295,7 @@ paths:
       tags:
         - Invitation
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Accept or reject a invitation.
       parameters:
         - name: accept
@@ -335,7 +335,7 @@ paths:
       tags:
         - Participation
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Get a list of Participations between two dates.
       responses:
         200:
@@ -355,7 +355,7 @@ paths:
       tags:
         - Group
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Create a new group.
       description: The creating user will automatically be added as group administrator.
       requestBody:
@@ -389,7 +389,7 @@ paths:
       tags:
         - Group
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Get a single group resource.
       responses:
         200:
@@ -409,7 +409,7 @@ paths:
       tags:
         - Group
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Update a existing group.
       requestBody:
         required: true
@@ -437,7 +437,7 @@ paths:
       tags:
         - Group
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Delete a group.
       description: To delete a group you have to be an administrator of this group.
       responses:
@@ -459,7 +459,7 @@ paths:
       tags:
         - Place
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Create a new place.
       description: Requires group admin rights.
       requestBody:
@@ -494,7 +494,7 @@ paths:
       tags:
         - Place
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Update a single place.
       description: Requires group admin rights.
       requestBody:
@@ -523,7 +523,7 @@ paths:
       tags:
         - Place
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Delete a place.
       description: Requires group admin rights.
       responses:
@@ -546,7 +546,7 @@ paths:
       tags:
         - Group Member
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Update a single group member.
       description: If the requesting user is a group member, he/she can only change their own color.
                    A group admin can change the color of other group members and grant or revoke admin rights.
@@ -576,7 +576,7 @@ paths:
       tags:
         - Group Member
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Remove a group member.
       description: This request requires group admin rights.
       responses:
@@ -598,7 +598,7 @@ paths:
       tags:
         - Invitation
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Returns a collection of all current invitations.
       description: This request requires group admin rights.
       responses:
@@ -627,7 +627,7 @@ paths:
       tags:
         - Invitation
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Invite a user.
       description: This request requires group admin rights.
       requestBody:
@@ -656,7 +656,7 @@ paths:
       tags:
         - Invitation
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Withdraw an invitation.
       description: This request requires group admin rights.
       responses:
@@ -679,7 +679,7 @@ paths:
       tags:
         - Lunchbreak
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       parameters:
         - name: from
           in: query
@@ -723,7 +723,7 @@ paths:
       tags:
         - Lunchbreak
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Get a lunchbreak at a given date.
       responses:
         200:
@@ -749,7 +749,7 @@ paths:
       tags:
         - Absence
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Mark the current user as absent.
       description: If the user is already participating, this request will delete the participation!
       responses:
@@ -766,7 +766,7 @@ paths:
       tags:
         - Absence
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Remove the absent flag for the current user.
       responses:
         204:
@@ -788,7 +788,7 @@ paths:
       tags:
         - Participation
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Particpate at this lunchbreak.
       description: This operation is only permitted for today and until voteEndingTime is reached.
                    If no lunchbreak at this date exists, a new one is created.
@@ -818,7 +818,7 @@ paths:
       tags:
         - Participation
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Update the participation (even after voteEndingTime).
       description: 'Important: Votes are ignored if voteEndingTime is reached.'
       requestBody:
@@ -847,7 +847,7 @@ paths:
       tags:
         - Participation
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Delete the participation.
       description: This operation is only permitted for today and until voteEndingTime is reached.
                    If no other participants and comments exist, the lunchbreak will be deleted.
@@ -873,7 +873,7 @@ paths:
       tags:
         - Comment
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Post a new comment.
       description: This operation is only permitted for existing lunchbreaks and todays lunchbreak.
                    If no lunchbreak for today exists, a new one is created.
@@ -908,7 +908,7 @@ paths:
       tags:
         - Comment
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Update a comment.
       requestBody:
         required: true
@@ -936,7 +936,7 @@ paths:
       tags:
         - Comment
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       summary: Delete a single comment.
       description: If no other comments and participants exist, the lunchbreak will be deleted.
       responses:
@@ -1344,10 +1344,10 @@ components:
           $ref: '#/components/schemas/Place'
 
   securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: session
 
     basicAuth:
       type: http

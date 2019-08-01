@@ -10,7 +10,8 @@ const {
 	Participant,
 	Vote,
 	Comment,
-	Invitation } = require('../../../models')
+	Invitation,
+	Session } = require('../../../models')
 const db = require('../../../models').sequelize
 const data = require('./test-data')
 const bcrypt = require('bcryptjs')
@@ -33,6 +34,7 @@ module.exports = async function resetData() {
 		await Absence.bulkCreate(data.absences)
 		await Vote.bulkCreate(data.votes)
 		await Comment.bulkCreate(data.comments)
+		await Session.truncate()
 
 		// The test data gets inserted with explicit primary keys.
 		// As a result, the postgres autoincrement/serial won't get incremented and we'll get
@@ -48,6 +50,7 @@ module.exports = async function resetData() {
 		await db.query('SELECT setval(\'absences_id_seq\', (SELECT MAX(id) from "absences"));')
 		await db.query('SELECT setval(\'votes_id_seq\', (SELECT MAX(id) from "votes"));')
 		await db.query('SELECT setval(\'comments_id_seq\', (SELECT MAX(id) from "comments"));')
+		await db.query('SELECT setval(\'sessions_id_seq\', 1);')
 	} catch (error) {
 		console.log(error)
 		throw error

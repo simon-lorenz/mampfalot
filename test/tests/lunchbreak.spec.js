@@ -1,7 +1,7 @@
 const setupDatabase = require('../utils/scripts/setup-database')
 const errorHelper = require('../utils/errors')
 const request = require('supertest')('http://localhost:5001/api')
-const TokenHelper = require('../utils/token-helper')
+const SessionHelper = require('../utils/session-helper')
 const testData = require('../utils/scripts/test-data')
 
 describe('Lunchbreak', () => {
@@ -15,7 +15,7 @@ describe('Lunchbreak', () => {
 			it('requires query values from and to', async () => {
 				await request
 					.get('/groups/1/lunchbreaks')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(400)
 					.expect(res => {
 						errorHelper.checkRequiredQueryValues(res.body, ['from', 'to'], true)
@@ -25,7 +25,7 @@ describe('Lunchbreak', () => {
 			it('fails if from and to are not in the same year', async () => {
 				await request
 					.get('/groups/1/lunchbreaks')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.query({ from: '2018-01-01', to: '2019-01-01' })
 					.expect(400)
 					.expect(res => {
@@ -37,7 +37,7 @@ describe('Lunchbreak', () => {
 			it('fails if from is greater than to', async () => {
 				await request
 					.get('/groups/1/lunchbreaks')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.query({ from: '2018-01-02', to: '2018-01-01' })
 					.expect(400)
 					.expect(res => {
@@ -49,7 +49,7 @@ describe('Lunchbreak', () => {
 			it('fails if from is equal to', async () => {
 				await request
 					.get('/groups/1/lunchbreaks')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.query({ from: '2018-01-01', to: '2018-01-01' })
 					.expect(400)
 					.expect(res => {
@@ -61,7 +61,7 @@ describe('Lunchbreak', () => {
 			it('treats the query dates as inclusive values', async () => {
 				await request
 					.get('/groups/1/lunchbreaks')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.query({ from: '2018-06-25', to: '2018-06-26' })
 					.expect(200)
 					.expect(res => {
@@ -72,7 +72,7 @@ describe('Lunchbreak', () => {
 			it('sends a valid lunchbreak collection', async () => {
 				await request
 					.get('/groups/1/lunchbreaks')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.query({ from: '2018-01-01', to: '2018-12-31' })
 					.expect(200)
 					.expect(res => {
@@ -91,7 +91,7 @@ describe('Lunchbreak', () => {
 			it('returns NotFoundError', async () => {
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-30')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 					.expect(res => {
 						errorHelper.checkNotFoundError(res.body, 'Lunchbreak', null)
@@ -101,7 +101,7 @@ describe('Lunchbreak', () => {
 			it('fails if user isn\'t a group member', async () => {
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-25')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(403)
 					.expect(res => {
 						const expectedError = {
@@ -117,7 +117,7 @@ describe('Lunchbreak', () => {
 			it('sends a correct lunchbreak resource', async () => {
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-25')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(200)
 					.expect(res => {
 						res.body.should.be.equalInAnyOrder(testData.getLunchbreak(1, '2018-06-25'))
@@ -126,7 +126,7 @@ describe('Lunchbreak', () => {
 
 				await request
 					.get('/groups/2/lunchbreaks/2018-06-25')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(200)
 					.expect(res => {
 						res.body.should.be.equalInAnyOrder(testData.getLunchbreak(2, '2018-06-25'))
@@ -135,7 +135,7 @@ describe('Lunchbreak', () => {
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-26')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(200)
 					.expect(res => {
 						res.body.should.be.equalInAnyOrder(testData.getLunchbreak(1, '2018-06-26'))

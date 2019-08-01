@@ -20,13 +20,13 @@ class OpenAPIHelper {
 		return result
 	}
 
-	requiresBearerToken(url, method) {
+	requiresSessionCookie(url, method) {
 		method = method.toLowerCase()
 
 		const securityMeasurements = this.paths[url][method].security
 
 		if (securityMeasurements)
-			return securityMeasurements.find(measurement => measurement.bearerAuth) !== undefined
+			return securityMeasurements.find(measurement => measurement.cookieAuth) !== undefined
 		else
 			return false
 	}

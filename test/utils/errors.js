@@ -5,7 +5,7 @@ module.exports = {
 	AuthenticationErrorTypes: {
 		INVALID_CREDENTIALS: 1,
 		AUTHENTICTAION_REQUIRED: 2,
-		INVALID_TOKEN: 3,
+		INVALID_SESSION: 3,
 		NOT_VERIFIED: 4
 	},
 
@@ -73,8 +73,8 @@ module.exports = {
 			case this.AuthenticationErrorTypes.AUTHENTICTAION_REQUIRED:
 				error.message.should.be.equal('This request requires authentication.')
 				break
-			case this.AuthenticationErrorTypes.INVALID_TOKEN:
-				error.message.should.be.equal('The provided token is invalid.')
+			case this.AuthenticationErrorTypes.INVALID_SESSION:
+				error.message.should.be.equal('The provided session is invalid.')
 				break
 			case this.AuthenticationErrorTypes.NOT_VERIFIED:
 				error.message.should.be.equal('This account is not verified yet.')

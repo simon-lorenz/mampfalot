@@ -2,7 +2,7 @@ const setupDatabase = require('../utils/scripts/setup-database')
 const testData = require('../utils/scripts/test-data')
 const errorHelper = require('../utils/errors')
 const request = require('supertest')('http://localhost:5001/api')
-const TokenHelper = require('../utils/token-helper')
+const SessionHelper = require('../utils/session-helper')
 
 describe('Invitation', () => {
 
@@ -17,7 +17,7 @@ describe('Invitation', () => {
 			it('fails if the user is no group member', async() => {
 				await request
 					.get('/groups/1/invitations')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(403)
 					.expect(res => {
 						const errorItem = {
@@ -32,7 +32,7 @@ describe('Invitation', () => {
 			it('returns a collection of invitations', async () => {
 				await request
 					.get('/groups/1/invitations')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 					.expect(res => {
 						res.body.should.be.equalInAnyOrder(testData.getInvitations(1))
@@ -53,7 +53,7 @@ describe('Invitation', () => {
 			it('fails if the user is no group member', async () => {
 				await request
 					.post('/groups/1/invitations/alice')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(403)
 					.expect(res => {
 						const errorItem = {
@@ -68,7 +68,7 @@ describe('Invitation', () => {
 			it('fails if the invited user is already a group member', async () => {
 				await request
 					.post('/groups/1/invitations/johndoe1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(400)
 					.expect(res => {
 						const error = res.body
@@ -84,14 +84,14 @@ describe('Invitation', () => {
 			it('fails if invited user is not found', async () => {
 				await request
 					.post('/groups/1/invitations/unknown-user')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 			})
 
 			it('fails if the user is already invited', async () => {
 				await request
 					.post('/groups/1/invitations/loten')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(res => {
 						const errorItem = {
 							field: 'username',
@@ -107,7 +107,7 @@ describe('Invitation', () => {
 			it('members cannot invite', async () => {
 				await request
 					.post('/groups/1/invitations/alice')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(403)
 					.expect(res => {
 						const expected = {
@@ -121,7 +121,7 @@ describe('Invitation', () => {
 			it('creates a new invitation successfully', async () => {
 				await request
 					.post('/groups/1/invitations/björn_tietgen')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(201)
 					.expect(res => {
 						const expected = {
@@ -145,7 +145,7 @@ describe('Invitation', () => {
 			it('sends NotFoundError', async () => {
 				await request
 					.delete('/groups/1/invitations/alice')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 					.expect(res => {
 						errorHelper.checkNotFoundError(res.body, 'Invitation', null)
@@ -155,12 +155,12 @@ describe('Invitation', () => {
 			it('admins can delete invitations', async () => {
 				await request
 					.delete('/groups/1/invitations/loten')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				await request
 					.get('/groups/1/invitations')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 					.expect(res => {
 						if (res.body.find(invitation => invitation.to.username === 'loten'))
@@ -171,36 +171,36 @@ describe('Invitation', () => {
 			it('members cannot delete invitations', async () => {
 				await request
 					.delete('/groups/1/invitations/loten')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(403)
 			})
 
 			it('does not delete the associated users', async () => {
 				await request
 					.delete('/groups/1/invitations/loten')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				await request
 					.get('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 
 				await request
 					.get('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(200)
 			})
 
 			it('does not delete the associated group', async () => {
 				await request
 					.delete('/groups/1/invitations/loten')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				await request
 					.get('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 			})
 
@@ -217,7 +217,7 @@ describe('Invitation', () => {
 			it('sends a correct collection of invitations', async () => {
 				await request
 					.get('/users/me/invitations')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(200)
 					.expect(res => {
 						res.body.should.be.equalInAnyOrder(testData.getInvitationsOfUser(3))
@@ -239,7 +239,7 @@ describe('Invitation', () => {
 			it('requires query value accept', async () => {
 				await request
 					.delete('/users/me/invitations/1')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(400)
 					.expect(res => {
 						errorHelper.checkRequiredQueryValues(res.body, ['accept'], 'all')
@@ -250,7 +250,7 @@ describe('Invitation', () => {
 				await request
 					.delete('/users/me/invitations/299')
 					.query({ accept: true })
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(404)
 					.expect(res => {
 						errorHelper.checkNotFoundError(res.body, 'Invitation', null)
@@ -261,12 +261,12 @@ describe('Invitation', () => {
 				await request
 					.delete('/users/me/invitations/1')
 					.query({ accept: true })
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(204)
 
 				await request
 					.get('/users/me/invitations')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.then(res => {
 						if (res.body.find(invitation => invitation.groupId === 1))
 							throw new Error('The invitation was not deleted!')
@@ -274,7 +274,7 @@ describe('Invitation', () => {
 
 				await request
 					.get('/users/me/groups')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(200)
 					.expect(res => {
 						if (res.body.find(group => group.id === 1) === undefined)
@@ -286,12 +286,12 @@ describe('Invitation', () => {
 				await request
 					.delete('/users/me/invitations/1')
 					.query({ accept: true })
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(204)
 
 				await request
 					.get('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(200)
 					.expect(res => {
 						const newMember = res.body.members.find(member => member.username === 'loten')
@@ -304,12 +304,12 @@ describe('Invitation', () => {
 				await request
 					.delete('/users/me/invitations/1')
 					.query({ accept: false })
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(204)
 
 				await request
 					.get('/users/me/invitations')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.then(res => {
 						if (res.body.find(invitation => invitation.groupId === 1))
 							throw new Error('The invitation was not deleted!')
@@ -317,7 +317,7 @@ describe('Invitation', () => {
 
 				await request
 					.get('/users/me/groups')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(200)
 					.expect(res => {
 						if (res.body.find(group => group.id === 1))
@@ -329,12 +329,12 @@ describe('Invitation', () => {
 				await request
 					.delete('/users/me/invitations/1')
 					.query({ accept: true })
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(204)
 
 				await request
 					.get('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(200)
 			})
 
@@ -342,12 +342,12 @@ describe('Invitation', () => {
 				await request
 					.delete('/users/me/invitations/1')
 					.query({ accept: true })
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(204)
 
 				await request
 					.get('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.set('cookie', await SessionHelper.getSessionCookie('loten'))
 					.expect(200)
 			})
 

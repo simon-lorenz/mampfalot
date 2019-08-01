@@ -2,14 +2,14 @@ const setupDatabase = require('../utils/scripts/setup-database')
 const testData = require('../utils/scripts/test-data')
 const errorHelper = require('../utils/errors')
 const request = require('supertest')('http://localhost:5001/api')
-const TokenHelper = require('../utils/token-helper')
+const SessionHelper = require('../utils/session-helper')
 
 describe('Group Member', () => {
 	describe('/groups/:groupId/members/:username', () => {
 		it('returns a 404 if user is no group member', async () => {
 			await request
 				.put('/groups/1/members/unknown-username')
-				.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+				.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 				.expect(404)
 				.expect(res => {
 					errorHelper.checkNotFoundError(res.body, 'User', 'unknown-username')
@@ -17,7 +17,7 @@ describe('Group Member', () => {
 
 			await request
 				.delete('/groups/1/members/unknown-username')
-				.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+				.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 				.expect(404)
 				.expect(res => {
 					errorHelper.checkNotFoundError(res.body, 'User', 'unknown-username')
@@ -32,7 +32,7 @@ describe('Group Member', () => {
 			it('should return a member resource', async () => {
 				await request
 					.put('/groups/1/members/maxmustermann')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({ color: '#eeeeee' })
 					.expect(200)
 					.expect(res => res.body.should.have.all.keys(testData.getGroupMemberKeys()))
@@ -41,7 +41,7 @@ describe('Group Member', () => {
 			it('allows an user to change his color', async () => {
 				await request
 					.put('/groups/1/members/johndoe1')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.send({ color: '#eeeeee' })
 					.expect(200)
 					.expect(res => {
@@ -53,7 +53,7 @@ describe('Group Member', () => {
 			it('allows an admin to change another member', async () => {
 				await request
 					.put('/groups/1/members/johndoe1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({ color: '#fafafa', isAdmin: true })
 					.expect(200)
 					.expect(res => {
@@ -66,7 +66,7 @@ describe('Group Member', () => {
 			it('successfully grants and revokes a users admin rights', async () => {
 				await request
 					.put('/groups/1/members/johndoe1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({ isAdmin: true })
 					.expect(200)
 					.expect(res => {
@@ -76,7 +76,7 @@ describe('Group Member', () => {
 
 				await request
 					.put('/groups/1/members/johndoe1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({ isAdmin: false })
 					.expect(200)
 					.expect(res => {
@@ -88,7 +88,7 @@ describe('Group Member', () => {
 			it('fails if a non admin member tries to change another member', async () => {
 				await request
 					.put(('/groups/1/members/maxmustermann'))
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(403)
 					.expect(res => {
 						const expectedError = {
@@ -106,7 +106,7 @@ describe('Group Member', () => {
 				for (const val of TRUTHY) {
 					await request
 						.put('/groups/1/members/johndoe1')
-						.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+						.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 						.send({ isAdmin: val })
 						.expect(403)
 						.expect(res => {
@@ -123,7 +123,7 @@ describe('Group Member', () => {
 			it('fails if the user is the groups last admin', async () => {
 				await request
 					.put('/groups/1/members/maxmustermann')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({ isAdmin: false })
 					.expect(403)
 					.expect(res => {
@@ -146,7 +146,7 @@ describe('Group Member', () => {
 			it('requires group admin rights to remove other members', async () => {
 				await request
 					.delete('/groups/1/members/maxmustermann')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(403)
 					.expect(res => {
 						const expectedError = {
@@ -161,21 +161,21 @@ describe('Group Member', () => {
 			it('lets the admins remove other group members', async () => {
 				await request
 					.delete('/groups/1/members/johndoe1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 			})
 
 			it('allows a user to leave a group', async () => {
 				await request
 					.delete('/groups/1/members/johndoe1')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(204)
 			})
 
 			it('fails if the user is the groups last admin', async () => {
 				await request
 					.delete('/groups/1/members/maxmustermann')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(403)
 					.expect(res => {
 						const expectedError = {
@@ -191,24 +191,24 @@ describe('Group Member', () => {
 			it('does not delete the associated group', async () => {
 				await request
 					.delete('/groups/1/members/johndoe1')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(204)
 
 				await request
 					.get('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 			})
 
 			it('does not delete the associated user', async () => {
 				await request
 					.delete('/groups/1/members/johndoe1')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(204)
 
 				await request
 					.get('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(200)
 			})
 		})

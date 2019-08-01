@@ -1,21 +1,14 @@
 const { users } = require('./scripts/test-data')
 const request = require('supertest')('http://localhost:5001/api')
 
-class TokenHelper {
+class SessionHelper {
 
-	async getAuthorizationHeader(username) {
-		return {
-			Authorization: await this.getToken(username)
-		}
-	}
-
-	async getToken(username) {
+	async getSessionCookie(username) {
 		const user = this.findUser(username)
-		const token = await request
+		return request
 			.get('/authenticate')
 			.auth(user.username, user.password)
-			.then(res => res.body.token)
-		return `Bearer ${token}`
+			.then(res => res.header['set-cookie'][0])
 	}
 
 	findUser(username) {
@@ -28,4 +21,4 @@ class TokenHelper {
 
 }
 
-module.exports = new TokenHelper()
+module.exports = new SessionHelper()

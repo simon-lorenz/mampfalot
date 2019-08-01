@@ -1,7 +1,7 @@
 const setupDatabase = require('../utils/scripts/setup-database')
 const errorHelper = require('../utils/errors')
 const request = require('supertest')('http://localhost:5001/api')
-const TokenHelper = require('../utils/token-helper')
+const SessionHelper = require('../utils/session-helper')
 const testData = require('../utils/scripts/test-data')
 
 describe('Place', () => {
@@ -18,7 +18,7 @@ describe('Place', () => {
 			it('requires group admin rights', async () => {
 				await request
 					.post(`/groups/${newPlace.groupId}/places`)
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.send(newPlace)
 					.expect(403)
 					.expect(res => {
@@ -34,7 +34,7 @@ describe('Place', () => {
 			it('requires body values', async () => {
 				await request
 					.post(`/groups/${newPlace.groupId}/places`)
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({})
 					.expect(400)
 					.expect(res => {
@@ -47,7 +47,7 @@ describe('Place', () => {
 				newPlace.foodType = ''
 				await request
 					.post(`/groups/${newPlace.groupId}/places`)
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send(newPlace)
 					.expect(400)
 					.expect(res => {
@@ -64,7 +64,7 @@ describe('Place', () => {
 				newPlace.name = ''
 				await request
 					.post(`/groups/${newPlace.groupId}/places`)
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send(newPlace)
 					.expect(400)
 					.expect(res => {
@@ -81,7 +81,7 @@ describe('Place', () => {
 				newPlace.name = 'AsiaFood'
 				await request
 					.post(`/groups/${newPlace.groupId}/places`)
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send(newPlace)
 					.expect(400)
 					.expect(res => {
@@ -97,7 +97,7 @@ describe('Place', () => {
 			it('inserts new place correctly', async () => {
 				await request
 					.post(`/groups/${newPlace.groupId}/places`)
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send(newPlace)
 					.expect(201)
 					.expect(res => {
@@ -126,7 +126,7 @@ describe('Place', () => {
 			it('requires group admin rights', async () => {
 				await request
 					.put('/groups/1/places/1')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.send(updatedPlace)
 					.expect(403)
 					.expect(res => {
@@ -142,7 +142,7 @@ describe('Place', () => {
 			it('updates a new place correctly', async () => {
 				await request
 					.put('/groups/1/places/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send(updatedPlace)
 					.expect(200)
 					.expect(response => {
@@ -157,7 +157,7 @@ describe('Place', () => {
 			it('sends 400 if no name and foodType is provided', async () => {
 				await request
 					.put('/groups/1/places/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(400)
 					.expect(res => {
 						const message = 'This request has to provide all of the following body values: foodType, name'
@@ -169,7 +169,7 @@ describe('Place', () => {
 				updatedPlace.foodType = ''
 				await request
 					.put('/groups/1/places/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send(updatedPlace)
 					.expect(400)
 					.expect(res => {
@@ -186,7 +186,7 @@ describe('Place', () => {
 				updatedPlace.name = ''
 				await request
 					.put('/groups/1/places/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send(updatedPlace)
 					.expect(400)
 					.expect(res => {
@@ -203,7 +203,7 @@ describe('Place', () => {
 				updatedPlace.name = 'AsiaFood'
 				await request
 					.put('/groups/1/places/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send(updatedPlace)
 					.expect(400)
 					.expect(res => {
@@ -225,7 +225,7 @@ describe('Place', () => {
 			it('requires group admin rights', async () => {
 				await request
 					.delete('/groups/1/places/1')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(403)
 					.expect(res => {
 						const expectedError = {
@@ -240,12 +240,12 @@ describe('Place', () => {
 			it('deletes a place successfully', async () => {
 				await request
 					.delete('/groups/1/places/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				await request
 					.get('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.then(res => {
 						if (res.body.places.find(place => place.id === 1))
 							throw new Error('Place with id 1 was not deleted.')
@@ -255,24 +255,24 @@ describe('Place', () => {
 			it('deletes all votes associated with this place', async () => {
 				await request
 					.delete('/groups/1/places/2')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				await request
 					.get('/votes/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 			})
 
 			it('does not delete the associated group', async () => {
 				await request
 					.delete('/groups/1/places/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				await request
 					.get('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 			})
 
@@ -280,7 +280,7 @@ describe('Place', () => {
 				await request
 					.get('/users/me/participations/1')
 					.query({ from: '2018-06-24', to: '2018-06-25' })
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 					.expect(res => {
 						const participation = res.body.find(p => p.date === '2018-06-25')
@@ -289,13 +289,13 @@ describe('Place', () => {
 
 				await request
 					.delete('/groups/1/places/4')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				await request
 					.get('/users/me/participations/1')
 					.query({ from: '2018-06-24', to: '2018-06-25' })
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 					.expect(res => {
 						const participation = res.body.find(p => p.date === '2018-06-25')

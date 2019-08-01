@@ -1,7 +1,7 @@
 const setupDatabase = require('../utils/scripts/setup-database')
 const errorHelper = require('../utils/errors')
 const request = require('supertest')('http://localhost:5001/api')
-const TokenHelper = require('../utils/token-helper')
+const SessionHelper = require('../utils/session-helper')
 const testData = require('../utils/scripts/test-data')
 const testServer = require('../utils/test-server')
 
@@ -22,7 +22,7 @@ describe('Comment', () => {
 				newComment.text = undefined
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-25/comments')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.send(newComment)
 					.expect(400)
 					.expect(res => {
@@ -34,7 +34,7 @@ describe('Comment', () => {
 				newComment.text = ''
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-25/comments')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.send(newComment)
 					.expect(400)
 					.expect(res => {
@@ -51,7 +51,7 @@ describe('Comment', () => {
 				newComment.text = null
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-25/comments')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.send(newComment)
 					.expect(400)
 					.expect(res => {
@@ -68,7 +68,7 @@ describe('Comment', () => {
 				newComment.userId = 3
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-25/comments')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.send(newComment)
 					.expect(201)
 					.expect(res => {
@@ -82,12 +82,12 @@ describe('Comment', () => {
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/comments')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({
 						text: 'Please create a luchbreak, thanks.'
 					})
@@ -102,12 +102,12 @@ describe('Comment', () => {
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-30')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-30/comments')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({
 						text: 'Please create a luchbreak, thanks.'
 					})
@@ -122,12 +122,12 @@ describe('Comment', () => {
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/comments')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({
 						text: 'Please create a luchbreak, thanks.'
 					})
@@ -135,7 +135,7 @@ describe('Comment', () => {
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 					.expect(res => {
 						res.body.comments.should.be.an('array').with.lengthOf(1)
@@ -146,7 +146,7 @@ describe('Comment', () => {
 			it('successfully adds a comment', async () => {
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-25/comments')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.send(newComment)
 					.expect(201)
 					.expect(res => {
@@ -168,7 +168,7 @@ describe('Comment', () => {
 			it('fails if userId does not match', async () => {
 				await request
 					.put('/groups/1/lunchbreaks/2018-06-25/comments/1')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.send({ text: 'new text!' })
 					.expect(403)
 					.expect(res => {
@@ -185,7 +185,7 @@ describe('Comment', () => {
 			it('requires text in body', async () => {
 				await request
 					.put('/groups/1/lunchbreaks/2018-06-25/comments/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(400)
 					.expect(res => {
 						errorHelper.checkRequiredBodyValues(res.body, ['text'], true)
@@ -195,7 +195,7 @@ describe('Comment', () => {
 			it('fails if text is null', async () => {
 				await request
 					.put('/groups/1/lunchbreaks/2018-06-25/comments/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({ text: null })
 					.expect(400)
 					.expect(res => {
@@ -212,7 +212,7 @@ describe('Comment', () => {
 			it('fails if text is empty', async () => {
 				await request
 					.put('/groups/1/lunchbreaks/2018-06-25/comments/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({ text: '' })
 					.expect(400)
 					.expect(res => {
@@ -228,7 +228,7 @@ describe('Comment', () => {
 			it('fails if comment does not exist', async () => {
 				await request
 					.put('/groups/1/lunchbreaks/2018-06-25/comments/99')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({ text: 'new text' })
 					.expect(404)
 					.expect(res => {
@@ -239,7 +239,7 @@ describe('Comment', () => {
 			it('updates a comment correctly', async () => {
 				await request
 					.put('/groups/1/lunchbreaks/2018-06-25/comments/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({ text: 'New comment text!' })
 					.expect(200)
 					.expect(res => {
@@ -259,7 +259,7 @@ describe('Comment', () => {
 			it('fails if user does not own comment', async () => {
 				await request
 					.delete('/groups/1/lunchbreaks/2018-06-25/comments/1')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(403)
 					.expect(res => {
 						const expectedError = {
@@ -276,7 +276,7 @@ describe('Comment', () => {
 			it('fails if comment does not exist', async () => {
 				await request
 					.delete('/groups/1/lunchbreaks/2018-06-25/comments/99')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 					.expect(res => {
 						errorHelper.checkNotFoundError(res.body, 'Comment', 99)
@@ -286,12 +286,12 @@ describe('Comment', () => {
 			it('deletes a comment successfully', async () => {
 				await request
 					.delete('/groups/1/lunchbreaks/2018-06-25/comments/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-25')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(res => {
 						const comments = res.body.comments
 						if (comments.find(comment => comment.id === 1))
@@ -302,12 +302,12 @@ describe('Comment', () => {
 			it('does not delete the associated user', async () => {
 				await request
 					.delete('/groups/1/lunchbreaks/2018-06-25/comments/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				await request
 					.get('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 			})
 
@@ -316,7 +316,7 @@ describe('Comment', () => {
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/participation')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({
 						votes: [],
 						result: null,
@@ -326,7 +326,7 @@ describe('Comment', () => {
 
 				const id = await request
 					.post('/groups/1/lunchbreaks/2018-07-01/comments')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({
 						text: 'My new comment.'
 					})
@@ -336,12 +336,12 @@ describe('Comment', () => {
 
 				await request
 					.delete(`/groups/1/lunchbreaks/2018-07-01/comments/${id}`)
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 			})
 
@@ -350,7 +350,7 @@ describe('Comment', () => {
 
 				const id = await request
 					.post('/groups/1/lunchbreaks/2018-07-01/comments')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({
 						text: 'delete me!'
 					})
@@ -359,17 +359,17 @@ describe('Comment', () => {
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/absence')
-					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.set('cookie', await SessionHelper.getSessionCookie('johndoe1'))
 					.expect(201)
 
 				await request
 					.delete(`/groups/1/lunchbreaks/2018-07-01/comments/${id}`)
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 					.expect(res => {
 						const lunchbreak = res.body
@@ -383,7 +383,7 @@ describe('Comment', () => {
 
 				const id = await request
 					.post('/groups/1/lunchbreaks/2018-07-01/comments')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({
 						text: 'Please create a luchbreak, thanks.'
 					})
@@ -392,7 +392,7 @@ describe('Comment', () => {
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/comments')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({
 						text: 'And do not delete it.'
 					})
@@ -400,12 +400,12 @@ describe('Comment', () => {
 
 				await request
 					.delete(`/groups/1/lunchbreaks/2018-07-01/comments/${id}`)
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(200)
 			})
 
@@ -414,7 +414,7 @@ describe('Comment', () => {
 
 				const id = await request
 					.post('/groups/1/lunchbreaks/2018-07-01/comments')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.send({
 						text: 'Please create a luchbreak, thanks.'
 					})
@@ -423,12 +423,12 @@ describe('Comment', () => {
 
 				await request
 					.delete(`/groups/1/lunchbreaks/2018-07-01/comments/${id}`)
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(204)
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 					.expect(404)
 			})
 		})

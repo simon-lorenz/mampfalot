@@ -1,6 +1,6 @@
 const testServer = require('../utils/test-server')
 const request = require('supertest')('http://localhost:5001/api')
-const TokenHelper = require('../utils/token-helper')
+const SessionHelper = require('../utils/session-helper')
 const errorHelper = require('../utils/errors')
 const { AuthenticationErrorTypes } = require('../utils/errors')
 const SwaggerParser = require('swagger-parser')
@@ -68,7 +68,7 @@ describe('The mampfalot api', () => {
 		for (const url of urls) {
 			const methods = APIContract.getMethods(url)
 			for (const method of methods) {
-				if (APIContract.requiresBearerToken(url, method) === false)
+				if (APIContract.requiresSessionCookie(url, method) === false)
 					continue
 
 				const testableUrl = APIContract.replaceParams(url)
@@ -87,14 +87,14 @@ describe('The mampfalot api', () => {
 			throw new Error(`\n${errors.join('\n')}`)
 	})
 
-	it('fails if token is invalid', async () => {
-		const invalid = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6NSwibmFtZSI6Ik1heCBNdXN0ZXJtYW5uIiwiZW1haWwiOiJtdXN0ZXJtYW5uQGdtYWlsLmNvbSIsImlhdCI6MTUzNjc1Njk3MCwiZXhwIjoxNTM2NzYwNTg5LCJqdGkiOiI2YTA5OTY1Ny03MmRlLTQyOGMtOWE2NS00MDQ5N2FmZjY5YjcifQ.Ym0pnoafK1bpBKq_ohqPKyx0mITa_YfkIaHey94wXgQ'
+	it('fails if cookie is invalid', async () => {
+		const invalid = 'session=123'
 		await request
 			.get('/users/5')
-			.set({ Authorization: invalid })
+			.set('cookie', invalid)
 			.expect(401)
 			.expect(res => {
-				errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.INVALID_TOKEN)
+				errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.INVALID_SESSION)
 			})
 	})
 
@@ -106,7 +106,7 @@ describe('The mampfalot api', () => {
 			const methods = APIContract.getMethods(url)
 			await request
 				.patch(url)
-				.set({ Authorization: await TokenHelper.getToken('maxmustermann') })
+				.set('cookie', await SessionHelper.getSessionCookie('maxmustermann'))
 				.expect(405)
 				.expect(res => {
 					errorHelper.checkMethodNotAllowedError(res.body, 'PATCH', methods.map(method => method.toUpperCase()))
