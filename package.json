@@ -37,10 +37,10 @@
     "handlebars": "^4.1.2",
     "helmet": "^3.13.0",
     "jsonwebtoken": "^8.2.1",
+    "morgan": "^1.9.1",
     "nodemailer": "^4.6.8",
     "pg": "^6.0.0",
     "pino": "^5.13.1",
-    "pino-http": "^4.2.0",
     "sequelize": "^5.9.0",
     "uuid": "^3.3.2"
   },

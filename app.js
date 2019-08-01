@@ -8,6 +8,7 @@ const cors = require('cors')
 const helmet = require('helmet')
 const Promise = require('bluebird')
 const logger = require('./util/logger')
+const morgan = require('morgan')
 const { asyncMiddleware } = require('./util/util')
 const { initializeRequestId, getRequestId } = require('./util/request-id')
 const { initializeControllers, initializeUser } = require('./util/middleware')
@@ -47,13 +48,11 @@ app.use(helmet())
 
 app.use(initializeRequestId)
 
-app.use(require('pino-http')({
-	logger: logger,
-	serializers: {
-		msg: () => 'Request completed',
-	},
-	genReqId: function() {
-		return getRequestId()
+app.use(morgan('short', {
+	stream: {
+		write: (str) => {
+			logger.info({ id: getRequestId() }, str.trim())
+		}
 	}
 }))
 
