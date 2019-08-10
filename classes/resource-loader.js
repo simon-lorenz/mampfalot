@@ -72,11 +72,10 @@ class ResourceLoader {
 			]
 		})
 
-		if (member) {
+		if (member)
 			return member
-		} else {
+		else
 			throw new NotFoundError('GroupMember', username)
-		}
 	}
 
 	/**
@@ -245,11 +244,11 @@ class ResourceLoader {
 		const userId = parseInt(req.params.userId)
 		res.locals.resources = {}
 		res.locals.resources.user = await User.unscoped().findByPk(userId)
-		if (res.locals.resources.user) {
+
+		if (res.locals.resources.user)
 			return next()
-		} else {
+		else
 			return next(new NotFoundError('User', userId))
-		}
 	}
 
 }

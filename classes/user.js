@@ -38,11 +38,10 @@ class User {
 			}]
 		}, { raw: true })
 
-		if (userGroups) {
+		if (userGroups)
 			this.groups = userGroups.groups
-		} else {
+		else
 			throw new AuthenticationError('This user does not exist anymore.')
-		}
 	}
 
 	/**

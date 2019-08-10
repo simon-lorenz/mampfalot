@@ -78,20 +78,17 @@ class ValidationError extends Error {
 	}
 
 	fromSequelizeValidationError(error) {
-		if (!(error instanceof Sequelize.ValidationError)) {
+		if (!(error instanceof Sequelize.ValidationError))
 			throw new Error ('the given error was no sequelize validation error')
-		}
 
 		this.errors = []
-		for (const item of error.errors) {
+		for (const item of error.errors)
 			this.addError(item.path, item.value, item.message)
-		}
 	}
 
 	fromBulkRecordError(error) {
-		if (!(error instanceof Sequelize.BulkRecordError)) {
+		if (!(error instanceof Sequelize.BulkRecordError))
 			throw new Error('The given error was no BulkRecordError')
-		}
 
 		this.fromSequelizeValidationError(error.errors)
 	}

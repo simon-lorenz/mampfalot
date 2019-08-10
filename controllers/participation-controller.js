@@ -114,9 +114,8 @@ class ParticipationController {
 			include: [ Participant, Comment, Absence ]
 		})
 
-		if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0 && lunchbreak.absences.length === 0) {
+		if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0 && lunchbreak.absences.length === 0)
 			await lunchbreak.destroy()
-		}
 	}
 
 	async getParticipations(groupId, from, to) {
@@ -158,9 +157,9 @@ class ParticipationController {
 		if (lunchbreak === null) {
 			const lunchbreakController = new LunchbreakController(this.user)
 
-			if (dateIsToday(date) === false)
+			if (dateIsToday(date) === false) {
 				throw new RequestError('The end of voting is reached, therefore you cannot create a new lunchbreak.')
-			else {
+			} else {
 				lunchbreak = await lunchbreakController.createLunchbreak(groupId)
 				if (await voteEndingTimeReached(lunchbreak.id)) {
 					await Lunchbreak.destroy({

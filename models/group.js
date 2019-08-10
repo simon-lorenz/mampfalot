@@ -35,9 +35,8 @@ module.exports = (sequelize, DataTypes) => {
 					msg: 'utcOffset cannot be greater than 720'
 				},
 				validOffset: function (value) {
-					if (value % 60 !== 0) {
+					if (value % 60 !== 0)
 						throw new Error('This is not a valid UTC offset.')
-					}
 				}
 			}
 		},
@@ -48,9 +47,8 @@ module.exports = (sequelize, DataTypes) => {
 			validate: {
 				min: 1,
 				equalOrGreaterThanMaxPointsPerVote(value) {
-					if (value < this.maxPointsPerVote) {
+					if (value < this.maxPointsPerVote)
 						throw new Error('pointsPerDay has to be equal or greater than maxPointsPerVote.')
-					}
 				}
 			}
 		},
@@ -61,14 +59,12 @@ module.exports = (sequelize, DataTypes) => {
 			validate: {
 				min: 1,
 				equalOrGreaterThanMinPointsPerVote(value) {
-					if (value < this.minPointsPerVote) {
+					if (value < this.minPointsPerVote)
 						throw new Error('maxPointsPerVote has to be greater than or equal to minPointsPerVote.')
-					}
 				},
 				equalOrLessThanPointsPerDay(value) {
-					if (value > this.pointsPerDay) {
+					if (value > this.pointsPerDay)
 						throw new Error('maxPointsPerVote has to be less than or equal to pointsPerDay.')
-					}
 				},
 			}
 		},
@@ -79,14 +75,12 @@ module.exports = (sequelize, DataTypes) => {
 			validate: {
 				min: 1,
 				equalOrLessThanMaxPointsPerVote(value) {
-					if (value > this.maxPointsPerVote) {
+					if (value > this.maxPointsPerVote)
 						throw new Error('minPointsPerVote has to be less than or equal to maxPointsPerVote.')
-					}
 				},
 				equalOrLessThanPointsPerDay(value) {
-					if (value > this.pointsPerDay) {
+					if (value > this.pointsPerDay)
 						throw new Error('minPointsPerVote has to be less than or equal to pointsPerDay.')
-					}
 				}
 			}
 		}
@@ -99,9 +93,8 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		validate: {
 			timeValidator() {
-				if (this.lunchTime < this.voteEndingTime) {
+				if (this.lunchTime < this.voteEndingTime)
 					throw new Error('voteEndingTime has to be less than lunchTime.')
-				}
 			}
 		}
 	})

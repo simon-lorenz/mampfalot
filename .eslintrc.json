@@ -11,6 +11,7 @@
     "arrow-spacing": "error",
     "eol-last": ["error", "always"],
     "eqeqeq": ["error"],
+    "curly": ["error", "multi-or-nest", "consistent"],
     "indent": ["error", "tab", { "SwitchCase": 1 }],
     "linebreak-style": ["error", "unix"],
     "no-console": "off",

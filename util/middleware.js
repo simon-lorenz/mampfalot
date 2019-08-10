@@ -29,25 +29,22 @@ module.exports = {
 			const missing = []
 
 			for (const value of values) {
-				if (req.body[value] === undefined) {
+				if (req.body[value] === undefined)
 					missing.push(value)
-				}
 			}
 
 			switch (mode) {
 				case 'all':
-					if (missing.length > 0) {
+					if (missing.length > 0)
 						return  next(new RequestError(`This request has to provide all of the following body values: ${values.join(', ')}`))
-					} else {
+					else
 						return next()
-					}
 
 				case 'atLeastOne':
-					if (missing.length === values.length) {
+					if (missing.length === values.length)
 						return next(new RequestError(`This request has to provide at least one of the following body values: ${values.join(', ')}`))
-					} else {
+					else
 						return next()
-					}
 
 				default:
 					return next(new Error('Unkown mode'))
@@ -60,25 +57,22 @@ module.exports = {
 			const missing = []
 
 			for (const value of values) {
-				if (req.query[value] === undefined) {
+				if (req.query[value] === undefined)
 					missing.push(value)
-				}
 			}
 
 			switch (mode) {
 				case 'all':
-					if (missing.length > 0) {
+					if (missing.length > 0)
 						return  next(new RequestError(`This request has to provide all of the following query values: ${values.join(', ')}`))
-					} else {
+					else
 						return next()
-					}
 
 				case 'atLeastOne':
-					if (missing.length === values.length) {
+					if (missing.length === values.length)
 						return next(new RequestError(`This request has to provide at least one of the following query values: ${values.toString()}`))
-					} else {
+					else
 						return next()
-					}
 
 				default:
 					return next(new Error('Unkown mode'))
@@ -94,11 +88,10 @@ module.exports = {
 	 */
 	allowMethods(methods) {
 		return (req, res, next) => {
-			if (methods.includes(req.method)) {
+			if (methods.includes(req.method))
 				next()
-			} else {
+			else
 				next(new MethodNotAllowedError(req.method, methods))
-			}
 		}
 	},
 
