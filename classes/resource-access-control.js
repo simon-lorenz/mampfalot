@@ -231,6 +231,7 @@ class ResourceAccessControl {
 		if (vote.participant.userId !== this.user.id)
 			throw new AuthorizationError('Vote', vote.id, 'DELETE')
 	}
+
 }
 
 module.exports = ResourceAccessControl

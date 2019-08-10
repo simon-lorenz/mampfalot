@@ -219,6 +219,7 @@ class UserController {
 		})
 		return await bcrypt.compare(password, user.password)
 	}
+
 }
 
 module.exports = UserController
