@@ -3,6 +3,8 @@
 const { RequestError, MethodNotAllowedError } = require('../classes/errors')
 const { verifyToken, getTokenFromAuthorizationHeader } = require('./authentication')
 const User = require('../classes/user')
+const logger = require('./logger')
+const { getRequestId } = require('./request-id')
 const AbsenceController = require('../controllers/absence-controller')
 const CommentController = require('../controllers/comment-controller')
 const GroupController = require('../controllers/group-controller')
@@ -116,6 +118,7 @@ module.exports = {
 		const payload = verifyToken(token)
 		await user.setId(payload.id)
 		res.locals.user = user
+		logger.info({ id: getRequestId() }, `Requesting user: ${res.locals.user.username}`)
 		next()
 	},
 
