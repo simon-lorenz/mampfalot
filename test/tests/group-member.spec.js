@@ -213,6 +213,35 @@ describe('Group Member', () => {
 					.expect(200)
 			})
 
+			it('does not revoke the invitations of this user', async () => {
+				await request
+					.post('/groups/1/invitations/alice')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(201)
+
+				// Make john admin so max to leave
+				await request
+					.put('/groups/1/members/johndoe1')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({ isAdmin: true })
+					.expect(200)
+
+				await request
+					.delete('/groups/1/members/maxmustermann')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(204)
+
+				await request
+					.get('/users/me/invitations')
+					.set(await TokenHelper.getAuthorizationHeader('alice'))
+					.expect(200)
+					.expect(res => {
+						const invitation = res.body.find(i => i.group.id === 1)
+						if (!invitation)
+							throw new Error('Invitation not found!')
+					})
+			})
+
 			it('does not fuck up lunchbreaks where the ex-member is responseless', async () => {
 				testServer.start(5001, '11:24:59', '25.06.2018')
 				await request

@@ -656,6 +656,28 @@ describe('User', () => {
 					})
 			})
 
+			it('deletes invitations to this user', async () => {
+				await request
+					.post('/groups/1/invitations/alice')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(201)
+
+				await request
+					.delete('/users/me')
+					.set(await TokenHelper.getAuthorizationHeader('alice'))
+					.expect(204)
+
+				await request
+					.get('/groups/1/invitations')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+					.expect(res => {
+						const invitation = res.body.find(i => i.to.username === 'alice')
+						if (invitation)
+							throw new Error('Invitation was not deleted')
+					})
+			})
+
 			it('sets the username on associated comments to null', async () => {
 				await request
 					.delete('/users/me')
