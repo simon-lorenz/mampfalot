@@ -81,9 +81,8 @@ class UserController {
 		})
 
 		if (values.password) {
-			if (!values.currentPassword) {
+			if (!values.currentPassword)
 				throw new RequestError('You need to provide your current password to change it.')
-			}
 
 			if (await this.checkPassword(userResource.username, values.currentPassword) === false)
 				throw new AuthenticationError('The provided credentials are incorrect.')
@@ -91,7 +90,8 @@ class UserController {
 				userResource.password = bcrypt.hashSync(values.password, 12)
 		}
 
-		if (values.username) { userResource.username = values.username }
+		if (values.username)
+			userResource.username = values.username
 
 		if (values.firstName === '' || values.firstName === null)
 			userResource.firstName = null
@@ -219,6 +219,7 @@ class UserController {
 		})
 		return await bcrypt.compare(password, user.password)
 	}
+
 }
 
 module.exports = UserController

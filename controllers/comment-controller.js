@@ -63,9 +63,9 @@ class CommentController {
 		})
 
 		if (lunchbreak === null) {
-			if (dateIsToday(date) === false)
+			if (dateIsToday(date) === false) {
 				throw new RequestError('The end of voting is reached, therefore you cannot create a new lunchbreak.')
-			else {
+			} else {
 				lunchbreak = await LunchbreakController.createLunchbreak(groupId)
 				if (await voteEndingTimeReached(lunchbreak.id)) {
 					await Lunchbreak.destroy({

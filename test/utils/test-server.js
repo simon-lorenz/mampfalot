@@ -10,9 +10,8 @@ class TestServer {
 	}
 
 	close() {
-		if (this.server) {
+		if (this.server)
 			this.server.close()
-		}
 	}
 
 }

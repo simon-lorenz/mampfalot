@@ -199,7 +199,8 @@ app.use((err, req, res, next) => {
 
 // Handle every other possible error
 app.use((err, req, res, next) => {
-	logger.error({ id: getRequestId(), error: err }, 'Unexpected Error')
+	// Log to err instead error to get serialized by pino
+	logger.error({ id: getRequestId(), err: err }, 'Unexpected Error')
 	res.status(500).send(new ServerError())
 })
 

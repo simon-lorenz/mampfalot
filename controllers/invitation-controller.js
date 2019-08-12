@@ -212,6 +212,7 @@ class InvitationController {
 
 		await invitation.destroy()
 	}
+
 }
 
 module.exports = InvitationController

@@ -3,6 +3,8 @@
 const { RequestError, MethodNotAllowedError } = require('../classes/errors')
 const { verifyToken, getTokenFromAuthorizationHeader } = require('./authentication')
 const User = require('../classes/user')
+const logger = require('./logger')
+const { getRequestId } = require('./request-id')
 const AbsenceController = require('../controllers/absence-controller')
 const CommentController = require('../controllers/comment-controller')
 const GroupController = require('../controllers/group-controller')
@@ -27,25 +29,22 @@ module.exports = {
 			const missing = []
 
 			for (const value of values) {
-				if (req.body[value] === undefined) {
+				if (req.body[value] === undefined)
 					missing.push(value)
-				}
 			}
 
 			switch (mode) {
 				case 'all':
-					if (missing.length > 0) {
+					if (missing.length > 0)
 						return  next(new RequestError(`This request has to provide all of the following body values: ${values.join(', ')}`))
-					} else {
+					else
 						return next()
-					}
 
 				case 'atLeastOne':
-					if (missing.length === values.length) {
+					if (missing.length === values.length)
 						return next(new RequestError(`This request has to provide at least one of the following body values: ${values.join(', ')}`))
-					} else {
+					else
 						return next()
-					}
 
 				default:
 					return next(new Error('Unkown mode'))
@@ -58,25 +57,22 @@ module.exports = {
 			const missing = []
 
 			for (const value of values) {
-				if (req.query[value] === undefined) {
+				if (req.query[value] === undefined)
 					missing.push(value)
-				}
 			}
 
 			switch (mode) {
 				case 'all':
-					if (missing.length > 0) {
+					if (missing.length > 0)
 						return  next(new RequestError(`This request has to provide all of the following query values: ${values.join(', ')}`))
-					} else {
+					else
 						return next()
-					}
 
 				case 'atLeastOne':
-					if (missing.length === values.length) {
+					if (missing.length === values.length)
 						return next(new RequestError(`This request has to provide at least one of the following query values: ${values.toString()}`))
-					} else {
+					else
 						return next()
-					}
 
 				default:
 					return next(new Error('Unkown mode'))
@@ -92,11 +88,10 @@ module.exports = {
 	 */
 	allowMethods(methods) {
 		return (req, res, next) => {
-			if (methods.includes(req.method)) {
+			if (methods.includes(req.method))
 				next()
-			} else {
+			else
 				next(new MethodNotAllowedError(req.method, methods))
-			}
 		}
 	},
 
@@ -116,6 +111,7 @@ module.exports = {
 		const payload = verifyToken(token)
 		await user.setId(payload.id)
 		res.locals.user = user
+		logger.info({ id: getRequestId() }, `Requesting user: ${res.locals.user.username}`)
 		next()
 	},
 

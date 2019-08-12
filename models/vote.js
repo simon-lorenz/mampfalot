@@ -51,9 +51,8 @@ module.exports = (sequelize, DataTypes) => {
 						]
 					})
 
-					if (!group) {
+					if (!group)
 						throw new Error('This placeId does not belong to the associated group.')
-					}
 				}
 			}
 		},

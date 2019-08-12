@@ -121,9 +121,8 @@ class Mailer {
 	 * Results are logged to the console.
 	 */
 	async checkConnections() {
-		for (const account of this.accounts) {
+		for (const account of this.accounts)
 			await account.checkConnection()
-		}
 	}
 
 	/**
@@ -134,8 +133,10 @@ class Mailer {
 	 */
 	getAccount(address) {
 		for (const account of this.accounts) {
-			if (account.address === address) return account
+			if (account.address === address)
+				return account
 		}
+
 		throw new Error(`No account with address "${address}" found!`)
 	}
 
