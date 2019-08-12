@@ -1,5 +1,6 @@
 const setupDatabase = require('../utils/scripts/setup-database')
 const testData = require('../utils/scripts/test-data')
+const testServer = require('../utils/test-server')
 const errorHelper = require('../utils/errors')
 const request = require('supertest')('http://localhost:5001/api')
 const TokenHelper = require('../utils/token-helper')
@@ -209,6 +210,24 @@ describe('Group Member', () => {
 				await request
 					.get('/users/me')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.expect(200)
+			})
+
+			it('does not fuck up lunchbreaks where the ex-member is responseless', async () => {
+				testServer.start(5001, '11:24:59', '25.06.2018')
+				await request
+					.delete('/groups/1/lunchbreaks/2018-06-25/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.expect(204)
+
+				await request
+					.delete('/groups/1/members/johndoe1')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.expect(204)
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-06-25')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(200)
 			})
 		})

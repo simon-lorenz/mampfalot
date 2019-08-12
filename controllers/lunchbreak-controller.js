@@ -126,7 +126,7 @@ class LunchbreakController {
 		const group = await ResourceLoader.loadGroupById(groupId)
 		const allMembers = group.members
 		lunchbreak.responseless = allMembers.filter(member => {
-			const participates = lunchbreak.participants.find(p => p.member.username === member.username)
+			const participates = lunchbreak.participants.find(p => p.member !== null && p.member.username === member.username)
 			const absent = lunchbreak.absent.find(absent => absent.username === member.username)
 			return !participates && !absent
 		})
