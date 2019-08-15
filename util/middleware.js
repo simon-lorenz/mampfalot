@@ -1,10 +1,9 @@
 'use strict'
 
-const uuidv4 = require('uuid/v4')
 const { RequestError, MethodNotAllowedError } = require('../classes/errors')
 const { verifyToken, getTokenFromAuthorizationHeader } = require('./authentication')
 const User = require('../classes/user')
-const { loggingNamespace } = require('./logger')
+const logger = require('./logger')
 const AbsenceController = require('../controllers/absence-controller')
 const CommentController = require('../controllers/comment-controller')
 const GroupController = require('../controllers/group-controller')
@@ -102,17 +101,6 @@ module.exports = {
 		}
 	},
 
-	initializeLoggingNamespace (req, res, next) {
-		loggingNamespace.bindEmitter(req)
-		loggingNamespace.bindEmitter(res)
-		loggingNamespace.run(() => next())
-	},
-
-	async initializeRequestId(req, res, next) {
-		loggingNamespace.set('requestId', uuidv4())
-		next()
-	},
-
 	/**
 	 * Verifies the json web token and initializes the user in res.locals
 	 */
@@ -122,7 +110,7 @@ module.exports = {
 		const payload = verifyToken(token)
 		await user.setId(payload.id)
 		res.locals.user = user
-		loggingNamespace.set('username', user.username)
+		logger.attachUsername(res.locals.user.username)
 		next()
 	},
 

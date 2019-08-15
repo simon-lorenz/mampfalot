@@ -7,16 +7,20 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const helmet = require('helmet')
 const Promise = require('bluebird')
-const { logger } = require('./util/logger')
+const logger = require('./util/logger')
 const morgan = require('morgan')
 const { asyncMiddleware } = require('./util/util')
-const { initializeControllers, initializeUser, initializeLoggingNamespace, initializeRequestId } = require('./util/middleware')
+const { initializeControllers, initializeUser } = require('./util/middleware')
 const { AuthenticationError, AuthorizationError, NotFoundError } = require('./classes/errors')
 const { MethodNotAllowedError, ValidationError, RequestError, ServerError } = require('./classes/errors')
 
 app.set('trust proxy', true)
 
-app.use(initializeLoggingNamespace)
+app.use(logger.initialize)
+app.use((req, res, next) => {
+	logger.attachRequestId()
+	next()
+})
 
 // Enable time-manipulation for testing purposes
 app.use((req, res, next) => {
@@ -46,8 +50,6 @@ app.use((req, res, next) => {
 
 app.use(cors())
 app.use(helmet())
-
-app.use(initializeRequestId)
 
 app.use(morgan('short', {
 	stream: {
