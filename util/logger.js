@@ -3,6 +3,7 @@
 const cls = require('cls-hooked')
 const pino = require('pino')
 const uuidv4 = require('uuid/v4')
+const morgan = require('morgan')
 
 const logger = pino({
 	redact: ['req.headers.authorization'],
@@ -94,6 +95,20 @@ module.exports = {
 	 */
 	attachUsername(username) {
 		loggingNamespace.set('username', username)
+	},
+
+	/**
+	 * Returns a middleware that logs http requests with morgan.
+	 * @returns {function} Middleware
+	 */
+	logHttpRequest() {
+		return morgan('short', {
+			stream: {
+				write: (str) => {
+					this.info(str.trim())
+				}
+			}
+		})
 	}
 
 }

@@ -8,7 +8,6 @@ const cors = require('cors')
 const helmet = require('helmet')
 const Promise = require('bluebird')
 const logger = require('./util/logger')
-const morgan = require('morgan')
 const { asyncMiddleware } = require('./util/util')
 const { initializeControllers, initializeUser } = require('./util/middleware')
 const { AuthenticationError, AuthorizationError, NotFoundError } = require('./classes/errors')
@@ -21,6 +20,7 @@ app.use((req, res, next) => {
 	logger.attachRequestId()
 	next()
 })
+app.use(logger.logHttpRequest())
 
 // Enable time-manipulation for testing purposes
 app.use((req, res, next) => {
@@ -50,14 +50,6 @@ app.use((req, res, next) => {
 
 app.use(cors())
 app.use(helmet())
-
-app.use(morgan('short', {
-	stream: {
-		write: (str) => {
-			logger.info(str.trim())
-		}
-	}
-}))
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({
