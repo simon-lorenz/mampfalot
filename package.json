@@ -10,16 +10,7 @@
     "start": "node server",
     "start:dev": "nodemon server --quiet | tee server.log | pino-pretty -t \"SYS:HH:MM:ss\" -i hostname,pid,responseTime",
     "lint": "eslint . --ext .js",
-    "test": "mocha",
-    "test-auth": "npm run test -- -g /auth",
-    "test-users": "npm run test -- -g /users",
-    "test-groups": "npm run test -- -g /groups",
-    "test-invitations": "npm run test -- -g /invitations",
-    "test-places": "npm run test -- -g /places",
-    "test-lunchbreaks": "npm run test -- -g /lunchbreaks",
-    "test-participants": "npm run test -- -g /participants",
-    "test-votes": "npm run test -- -g /votes",
-    "test-comments": "npm run test -- -g /comments"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
