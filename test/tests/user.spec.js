@@ -292,22 +292,18 @@ describe('User', () => {
 
 				for (const email of INVALID_ADDRESSES) {
 					newUser.email = email
-					try {
-						await request
-							.post('/users')
-							.send(newUser)
-							.expect(400)
-							.expect(res => {
-								const expectedErrorItem = {
-									field: 'email',
-									value: newUser.email,
-									message: 'This is not a valid e-mail-address'
-								}
-								errorHelper.checkValidationError(res.body, expectedErrorItem)
-							})
-					} catch (err) {
-						throw err
-					}
+					await request
+						.post('/users')
+						.send(newUser)
+						.expect(400)
+						.expect(res => {
+							const expectedErrorItem = {
+								field: 'email',
+								value: newUser.email,
+								message: 'This is not a valid e-mail-address'
+							}
+							errorHelper.checkValidationError(res.body, expectedErrorItem)
+						})
 				}
 			})
 		})

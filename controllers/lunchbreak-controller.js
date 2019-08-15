@@ -72,6 +72,7 @@ class LunchbreakController {
 
 		let lunchbreaks = await ResourceLoader.loadLunchbreaks(groupId, from, to)
 		lunchbreaks = await Promise.all(lunchbreaks.map(async (lunchbreak) => {
+			const group = await ResourceLoader.loadGroupById(groupId)
 			lunchbreak = lunchbreak.toJSON()
 
 			delete lunchbreak.groupId
@@ -90,7 +91,6 @@ class LunchbreakController {
 			})
 			delete lunchbreak.absences
 
-			const group = await ResourceLoader.loadGroupById(groupId)
 			const allMembers = group.members
 			lunchbreak.responseless = allMembers.filter(member => {
 				const participates = lunchbreak.participants.find(p => p.member.username === member.username)
@@ -104,6 +104,7 @@ class LunchbreakController {
 	}
 
 	async getLunchbreak(groupId, date) {
+		const group = await ResourceLoader.loadGroupById(groupId)
 		let lunchbreak = await ResourceLoader.loadLunchbreak(groupId, date)
 		lunchbreak = lunchbreak.toJSON()
 
@@ -123,7 +124,6 @@ class LunchbreakController {
 		})
 		delete lunchbreak.absences
 
-		const group = await ResourceLoader.loadGroupById(groupId)
 		const allMembers = group.members
 		lunchbreak.responseless = allMembers.filter(member => {
 			const participates = lunchbreak.participants.find(p => p.member !== null && p.member.username === member.username)
