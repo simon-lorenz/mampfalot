@@ -4,7 +4,7 @@ const app = require('./app')
 const PORT = process.env.PORT || 5000
 const sequelize = require('./models').sequelize
 const mailer = require('./util/mailer')
-const { logger } = require('./util/logger')
+const logger = require('./util/logger')
 
 async function start() {
 	logger.info('[Application] Initializing...')

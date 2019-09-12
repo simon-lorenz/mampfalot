@@ -2,34 +2,33 @@
 
 const fs = require('fs')
 const path = require('path')
-const basename = path.basename(__filename)
 const Sequelize = require('sequelize')
-
-const db = {}
 
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
 	logging: false
 })
 
+const models = {}
+
 fs
 	.readdirSync(__dirname)
-	.filter(file => {
-		return (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.js')
-	})
+	.filter(file => file.indexOf('.') !== 0)
+	.filter(file => file.slice(-3) === '.js')
+	.filter(file => file !== path.basename(__filename))
 	.forEach(file => {
-		const model = sequelize['import'](path.join(__dirname, file))
-		db[model.name] = model
+		const pathToModel = path.join(__dirname, file)
+		const model = sequelize.import(pathToModel)
+		models[model.name] = model
 	})
 
-Object.keys(db).forEach(modelName => {
-	if (db[modelName].associate)
-		db[modelName].associate(db)
+Object
+	.keys(models)
+	.forEach(modelName => {
+		if (models[modelName].associate)
+			models[modelName].associate(models)
+	})
 
-	if(db[modelName].loadScopes)
-		db[modelName].loadScopes(db)
-})
-
-db.sequelize = sequelize
-db.Sequelize = Sequelize
-
-module.exports = db
+module.exports = {
+	sequelize,
+	...models
+}
