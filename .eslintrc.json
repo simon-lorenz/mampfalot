@@ -17,8 +17,9 @@
     "lines-between-class-members": ["error", "always"],
     "no-console": "off",
     "no-eval": "error",
-    "no-multiple-empty-lines":"error",
-    "no-this-before-super":"error",
+    "no-multiple-empty-lines": "error",
+    "no-multi-spaces": "error",
+    "no-this-before-super": "error",
     "no-throw-literal": "error",
     "no-trailing-spaces": "error",
     "no-unused-vars": ["error", { "argsIgnorePattern": "next" }],
@@ -32,6 +33,7 @@
     "prefer-template": "error",
     "quotes": ["error", "single"],
     "semi": ["error", "never"],
+    "space-infix-ops": ["error"],
     "strict": ["error", "global"],
     "template-curly-spacing": ["error", "never"]
   }

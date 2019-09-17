@@ -5,7 +5,7 @@ const ResourceLoader = require('../classes/resource-loader')
 const { User } = require('../models')
 const bcrypt = require('bcryptjs')
 const mailer = require('../util/mailer')
-const { generateRandomToken }  = require('../util/util')
+const { generateRandomToken } = require('../util/util')
 const { Op } = require('sequelize')
 
 class UserController {

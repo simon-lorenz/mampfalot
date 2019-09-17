@@ -233,7 +233,7 @@ describe('User', () => {
 			})
 
 			it('fails if password is too long', async () => {
-				newUser.password =  'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
+				newUser.password = 'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
 										'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
 										'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
 										'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +

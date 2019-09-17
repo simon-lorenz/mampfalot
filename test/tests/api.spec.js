@@ -7,7 +7,7 @@ const SwaggerParser = require('swagger-parser')
 const APIContract = require('../utils/openapi-helper')
 
 describe('The test server', () => {
-	it('mocks date and time correctly', async ()  => {
+	it('mocks date and time correctly', async () => {
 		testServer.start(5001, '09:22:33', '05.02.2019')
 		await require('supertest')('http://localhost:5001')
 			.get('/utc-system-time')

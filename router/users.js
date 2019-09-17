@@ -2,7 +2,7 @@
 
 const router = require('express').Router()
 const { allowMethods, hasQueryValues, hasBodyValues, convertParamToNumber, initializeUser, initializeControllers } = require('../util/middleware')
-const { asyncMiddleware }  = require('../util/util')
+const { asyncMiddleware } = require('../util/util')
 const UserController = require('../controllers/user-controller')
 
 router.route('/').all(allowMethods(['POST']))
