@@ -10,8 +10,8 @@ const {
 	Participant,
 	Vote,
 	Comment,
-	Invitation } = require('../../../models')
-const db = require('../../../models').sequelize
+	Invitation } = require('../../../src/models')
+const db = require('../../../src/models').sequelize
 const data = require('./test-data')
 const bcrypt = require('bcryptjs')
 
