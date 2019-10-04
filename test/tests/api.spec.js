@@ -111,7 +111,7 @@ describe('The mampfalot api', () => {
 				.expect(res => {
 					errorHelper.checkMethodNotAllowedError(res.body, 'PATCH', methods.map(method => method.toUpperCase()))
 				})
-				.catch((err) => {
+				.catch(err => {
 					errors.push(`${url}: ${err.message}`)
 				})
 		}

@@ -46,7 +46,7 @@ module.exports = (sequelize, DataTypes) => {
 		timestamps: false
 	})
 
-	GroupMembers.associate = function(models) {
+	GroupMembers.associate = models => {
 		models.GroupMembers.belongsTo(models.User, { foreignKey: 'userId' })
 	}
 

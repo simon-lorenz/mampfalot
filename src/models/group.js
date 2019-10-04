@@ -34,7 +34,7 @@ module.exports = (sequelize, DataTypes) => {
 					args: 720,
 					msg: 'utcOffset cannot be greater than 720'
 				},
-				validOffset: function (value) {
+				validOffset: value => {
 					if (value % 60 !== 0)
 						throw new Error('This is not a valid UTC offset.')
 				}
@@ -99,7 +99,7 @@ module.exports = (sequelize, DataTypes) => {
 		}
 	})
 
-	Group.associate = function (models) {
+	Group.associate = models => {
 		models.Group.hasMany(models.Invitation, { foreignKey: 'groupId' })
 		models.Group.hasMany(models.Place, { foreignKey: 'groupId' })
 		models.Group.hasMany(models.Lunchbreak, { foreignKey: 'groupId' })

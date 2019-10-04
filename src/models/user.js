@@ -100,7 +100,7 @@ module.exports = (sequelize, DataTypes) => {
 		}
 	})
 
-	User.associate = function (models) {
+	User.associate = models => {
 		models.User.hasMany(models.Invitation, { foreignKey: 'fromId' })
 		models.User.hasMany(models.Invitation, { foreignKey: 'toId' })
 		models.User.hasOne(models.GroupMembers, { as: 'config', foreignKey: 'userId' })

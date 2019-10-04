@@ -356,7 +356,7 @@ module.exports = {
 		const userId = this.users.find(user => user.username === username).id
 		const memberId = this.groupMembers.find(member => member.userId === userId && member.groupId === groupId).id
 		const participations = this.participants.filter(participant => participant.memberId === memberId)
-		return participations.map((participation) => {
+		return participations.map(participation => {
 			return {
 				date: this.lunchbreaks.find(lunchbreak => lunchbreak.id === participation.lunchbreakId).date,
 				votes: this.getVotesOfParticipant(participation.id),

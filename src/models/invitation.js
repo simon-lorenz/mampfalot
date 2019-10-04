@@ -43,7 +43,7 @@ module.exports = (sequelize, DataTypes) => {
 		}
 	})
 
-	Invitation.associate = function (models) {
+	Invitation.associate = models => {
 		models.Invitation.belongsTo(models.Group, { foreignKey: 'groupId' })
 		models.Invitation.belongsTo(models.User, { as: 'from', foreignKey: 'fromId' })
 		models.Invitation.belongsTo(models.User, { as: 'to', foreignKey: 'toId' })
