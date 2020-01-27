@@ -8,6 +8,7 @@
     "ecmaVersion": 2018
   },
   "rules": {
+    "arrow-parens": ["error", "as-needed"],
     "arrow-spacing": "error",
     "curly": ["error", "multi-or-nest", "consistent"],
     "eol-last": ["error", "always"],
@@ -15,10 +16,12 @@
     "indent": ["error", "tab", { "SwitchCase": 1 }],
     "linebreak-style": ["error", "unix"],
     "lines-between-class-members": ["error", "always"],
+    "no-confusing-arrow": ["error"],
     "no-console": "off",
     "no-eval": "error",
-    "no-multiple-empty-lines":"error",
-    "no-this-before-super":"error",
+    "no-multiple-empty-lines": "error",
+    "no-multi-spaces": "error",
+    "no-this-before-super": "error",
     "no-throw-literal": "error",
     "no-trailing-spaces": "error",
     "no-unused-vars": ["error", { "argsIgnorePattern": "next" }],
@@ -32,6 +35,7 @@
     "prefer-template": "error",
     "quotes": ["error", "single"],
     "semi": ["error", "never"],
+    "space-infix-ops": ["error"],
     "strict": ["error", "global"],
     "template-curly-spacing": ["error", "never"]
   }

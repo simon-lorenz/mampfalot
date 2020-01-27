@@ -10,7 +10,7 @@ module.exports = {
 	 * middleware because it catches every error automatically and routes it
 	 * to the next error handling middleware.
 	 */
-	asyncMiddleware: (fn) => {
+	asyncMiddleware: fn => {
 		return (req, res, next) => {
 			Promise
 				.resolve(fn(req, res, next))

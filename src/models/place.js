@@ -51,7 +51,7 @@ module.exports = (sequelize, DataTypes) => {
 		}
 	})
 
-	Place.associate = function (models) {
+	Place.associate = models => {
 		models.Place.hasMany(models.Vote, { foreignKey: 'placeId' })
 		models.Place.belongsTo(models.Group, { foreignKey: 'groupId' })
 	}

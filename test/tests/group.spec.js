@@ -60,6 +60,7 @@ describe('Group', () => {
 						member.should.have.all.keys(testData.getGroupMemberKeys())
 						member.should.have.property('username').equal('maxmustermann')
 						member.should.have.property('config').which.has.property('isAdmin').equal(true)
+						member.should.have.property('config').which.has.property('color').equal('#80d8ff')
 					})
 			})
 		})

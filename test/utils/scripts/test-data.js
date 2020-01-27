@@ -248,6 +248,17 @@ module.exports = {
 			password: 'verifyme',
 			verified: false,
 			verificationToken: '$2a$12$1tHI5g0IJm77KrvASnroLeLIHpQGzdCnU2.lZWqDsFCLPVrXTTfkW' // Hash of "valid-token"
+		},
+		{
+			id: 8,
+			username: 'please-change-my-password',
+			firstName: '',
+			lastName: '',
+			email: 'please-change-my-password@email.nonexistenttld',
+			password: 'somepasswordiforgot',
+			verified: true,
+			passwordResetToken: '$2a$12$0YYth34h.nOI2GN707qrzeUucHU7XVtLMrUeGWNph3bv76zAKT2GS', // Hash of cc915e69976263e3464402d24c65df4dbd750b54ca0b96d69f
+			passwordResetExpiration: '2020-01-27 15:35:29.451+01'
 		}
 	],
 	getAbsence(memberId, lunchbreakId) {
@@ -356,7 +367,7 @@ module.exports = {
 		const userId = this.users.find(user => user.username === username).id
 		const memberId = this.groupMembers.find(member => member.userId === userId && member.groupId === groupId).id
 		const participations = this.participants.filter(participant => participant.memberId === memberId)
-		return participations.map((participation) => {
+		return participations.map(participation => {
 			return {
 				date: this.lunchbreaks.find(lunchbreak => lunchbreak.id === participation.lunchbreakId).date,
 				votes: this.getVotesOfParticipant(participation.id),

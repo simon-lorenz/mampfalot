@@ -71,7 +71,7 @@ class LunchbreakController {
 			throw new RequestError('The query values from and to have to be in the same year.')
 
 		let lunchbreaks = await ResourceLoader.loadLunchbreaks(groupId, from, to)
-		lunchbreaks = await Promise.all(lunchbreaks.map(async (lunchbreak) => {
+		lunchbreaks = await Promise.all(lunchbreaks.map(async lunchbreak => {
 			const group = await ResourceLoader.loadGroupById(groupId)
 			lunchbreak = lunchbreak.toJSON()
 

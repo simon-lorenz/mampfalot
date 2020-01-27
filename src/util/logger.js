@@ -104,7 +104,7 @@ module.exports = {
 	logHttpRequest() {
 		return morgan('short', {
 			stream: {
-				write: (str) => {
+				write: str => {
 					this.info(str.trim())
 				}
 			}

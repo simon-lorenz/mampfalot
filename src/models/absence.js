@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
 		}
 	})
 
-	Absence.associate = (models) => {
+	Absence.associate = models => {
 		models.Absence.belongsTo(models.Lunchbreak, { foreignKey: 'lunchbreakId' })
 		models.Absence.belongsTo(models.GroupMembers, { foreignKey: 'memberId', as: 'member' })
 	}

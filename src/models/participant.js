@@ -75,7 +75,7 @@ module.exports = (sequelize, DataTypes) => {
 		}
 	})
 
-	Participant.associate = function (models) {
+	Participant.associate = models => {
 		models.Participant.belongsTo(models.GroupMembers, { foreignKey: 'memberId', as: 'member' })
 		models.Participant.belongsTo(models.Lunchbreak, { foreignKey: 'lunchbreakId' })
 		models.Participant.hasMany(models.Vote, { foreignKey: 'participantId' })

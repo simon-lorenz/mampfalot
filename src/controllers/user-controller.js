@@ -5,7 +5,7 @@ const ResourceLoader = require('../classes/resource-loader')
 const { User } = require('../models')
 const bcrypt = require('bcryptjs')
 const mailer = require('../util/mailer')
-const { generateRandomToken }  = require('../util/util')
+const { generateRandomToken } = require('../util/util')
 const { Op } = require('sequelize')
 
 class UserController {
@@ -197,6 +197,9 @@ class UserController {
 		user.password = newPassword
 		user.passwordResetToken = null
 		user.passwordResetExpiration = null
+		await user.validate()
+
+		user.password = await bcrypt.hash(user.password, 12)
 		await user.save()
 	}
 

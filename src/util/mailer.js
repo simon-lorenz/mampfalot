@@ -3,7 +3,7 @@
 const nodemailer = require('nodemailer')
 const handlebars = require('handlebars')
 const fs = require('fs')
-const logger = require('../util/logger')
+const logger = require('./logger')
 
 /**
  * Promisifies nodes readFile() function.

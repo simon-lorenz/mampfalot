@@ -579,7 +579,7 @@ describe('Participation', () => {
 				const votes = await request
 					.get('/groups/1/lunchbreaks/2018-06-25')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.then((res) => {
+					.then(res => {
 						const lunchbreak = res.body
 						return lunchbreak.participants.find(p => p.member.username === 'maxmustermann')
 					})
@@ -607,7 +607,7 @@ describe('Participation', () => {
 				const votes = await request
 					.get('/groups/1/lunchbreaks/2018-06-25')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.then((res) => {
+					.then(res => {
 						const lunchbreak = res.body
 						return lunchbreak.participants.find(p => p.member.username === 'maxmustermann')
 					})

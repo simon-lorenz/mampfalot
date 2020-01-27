@@ -39,14 +39,14 @@ module.exports = (sequelize, DataTypes) => {
 		color: {
 			type: DataTypes.STRING,
 			allowNull: true,
-			defaultValue: '80D8FF'
+			defaultValue: '#80d8ff'
 		}
 	}, {
 		tableName: 'group_members',
 		timestamps: false
 	})
 
-	GroupMembers.associate = function(models) {
+	GroupMembers.associate = models => {
 		models.GroupMembers.belongsTo(models.User, { foreignKey: 'userId' })
 	}
 

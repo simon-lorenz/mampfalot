@@ -1,10 +1,10 @@
 'use strict'
 
-const app = require('./app')
+const app = require('./src/app')
 const PORT = process.env.PORT || 5000
-const sequelize = require('./models').sequelize
-const mailer = require('./util/mailer')
-const logger = require('./util/logger')
+const sequelize = require('./src/models').sequelize
+const mailer = require('./src/util/mailer')
+const logger = require('./src/util/logger')
 
 async function start() {
 	logger.info('[Application] Initializing...')
