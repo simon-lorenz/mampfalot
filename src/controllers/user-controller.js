@@ -197,6 +197,9 @@ class UserController {
 		user.password = newPassword
 		user.passwordResetToken = null
 		user.passwordResetExpiration = null
+		await user.validate()
+
+		user.password = await bcrypt.hash(user.password, 12)
 		await user.save()
 	}
 

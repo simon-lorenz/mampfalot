@@ -7,6 +7,7 @@ const util = require('../utils/util')
 const request = require('supertest')('http://localhost:5001/api')
 const TokenHelper = require('../utils/token-helper')
 const testData = require('../utils/scripts/test-data')
+const testServer = require('../utils/test-server')
 
 describe('User', () => {
 
@@ -334,6 +335,35 @@ describe('User', () => {
 		describe('POST', () => {
 			beforeEach(async () => {
 				await setupDatabase()
+			})
+
+			it('resets a password successfully', async () => {
+				testServer.start(5001, '14:33:00', '27.01.2020')
+
+				await request
+					.post('/users/please-change-my-password/forgot-password')
+					.send({
+						token: 'cc915e69976263e3464402d24c65df4dbd750b54ca0b96d69f',
+						newPassword: 'this-is-my-new-password'
+					})
+					.expect(204)
+
+				await request
+					.get('/authenticate')
+					.auth('please-change-my-password', 'this-is-my-new-password')
+					.expect(200)
+			})
+
+			it('fails if the password is too short', async () => {
+				testServer.start(5001, '14:33:00', '27.01.2020')
+
+				await request
+					.post('/users/please-change-my-password/forgot-password')
+					.send({
+						token: 'cc915e69976263e3464402d24c65df4dbd750b54ca0b96d69f',
+						newPassword: '123'
+					})
+					.expect(400)
 			})
 
 			it('fails if the body does not contain a resetToken', async () => {
