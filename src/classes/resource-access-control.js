@@ -1,5 +1,3 @@
-'use strict'
-
 const { GroupMembers, Lunchbreak } = require('../models')
 const { AuthorizationError } = require('./errors')
 
@@ -10,96 +8,111 @@ const { AuthorizationError } = require('./errors')
  * NotFoundError.
  */
 class ResourceAccessControl {
-
-	constructor (user) {
+	constructor(user) {
 		this.user = user
 	}
 
 	async createAbsence(absence) {
 		const lunchbreak = await Lunchbreak.findByPk(absence.lunchbreakId, { attributes: ['groupId'] })
-		if (!this.user.isGroupMember(lunchbreak.groupId))
+		if (!this.user.isGroupMember(lunchbreak.groupId)) {
 			throw new AuthorizationError('Absence', null, 'CREATE')
+		}
 	}
 
 	async deleteAbsence(absence) {
 		const lunchbreak = await Lunchbreak.findByPk(absence.lunchbreakId, { attributes: ['groupId'] })
-		if (!this.user.isGroupMember(lunchbreak.groupId))
+		if (!this.user.isGroupMember(lunchbreak.groupId)) {
 			throw new AuthorizationError('Absence', null, 'DELETE')
+		}
 	}
 
 	async createComment(comment) {
 		const lunchbreak = await Lunchbreak.findByPk(comment.lunchbreakId, { attributes: ['groupId'] })
-		if (!this.user.isGroupMember(lunchbreak.groupId))
+		if (!this.user.isGroupMember(lunchbreak.groupId)) {
 			throw new AuthorizationError('Comment', null, 'CREATE')
+		}
 	}
 
 	async readComment(comment) {
 		const lunchbreak = await Lunchbreak.findByPk(comment.lunchbreakId, { attributes: ['groupId'] })
-		if (!this.user.isGroupMember(lunchbreak.groupId))
+		if (!this.user.isGroupMember(lunchbreak.groupId)) {
 			throw new AuthorizationError('Comment', comment.id, 'READ')
+		}
 	}
 
 	async updateComment(comment) {
-		if (comment.author.username !== this.user.username)
+		if (comment.author.username !== this.user.username) {
 			throw new AuthorizationError('Comment', comment.id, 'UPDATE')
+		}
 	}
 
 	async deleteComment(comment) {
-		if (comment.author.username !== this.user.username)
+		if (comment.author.username !== this.user.username) {
 			throw new AuthorizationError('Comment', comment.id, 'DELETE')
+		}
 	}
 
 	async readGroup(group) {
-		if (!this.user.isGroupMember(group.id))
+		if (!this.user.isGroupMember(group.id)) {
 			throw new AuthorizationError('Group', group.id, 'READ')
+		}
 	}
 
 	/**
 	 * Checks if the user can read the groups of a user
 	 */
 	async readGroupCollection(user) {
-		if (this.user.id !== user.id)
+		if (this.user.id !== user.id) {
 			throw new AuthorizationError('GroupCollection', null, 'READ')
+		}
 	}
 
 	async updateGroup(group) {
-		if (!this.user.isGroupAdmin(group.id))
+		if (!this.user.isGroupAdmin(group.id)) {
 			throw new AuthorizationError('Group', group.id, 'UPDATE')
+		}
 	}
 
 	async deleteGroup(group) {
-		if (!this.user.isGroupAdmin(group.id))
+		if (!this.user.isGroupAdmin(group.id)) {
 			throw new AuthorizationError('Group', group.id, 'DELETE')
+		}
 	}
 
 	async createGroupMember(member) {
-		if (!this.user.isGroupAdmin(member.groupId))
+		if (!this.user.isGroupAdmin(member.groupId)) {
 			throw new AuthorizationError('GroupMember', null, 'CREATE')
+		}
 	}
 
 	async readGroupMemberCollection(group) {
-		if (!this.user.isGroupMember(group.id))
+		if (!this.user.isGroupMember(group.id)) {
 			throw new AuthorizationError('GroupMemberCollection', null, 'READ')
+		}
 	}
 
 	async readInvitationCollection(group) {
-		if (!this.user.isGroupMember(group.id))
+		if (!this.user.isGroupMember(group.id)) {
 			throw new AuthorizationError('InvitationCollection', null, 'READ')
+		}
 	}
 
 	async readInvitationCollectionOfUser(user) {
-		if (this.user.id !== user.id)
+		if (this.user.id !== user.id) {
 			throw new AuthorizationError('InvitationCollection', null, 'READ')
+		}
 	}
 
 	async createInvitation(invitation) {
-		if (!this.user.isGroupAdmin(invitation.groupId))
+		if (!this.user.isGroupAdmin(invitation.groupId)) {
 			throw new AuthorizationError('Invitation', null, 'CREATE')
+		}
 	}
 
 	async deleteInvitation(invitation) {
-		if (!this.user.isGroupAdmin(invitation.groupId))
+		if (!this.user.isGroupAdmin(invitation.groupId)) {
 			throw new AuthorizationError('Invitation', null, 'DELETE')
+		}
 	}
 
 	async updateGroupMember(member, username) {
@@ -107,8 +120,9 @@ class ResourceAccessControl {
 		const losesAdminRights = !member.isAdmin && member.previous('isAdmin')
 
 		if (this.user.id === member.userId || this.user.isGroupAdmin(member.groupId)) {
-			if (gainsAdminRights && !this.user.isGroupAdmin(member.groupId))
+			if (gainsAdminRights && !this.user.isGroupAdmin(member.groupId)) {
 				throw new AuthorizationError('GroupMember', username, 'UPDATE')
+			}
 
 			if (losesAdminRights) {
 				const admins = await GroupMembers.findAll({
@@ -151,87 +165,102 @@ class ResourceAccessControl {
 	}
 
 	async createLunchbreak(lunchbreak) {
-		if (!this.user.isGroupMember(lunchbreak.groupId))
+		if (!this.user.isGroupMember(lunchbreak.groupId)) {
 			throw new AuthorizationError('Lunchbreak', null, 'CREATE')
+		}
 	}
 
 	async readLunchbreak(lunchbreak) {
-		if (!this.user.isGroupMember(lunchbreak.groupId))
+		if (!this.user.isGroupMember(lunchbreak.groupId)) {
 			throw new AuthorizationError('Lunchbreak', lunchbreak.id, 'READ')
+		}
 	}
 
 	async updateLunchbreak(lunchbreak) {
-		if (!this.user.isGroupAdmin(lunchbreak.groupId))
+		if (!this.user.isGroupAdmin(lunchbreak.groupId)) {
 			throw new AuthorizationError('Lunchbreak', lunchbreak.id, 'UPDATE')
+		}
 	}
 
 	async createParticipant(participant) {
 		const lunchbreak = await Lunchbreak.findByPk(participant.lunchbreakId, { attributes: ['groupId'] })
 
-		if (!this.user.isGroupMember(lunchbreak.groupId))
+		if (!this.user.isGroupMember(lunchbreak.groupId)) {
 			throw new AuthorizationError('Participant', participant.id, 'CREATE')
+		}
 	}
 
 	async readParticipant(participant) {
-		if (!this.user.isGroupMember(participant.lunchbreak.groupId))
+		if (!this.user.isGroupMember(participant.lunchbreak.groupId)) {
 			throw new AuthorizationError('Participant', participant.id, 'READ')
+		}
 	}
 
 	async deleteParticipant(participant) {
-		if (this.user.id !== participant.userId)
+		if (this.user.id !== participant.userId) {
 			throw new AuthorizationError('Participant', participant.id, 'DELETE')
+		}
 	}
 
 	async createPlace(place) {
-		if (!this.user.isGroupAdmin(place.groupId))
+		if (!this.user.isGroupAdmin(place.groupId)) {
 			throw new AuthorizationError('Place', null, 'CREATE')
+		}
 	}
 
 	async readPlace(place) {
-		if (!this.user.isGroupMember(place.groupId))
+		if (!this.user.isGroupMember(place.groupId)) {
 			throw new AuthorizationError('Place', place.id, 'READ')
+		}
 	}
 
 	async updatePlace(place) {
-		if (!this.user.isGroupAdmin(place.groupId))
+		if (!this.user.isGroupAdmin(place.groupId)) {
 			throw new AuthorizationError('Place', place.id, 'UPDATE')
+		}
 	}
 
 	async deletePlace(place) {
-		if (!this.user.isGroupAdmin(place.groupId))
+		if (!this.user.isGroupAdmin(place.groupId)) {
 			throw new AuthorizationError('Place', place.id, 'DELETE')
+		}
 	}
 
 	async readUser(user) {
-		if (this.user.id !== user.id)
+		if (this.user.id !== user.id) {
 			throw new AuthorizationError('User', user.id, 'READ')
+		}
 	}
 
 	async updateUser(user) {
-		if (this.user.id !== user.id)
+		if (this.user.id !== user.id) {
 			throw new AuthorizationError('User', user.id, 'UPDATE')
+		}
 	}
 
 	async deleteUser(user) {
-		if (this.user.id !== user.id)
+		if (this.user.id !== user.id) {
 			throw new AuthorizationError('User', user.id, 'DELETE')
+		}
 	}
 
 	async createVoteCollection(participant) {
-		if (participant.userId !== this.user.id)
+		if (participant.userId !== this.user.id) {
 			throw new AuthorizationError('VoteCollection', null, 'CREATE')
+		}
 	}
 
 	async readVote(vote) {
-		if (vote.participant.userId !== this.user.id)
+		if (vote.participant.userId !== this.user.id) {
 			throw new AuthorizationError('Vote', vote.id, 'READ')
+		}
 	}
 
 	async deleteVote(vote) {
-		if (vote.participant.userId !== this.user.id)
+		if (vote.participant.userId !== this.user.id) {
 			throw new AuthorizationError('Vote', vote.id, 'DELETE')
+		}
 	}
-
 }
 
 module.exports = ResourceAccessControl

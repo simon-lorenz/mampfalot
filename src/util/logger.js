@@ -1,5 +1,3 @@
-'use strict'
-
 const cls = require('cls-hooked')
 const pino = require('pino')
 const uuidv4 = require('uuid/v4')
@@ -29,45 +27,51 @@ const getRequestMetaData = () => {
 module.exports = {
 	// Wrap up the pino logger api in a totally DRY manner to attach request meta data to each log entry.
 	trace(mergingObjectOrMessage, message) {
-		if (message)
+		if (message) {
 			logger.trace({ ...getRequestMetaData(), ...mergingObjectOrMessage }, message)
-		else
+		} else {
 			logger.trace(getRequestMetaData(), mergingObjectOrMessage)
+		}
 	},
 
 	debug(mergingObjectOrMessage, message) {
-		if (message)
+		if (message) {
 			logger.debug({ ...getRequestMetaData(), ...mergingObjectOrMessage }, message)
-		else
+		} else {
 			logger.debug(getRequestMetaData(), mergingObjectOrMessage)
+		}
 	},
 
 	info(mergingObjectOrMessage, message) {
-		if (message)
+		if (message) {
 			logger.info({ ...getRequestMetaData(), ...mergingObjectOrMessage }, message)
-		else
+		} else {
 			logger.info(getRequestMetaData(), mergingObjectOrMessage)
+		}
 	},
 
 	warn(mergingObjectOrMessage, message) {
-		if (message)
+		if (message) {
 			logger.warn({ ...getRequestMetaData(), ...mergingObjectOrMessage }, message)
-		else
+		} else {
 			logger.warn(getRequestMetaData(), mergingObjectOrMessage)
+		}
 	},
 
 	error(mergingObjectOrMessage, message) {
-		if (message)
+		if (message) {
 			logger.error({ ...getRequestMetaData(), ...mergingObjectOrMessage }, message)
-		else
+		} else {
 			logger.error(getRequestMetaData(), mergingObjectOrMessage)
+		}
 	},
 
 	fatal(mergingObjectOrMessage, message) {
-		if (message)
+		if (message) {
 			logger.fatal({ ...getRequestMetaData(), ...mergingObjectOrMessage }, message)
-		else
+		} else {
 			logger.fatal(getRequestMetaData(), mergingObjectOrMessage)
+		}
 	},
 
 	/**
@@ -110,5 +114,4 @@ module.exports = {
 			}
 		})
 	}
-
 }

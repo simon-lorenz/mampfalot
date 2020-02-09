@@ -9,7 +9,8 @@
   "scripts": {
     "start": "node server",
     "start:dev": "nodemon server --quiet | tee server.log | pino-pretty -t \"SYS:HH:MM:ss\" -i hostname,pid,responseTime",
-    "lint": "eslint . --ext .js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test": "mocha"
   },
   "repository": {
@@ -40,10 +41,12 @@
     "chai-sorted": "^0.2.0",
     "deep-equal-in-any-order": "^1.0.21",
     "eslint": "^6.8.0",
+    "eslint-plugin-prettier": "^3.1.2",
     "mocha": "^7.0.1",
     "mocha-clean": "^1.0.0",
     "nodemon": "^2.0.2",
     "pino-pretty": "^3.5.0",
+    "prettier": "^1.19.1",
     "supertest": "^4.0.2",
     "swagger-parser": "^8.0.4",
     "timekeeper": "^2.2.0"

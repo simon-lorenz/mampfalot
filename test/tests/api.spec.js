@@ -26,7 +26,6 @@ describe('The test server', () => {
 })
 
 describe('The mampfalot api', () => {
-
 	before(() => APIContract.parse())
 
 	it('has a valid openapi contract', async () => {
@@ -34,9 +33,7 @@ describe('The mampfalot api', () => {
 	})
 
 	it('responds to /', async () => {
-		await request
-			.get('/')
-			.expect(200)
+		await request.get('/').expect(200)
 	})
 
 	it('404s unkown routes', async () => {
@@ -51,12 +48,10 @@ describe('The mampfalot api', () => {
 	})
 
 	it('does not send the "x-powered-by" header', async () => {
-		await request
-			.get('/')
-			.expect(res => {
-				const headers = res.headers
-				headers.should.not.have.property('x-powered-by')
-			})
+		await request.get('/').expect(res => {
+			const headers = res.headers
+			headers.should.not.have.property('x-powered-by')
+		})
 	})
 
 	it('requires authentication for all protected endpoints', async () => {
@@ -68,8 +63,9 @@ describe('The mampfalot api', () => {
 		for (const url of urls) {
 			const methods = APIContract.getMethods(url)
 			for (const method of methods) {
-				if (APIContract.requiresBearerToken(url, method) === false)
+				if (APIContract.requiresBearerToken(url, method) === false) {
 					continue
+				}
 
 				const testableUrl = APIContract.replaceParams(url)
 
@@ -83,12 +79,14 @@ describe('The mampfalot api', () => {
 			}
 		}
 
-		if (errors.length > 0)
+		if (errors.length > 0) {
 			throw new Error(`\n${errors.join('\n')}`)
+		}
 	})
 
 	it('fails if token is invalid', async () => {
-		const invalid = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6NSwibmFtZSI6Ik1heCBNdXN0ZXJtYW5uIiwiZW1haWwiOiJtdXN0ZXJtYW5uQGdtYWlsLmNvbSIsImlhdCI6MTUzNjc1Njk3MCwiZXhwIjoxNTM2NzYwNTg5LCJqdGkiOiI2YTA5OTY1Ny03MmRlLTQyOGMtOWE2NS00MDQ5N2FmZjY5YjcifQ.Ym0pnoafK1bpBKq_ohqPKyx0mITa_YfkIaHey94wXgQ'
+		const invalid =
+			'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6NSwibmFtZSI6Ik1heCBNdXN0ZXJtYW5uIiwiZW1haWwiOiJtdXN0ZXJtYW5uQGdtYWlsLmNvbSIsImlhdCI6MTUzNjc1Njk3MCwiZXhwIjoxNTM2NzYwNTg5LCJqdGkiOiI2YTA5OTY1Ny03MmRlLTQyOGMtOWE2NS00MDQ5N2FmZjY5YjcifQ.Ym0pnoafK1bpBKq_ohqPKyx0mITa_YfkIaHey94wXgQ'
 		await request
 			.get('/users/5')
 			.set({ Authorization: invalid })
@@ -109,14 +107,19 @@ describe('The mampfalot api', () => {
 				.set({ Authorization: await TokenHelper.getToken('maxmustermann') })
 				.expect(405)
 				.expect(res => {
-					errorHelper.checkMethodNotAllowedError(res.body, 'PATCH', methods.map(method => method.toUpperCase()))
+					errorHelper.checkMethodNotAllowedError(
+						res.body,
+						'PATCH',
+						methods.map(method => method.toUpperCase())
+					)
 				})
 				.catch(err => {
 					errors.push(`${url}: ${err.message}`)
 				})
 		}
 
-		if (errors.length > 0)
-			throw new Error (`\n${errors.join('\n')}` )
+		if (errors.length > 0) {
+			throw new Error(`\n${errors.join('\n')}`)
+		}
 	})
 })

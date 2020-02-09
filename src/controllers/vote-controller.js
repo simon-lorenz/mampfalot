@@ -1,17 +1,15 @@
-'use strict'
-
 const { Lunchbreak, Participant, Group, Vote } = require('../models')
 const { ValidationError } = require('../classes/errors')
 
 class VoteController {
-
 	/**
 	 * Overrides the votes of a participation, if the provided votes are valid.
 	 * This function does not check the voteEndingTime!
 	 */
 	static async overrideVotes(votes, participantId) {
-		if (votes === [])
+		if (votes === []) {
 			return await destroyVotesOfParticipant(participantId)
+		}
 
 		const config = await getGroupConfig(participantId)
 		checkMinPointsPerVote(votes, config.minPointsPerVote)
@@ -22,7 +20,6 @@ class VoteController {
 		await destroyVotesOfParticipant(participantId)
 		await Vote.bulkCreate(votes, { validate: true })
 	}
-
 }
 
 /**
@@ -65,13 +62,15 @@ function checkMinPointsPerVote(votes, minPointsPerVote) {
 	const invalidVotes = votes.filter(vote => Number(vote.points) < minPointsPerVote)
 
 	if (invalidVotes.length > 0) {
-		throw new ValidationError(invalidVotes.map(vote => {
-			return {
-				field: 'points',
-				value: vote.points,
-				message: `Points deceeds minPointsPerVote (${minPointsPerVote}).`
-			}
-		}))
+		throw new ValidationError(
+			invalidVotes.map(vote => {
+				return {
+					field: 'points',
+					value: vote.points,
+					message: `Points deceeds minPointsPerVote (${minPointsPerVote}).`
+				}
+			})
+		)
 	}
 }
 
@@ -85,13 +84,15 @@ function checkMaxPointsPerVote(votes, maxPointsPerVote) {
 	const invalidVotes = votes.filter(vote => Number(vote.points) > maxPointsPerVote)
 
 	if (invalidVotes.length > 0) {
-		throw new ValidationError(invalidVotes.map(vote => {
-			return {
-				field: 'points',
-				value: vote.points,
-				message: `Points exceeds maxPointsPerVote (${maxPointsPerVote}).`
-			}
-		}))
+		throw new ValidationError(
+			invalidVotes.map(vote => {
+				return {
+					field: 'points',
+					value: vote.points,
+					message: `Points exceeds maxPointsPerVote (${maxPointsPerVote}).`
+				}
+			})
+		)
 	}
 }
 
@@ -100,14 +101,18 @@ function checkMaxPointsPerVote(votes, maxPointsPerVote) {
  * @throws {ValidationError}
  */
 function checkPointsPerDay(votes, pointsPerDay) {
-	let sum = 0
-	votes.forEach(vote => sum += Number(vote.points))
+	const sum = votes.reduce((acc, vote) => {
+		return acc + vote.points
+	}, 0)
+
 	if (sum > pointsPerDay) {
-		throw new ValidationError([{
-			field: 'points',
-			value: sum,
-			message: `Sum of points exceeds pointsPerDay (${pointsPerDay}).`
-		}])
+		throw new ValidationError([
+			{
+				field: 'points',
+				value: sum,
+				message: `Sum of points exceeds pointsPerDay (${pointsPerDay}).`
+			}
+		])
 	}
 }
 

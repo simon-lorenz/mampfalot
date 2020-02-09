@@ -10,7 +10,8 @@ const {
 	Participant,
 	Vote,
 	Comment,
-	Invitation } = require('../../../src/models')
+	Invitation
+} = require('../../../src/models')
 const db = require('../../../src/models').sequelize
 const data = require('./test-data')
 const bcrypt = require('bcryptjs')
@@ -19,11 +20,13 @@ module.exports = async function resetData() {
 	await db.sync({ force: true })
 
 	try {
-		await User.bulkCreate(data.users.map(user => {
-			const result = Object.assign({}, user)
-			result.password = bcrypt.hashSync(user.password, 1)
-			return result
-		}))
+		await User.bulkCreate(
+			data.users.map(user => {
+				const result = Object.assign({}, user)
+				result.password = bcrypt.hashSync(user.password, 1)
+				return result
+			})
+		)
 		await Group.bulkCreate(data.groups)
 		await GroupMembers.bulkCreate(data.groupMembers)
 		await Invitation.bulkCreate(data.invitations)

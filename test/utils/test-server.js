@@ -1,7 +1,6 @@
 const app = require('../../src/app')
 
 class TestServer {
-
 	start(port, time = '', date = '') {
 		this.close()
 		process.env.TIME = time
@@ -10,10 +9,10 @@ class TestServer {
 	}
 
 	close() {
-		if (this.server)
+		if (this.server) {
 			this.server.close()
+		}
 	}
-
 }
 
 const testServer = new TestServer()

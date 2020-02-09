@@ -88,7 +88,7 @@ describe('Group Member', () => {
 
 			it('fails if a non admin member tries to change another member', async () => {
 				await request
-					.put(('/groups/1/members/maxmustermann'))
+					.put('/groups/1/members/maxmustermann')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.expect(403)
 					.expect(res => {
@@ -237,8 +237,9 @@ describe('Group Member', () => {
 					.expect(200)
 					.expect(res => {
 						const invitation = res.body.find(i => i.group.id === 1)
-						if (!invitation)
+						if (!invitation) {
 							throw new Error('Invitation not found!')
+						}
 					})
 			})
 

@@ -6,17 +6,14 @@ const testData = require('../utils/scripts/test-data')
 const testServer = require('../utils/test-server')
 
 describe('Absence', () => {
-
 	describe('/groups/:id/lunchbreaks/:date/absence', () => {
-
 		describe('POST', () => {
-
 			beforeEach(async () => {
 				await setupDatabase()
 				testServer.start(5001, '11:24:59', '25.06.2018')
 			})
 
-			it('marks a user as absent', async() => {
+			it('marks a user as absent', async () => {
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-25/absence')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
@@ -27,9 +24,7 @@ describe('Absence', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.then(res => res.body)
 					.then(lunchbreak => {
-						lunchbreak.absent.should.be.deep.equal([
-							testData.getGroupMember(1)
-						])
+						lunchbreak.absent.should.be.deep.equal([testData.getGroupMember(1)])
 					})
 			})
 
@@ -50,9 +45,7 @@ describe('Absence', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(200)
 					.expect(res => {
-						res.body.absent.should.be.deep.equal([
-							testData.getGroupMember(1)
-						])
+						res.body.absent.should.be.deep.equal([testData.getGroupMember(1)])
 					})
 			})
 
@@ -72,9 +65,7 @@ describe('Absence', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.then(res => res.body)
 					.then(lunchbreak => {
-						lunchbreak.absent.should.be.deep.equal([
-							testData.getGroupMember(1)
-						])
+						lunchbreak.absent.should.be.deep.equal([testData.getGroupMember(1)])
 					})
 			})
 
@@ -104,8 +95,9 @@ describe('Absence', () => {
 					.expect(200)
 					.expect(res => {
 						const lunchbreak = res.body
-						if (lunchbreak.participants.find(p => p.member.username === 'maxmustermann'))
+						if (lunchbreak.participants.find(p => p.member.username === 'maxmustermann')) {
 							throw new Error('Participation was not deleted')
+						}
 					})
 			})
 
@@ -124,7 +116,10 @@ describe('Absence', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(400)
 					.expect(res => {
-						errorHelper.checkRequestError(res.body, 'The end of voting has been reached, therefore you cannot mark yourself as absent.')
+						errorHelper.checkRequestError(
+							res.body,
+							'The end of voting has been reached, therefore you cannot mark yourself as absent.'
+						)
 					})
 			})
 
@@ -136,7 +131,10 @@ describe('Absence', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(400)
 					.expect(res => {
-						errorHelper.checkRequestError(res.body, 'The end of voting is reached, therefore you cannot create a new lunchbreak.')
+						errorHelper.checkRequestError(
+							res.body,
+							'The end of voting is reached, therefore you cannot create a new lunchbreak.'
+						)
 					})
 
 				await request
@@ -145,7 +143,7 @@ describe('Absence', () => {
 					.expect(404)
 			})
 
-			it('fails if the date lies in the past', async() => {
+			it('fails if the date lies in the past', async () => {
 				testServer.start(5001, '11:24:59', '02.07.2018')
 
 				await request
@@ -188,11 +186,9 @@ describe('Absence', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(404)
 			})
-
 		})
 
 		describe('DELETE', () => {
-
 			beforeEach(async () => {
 				await setupDatabase()
 				testServer.start(5001, '11:24:59', '25.06.2018')
@@ -231,7 +227,10 @@ describe('Absence', () => {
 					.expect(400)
 					.then(res => res.body)
 					.then(error => {
-						errorHelper.checkRequestError(error, 'The end of voting is reached, therefore you cannot delete this absence.')
+						errorHelper.checkRequestError(
+							error,
+							'The end of voting is reached, therefore you cannot delete this absence.'
+						)
 					})
 			})
 
@@ -276,7 +275,6 @@ describe('Absence', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(404)
 			})
-
 		})
 	})
 })

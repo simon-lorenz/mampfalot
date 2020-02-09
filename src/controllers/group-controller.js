@@ -1,12 +1,9 @@
-'use strict'
-
 const { Group, GroupMembers, Place, User } = require('../models')
 const ResourceLoader = require('../classes/resource-loader')
 const { AuthorizationError } = require('../classes/errors')
 const { Op } = require('sequelize')
 
 class GroupController {
-
 	constructor(user) {
 		this.user = user
 	}
@@ -18,8 +15,9 @@ class GroupController {
 	}
 
 	async getGroupsByUser(userId) {
-		if (this.user.id !== userId)
+		if (this.user.id !== userId) {
 			throw new AuthorizationError('GroupCollection', null, 'READ')
+		}
 
 		// The problem here is to find all groups of which our user is a member of and
 		// get a result which still includes all group members and not only our user.
@@ -104,7 +102,6 @@ class GroupController {
 		await this.user.can.deleteGroup(group)
 		await group.destroy()
 	}
-
 }
 
 module.exports = GroupController

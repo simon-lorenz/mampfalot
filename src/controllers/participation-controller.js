@@ -1,5 +1,3 @@
-'use strict'
-
 const { Absence, Participant, GroupMembers, Lunchbreak, Vote, Place, Comment } = require('../models')
 const { NotFoundError, RequestError, AuthorizationError } = require('../classes/errors')
 const { Op } = require('sequelize')
@@ -8,7 +6,6 @@ const LunchbreakController = require('./lunchbreak-controller')
 const VoteController = require('./vote-controller')
 
 class ParticipationLoader {
-
 	static async loadParticipation(groupId, date, userId) {
 		const participation = await Participant.findOne({
 			include: [
@@ -46,11 +43,11 @@ class ParticipationLoader {
 			]
 		})
 
-		if (participation)
+		if (participation) {
 			return participation
-		else
+		} else {
 			throw new NotFoundError('Participation')
-
+		}
 	}
 
 	static async loadParticipations(groupId, from, to, userId) {
@@ -70,7 +67,7 @@ class ParticipationLoader {
 					attributes: ['date'],
 					where: {
 						date: {
-							[Op.between]: [ from, to ]
+							[Op.between]: [from, to]
 						},
 						groupId: groupId
 					}
@@ -93,11 +90,9 @@ class ParticipationLoader {
 			]
 		})
 	}
-
 }
 
 class ParticipationController {
-
 	constructor(user) {
 		this.user = user
 	}
@@ -105,28 +100,32 @@ class ParticipationController {
 	async deleteParticipation(groupId, date) {
 		const participation = await ParticipationLoader.loadParticipation(groupId, date, this.user.id)
 
-		if (await voteEndingTimeReached(participation.lunchbreak.id))
+		if (await voteEndingTimeReached(participation.lunchbreak.id)) {
 			throw new RequestError('The end of voting has been reached, therefore this participation cannot be deleted.')
+		}
 
 		await participation.destroy()
 
 		const lunchbreak = await Lunchbreak.findByPk(participation.lunchbreak.id, {
-			include: [ Participant, Comment, Absence ]
+			include: [Participant, Comment, Absence]
 		})
 
-		if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0 && lunchbreak.absences.length === 0)
+		if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0 && lunchbreak.absences.length === 0) {
 			await lunchbreak.destroy()
+		}
 	}
 
 	async getParticipations(groupId, from, to) {
 		from = new Date(from)
 		to = new Date(to)
 
-		if (from >= to)
+		if (from >= to) {
 			throw new RequestError('The given timespan is invalid.')
+		}
 
-		if (from.getFullYear() !== to.getFullYear())
+		if (from.getFullYear() !== to.getFullYear()) {
 			throw new RequestError('The query values from and to have to be in the same year.')
+		}
 
 		const participations = await ParticipationLoader.loadParticipations(groupId, from, to, this.user.id)
 		return participations.map(participation => {
@@ -144,13 +143,15 @@ class ParticipationController {
 	}
 
 	async createParticipation(groupId, date, values) {
-		if (!dateIsToday(date))
+		if (!dateIsToday(date)) {
 			throw new RequestError('Participations can only be created for today.')
+		}
 
 		let lunchbreak = await Lunchbreak.findOne({
 			attributes: ['id'],
 			where: {
-				date, groupId
+				date,
+				groupId
 			}
 		})
 
@@ -172,8 +173,9 @@ class ParticipationController {
 			}
 		}
 
-		if (await voteEndingTimeReached(lunchbreak.id))
+		if (await voteEndingTimeReached(lunchbreak.id)) {
 			throw new RequestError('The end of voting has been reached, therefore you cannot participate anymore.')
+		}
 
 		const member = await GroupMembers.findOne({
 			attributes: ['id'],
@@ -183,8 +185,9 @@ class ParticipationController {
 			}
 		})
 
-		if (member === null)
+		if (member === null) {
 			throw new AuthorizationError('Participation', null, 'CREATE')
+		}
 
 		let participation
 
@@ -200,9 +203,9 @@ class ParticipationController {
 					resultId: values.result ? values.result.id : null,
 					amountSpent: values.amountSpent
 				})
-			} else {{
+			} else {
 				throw error
-			}}
+			}
 		}
 
 		await participation.save()
@@ -236,15 +239,16 @@ class ParticipationController {
 
 	async updateParticipation(groupId, date, values) {
 		const participation = await ParticipationLoader.loadParticipation(groupId, date, this.user.id)
-		if (participation === null)
+		if (participation === null) {
 			throw new NotFoundError('Participation', null)
+		}
 
 		participation.amountSpent = values.amountSpent
 		participation.resultId = values.result ? values.result.id : null
 
 		await participation.save()
 
-		if (values.votes && !await voteEndingTimeReached(participation.lunchbreakId)) {
+		if (values.votes && !(await voteEndingTimeReached(participation.lunchbreakId))) {
 			values.votes.map(vote => {
 				vote.participantId = participation.id
 				vote.placeId = vote.place ? vote.place.id : null
@@ -265,7 +269,6 @@ class ParticipationController {
 			amountSpent: result.amountSpent
 		}
 	}
-
 }
 
 module.exports = ParticipationController

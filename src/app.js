@@ -1,5 +1,3 @@
-'use strict'
-
 require('dotenv').config()
 const app = require('express')()
 const Sequelize = require('sequelize')
@@ -45,6 +43,7 @@ app.use((req, res, next) => {
 			tk.freeze(newSystemTime)
 		}
 	}
+
 	next()
 })
 
@@ -52,9 +51,11 @@ app.use(cors())
 app.use(helmet())
 
 app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({
-	extended: false
-}))
+app.use(
+	bodyParser.urlencoded({
+		extended: false
+	})
+)
 
 app.get('/utc-system-time', (req, res, next) => {
 	if (process.env.NODE_ENV === 'test') {
@@ -146,6 +147,7 @@ app.use((err, req, res, next) => {
 		validationError.fromSequelizeValidationError(err)
 		err = validationError
 	}
+
 	next(err)
 })
 

@@ -1,12 +1,9 @@
-'use strict'
-
 const ResourceAccessControl = require('./resource-access-control')
 const UserModel = require('../models').User
 const GroupModel = require('../models').Group
 const { AuthenticationError } = require('./errors')
 
 class User {
-
 	constructor() {
 		this.can = new ResourceAccessControl(this)
 		this.groups = []
@@ -23,25 +20,31 @@ class User {
 	}
 
 	async loadGroups() {
-		const userGroups = await UserModel.findOne({
-			attributes: [],
-			where: {
-				id: this.id
+		const userGroups = await UserModel.findOne(
+			{
+				attributes: [],
+				where: {
+					id: this.id
+				},
+				include: [
+					{
+						model: GroupModel,
+						attributes: ['id'],
+						through: {
+							attributes: ['isAdmin'],
+							as: 'config'
+						}
+					}
+				]
 			},
-			include: [{
-				model: GroupModel,
-				attributes: ['id'],
-				through: {
-					attributes: ['isAdmin'],
-					as: 'config'
-				}
-			}]
-		}, { raw: true })
+			{ raw: true }
+		)
 
-		if (userGroups)
+		if (userGroups) {
 			this.groups = userGroups.groups
-		else
+		} else {
 			throw new AuthenticationError('This user does not exist anymore.')
+		}
 	}
 
 	/**
@@ -50,10 +53,11 @@ class User {
 	isGroupAdmin(groupId) {
 		const group = this.groups.find(group => group.id === groupId)
 
-		if (group)
+		if (group) {
 			return group.config.isAdmin
-		else
+		} else {
 			return false
+		}
 	}
 
 	/**
@@ -62,7 +66,6 @@ class User {
 	isGroupMember(groupId) {
 		return this.groups.find(group => group.id === groupId) !== undefined
 	}
-
 }
 
 module.exports = User

@@ -1,18 +1,16 @@
-'use strict'
-
 const { Absence, Comment, Lunchbreak, GroupMembers, Participant } = require('../models')
 const { RequestError, NotFoundError, AuthorizationError } = require('../classes/errors')
 const { dateIsToday, voteEndingTimeReached } = require('../util/util')
 
 class AbsenceController {
-
 	constructor(user) {
 		this.user = user
 	}
 
 	async createAbsence(lunchbreakController, groupId, date) {
-		if (!dateIsToday(date))
+		if (!dateIsToday(date)) {
 			throw new RequestError('Absences can only be created for today.')
+		}
 
 		let lunchbreak = await Lunchbreak.findOne({
 			attributes: ['id'],
@@ -37,8 +35,9 @@ class AbsenceController {
 				}
 			}
 		} else {
-			if (await voteEndingTimeReached(lunchbreak.id))
+			if (await voteEndingTimeReached(lunchbreak.id)) {
 				throw new RequestError('The end of voting has been reached, therefore you cannot mark yourself as absent.')
+			}
 		}
 
 		const member = await GroupMembers.findOne({
@@ -49,8 +48,9 @@ class AbsenceController {
 			}
 		})
 
-		if (member === null)
+		if (member === null) {
 			throw new AuthorizationError('Absence', null, 'CREATE')
+		}
 
 		let absence = await Absence.findOne({
 			where: {
@@ -76,8 +76,9 @@ class AbsenceController {
 	}
 
 	async deleteAbsence(lunchbreakController, groupId, date) {
-		if (!dateIsToday(date))
+		if (!dateIsToday(date)) {
 			throw new RequestError('You can only delete todays absence.')
+		}
 
 		let lunchbreak = await Lunchbreak.findOne({
 			attributes: ['id'],
@@ -87,11 +88,11 @@ class AbsenceController {
 			}
 		})
 
-		if (lunchbreak === null)
+		if (lunchbreak === null) {
 			throw new NotFoundError('Lunchbreak')
-		else if (await voteEndingTimeReached(lunchbreak.id))
+		} else if (await voteEndingTimeReached(lunchbreak.id)) {
 			throw new RequestError('The end of voting is reached, therefore you cannot delete this absence.')
-
+		}
 
 		const member = await GroupMembers.findOne({
 			attributes: ['id'],
@@ -101,8 +102,9 @@ class AbsenceController {
 			}
 		})
 
-		if (member === null)
+		if (member === null) {
 			throw new AuthorizationError('Absence', null, 'DELETE')
+		}
 
 		const absence = await Absence.findOne({
 			where: {
@@ -121,15 +123,13 @@ class AbsenceController {
 				groupId,
 				date
 			},
-			include: [
-				Comment, Participant, Absence
-			]
+			include: [Comment, Participant, Absence]
 		})
 
-		if (lunchbreak.comments.length === 0 && lunchbreak.participants.length === 0 && lunchbreak.absences.length === 0)
+		if (lunchbreak.comments.length === 0 && lunchbreak.participants.length === 0 && lunchbreak.absences.length === 0) {
 			await lunchbreak.destroy()
+		}
 	}
-
 }
 
 module.exports = AbsenceController

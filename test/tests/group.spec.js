@@ -59,8 +59,14 @@ describe('Group', () => {
 						const member = res.body.members[0]
 						member.should.have.all.keys(testData.getGroupMemberKeys())
 						member.should.have.property('username').equal('maxmustermann')
-						member.should.have.property('config').which.has.property('isAdmin').equal(true)
-						member.should.have.property('config').which.has.property('color').equal('#80d8ff')
+						member.should.have
+							.property('config')
+							.which.has.property('isAdmin')
+							.equal(true)
+						member.should.have
+							.property('config')
+							.which.has.property('color')
+							.equal('#80d8ff')
 					})
 			})
 		})
@@ -90,7 +96,7 @@ describe('Group', () => {
 					.expect(res => res.body.should.be.equalInAnyOrder(testData.getGroup(1)))
 			})
 
-			it('sends 403 if user isn\'t a group member', async () => {
+			it("sends 403 if user isn't a group member", async () => {
 				await request
 					.get('/groups/2')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
@@ -105,7 +111,7 @@ describe('Group', () => {
 					})
 			})
 
-			it('sends 404 if group doesn\'t exist', async () => {
+			it("sends 404 if group doesn't exist", async () => {
 				await request
 					.get('/groups/99')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
@@ -121,7 +127,7 @@ describe('Group', () => {
 				await setupDatabase()
 			})
 
-			it('fails with 404 if group doesn\'t exist', async () => {
+			it("fails with 404 if group doesn't exist", async () => {
 				await request
 					.put('/groups/99')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
@@ -441,8 +447,9 @@ describe('Group', () => {
 						.get('/users/me/groups')
 						.set(await TokenHelper.getAuthorizationHeader(member.username))
 						.then(res => {
-							if (res.body.find(group => group.id === 1))
+							if (res.body.find(group => group.id === 1)) {
 								throw new Error('User is still a member of group 1')
+							}
 						})
 				}
 			})

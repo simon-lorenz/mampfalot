@@ -1,10 +1,7 @@
-'use strict'
-
 const { GroupMembers } = require('../models')
 const ResourceLoader = require('../classes/resource-loader')
 
 class GroupMemberController {
-
 	constructor(user) {
 		this.user = user
 	}
@@ -29,11 +26,13 @@ class GroupMemberController {
 			}
 		})
 
-		if (values.isAdmin !== undefined)
+		if (values.isAdmin !== undefined) {
 			member.isAdmin = values.isAdmin
+		}
 
-		if (values.color !== undefined)
+		if (values.color !== undefined) {
 			member.color = values.color
+		}
 
 		await this.user.can.updateGroupMember(member, username)
 
@@ -41,7 +40,6 @@ class GroupMemberController {
 
 		return await ResourceLoader.loadMember(groupId, username)
 	}
-
 }
 
 module.exports = GroupMemberController

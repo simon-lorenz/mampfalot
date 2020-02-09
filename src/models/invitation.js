@@ -1,47 +1,51 @@
-'use strict'
-
 module.exports = (sequelize, DataTypes) => {
-	const Invitation = sequelize.define('Invitation', {
-		groupId: {
-			type: DataTypes.INTEGER,
-			allowNull: false,
-			onDelete: 'CASCADE',
-			unique: 'inviteOnce'
-		},
-		fromId: {
-			type: DataTypes.INTEGER,
-			allowNull: true,
-			onDelete: 'SET NULL',
-		},
-		toId: {
-			type: DataTypes.INTEGER,
-			allowNull: false,
-			onDelete: 'CASCADE',
-			unique: {
-				name: 'inviteOnce',
-				msg: 'This user is already invited.'
+	const Invitation = sequelize.define(
+		'Invitation',
+		{
+			groupId: {
+				type: DataTypes.INTEGER,
+				allowNull: false,
+				onDelete: 'CASCADE',
+				unique: 'inviteOnce'
 			},
-			validate: {
-				async notMemberOfGroup() {
-					const { GroupMembers } = sequelize.models
-					const member = await GroupMembers.findOne({
-						where: {
-							groupId: this.groupId,
-							userId: this.toId
+			fromId: {
+				type: DataTypes.INTEGER,
+				allowNull: true,
+				onDelete: 'SET NULL'
+			},
+			toId: {
+				type: DataTypes.INTEGER,
+				allowNull: false,
+				onDelete: 'CASCADE',
+				unique: {
+					name: 'inviteOnce',
+					msg: 'This user is already invited.'
+				},
+				validate: {
+					async notMemberOfGroup() {
+						const { GroupMembers } = sequelize.models
+						const member = await GroupMembers.findOne({
+							where: {
+								groupId: this.groupId,
+								userId: this.toId
+							}
+						})
+						if (member) {
+							throw new Error('This user is already a member of this group.')
 						}
-					})
-					if (member) throw new Error('This user is already a member of this group.')
+					}
 				}
 			}
+		},
+		{
+			tableName: 'invitations',
+			timestamps: true,
+			name: {
+				singular: 'invitation',
+				plural: 'invitations'
+			}
 		}
-	}, {
-		tableName: 'invitations',
-		timestamps: true,
-		name: {
-			singular: 'invitation',
-			plural: 'invitations'
-		}
-	})
+	)
 
 	Invitation.associate = models => {
 		models.Invitation.belongsTo(models.Group, { foreignKey: 'groupId' })

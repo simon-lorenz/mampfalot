@@ -5,7 +5,6 @@ const TokenHelper = require('../utils/token-helper')
 const testData = require('../utils/scripts/test-data')
 
 describe('Lunchbreak', () => {
-
 	describe('/groups/:groupId/lunchbreaks', () => {
 		describe('GET', () => {
 			before(async () => {
@@ -84,7 +83,7 @@ describe('Lunchbreak', () => {
 
 	describe('/groups/:groupId/lunchbreaks/:date', () => {
 		describe('GET', () => {
-			before(async() => {
+			before(async () => {
 				await setupDatabase()
 			})
 
@@ -98,7 +97,7 @@ describe('Lunchbreak', () => {
 					})
 			})
 
-			it('fails if user isn\'t a group member', async () => {
+			it("fails if user isn't a group member", async () => {
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-25')
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
@@ -144,5 +143,4 @@ describe('Lunchbreak', () => {
 			})
 		})
 	})
-
 })

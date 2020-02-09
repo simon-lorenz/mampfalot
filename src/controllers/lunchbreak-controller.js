@@ -1,19 +1,17 @@
-'use strict'
-
 const ResourceLoader = require('../classes/resource-loader')
 const { Lunchbreak } = require('../models')
 const { RequestError } = require('../classes/errors')
 
 class LunchbreakController {
-
 	constructor(user) {
 		this.user = user
 	}
 
 	convertComment(comment) {
 		function getAuthor(comment) {
-			if (comment.author === null)
+			if (comment.author === null) {
 				return null
+			}
 
 			return {
 				username: comment.author.user.username,
@@ -37,8 +35,9 @@ class LunchbreakController {
 
 	convertParticipant(participant) {
 		function getMember(participant) {
-			if (participant.member === null)
+			if (participant.member === null) {
 				return null
+			}
 
 			return {
 				username: participant.member.user.username,
@@ -64,42 +63,46 @@ class LunchbreakController {
 		from = new Date(from)
 		to = new Date(to)
 
-		if (from >= to)
+		if (from >= to) {
 			throw new RequestError('The given timespan is invalid.')
+		}
 
-		if (from.getFullYear() !== to.getFullYear())
+		if (from.getFullYear() !== to.getFullYear()) {
 			throw new RequestError('The query values from and to have to be in the same year.')
+		}
 
 		let lunchbreaks = await ResourceLoader.loadLunchbreaks(groupId, from, to)
-		lunchbreaks = await Promise.all(lunchbreaks.map(async lunchbreak => {
-			const group = await ResourceLoader.loadGroupById(groupId)
-			lunchbreak = lunchbreak.toJSON()
+		lunchbreaks = await Promise.all(
+			lunchbreaks.map(async lunchbreak => {
+				const group = await ResourceLoader.loadGroupById(groupId)
+				lunchbreak = lunchbreak.toJSON()
 
-			delete lunchbreak.groupId
-			lunchbreak.comments = lunchbreak.comments.map(comment => this.convertComment(comment))
-			lunchbreak.participants = lunchbreak.participants.map(participant => this.convertParticipant(participant))
-			lunchbreak.absent = lunchbreak.absences.map(absence => {
-				return {
-					username: absence.member.user.username,
-					firstName: absence.member.user.firstName,
-					lastName: absence.member.user.lastName,
-					config: {
-						color: absence.member.color,
-						isAdmin: absence.member.isAdmin,
+				delete lunchbreak.groupId
+				lunchbreak.comments = lunchbreak.comments.map(comment => this.convertComment(comment))
+				lunchbreak.participants = lunchbreak.participants.map(participant => this.convertParticipant(participant))
+				lunchbreak.absent = lunchbreak.absences.map(absence => {
+					return {
+						username: absence.member.user.username,
+						firstName: absence.member.user.firstName,
+						lastName: absence.member.user.lastName,
+						config: {
+							color: absence.member.color,
+							isAdmin: absence.member.isAdmin
+						}
 					}
-				}
-			})
-			delete lunchbreak.absences
+				})
+				delete lunchbreak.absences
 
-			const allMembers = group.members
-			lunchbreak.responseless = allMembers.filter(member => {
-				const participates = lunchbreak.participants.find(p => p.member.username === member.username)
-				const absent = lunchbreak.absent.find(absent => absent.username === member.username)
-				return !participates && !absent
-			})
+				const allMembers = group.members
+				lunchbreak.responseless = allMembers.filter(member => {
+					const participates = lunchbreak.participants.find(p => p.member.username === member.username)
+					const absent = lunchbreak.absent.find(absent => absent.username === member.username)
+					return !participates && !absent
+				})
 
-			return lunchbreak
-		}))
+				return lunchbreak
+			})
+		)
 		return lunchbreaks
 	}
 
@@ -118,7 +121,7 @@ class LunchbreakController {
 				lastName: absence.member.user.lastName,
 				config: {
 					color: absence.member.color,
-					isAdmin: absence.member.isAdmin,
+					isAdmin: absence.member.isAdmin
 				}
 			}
 		})
@@ -145,7 +148,6 @@ class LunchbreakController {
 		await lunchbreak.save()
 		return await this.getLunchbreak(groupId, today)
 	}
-
 }
 
 module.exports = LunchbreakController

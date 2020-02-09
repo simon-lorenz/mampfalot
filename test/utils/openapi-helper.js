@@ -1,10 +1,7 @@
-'use strict'
-
 const SwaggerParser = require('swagger-parser')
 const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete']
 
 class OpenAPIHelper {
-
 	async parse() {
 		const parsed = await SwaggerParser.parse(`${__dirname}/../../docs/mampfalot.oas3.yaml`)
 		this.paths = parsed.paths
@@ -14,8 +11,9 @@ class OpenAPIHelper {
 		const result = []
 
 		HTTP_METHODS.forEach(method => {
-			if (this.paths[url][method])
+			if (this.paths[url][method]) {
 				result.push(method)
+			}
 		})
 		return result
 	}
@@ -25,10 +23,11 @@ class OpenAPIHelper {
 
 		const securityMeasurements = this.paths[url][method].security
 
-		if (securityMeasurements)
+		if (securityMeasurements) {
 			return securityMeasurements.find(measurement => measurement.bearerAuth) !== undefined
-		else
+		} else {
 			return false
+		}
 	}
 
 	getUrls() {
@@ -43,7 +42,6 @@ class OpenAPIHelper {
 		url = url.replace('{date}', '25-06-2018')
 		return url
 	}
-
 }
 
 module.exports = new OpenAPIHelper()
