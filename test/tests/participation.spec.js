@@ -6,9 +6,7 @@ const TokenHelper = require('../utils/token-helper')
 const testData = require('../utils/scripts/test-data')
 
 describe('Participation', () => {
-
 	describe('/users/me/participations', () => {
-
 		describe('GET', () => {
 			it('requires from and to query values', async () => {
 				await request
@@ -67,11 +65,9 @@ describe('Participation', () => {
 					})
 			})
 		})
-
 	})
 
 	describe('/groups/:groupId/lunchbreaks/:date/participation', () => {
-
 		describe('POST', () => {
 			let payload
 
@@ -169,7 +165,6 @@ describe('Participation', () => {
 						const participant = res.body.participants.find(p => p.member.username === 'johndoe1')
 						participant.votes.should.be.deep.eql(votes)
 					})
-
 			})
 
 			it('fails if the date lies in the past', async () => {
@@ -305,7 +300,6 @@ describe('Participation', () => {
 							message: 'Votes must have different places.'
 						}
 						errorHelper.checkValidationError(res.body, expected)
-
 					})
 			})
 
@@ -324,7 +318,6 @@ describe('Participation', () => {
 							message: 'Points exceeds maxPointsPerVote (70).'
 						}
 						errorHelper.checkValidationError(res.body, expected)
-
 					})
 			})
 
@@ -343,7 +336,6 @@ describe('Participation', () => {
 							message: 'Points deceeds minPointsPerVote (30).'
 						}
 						errorHelper.checkValidationError(res.body, expected)
-
 					})
 			})
 
@@ -362,7 +354,6 @@ describe('Participation', () => {
 							message: 'This placeId does not belong to the associated group.'
 						}
 						errorHelper.checkValidationError(res.body, expected)
-
 					})
 			})
 
@@ -381,7 +372,6 @@ describe('Participation', () => {
 							message: 'Sum of points exceeds pointsPerDay (100).'
 						}
 						errorHelper.checkValidationError(res.body, expected)
-
 					})
 			})
 
@@ -400,7 +390,6 @@ describe('Participation', () => {
 							message: 'Points must be an integer.'
 						}
 						errorHelper.checkValidationError(res.body, expected)
-
 					})
 			})
 
@@ -419,7 +408,6 @@ describe('Participation', () => {
 							message: 'Points must be an integer.'
 						}
 						errorHelper.checkValidationError(res.body, expected)
-
 					})
 			})
 
@@ -445,8 +433,9 @@ describe('Participation', () => {
 					.expect(200)
 					.expect(res => {
 						const participants = res.body.participants
-						if (participants.find(participant => participant.member.username === 'johndoe1') === undefined)
+						if (participants.find(participant => participant.member.username === 'johndoe1') === undefined) {
 							throw new Error('The participation was not created.')
+						}
 					})
 			})
 
@@ -459,8 +448,9 @@ describe('Participation', () => {
 					.expect(200)
 					.expect(res => {
 						const absent = res.body.absent
-						if (absent.find(member => member.username === 'maxmustermann') === undefined)
+						if (absent.find(member => member.username === 'maxmustermann') === undefined) {
 							throw new Error('No absence found to delete!')
+						}
 					})
 
 				await request
@@ -474,8 +464,9 @@ describe('Participation', () => {
 					.expect(200)
 					.expect(res => {
 						const absent = res.body.absent
-						if (absent.find(member => member.username === 'maxmustermann'))
+						if (absent.find(member => member.username === 'maxmustermann')) {
 							throw new Error('The absence was not deleted.')
+						}
 					})
 			})
 
@@ -499,8 +490,9 @@ describe('Participation', () => {
 					.expect(200)
 					.expect(res => {
 						const participants = res.body.participants
-						if (participants.find(participant => participant.member.username === 'johndoe1') === undefined)
+						if (participants.find(participant => participant.member.username === 'johndoe1') === undefined) {
 							throw new Error('The participation was not created.')
+						}
 					})
 			})
 
@@ -523,8 +515,9 @@ describe('Participation', () => {
 					.expect(200)
 					.expect(res => {
 						const participants = res.body.participants
-						if (participants.find(participant => participant.member.username === 'johndoe1') === undefined)
+						if (participants.find(participant => participant.member.username === 'johndoe1') === undefined) {
 							throw new Error('The participation was not created.')
+						}
 					})
 			})
 		})
@@ -677,7 +670,6 @@ describe('Participation', () => {
 						participation.amountSpent.should.be.deep.eql(payload.amountSpent)
 					})
 			})
-
 		})
 
 		describe('DELETE', () => {
@@ -725,8 +717,9 @@ describe('Participation', () => {
 							participant.member.username === 'maxmustermann'
 						})
 
-						if (max)
+						if (max) {
 							throw new Error('The participation was not deleted.')
+						}
 					})
 			})
 
@@ -782,8 +775,14 @@ describe('Participation', () => {
 					.expect(200)
 					.expect(res => {
 						const lunchbreak = res.body
-						lunchbreak.should.have.property('absent').which.is.an('array').with.lengthOf(1)
-						lunchbreak.should.have.property('participants').which.is.an('array').with.lengthOf(0)
+						lunchbreak.should.have
+							.property('absent')
+							.which.is.an('array')
+							.with.lengthOf(1)
+						lunchbreak.should.have
+							.property('participants')
+							.which.is.an('array')
+							.with.lengthOf(0)
 					})
 			})
 
@@ -804,7 +803,7 @@ describe('Participation', () => {
 					.post('/groups/1/lunchbreaks/2018-07-01/comments')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({
-						text: 'Don\'t delete me!'
+						text: "Don't delete me!"
 					})
 					.expect(201)
 
@@ -869,7 +868,5 @@ describe('Participation', () => {
 					.expect(200)
 			})
 		})
-
 	})
-
 })

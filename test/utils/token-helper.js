@@ -2,7 +2,6 @@ const { users } = require('./scripts/test-data')
 const request = require('supertest')('http://localhost:5001/api')
 
 class TokenHelper {
-
 	async getAuthorizationHeader(username) {
 		return {
 			Authorization: await this.getToken(username)
@@ -20,12 +19,12 @@ class TokenHelper {
 
 	findUser(username) {
 		const user = users.find(user => user.username === username)
-		if (user)
+		if (user) {
 			return user
-		else
+		} else {
 			throw new Error(`User "${username}" could not be found!`)
+		}
 	}
-
 }
 
 module.exports = new TokenHelper()

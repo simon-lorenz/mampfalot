@@ -1,9 +1,6 @@
-'use strict'
-
 const { Place } = require('../models')
 
 class PlaceController {
-
 	constructor(user) {
 		this.user = user
 	}
@@ -26,7 +23,7 @@ class PlaceController {
 	async updatePlace(id, values) {
 		const place = await Place.findByPk(id)
 		await this.user.can.updatePlace(place)
-		place.foodType = values.foodType,
+		place.foodType = values.foodType
 		place.name = values.name
 		await place.save()
 		return {
@@ -41,7 +38,6 @@ class PlaceController {
 		await this.user.can.deletePlace(place)
 		await place.destroy()
 	}
-
 }
 
 module.exports = PlaceController

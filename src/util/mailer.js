@@ -1,5 +1,3 @@
-'use strict'
-
 const nodemailer = require('nodemailer')
 const handlebars = require('handlebars')
 const fs = require('fs')
@@ -13,8 +11,11 @@ const logger = require('./logger')
 async function readFile(path) {
 	return new Promise((resolve, reject) => {
 		fs.readFile(path, { encoding: 'utf-8' }, (err, content) => {
-			if (err) reject(err)
-			resolve(content)
+			if (err) {
+				reject(err)
+			} else {
+				resolve(content)
+			}
 		})
 	})
 }
@@ -36,13 +37,12 @@ async function compileTemplate(path, values) {
  * Use it to send mails from this account.
  */
 class MailAccount {
-
 	/**
 	 * @param {string} address The email address of the account
 	 * @param {*} title The accounts title, used in the "from" field
 	 * @param {*} password
 	 */
-	constructor (address, title, password) {
+	constructor(address, title, password) {
 		this.address = address
 		this.title = title
 		this.password = password
@@ -58,12 +58,13 @@ class MailAccount {
 	}
 
 	/**
-	* Tries to establish an smtp connection for this
-	* mail account.Logs the result to the console.
-	* @returns Promise
-	*/
+	 * Tries to establish an smtp connection for this
+	 * mail account.Logs the result to the console.
+	 * @returns Promise
+	 */
 	checkConnection() {
-		return this.transport.verify()
+		return this.transport
+			.verify()
 			.then(() => logger.info(`[Mailer] Successfully established smtp connection for account ${this.address}`))
 			.catch(() => logger.error(`[Mailer] Could not establish smtp connection for account ${this.address}`))
 	}
@@ -91,7 +92,10 @@ class MailAccount {
 			return new Promise((resolve, reject) => {
 				this.transport.sendMail(mail, (err, info) => {
 					logger.info('[Mailer] - Sending email...')
-					if (err) return reject(err)
+					if (err) {
+						return reject(err)
+					}
+
 					logger.info('[Mailer] - Mail successfully sent!')
 					resolve(info)
 				})
@@ -100,15 +104,13 @@ class MailAccount {
 			logger.info({ email: mail }, 'Would send email in production mode.')
 		}
 	}
-
 }
 
 /**
  * With this class you can send a set of different emails to users.
  */
 class Mailer {
-
-	constructor () {
+	constructor() {
 		this.accounts = new Array()
 		this.accounts.push(new MailAccount('support@mampfalot.app', 'Mampfalot Support', process.env.MAIL_PASSWORD_SUPPORT))
 		this.accounts.push(new MailAccount('hello@mampfalot.app', 'Mampfalot', process.env.MAIL_PASSWORD_HELLO))
@@ -120,8 +122,9 @@ class Mailer {
 	 * Results are logged to the console.
 	 */
 	async checkConnections() {
-		for (const account of this.accounts)
+		for (const account of this.accounts) {
 			await account.checkConnection()
+		}
 	}
 
 	/**
@@ -132,8 +135,9 @@ class Mailer {
 	 */
 	getAccount(address) {
 		for (const account of this.accounts) {
-			if (account.address === address)
+			if (account.address === address) {
 				return account
+			}
 		}
 
 		throw new Error(`No account with address "${address}" found!`)
@@ -251,7 +255,6 @@ class Mailer {
 		const subject = 'Dein Benutzername bei Mampfalot'
 		this.getAccount('hello@mampfalot.app').send(to, subject, text, html)
 	}
-
 }
 
 module.exports = new Mailer()

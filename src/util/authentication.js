@@ -1,5 +1,3 @@
-'use strict'
-
 const jwt = require('jsonwebtoken')
 const { AuthenticationError } = require('../classes/errors')
 const { User } = require('../models')
@@ -40,15 +38,18 @@ async function checkCredentialsAndGenerateToken(username, password) {
 		raw: true
 	})
 
-	if (!user)
+	if (!user) {
 		throw new AuthenticationError('The provided credentials are incorrect.')
+	}
 
-	if (!user.verified)
+	if (!user.verified) {
 		throw new AuthenticationError('This account is not verified yet.')
+	}
 
 	const passwordMatch = await bcrypt.compare(password, user.password)
-	if (!passwordMatch)
+	if (!passwordMatch) {
 		throw new AuthenticationError('The provided credentials are incorrect.')
+	}
 
 	return jwt.sign({ id: user.id }, process.env.SECRET_KEY, { expiresIn: '10h' })
 }
@@ -62,10 +63,11 @@ async function checkCredentialsAndGenerateToken(username, password) {
  */
 function getTokenFromAuthorizationHeader(request) {
 	const authorizationHeader = request.headers['authorization']
-	if (authorizationHeader)
+	if (authorizationHeader) {
 		return authorizationHeader.split(' ')[1]
-	else
+	} else {
 		throw new AuthenticationError('This request requires authentication.')
+	}
 }
 
 /**

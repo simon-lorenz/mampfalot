@@ -1,5 +1,3 @@
-'use strict'
-
 const { Invitation, User, Group, Place, GroupMembers } = require('../models')
 const GroupController = require('./group-controller')
 const Sequelize = require('sequelize')
@@ -7,7 +5,6 @@ const { NotFoundError } = require('../classes/errors')
 const ResourceLoader = require('../classes/resource-loader')
 
 class InvitationController {
-
 	constructor(user) {
 		this.user = user
 	}
@@ -118,8 +115,9 @@ class InvitationController {
 			}
 		})
 
-		if (!invitedUser)
+		if (!invitedUser) {
 			throw new NotFoundError('User', username)
+		}
 
 		const invitation = await Invitation.build({
 			groupId: id,
@@ -137,8 +135,13 @@ class InvitationController {
 			// Thats why we need to format the "field" values of a possible Validation Error.
 			if (error instanceof Sequelize.ValidationError) {
 				for (const item of error.errors) {
-					if (item.path === 'toId') item.path = 'to'
-					if (item.path === 'fromId') item.path = 'from'
+					if (item.path === 'toId') {
+						item.path = 'to'
+					}
+
+					if (item.path === 'fromId') {
+						item.path = 'from'
+					}
 
 					if (item.message === 'This user is already invited.') {
 						item.path = 'username'
@@ -146,6 +149,7 @@ class InvitationController {
 					}
 				}
 			}
+
 			throw error
 		}
 
@@ -155,7 +159,7 @@ class InvitationController {
 	async withdrawInvitation(groupId, username) {
 		const invitation = await Invitation.findOne({
 			where: {
-				groupId: groupId,
+				groupId: groupId
 			},
 			include: [
 				{
@@ -168,8 +172,9 @@ class InvitationController {
 			]
 		})
 
-		if (!invitation)
+		if (!invitation) {
 			throw new NotFoundError('Invitation')
+		}
 
 		await this.user.can.deleteInvitation(invitation)
 		await invitation.destroy()
@@ -183,8 +188,9 @@ class InvitationController {
 			}
 		})
 
-		if (!invitation)
+		if (!invitation) {
 			throw new NotFoundError('Invitation')
+		}
 
 		const colors = ['#ffa768', '#e0dbff', '#f5e97d', '#ffa1b7', '#948bf0', '#a8f08d']
 		const randomColor = colors[Math.floor(Math.random() * colors.length)]
@@ -207,12 +213,12 @@ class InvitationController {
 			}
 		})
 
-		if (!invitation)
+		if (!invitation) {
 			throw new NotFoundError('Invitation')
+		}
 
 		await invitation.destroy()
 	}
-
 }
 
 module.exports = InvitationController

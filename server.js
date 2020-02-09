@@ -1,5 +1,3 @@
-'use strict'
-
 const app = require('./src/app')
 const PORT = process.env.PORT || 5000
 const sequelize = require('./src/models').sequelize

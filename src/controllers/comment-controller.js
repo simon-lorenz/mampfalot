@@ -1,11 +1,8 @@
-'use strict'
-
 const { Absence, Comment, Lunchbreak, GroupMembers, User, Participant } = require('../models')
 const { NotFoundError, RequestError } = require('../classes/errors')
 const { dateIsToday, voteEndingTimeReached } = require('../util/util')
 
 class CommentController {
-
 	constructor(user) {
 		this.user = user
 	}
@@ -17,15 +14,16 @@ class CommentController {
 				{
 					model: GroupMembers,
 					as: 'author',
-					include: [ User ]
+					include: [User]
 				}
 			]
 		})
 
-		if (comment === null)
+		if (comment === null) {
 			throw new NotFoundError('Comment', id)
-		else
+		} else {
 			return comment
+		}
 	}
 
 	formatComment(comment) {
@@ -113,15 +111,13 @@ class CommentController {
 		await comment.destroy()
 
 		const lunchbreak = await Lunchbreak.findByPk(comment.lunchbreakId, {
-			include: [
-				Participant, Comment, Absence
-			]
+			include: [Participant, Comment, Absence]
 		})
 
-		if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0 && lunchbreak.absences.length === 0)
+		if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0 && lunchbreak.absences.length === 0) {
 			await lunchbreak.destroy()
+		}
 	}
-
 }
 
 module.exports = CommentController

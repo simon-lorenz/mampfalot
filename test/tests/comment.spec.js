@@ -6,14 +6,13 @@ const testData = require('../utils/scripts/test-data')
 const testServer = require('../utils/test-server')
 
 describe('Comment', () => {
-
 	describe('/groups/:groupId/lunchbreaks/:date/comments', () => {
 		describe('POST', () => {
 			let newComment
 
 			beforeEach(async () => {
 				newComment = {
-					text: 'Hey ho, let\'s go!'
+					text: "Hey ho, let's go!"
 				}
 				await setupDatabase()
 			})
@@ -93,7 +92,10 @@ describe('Comment', () => {
 					})
 					.expect(400)
 					.expect(res => {
-						errorHelper.checkRequestError(res.body, 'The end of voting is reached, therefore you cannot create a new lunchbreak.')
+						errorHelper.checkRequestError(
+							res.body,
+							'The end of voting is reached, therefore you cannot create a new lunchbreak.'
+						)
 					})
 			})
 
@@ -113,7 +115,10 @@ describe('Comment', () => {
 					})
 					.expect(400)
 					.expect(res => {
-						errorHelper.checkRequestError(res.body, 'The end of voting is reached, therefore you cannot create a new lunchbreak.')
+						errorHelper.checkRequestError(
+							res.body,
+							'The end of voting is reached, therefore you cannot create a new lunchbreak.'
+						)
 					})
 			})
 
@@ -294,8 +299,9 @@ describe('Comment', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(res => {
 						const comments = res.body.comments
-						if (comments.find(comment => comment.id === 1))
+						if (comments.find(comment => comment.id === 1)) {
 							throw new Error('Comment was not deleted!')
+						}
 					})
 			})
 
@@ -332,7 +338,6 @@ describe('Comment', () => {
 					})
 					.expect(201)
 					.then(res => res.body.id)
-
 
 				await request
 					.delete(`/groups/1/lunchbreaks/2018-07-01/comments/${id}`)
@@ -373,8 +378,14 @@ describe('Comment', () => {
 					.expect(200)
 					.expect(res => {
 						const lunchbreak = res.body
-						lunchbreak.should.have.property('absent').which.is.an('array').with.lengthOf(1)
-						lunchbreak.should.have.property('comments').which.is.an('array').with.lengthOf(0)
+						lunchbreak.should.have
+							.property('absent')
+							.which.is.an('array')
+							.with.lengthOf(1)
+						lunchbreak.should.have
+							.property('comments')
+							.which.is.an('array')
+							.with.lengthOf(0)
 					})
 			})
 

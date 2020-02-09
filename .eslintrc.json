@@ -1,42 +1,35 @@
 {
-  "env": {
-    "es6": true,
-    "node": true
-  },
-  "extends": "eslint:recommended",
-  "parserOptions": {
-    "ecmaVersion": 2018
-  },
-  "rules": {
-    "arrow-parens": ["error", "as-needed"],
-    "arrow-spacing": "error",
-    "curly": ["error", "multi-or-nest", "consistent"],
-    "eol-last": ["error", "always"],
-    "eqeqeq": ["error"],
-    "indent": ["error", "tab", { "SwitchCase": 1 }],
-    "linebreak-style": ["error", "unix"],
-    "lines-between-class-members": ["error", "always"],
-    "no-confusing-arrow": ["error"],
-    "no-console": "off",
-    "no-eval": "error",
-    "no-multiple-empty-lines": "error",
-    "no-multi-spaces": "error",
-    "no-this-before-super": "error",
-    "no-throw-literal": "error",
-    "no-trailing-spaces": "error",
-    "no-unused-vars": ["error", { "argsIgnorePattern": "next" }],
-    "no-useless-return": "error",
-    "no-var": "error",
-    "object-curly-spacing": ["error", "always"],
-    "one-var": ["error", "never"],
-    "padded-blocks": ["error", { "classes": "always"} ],
-    "padding-line-between-statements": ["error", { "blankLine": "always", "prev": "*", "next": "function" }],
-    "prefer-const": "error",
-    "prefer-template": "error",
-    "quotes": ["error", "single"],
-    "semi": ["error", "never"],
-    "space-infix-ops": ["error"],
-    "strict": ["error", "global"],
-    "template-curly-spacing": ["error", "never"]
-  }
+	"plugins": ["prettier"],
+	"extends": "eslint:recommended",
+	"rules": {
+		"curly": ["error"],
+		"eqeqeq": ["error"],
+		"lines-between-class-members": ["error", "always"],
+		"no-console": "off",
+		"no-eval": "error",
+		"no-this-before-super": "error",
+		"no-throw-literal": "error",
+		"no-unused-vars": ["error", { "argsIgnorePattern": "next" }],
+		"no-useless-return": "error",
+		"no-var": "error",
+		"one-var": ["error", "never"],
+		"padding-line-between-statements": [
+			"error",
+			{ "blankLine": "always", "prev": "*", "next": "function" },
+			{ "blankLine": "always", "prev": "case", "next": "*" },
+			{ "blankLine": "always", "prev": "block-like", "next": "*"}
+		],
+		"prefer-const": "error",
+		"prefer-template": "error",
+		"prettier/prettier": "error",
+		"space-infix-ops": ["error"],
+		"strict": ["error", "never"]
+	},
+	"env": {
+		"es6": true,
+		"node": true
+	},
+	"parserOptions": {
+		"ecmaVersion": 2018
+	}
 }

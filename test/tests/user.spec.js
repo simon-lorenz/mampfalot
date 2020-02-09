@@ -1,5 +1,3 @@
-'use strict'
-
 const setupDatabase = require('../utils/scripts/setup-database')
 const errorHelper = require('../utils/errors')
 const { AuthenticationErrorTypes } = require('../utils/errors')
@@ -8,9 +6,9 @@ const request = require('supertest')('http://localhost:5001/api')
 const TokenHelper = require('../utils/token-helper')
 const testData = require('../utils/scripts/test-data')
 const testServer = require('../utils/test-server')
+const { expect } = require('chai')
 
 describe('User', () => {
-
 	describe('/users', () => {
 		describe('POST', () => {
 			let newUser
@@ -234,12 +232,13 @@ describe('User', () => {
 			})
 
 			it('fails if password is too long', async () => {
-				newUser.password = 'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
-										'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
-										'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
-										'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
-										'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
-										'123456' // 256 characters
+				newUser.password =
+					'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
+					'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
+					'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
+					'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
+					'asdfghjklqweasdfghjklqweasdfghjklqweasdfghjklqweas' +
+					'123456' // 256 characters
 				await request
 					.post('/users')
 					.send(newUser)
@@ -326,9 +325,7 @@ describe('User', () => {
 			})
 
 			it('sends 204 if username is known', async () => {
-				await request
-					.get('/users/maxmustermann/forgot-password')
-					.expect(204)
+				await request.get('/users/maxmustermann/forgot-password').expect(204)
 			})
 		})
 
@@ -371,7 +368,10 @@ describe('User', () => {
 					.post('/users/maxmustermann/forgot-password')
 					.send({ newPassword: '123456789' })
 					.expect(res => {
-						errorHelper.checkRequestError(res.body, 'This request has to provide all of the following body values: token, newPassword')
+						errorHelper.checkRequestError(
+							res.body,
+							'This request has to provide all of the following body values: token, newPassword'
+						)
 					})
 			})
 
@@ -380,7 +380,10 @@ describe('User', () => {
 					.post('/users/maxmustermann/forgot-password')
 					.send({ token: '123' })
 					.expect(res => {
-						errorHelper.checkRequestError(res.body, 'This request has to provide all of the following body values: token, newPassword')
+						errorHelper.checkRequestError(
+							res.body,
+							'This request has to provide all of the following body values: token, newPassword'
+						)
 					})
 			})
 
@@ -394,9 +397,7 @@ describe('User', () => {
 			})
 
 			it('fails on invalid credentials', async () => {
-				await request
-					.get('/users/maxmustermann/forgot-password')
-					.expect(204)
+				await request.get('/users/maxmustermann/forgot-password').expect(204)
 
 				await request
 					.post('/users/maxmustermann/forgot-password')
@@ -433,9 +434,7 @@ describe('User', () => {
 			})
 
 			it('sends 204 if user is unverified', async () => {
-				await request
-					.get('/users/to-be-verified/verify')
-					.expect(204)
+				await request.get('/users/to-be-verified/verify').expect(204)
 			})
 		})
 
@@ -445,11 +444,9 @@ describe('User', () => {
 			})
 
 			it('fails if the body does not contain a token', async () => {
-				await request
-					.post('/users/maxmustermann/verify')
-					.expect(res => {
-						errorHelper.checkRequestError(res.body, 'This request has to provide all of the following body values: token')
-					})
+				await request.post('/users/maxmustermann/verify').expect(res => {
+					errorHelper.checkRequestError(res.body, 'This request has to provide all of the following body values: token')
+				})
 			})
 
 			it('fails with invalid credentials', async () => {
@@ -495,15 +492,11 @@ describe('User', () => {
 	describe('/users/:email/forgot-username', () => {
 		describe('GET', () => {
 			it('sends 204 on non existing email', async () => {
-				await request
-					.get('/users/non-existing-address@provider.nonexistenttld/forgot-username')
-					.expect(204)
+				await request.get('/users/non-existing-address@provider.nonexistenttld/forgot-username').expect(204)
 			})
 
 			it('sends 204 on existing email', async () => {
-				await request
-					.get('/users/philipp.loten@company.nonexistenttld/forgot-username')
-					.expect(204)
+				await request.get('/users/philipp.loten@company.nonexistenttld/forgot-username').expect(204)
 			})
 		})
 	})
@@ -532,7 +525,7 @@ describe('User', () => {
 		})
 
 		describe('PUT', () => {
-			beforeEach(async() => {
+			beforeEach(async () => {
 				await setupDatabase()
 			})
 
@@ -542,7 +535,10 @@ describe('User', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(400)
 					.expect(res => {
-						errorHelper.checkRequestError(res.body, 'This request has to provide all of the following body values: username, firstName, lastName, email')
+						errorHelper.checkRequestError(
+							res.body,
+							'This request has to provide all of the following body values: username, firstName, lastName, email'
+						)
 					})
 			})
 
@@ -583,8 +579,8 @@ describe('User', () => {
 						lastName: 'Name',
 						email: 'neu@mail.nonexistenttld',
 						password: 'hurdurdur',
-						currentPassword: '123456' }
-					)
+						currentPassword: '123456'
+					})
 					.expect(200)
 					.expect(res => {
 						res.body.username.should.be.equal('fancy-new-name')
@@ -612,8 +608,8 @@ describe('User', () => {
 					.send(payload)
 					.expect(200)
 					.expect(res => {
-						(res.body.firstName === null).should.be.true;
-						(res.body.lastName === null).should.be.true
+						expect(res.body.firstName).to.be.null
+						expect(res.body.lastName).to.be.null
 					})
 			})
 
@@ -628,8 +624,8 @@ describe('User', () => {
 					.send(payload)
 					.expect(200)
 					.expect(res => {
-						(res.body.firstName === null).should.be.true;
-						(res.body.lastName === null).should.be.true
+						expect(res.body.firstName).to.be.null
+						expect(res.body.lastName).to.be.null
 					})
 			})
 
@@ -663,9 +659,7 @@ describe('User', () => {
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
 					.expect(204)
 
-				await request
-					.get('/auth')
-					.auth('loten', testData.getPassword('loten'))
+				await request.get('/auth').auth('loten', testData.getPassword('loten'))
 			})
 
 			it('deletes all group memberships of this user', async () => {
@@ -678,7 +672,7 @@ describe('User', () => {
 					.get('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(res => {
-						res.body.members.should.be.deep.eql([ testData.getGroupMember(1) ])
+						res.body.members.should.be.deep.eql([testData.getGroupMember(1)])
 					})
 			})
 
@@ -699,8 +693,9 @@ describe('User', () => {
 					.expect(200)
 					.expect(res => {
 						const invitation = res.body.find(i => i.to.username === 'alice')
-						if (invitation)
+						if (invitation) {
 							throw new Error('Invitation was not deleted')
+						}
 					})
 			})
 
@@ -737,5 +732,4 @@ describe('User', () => {
 			})
 		})
 	})
-
 })

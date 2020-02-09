@@ -5,7 +5,6 @@ const TokenHelper = require('../utils/token-helper')
 const testData = require('../utils/scripts/test-data')
 
 describe('Place', () => {
-
 	describe('/groups/:groupId/places', () => {
 		describe('POST', () => {
 			let newPlace
@@ -27,7 +26,7 @@ describe('Place', () => {
 							id: null,
 							operation: 'CREATE'
 						}
-						errorHelper.checkAuthorizationError(res.body,expectedError)
+						errorHelper.checkAuthorizationError(res.body, expectedError)
 					})
 			})
 
@@ -247,8 +246,9 @@ describe('Place', () => {
 					.get('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.then(res => {
-						if (res.body.places.find(place => place.id === 1))
+						if (res.body.places.find(place => place.id === 1)) {
 							throw new Error('Place with id 1 was not deleted.')
+						}
 					})
 			})
 
@@ -304,5 +304,4 @@ describe('Place', () => {
 			})
 		})
 	})
-
 })

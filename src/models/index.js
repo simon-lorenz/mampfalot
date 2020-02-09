@@ -1,5 +1,3 @@
-'use strict'
-
 const fs = require('fs')
 const path = require('path')
 const Sequelize = require('sequelize')
@@ -10,8 +8,7 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
 
 const models = {}
 
-fs
-	.readdirSync(__dirname)
+fs.readdirSync(__dirname)
 	.filter(file => file.indexOf('.') !== 0)
 	.filter(file => file.slice(-3) === '.js')
 	.filter(file => file !== path.basename(__filename))
@@ -21,12 +18,11 @@ fs
 		models[model.name] = model
 	})
 
-Object
-	.keys(models)
-	.forEach(modelName => {
-		if (models[modelName].associate)
-			models[modelName].associate(models)
-	})
+Object.keys(models).forEach(modelName => {
+	if (models[modelName].associate) {
+		models[modelName].associate(models)
+	}
+})
 
 module.exports = {
 	sequelize,

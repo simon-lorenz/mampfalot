@@ -1,5 +1,3 @@
-'use strict'
-
 const { AuthorizationError, AuthenticationError, RequestError, NotFoundError } = require('../classes/errors')
 const ResourceLoader = require('../classes/resource-loader')
 const { User } = require('../models')
@@ -9,14 +7,14 @@ const { generateRandomToken } = require('../util/util')
 const { Op } = require('sequelize')
 
 class UserController {
-
 	constructor(user) {
 		this.user = user
 	}
 
 	async getUser(userId) {
-		if (userId !== this.user.id)
+		if (userId !== this.user.id) {
 			throw new AuthorizationError('User', userId, 'READ')
+		}
 
 		return await ResourceLoader.loadUserWithEmail(userId)
 	}
@@ -39,8 +37,14 @@ class UserController {
 				existingUser.verificationToken = await bcrypt.hash(verificationToken, process.env.NODE_ENV === 'test' ? 1 : 12)
 				await existingUser.save()
 
-				await mailer.sendUserAlreadyRegisteredButNotVerifiedMail(existingUser.email, existingUser.username, verificationToken, existingUser.firstName)
+				await mailer.sendUserAlreadyRegisteredButNotVerifiedMail(
+					existingUser.email,
+					existingUser.username,
+					verificationToken,
+					existingUser.firstName
+				)
 			}
+
 			return
 		}
 
@@ -64,15 +68,17 @@ class UserController {
 	}
 
 	async deleteUser(userId) {
-		if (userId !== this.user.id)
+		if (userId !== this.user.id) {
 			throw new AuthorizationError('User', userId, 'DELETE')
+		}
 
 		await User.destroy({ where: { id: userId } })
 	}
 
 	async updateUser(userId, values) {
-		if (userId !== this.user.id)
+		if (userId !== this.user.id) {
 			throw new AuthorizationError('User', userId, 'UPDATE')
+		}
 
 		const userResource = await User.findOne({
 			where: {
@@ -81,27 +87,32 @@ class UserController {
 		})
 
 		if (values.password) {
-			if (!values.currentPassword)
+			if (!values.currentPassword) {
 				throw new RequestError('You need to provide your current password to change it.')
+			}
 
-			if (await this.checkPassword(userResource.username, values.currentPassword) === false)
+			if ((await this.checkPassword(userResource.username, values.currentPassword)) === false) {
 				throw new AuthenticationError('The provided credentials are incorrect.')
-			else
+			} else {
 				userResource.password = bcrypt.hashSync(values.password, 12)
+			}
 		}
 
-		if (values.username)
+		if (values.username) {
 			userResource.username = values.username
+		}
 
-		if (values.firstName === '' || values.firstName === null)
+		if (values.firstName === '' || values.firstName === null) {
 			userResource.firstName = null
-		else if (values.firstName)
+		} else if (values.firstName) {
 			userResource.firstName = values.firstName.trim()
+		}
 
-		if (values.lastName === '' || values.lastName === null)
+		if (values.lastName === '' || values.lastName === null) {
 			userResource.lastName = null
-		else if (values.lastName)
+		} else if (values.lastName) {
 			userResource.lastName = values.lastName.trim()
+		}
 
 		userResource.email = values.email.trim()
 
@@ -117,11 +128,13 @@ class UserController {
 			}
 		})
 
-		if (!user)
+		if (!user) {
 			throw new NotFoundError('User', username)
+		}
 
-		if (user.verified)
+		if (user.verified) {
 			throw new RequestError('This user is already verified.')
+		}
 
 		const verificationToken = await generateRandomToken(25)
 
@@ -139,17 +152,21 @@ class UserController {
 			}
 		})
 
-		if (!user)
+		if (!user) {
 			throw new NotFoundError('User', username)
+		}
 
-		if (user.verified)
+		if (user.verified) {
 			throw new RequestError('This user is already verified.')
+		}
 
-		if (!user.verificationToken)
+		if (!user.verificationToken) {
 			throw new RequestError('This user needs to request verification first.')
+		}
 
-		if (await bcrypt.compare(token, user.verificationToken) === false)
+		if ((await bcrypt.compare(token, user.verificationToken)) === false) {
 			throw new AuthenticationError('The provided credentials are incorrect.')
+		}
 
 		user.verified = true
 		user.verificationToken = null
@@ -160,8 +177,9 @@ class UserController {
 	static async initializePasswordResetProcess(username) {
 		const user = await User.findOne({ where: { username } })
 
-		if (!user)
+		if (!user) {
 			throw new NotFoundError('User', username)
+		}
 
 		const token = await generateRandomToken(25)
 		const tokenExp = new Date()
@@ -185,14 +203,17 @@ class UserController {
 			}
 		})
 
-		if (!user)
+		if (!user) {
 			throw new NotFoundError('User', username)
+		}
 
-		if (!user.passwordResetToken)
+		if (!user.passwordResetToken) {
 			throw new RequestError('This user needs to request a password reset first.')
+		}
 
-		if (await bcrypt.compare(token, user.passwordResetToken) === false)
+		if ((await bcrypt.compare(token, user.passwordResetToken)) === false) {
 			throw new AuthenticationError('The provided credentials are incorrect.')
+		}
 
 		user.password = newPassword
 		user.passwordResetToken = null
@@ -209,8 +230,9 @@ class UserController {
 			where: { email }
 		})
 
-		if (user)
+		if (user) {
 			await mailer.sendForgotUsernameMail(user.email, user.username, user.firstName)
+		}
 	}
 
 	async checkPassword(username, password) {
@@ -222,8 +244,6 @@ class UserController {
 		})
 		return await bcrypt.compare(password, user.password)
 	}
-
 }
 
 module.exports = UserController
-

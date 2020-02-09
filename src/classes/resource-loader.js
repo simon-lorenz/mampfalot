@@ -1,11 +1,8 @@
-'use strict'
-
 const { Absence, Comment, Group, Place, Lunchbreak, User, GroupMembers, Participant, Vote } = require('../models')
 const { NotFoundError } = require('./errors')
 const Op = require('sequelize').Op
 
 class ResourceLoader {
-
 	async getUserIdByUsername(username) {
 		const user = await User.findOne({
 			attributes: ['id'],
@@ -14,10 +11,11 @@ class ResourceLoader {
 			}
 		})
 
-		if (user)
+		if (user) {
 			return user.id
-		else
+		} else {
 			throw new NotFoundError('User', username)
+		}
 	}
 
 	async loadUserWithEmail(userId) {
@@ -44,14 +42,15 @@ class ResourceLoader {
 						as: 'config',
 						attributes: ['color', 'isAdmin']
 					}
-				},
+				}
 			]
 		})
 
-		if (group)
+		if (group) {
 			return group
-		else
+		} else {
 			throw new NotFoundError('Group', id)
+		}
 	}
 
 	async loadMember(groupId, username) {
@@ -72,10 +71,11 @@ class ResourceLoader {
 			]
 		})
 
-		if (member)
+		if (member) {
 			return member
-		else
+		} else {
 			throw new NotFoundError('GroupMember', username)
+		}
 	}
 
 	/**
@@ -83,7 +83,7 @@ class ResourceLoader {
 	 * This middleware requires the request to have the param 'lunchbreakId'.
 	 * If the resource can not be found, a NotFoundError is passed to next()
 	 */
-	async loadLunchbreak (groupId, date) {
+	async loadLunchbreak(groupId, date) {
 		const lunchbreak = await Lunchbreak.findOne({
 			where: {
 				groupId: groupId,
@@ -91,7 +91,7 @@ class ResourceLoader {
 			},
 			include: [
 				{
-					model:Participant,
+					model: Participant,
 					attributes: ['id'],
 					include: [
 						{
@@ -105,7 +105,7 @@ class ResourceLoader {
 							]
 						},
 						{
-							model:Vote,
+							model: Vote,
 							attributes: ['id', 'points'],
 							include: [
 								{
@@ -149,15 +149,14 @@ class ResourceLoader {
 					]
 				}
 			],
-			order: [
-				[Comment, 'createdAt', 'DESC']
-			]
+			order: [[Comment, 'createdAt', 'DESC']]
 		})
 
-		if (lunchbreak)
+		if (lunchbreak) {
 			return lunchbreak
-		else
+		} else {
 			throw new NotFoundError('Lunchbreak', null)
+		}
 	}
 
 	async loadLunchbreaks(groupId, from, to) {
@@ -170,7 +169,7 @@ class ResourceLoader {
 			},
 			include: [
 				{
-					model:Participant,
+					model: Participant,
 					attributes: ['id'],
 					include: [
 						{
@@ -184,7 +183,7 @@ class ResourceLoader {
 							]
 						},
 						{
-							model:Vote,
+							model: Vote,
 							attributes: ['id', 'points'],
 							include: [
 								{
@@ -228,9 +227,7 @@ class ResourceLoader {
 					]
 				}
 			],
-			order: [
-				[Comment, 'createdAt', 'DESC']
-			]
+			order: [[Comment, 'createdAt', 'DESC']]
 		})
 		return lunchbreaks
 	}
@@ -240,17 +237,17 @@ class ResourceLoader {
 	 * This middleware requires the request to have the param 'userId'.
 	 * If the resource can not be found, a NotFoundError is passed to next()
 	 */
-	async loadUser (req, res, next) {
+	async loadUser(req, res, next) {
 		const userId = parseInt(req.params.userId)
 		res.locals.resources = {}
 		res.locals.resources.user = await User.unscoped().findByPk(userId)
 
-		if (res.locals.resources.user)
+		if (res.locals.resources.user) {
 			return next()
-		else
+		} else {
 			return next(new NotFoundError('User', userId))
+		}
 	}
-
 }
 
 module.exports = new ResourceLoader()

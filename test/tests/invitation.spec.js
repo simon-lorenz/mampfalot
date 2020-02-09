@@ -5,16 +5,13 @@ const request = require('supertest')('http://localhost:5001/api')
 const TokenHelper = require('../utils/token-helper')
 
 describe('Invitation', () => {
-
 	describe('/groups/:groupId/invitations', () => {
-
 		describe('GET', () => {
-
 			before(async () => {
 				await setupDatabase()
 			})
 
-			it('fails if the user is no group member', async() => {
+			it('fails if the user is no group member', async () => {
 				await request
 					.get('/groups/1/invitations')
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
@@ -39,13 +36,10 @@ describe('Invitation', () => {
 					})
 			})
 		})
-
 	})
 
 	describe('/groups/:groupId/invitations/:username', () => {
-
 		describe('POST', () => {
-
 			beforeEach(async () => {
 				await setupDatabase()
 			})
@@ -133,11 +127,9 @@ describe('Invitation', () => {
 						res.body.should.be.equalInAnyOrder(expected)
 					})
 			})
-
 		})
 
 		describe('DELETE', () => {
-
 			beforeEach(async () => {
 				await setupDatabase()
 			})
@@ -163,8 +155,9 @@ describe('Invitation', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(200)
 					.expect(res => {
-						if (res.body.find(invitation => invitation.to.username === 'loten'))
+						if (res.body.find(invitation => invitation.to.username === 'loten')) {
 							throw new Error('The invitation was not deleted!')
+						}
 					})
 			})
 
@@ -203,15 +196,11 @@ describe('Invitation', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(200)
 			})
-
 		})
-
 	})
 
 	describe('/users/me/invitations', () => {
-
 		describe('GET', () => {
-
 			before(async () => await setupDatabase())
 
 			it('sends a correct collection of invitations', async () => {
@@ -223,15 +212,11 @@ describe('Invitation', () => {
 						res.body.should.be.equalInAnyOrder(testData.getInvitationsOfUser(3))
 					})
 			})
-
 		})
-
 	})
 
 	describe('/users/me/invitations/:groupId', () => {
-
 		describe('DELETE', () => {
-
 			beforeEach(async () => {
 				await setupDatabase()
 			})
@@ -268,8 +253,9 @@ describe('Invitation', () => {
 					.get('/users/me/invitations')
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
 					.then(res => {
-						if (res.body.find(invitation => invitation.groupId === 1))
+						if (res.body.find(invitation => invitation.groupId === 1)) {
 							throw new Error('The invitation was not deleted!')
+						}
 					})
 
 				await request
@@ -277,8 +263,9 @@ describe('Invitation', () => {
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
 					.expect(200)
 					.expect(res => {
-						if (res.body.find(group => group.id === 1) === undefined)
+						if (res.body.find(group => group.id === 1) === undefined) {
 							throw new Error('User 3 did not join group 1')
+						}
 					})
 			})
 
@@ -311,8 +298,9 @@ describe('Invitation', () => {
 					.get('/users/me/invitations')
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
 					.then(res => {
-						if (res.body.find(invitation => invitation.groupId === 1))
+						if (res.body.find(invitation => invitation.groupId === 1)) {
 							throw new Error('The invitation was not deleted!')
+						}
 					})
 
 				await request
@@ -320,8 +308,9 @@ describe('Invitation', () => {
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
 					.expect(200)
 					.expect(res => {
-						if (res.body.find(group => group.id === 1))
+						if (res.body.find(group => group.id === 1)) {
 							throw new Error('User 3 did join group 1')
+						}
 					})
 			})
 
@@ -350,9 +339,6 @@ describe('Invitation', () => {
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
 					.expect(200)
 			})
-
 		})
-
 	})
-
 })
