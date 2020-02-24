@@ -1,6 +1,6 @@
 # Mampfalot - Backend
 
-An express-based http-api for https://mampfalot.app.
+An express-based http-api for [mampfalot.app](https://mampfalot.app).
 
 ## Development Setup
 
