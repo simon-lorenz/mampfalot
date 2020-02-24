@@ -1,6 +1,6 @@
 const cls = require('cls-hooked')
 const pino = require('pino')
-const uuidv4 = require('uuid/v4')
+const uuidv4 = require('uuid').v4
 const morgan = require('morgan')
 
 const logger = pino({
