@@ -1,7 +1,5 @@
 const { RequestError, MethodNotAllowedError } = require('../classes/errors')
-const { verifyToken, getTokenFromAuthorizationHeader } = require('./authentication')
-const User = require('../classes/user')
-const logger = require('./logger')
+const { getUser } = require('./user')
 const AbsenceController = require('../controllers/absence-controller')
 const CommentController = require('../controllers/comment-controller')
 const GroupController = require('../controllers/group-controller')
@@ -111,34 +109,21 @@ module.exports = {
 	},
 
 	/**
-	 * Verifies the json web token and initializes the user in res.locals
-	 */
-	async initializeUser(req, res, next) {
-		const user = new User()
-		const token = getTokenFromAuthorizationHeader(req)
-		const payload = verifyToken(token)
-		await user.setId(payload.id)
-		res.locals.user = user
-		logger.attachUsername(res.locals.user.username)
-		next()
-	},
-
-	/**
 	 * Initializes res.locals.controllers
 	 */
 	initializeControllers: (req, res, next) => {
-		const { user } = res.locals
-		res.locals.controllers = {}
-		res.locals.controllers.AbsenceController = new AbsenceController(user)
-		res.locals.controllers.UserController = new UserController(user)
-		res.locals.controllers.CommentController = new CommentController(user)
-		res.locals.controllers.GroupController = new GroupController(user)
-		res.locals.controllers.GroupMemberController = new GroupMemberController(user)
-		res.locals.controllers.InvitationController = new InvitationController(user)
-		res.locals.controllers.LunchbreakController = new LunchbreakController(user)
-		res.locals.controllers.ParticipationController = new ParticipationController(user)
-		res.locals.controllers.PlaceController = new PlaceController(user)
-		res.locals.controllers.UserController = new UserController(user)
+		const user = getUser()
+		res.locals.controllers = {
+			AbsenceController: new AbsenceController(user),
+			UserController: new UserController(user),
+			CommentController: new CommentController(user),
+			GroupController: new GroupController(user),
+			GroupMemberController: new GroupMemberController(user),
+			InvitationController: new InvitationController(user),
+			LunchbreakController: new LunchbreakController(user),
+			ParticipationController: new ParticipationController(user),
+			PlaceController: new PlaceController(user)
+		}
 		next()
 	}
 }

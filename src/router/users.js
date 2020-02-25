@@ -4,9 +4,9 @@ const {
 	hasQueryValues,
 	hasBodyValues,
 	convertParamToNumber,
-	initializeUser,
 	initializeControllers
 } = require('../util/middleware')
+const { initializeUser, getUser } = require('../util/user')
 const { asyncMiddleware } = require('../util/util')
 const UserController = require('../controllers/user-controller')
 
@@ -78,7 +78,7 @@ router.route('/me/participations/:groupId').get(hasQueryValues(['from', 'to'], '
 
 router.route('/me').get(
 	asyncMiddleware(async (req, res, next) => {
-		const { user } = res.locals
+		const user = getUser()
 		const { UserController } = res.locals.controllers
 		res.send(await UserController.getUser(user.id))
 	})
@@ -86,7 +86,7 @@ router.route('/me').get(
 
 router.route('/me').put(
 	asyncMiddleware(async (req, res, next) => {
-		const { user } = res.locals
+		const user = getUser()
 		const { UserController } = res.locals.controllers
 		res.send(await UserController.updateUser(user.id, req.body))
 	})
@@ -94,7 +94,7 @@ router.route('/me').put(
 
 router.route('/me').delete(
 	asyncMiddleware(async (req, res, next) => {
-		const { user } = res.locals
+		const user = getUser()
 		const { UserController } = res.locals.controllers
 		await UserController.deleteUser(user.id)
 		res.status(204).send()
@@ -103,7 +103,7 @@ router.route('/me').delete(
 
 router.route('/me/groups').get(
 	asyncMiddleware(async (req, res, next) => {
-		const { user } = res.locals
+		const user = getUser()
 		const { GroupController } = res.locals.controllers
 		res.send(await GroupController.getGroupsByUser(user.id))
 	})
@@ -122,7 +122,7 @@ router.route('/me/invitations/:groupId').delete(
 	asyncMiddleware(async (req, res, next) => {
 		const accept = req.query.accept === 'true'
 		const { groupId } = req.params
-		const { user } = res.locals
+		const user = getUser()
 		const { InvitationController } = res.locals.controllers
 
 		if (accept) {
