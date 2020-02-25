@@ -1,5 +1,5 @@
 const { GroupMembers, Lunchbreak } = require('../models')
-const { AuthorizationError } = require('./errors')
+const { AuthorizationError } = require('../util/errors')
 
 /**
  * This class is responsible for controlling a users access to resources.

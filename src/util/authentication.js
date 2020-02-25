@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken')
-const { AuthenticationError } = require('../classes/errors')
+const { AuthenticationError } = require('../util/errors')
 const { User } = require('../models')
 const bcrypt = require('bcryptjs')
 

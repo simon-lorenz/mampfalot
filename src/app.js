@@ -9,8 +9,15 @@ const logger = require('./util/logger')
 const { asyncMiddleware } = require('./util/util')
 const { initializeControllers } = require('./util/middleware')
 const { initializeUser } = require('./util/user')
-const { AuthenticationError, AuthorizationError, NotFoundError } = require('./classes/errors')
-const { MethodNotAllowedError, ValidationError, RequestError, ServerError } = require('./classes/errors')
+const {
+	AuthenticationError,
+	AuthorizationError,
+	NotFoundError,
+	MethodNotAllowedError,
+	ValidationError,
+	RequestError,
+	ServerError
+} = require('./util/errors')
 
 app.set('trust proxy', true)
 

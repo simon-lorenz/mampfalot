@@ -1,5 +1,5 @@
 const { Absence, Participant, GroupMembers, Lunchbreak, Vote, Place, Comment } = require('../models')
-const { NotFoundError, RequestError, AuthorizationError } = require('../classes/errors')
+const { NotFoundError, RequestError, AuthorizationError } = require('../util/errors')
 const { Op } = require('sequelize')
 const { voteEndingTimeReached, dateIsToday } = require('../util/util')
 const LunchbreakController = require('./lunchbreak-controller')

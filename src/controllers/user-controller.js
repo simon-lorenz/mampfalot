@@ -1,4 +1,4 @@
-const { AuthorizationError, AuthenticationError, RequestError, NotFoundError } = require('../classes/errors')
+const { AuthorizationError, AuthenticationError, RequestError, NotFoundError } = require('../util/errors')
 const ResourceLoader = require('../classes/resource-loader')
 const { User } = require('../models')
 const bcrypt = require('bcryptjs')

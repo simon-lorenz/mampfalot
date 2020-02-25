@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const { AuthenticationError } = require('../classes/errors')
+const { AuthenticationError } = require('../util/errors')
 const { allowMethods } = require('../util/middleware')
 const { asyncMiddleware } = require('../util/util')
 const { extractBasicCredentialsFromHeader, checkCredentialsAndGenerateToken } = require('../util/authentication')

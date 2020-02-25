@@ -1,5 +1,5 @@
 const { Absence, Comment, Group, Place, Lunchbreak, User, GroupMembers, Participant, Vote } = require('../models')
-const { NotFoundError } = require('./errors')
+const { NotFoundError } = require('../util/errors')
 const Op = require('sequelize').Op
 
 class ResourceLoader {

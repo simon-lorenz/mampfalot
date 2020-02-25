@@ -1,5 +1,5 @@
 const { Absence, Comment, Lunchbreak, GroupMembers, User, Participant } = require('../models')
-const { NotFoundError, RequestError } = require('../classes/errors')
+const { NotFoundError, RequestError } = require('../util/errors')
 const { dateIsToday, voteEndingTimeReached } = require('../util/util')
 
 class CommentController {

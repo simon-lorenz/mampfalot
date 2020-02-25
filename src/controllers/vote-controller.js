@@ -1,5 +1,5 @@
 const { Lunchbreak, Participant, Group, Vote } = require('../models')
-const { ValidationError } = require('../classes/errors')
+const { ValidationError } = require('../util/errors')
 
 class VoteController {
 	/**

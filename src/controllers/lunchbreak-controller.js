@@ -1,6 +1,6 @@
 const ResourceLoader = require('../classes/resource-loader')
 const { Lunchbreak } = require('../models')
-const { RequestError } = require('../classes/errors')
+const { RequestError } = require('../util/errors')
 
 class LunchbreakController {
 	constructor(user) {

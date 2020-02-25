@@ -1,4 +1,4 @@
-const { RequestError, MethodNotAllowedError } = require('../classes/errors')
+const { RequestError, MethodNotAllowedError } = require('../util/errors')
 const { getUser } = require('./user')
 const AbsenceController = require('../controllers/absence-controller')
 const CommentController = require('../controllers/comment-controller')
