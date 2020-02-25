@@ -1,5 +1,5 @@
 const cls = require('cls-hooked')
-const ResourceAccessControl = require('../classes/resource-access-control')
+const ResourceAccessControl = require('./resource-access-control')
 const UserModel = require('../models').User
 const GroupModel = require('../models').Group
 const logger = require('./logger')
