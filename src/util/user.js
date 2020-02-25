@@ -2,7 +2,6 @@ const cls = require('cls-hooked')
 const ResourceAccessControl = require('../classes/resource-access-control')
 const UserModel = require('../models').User
 const GroupModel = require('../models').Group
-const { AuthenticationError } = require('../classes/errors')
 const logger = require('./logger')
 const { verifyToken, getTokenFromAuthorizationHeader } = require('./authentication')
 
@@ -25,7 +24,7 @@ class User {
 	}
 
 	async loadGroups() {
-		const userGroups = await UserModel.findOne(
+		const { groups } = await UserModel.findOne(
 			{
 				attributes: [],
 				where: {
@@ -45,11 +44,7 @@ class User {
 			{ raw: true }
 		)
 
-		if (userGroups) {
-			this.groups = userGroups.groups
-		} else {
-			throw new AuthenticationError('This user does not exist anymore.')
-		}
+		this.groups = groups
 	}
 
 	/**
