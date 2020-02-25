@@ -1,5 +1,5 @@
 const { GroupMembers } = require('../models')
-const ResourceLoader = require('../classes/resource-loader')
+const ResourceLoader = require('../util/resource-loader')
 
 class GroupMemberController {
 	constructor(user) {

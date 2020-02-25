@@ -1,5 +1,5 @@
 const { Group, GroupMembers, Place, User } = require('../models')
-const ResourceLoader = require('../classes/resource-loader')
+const ResourceLoader = require('../util/resource-loader')
 const { AuthorizationError } = require('../util/errors')
 const { Op } = require('sequelize')
 

@@ -1,4 +1,4 @@
-const ResourceLoader = require('../classes/resource-loader')
+const ResourceLoader = require('../util/resource-loader')
 const { Lunchbreak } = require('../models')
 const { RequestError } = require('../util/errors')
 

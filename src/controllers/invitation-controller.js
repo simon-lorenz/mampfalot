@@ -2,7 +2,7 @@ const { Invitation, User, Group, Place, GroupMembers } = require('../models')
 const GroupController = require('./group-controller')
 const Sequelize = require('sequelize')
 const { NotFoundError } = require('../util/errors')
-const ResourceLoader = require('../classes/resource-loader')
+const ResourceLoader = require('../util/resource-loader')
 
 class InvitationController {
 	constructor(user) {

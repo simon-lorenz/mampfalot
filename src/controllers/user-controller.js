@@ -1,5 +1,5 @@
 const { AuthorizationError, AuthenticationError, RequestError, NotFoundError } = require('../util/errors')
-const ResourceLoader = require('../classes/resource-loader')
+const ResourceLoader = require('../util/resource-loader')
 const { User } = require('../models')
 const bcrypt = require('bcryptjs')
 const mailer = require('../util/mailer')
