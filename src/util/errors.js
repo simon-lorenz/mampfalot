@@ -1,4 +1,5 @@
 const Sequelize = require('sequelize')
+const logger = require('./logger')
 
 class AuthenticationError extends Error {
 	constructor(message) {
@@ -47,14 +48,6 @@ class RequestError extends Error {
 	}
 }
 
-class ServerError extends Error {
-	constructor() {
-		super()
-		this.type = 'ServerError'
-		this.message = 'An internal error occurred.'
-	}
-}
-
 class ValidationError extends Error {
 	constructor(errors = []) {
 		super()
@@ -62,27 +55,22 @@ class ValidationError extends Error {
 		this.errors = errors
 	}
 
-	fromSequelizeValidationError(error) {
+	static fromSequelizeValidationError(error) {
 		if (!(error instanceof Sequelize.ValidationError)) {
 			throw new Error('the given error was no sequelize validation error')
 		}
 
-		this.errors = []
-		for (const item of error.errors) {
-			this.addError(item.path, item.value, item.message)
-		}
+		const result = new ValidationError()
+		result.errors = error.errors.map(item => new ValidationErrorItem(item.path, item.value, item.message))
+		return result
 	}
 
-	fromBulkRecordError(error) {
+	static fromBulkRecordError(error) {
 		if (!(error instanceof Sequelize.BulkRecordError)) {
 			throw new Error('The given error was no BulkRecordError')
 		}
 
-		this.fromSequelizeValidationError(error.errors)
-	}
-
-	addError(field, value, message) {
-		this.errors.push(new ValidationErrorItem(field, value, message))
+		return ValidationError.fromSequelizeValidationError(error.errors)
 	}
 }
 
@@ -100,7 +88,59 @@ module.exports = {
 	MethodNotAllowedError,
 	NotFoundError,
 	RequestError,
-	ServerError,
 	ValidationError,
-	ValidationErrorItem
+	ValidationErrorItem,
+	handleAuthenticationError(err, req, res, next) {
+		if (err instanceof AuthenticationError) {
+			logger.warn({ error: err }, 'AuthenticationError')
+			res.status(401).send(err)
+		} else {
+			next(err)
+		}
+	},
+	handleAuthorizationError(err, req, res, next) {
+		if (err instanceof AuthorizationError) {
+			logger.warn({ error: err }, 'AuthorizationError')
+			res.status(403).send(err)
+		} else {
+			next(err)
+		}
+	},
+	handleMethodNotAllowedError(err, req, res, next) {
+		if (err instanceof MethodNotAllowedError) {
+			logger.warn({ error: err }, 'MethodNotAllowedError')
+			res.status(405).send(err)
+		} else {
+			next(err)
+		}
+	},
+	handleNotFoundError(err, req, res, next) {
+		if (err instanceof NotFoundError) {
+			logger.warn({ error: err }, 'NotFoundError')
+			res.status(404).send(err)
+		} else {
+			next(err)
+		}
+	},
+	handleRequestError(err, req, res, next) {
+		if (err instanceof RequestError) {
+			logger.warn({ error: err }, 'RequestError')
+			res.status(400).send(err)
+		} else {
+			next(err)
+		}
+	},
+	handleUnexpectedError(err, req, res, next) {
+		// Log to err instead error to get serialized by pino
+		logger.error({ err: err }, 'Unexpected Error')
+		res.status(500).send({ type: 'ServerError', message: 'An internal error occurred.' })
+	},
+	handleValidationError(err, req, res, next) {
+		if (err instanceof ValidationError) {
+			res.status(400).send(err)
+			logger.warn({ error: err }, 'ValidationError')
+		} else {
+			next(err)
+		}
+	}
 }

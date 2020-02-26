@@ -10,13 +10,14 @@ const { asyncMiddleware } = require('./util/util')
 const { initializeControllers } = require('./util/middleware')
 const { initializeUser } = require('./util/user')
 const {
-	AuthenticationError,
-	AuthorizationError,
-	NotFoundError,
-	MethodNotAllowedError,
 	ValidationError,
-	RequestError,
-	ServerError
+	handleAuthenticationError,
+	handleAuthorizationError,
+	handleNotFoundError,
+	handleMethodNotAllowedError,
+	handleValidationError,
+	handleRequestError,
+	handleUnexpectedError
 } = require('./util/errors')
 
 app.set('trust proxy', true)
@@ -98,117 +99,6 @@ app.use('/api/authenticate', router.authenticate)
 app.use('/api/users', router.users)
 app.use('/api/groups', [asyncMiddleware(initializeUser), initializeControllers], router.groups)
 
-// Handle request errors
-app.use((err, req, res, next) => {
-	if (err instanceof RequestError) {
-		logger.warn({ error: err }, 'RequestError')
-		res.status(400).send(err)
-	} else {
-		next(err)
-	}
-})
-
-// Handle authentication errors
-app.use((err, req, res, next) => {
-	if (err instanceof AuthenticationError) {
-		logger.warn({ error: err }, 'AuthenticationError')
-		res.status(401).send(err)
-	} else {
-		next(err)
-	}
-})
-
-// Handle authorization errors
-app.use((err, req, res, next) => {
-	if (err instanceof AuthorizationError) {
-		logger.warn({ error: err }, 'AuthorizationError')
-		res.status(403).send(err)
-	} else {
-		next(err)
-	}
-})
-
-// Handle not found errors
-app.use((err, req, res, next) => {
-	if (err instanceof NotFoundError) {
-		logger.warn({ error: err }, 'NotFoundError')
-		res.status(404).send(err)
-	} else {
-		next(err)
-	}
-})
-
-// Handle MethodNotAllowedErrors
-app.use((err, req, res, next) => {
-	if (err instanceof MethodNotAllowedError) {
-		logger.warn({ error: err }, 'MethodNotAllowedError')
-		res.status(405).send(err)
-	} else {
-		next(err)
-	}
-})
-
-// Convert Sequelize validation errors
-app.use((err, req, res, next) => {
-	if (err instanceof Sequelize.ValidationError) {
-		const validationError = new ValidationError()
-		validationError.fromSequelizeValidationError(err)
-		err = validationError
-	}
-
-	next(err)
-})
-
-// Convert Sequelize BulkRecordError
-app.use((err, req, res, next) => {
-	if (err instanceof Promise.AggregateError) {
-		const bulkRecordError = err[0]
-
-		const validationError = new ValidationError()
-		validationError.fromBulkRecordError(bulkRecordError)
-		err = validationError
-	}
-
-	next(err)
-})
-
-// Handle custom validation errors
-app.use((err, req, res, next) => {
-	if (err instanceof ValidationError) {
-		res.status(400).send(err)
-		logger.warn({ error: err }, 'ValidationError')
-	} else {
-		next(err)
-	}
-})
-
-// Handle foreign key errors
-app.use((err, req, res, next) => {
-	if (err instanceof Sequelize.ForeignKeyConstraintError) {
-		res.status(400).send(err)
-		logger.warn({ error: err }, 'ForeignConstraintError')
-	} else {
-		next(err)
-	}
-})
-
-// Handle database errors
-app.use((err, req, res, next) => {
-	if (err instanceof Sequelize.DatabaseError) {
-		logger.error({ error: err }, 'DatabaseError')
-		res.status(500).send(new ServerError())
-	} else {
-		next(err)
-	}
-})
-
-// Handle every other possible error
-app.use((err, req, res, next) => {
-	// Log to err instead error to get serialized by pino
-	logger.error({ err: err }, 'Unexpected Error')
-	res.status(500).send(new ServerError())
-})
-
 app.use((req, res, next) => {
 	const err = {
 		type: 'NotFoundError',
@@ -217,5 +107,25 @@ app.use((req, res, next) => {
 	logger.warn({ error: err }, 'Request to unknown route')
 	res.status(404).send(err)
 })
+
+// Transform sequelize errors
+app.use((err, req, res, next) => {
+	if (err instanceof Sequelize.ValidationError) {
+		next(ValidationError.fromSequelizeValidationError(err))
+	} else if (err instanceof Promise.AggregateError) {
+		next(ValidationError.fromBulkRecordError(err[0]))
+	} else {
+		next(err)
+	}
+})
+
+// Handle errors
+app.use(handleAuthenticationError)
+app.use(handleAuthorizationError)
+app.use(handleMethodNotAllowedError)
+app.use(handleNotFoundError)
+app.use(handleRequestError)
+app.use(handleValidationError)
+app.use(handleUnexpectedError)
 
 module.exports = app
