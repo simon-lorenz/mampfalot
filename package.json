@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node server",
-    "start:dev": "nodemon server --quiet | tee server.log | pino-pretty -t \"SYS:HH:MM:ss\" -i hostname,pid,responseTime",
+    "start:dev": "nodemon server --quiet | tee logs/server.log | pino-pretty -t \"SYS:HH:MM:ss\" -i hostname,pid,responseTime",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "mocha"
