@@ -1,6 +1,7 @@
-const { Absence, Comment, Lunchbreak, GroupMembers, Participant } = require('../models')
-const { RequestError, NotFoundError, AuthorizationError } = require('../util/errors')
+const { Absence, Participant } = require('../models')
+const { RequestError, AuthorizationError } = require('../util/errors')
 const { dateIsToday, voteEndingTimeReached } = require('../util/util')
+const { AbsenceRepository, GroupMemberRepository, LunchbreakRepository } = require('../repositories')
 
 class AbsenceController {
 	constructor(user) {
@@ -8,127 +9,69 @@ class AbsenceController {
 	}
 
 	async createAbsence(lunchbreakController, groupId, date) {
+		if (!this.user.isGroupMember(groupId)) {
+			throw new AuthorizationError('Absence', null, 'CREATE')
+		}
+
 		if (!dateIsToday(date)) {
 			throw new RequestError('Absences can only be created for today.')
 		}
 
-		let lunchbreak = await Lunchbreak.findOne({
-			attributes: ['id'],
-			where: {
-				groupId,
-				date
-			}
-		})
+		if (await voteEndingTimeReached(groupId, date)) {
+			throw new RequestError('The end of voting has been reached, therefore you cannot mark yourself as absent.')
+		}
 
-		if (lunchbreak === null) {
-			if (dateIsToday(date) === false) {
-				throw new RequestError('The end of voting is reached, therefore you cannot create a new lunchbreak.')
+		try {
+			const lunchbreak = await lunchbreakController.findOrCreateLunchbreak(groupId, date)
+			const member = await GroupMemberRepository.getMember(groupId, this.user.username)
+			const absence = await AbsenceRepository.getAbsence(lunchbreak.id, member.id)
+
+			if (absence === null) {
+				await Absence.create({
+					lunchbreakId: lunchbreak.id,
+					memberId: member.id
+				})
+
+				await Participant.destroy({
+					where: {
+						lunchbreakId: lunchbreak.id,
+						memberId: member.id
+					}
+				})
+			}
+		} catch (error) {
+			if (error instanceof AuthorizationError) {
+				throw new AuthorizationError('Absence', null, 'CREATE')
 			} else {
-				lunchbreak = await lunchbreakController.createLunchbreak(groupId)
-				if (await voteEndingTimeReached(lunchbreak.id)) {
-					await Lunchbreak.destroy({
-						where: {
-							id: lunchbreak.id
-						}
-					})
-					throw new RequestError('The end of voting is reached, therefore you cannot create a new lunchbreak.')
-				}
+				throw error
 			}
-		} else {
-			if (await voteEndingTimeReached(lunchbreak.id)) {
-				throw new RequestError('The end of voting has been reached, therefore you cannot mark yourself as absent.')
-			}
-		}
-
-		const member = await GroupMembers.findOne({
-			attributes: ['id'],
-			where: {
-				groupId,
-				userId: this.user.id
-			}
-		})
-
-		if (member === null) {
-			throw new AuthorizationError('Absence', null, 'CREATE')
-		}
-
-		let absence = await Absence.findOne({
-			where: {
-				lunchbreakId: lunchbreak.id,
-				memberId: member.id
-			}
-		})
-
-		if (absence === null) {
-			absence = await Absence.build({
-				lunchbreakId: lunchbreak.id,
-				memberId: member.id
-			})
-			await this.user.can.createAbsence(absence)
-			await absence.save()
-			await Participant.destroy({
-				where: {
-					memberId: absence.memberId,
-					lunchbreakId: absence.lunchbreakId
-				}
-			})
 		}
 	}
 
 	async deleteAbsence(lunchbreakController, groupId, date) {
+		if (!this.user.isGroupMember(groupId)) {
+			throw new AuthorizationError('Absence', null, 'DELETE')
+		}
+
 		if (!dateIsToday(date)) {
 			throw new RequestError('You can only delete todays absence.')
 		}
 
-		let lunchbreak = await Lunchbreak.findOne({
-			attributes: ['id'],
-			where: {
-				groupId,
-				date
-			}
-		})
-
-		if (lunchbreak === null) {
-			throw new NotFoundError('Lunchbreak')
-		} else if (await voteEndingTimeReached(lunchbreak.id)) {
+		if (await voteEndingTimeReached(groupId, date)) {
 			throw new RequestError('The end of voting is reached, therefore you cannot delete this absence.')
 		}
 
-		const member = await GroupMembers.findOne({
-			attributes: ['id'],
-			where: {
-				groupId,
-				userId: this.user.id
-			}
-		})
+		const lunchbreakId = await LunchbreakRepository.getLunchbreakId(groupId, date)
+		const member = await GroupMemberRepository.getMember(groupId, this.user.username)
 
-		if (member === null) {
-			throw new AuthorizationError('Absence', null, 'DELETE')
-		}
-
-		const absence = await Absence.findOne({
+		await Absence.destroy({
 			where: {
-				lunchbreakId: lunchbreak.id,
+				lunchbreakId: lunchbreakId,
 				memberId: member.id
 			}
 		})
 
-		await this.user.can.deleteAbsence(absence)
-
-		await absence.destroy()
-
-		lunchbreak = await Lunchbreak.findOne({
-			attributes: ['id'],
-			where: {
-				groupId,
-				date
-			},
-			include: [Comment, Participant, Absence]
-		})
-
-		if (lunchbreak.comments.length === 0 && lunchbreak.participants.length === 0 && lunchbreak.absences.length === 0) {
-			await lunchbreak.destroy()
-		}
+		await lunchbreakController.checkForAutoDeletion(lunchbreakId)
 	}
 }
 

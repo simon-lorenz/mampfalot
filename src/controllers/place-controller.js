@@ -1,4 +1,5 @@
 const { Place } = require('../models')
+const { AuthorizationError } = require('../util/errors')
 
 class PlaceController {
 	constructor(user) {
@@ -11,7 +12,11 @@ class PlaceController {
 			foodType: values.foodType,
 			name: values.name
 		})
-		await this.user.can.createPlace(place)
+
+		if (!this.user.isGroupAdmin(groupId)) {
+			throw new AuthorizationError('Place', null, 'CREATE')
+		}
+
 		await place.save()
 		return {
 			id: place.id,
@@ -22,7 +27,10 @@ class PlaceController {
 
 	async updatePlace(id, values) {
 		const place = await Place.findByPk(id)
-		await this.user.can.updatePlace(place)
+		if (!this.user.isGroupAdmin(place.groupId)) {
+			throw new AuthorizationError('Place', place.id, 'UPDATE')
+		}
+
 		place.foodType = values.foodType
 		place.name = values.name
 		await place.save()
@@ -35,7 +43,11 @@ class PlaceController {
 
 	async deletePlace(id) {
 		const place = await Place.findByPk(id)
-		await this.user.can.deletePlace(place)
+
+		if (!this.user.isGroupAdmin(place.groupId)) {
+			throw new AuthorizationError('Place', place.id, 'DELETE')
+		}
+
 		await place.destroy()
 	}
 }

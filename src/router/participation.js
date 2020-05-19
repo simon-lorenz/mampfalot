@@ -10,8 +10,10 @@ router.route('/').post(
 	asyncMiddleware(async (req, res, next) => {
 		const { groupId, date } = req.params
 		const participation = req.body
-		const { ParticipationController } = res.locals.controllers
-		res.status(201).send(await ParticipationController.createParticipation(groupId, date, participation))
+		const { ParticipationController, LunchbreakController } = res.locals.controllers
+		res
+			.status(201)
+			.send(await ParticipationController.createParticipation(groupId, date, participation, LunchbreakController))
 	})
 )
 

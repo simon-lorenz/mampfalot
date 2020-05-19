@@ -1,5 +1,4 @@
 const cls = require('cls-hooked')
-const ResourceAccessControl = require('./resource-access-control')
 const UserModel = require('../models').User
 const GroupModel = require('../models').Group
 const logger = require('./logger')
@@ -9,7 +8,6 @@ const userNamespace = cls.createNamespace('user')
 
 class User {
 	constructor() {
-		this.can = new ResourceAccessControl(this)
 		this.groups = []
 	}
 

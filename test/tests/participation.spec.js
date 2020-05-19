@@ -111,9 +111,44 @@ describe('Participation', () => {
 						}
 						errorHelper.checkAuthorizationError(res.body, expectedError)
 					})
+
+				testServer.start(5001, '11:24:59', '26.02.2020')
+				await request
+					.post('/groups/1/lunchbreaks/2020-02-26/participation')
+					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.send(payload)
+					.expect(403)
+					.expect(res => {
+						const expectedError = {
+							resoucre: 'Participation',
+							value: null,
+							operation: 'CREATE'
+						}
+						errorHelper.checkAuthorizationError(res.body, expectedError)
+					})
 			})
 
-			it('fails if voteEndingTime is reached', async () => {
+			it('fails if voteEndingTime is reached and a participation exists already', async () => {
+				testServer.start(5001, '11:24:59', '01.07.2018')
+				await request
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(201)
+
+				testServer.start(5001, '11:25:01', '01.07.2018')
+				await request
+					.post('/groups/1/lunchbreaks/2018-07-01/participation')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send(payload)
+					.expect(400)
+					.expect(res => {
+						const message = 'The end of voting has been reached, therefore you cannot create a new participation.'
+						errorHelper.checkRequestError(res.body, message)
+					})
+			})
+
+			it('fails if voteEndingTime is reached and no lunchbreak exists yet', async () => {
 				testServer.start(5001, '11:25:01', '01.07.2018')
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/participation')

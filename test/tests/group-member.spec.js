@@ -13,7 +13,7 @@ describe('Group Member', () => {
 				.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 				.expect(404)
 				.expect(res => {
-					errorHelper.checkNotFoundError(res.body, 'User', 'unknown-username')
+					errorHelper.checkNotFoundError(res.body, 'GroupMember', 'unknown-username')
 				})
 
 			await request
@@ -21,7 +21,7 @@ describe('Group Member', () => {
 				.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 				.expect(404)
 				.expect(res => {
-					errorHelper.checkNotFoundError(res.body, 'User', 'unknown-username')
+					errorHelper.checkNotFoundError(res.body, 'GroupMember', 'unknown-username')
 				})
 		})
 

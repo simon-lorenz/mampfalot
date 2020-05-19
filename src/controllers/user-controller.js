@@ -1,5 +1,5 @@
 const { AuthorizationError, AuthenticationError, RequestError, NotFoundError } = require('../util/errors')
-const ResourceLoader = require('../util/resource-loader')
+const { UserRepository } = require('../repositories')
 const { User } = require('../models')
 const bcrypt = require('bcryptjs')
 const mailer = require('../util/mailer')
@@ -16,7 +16,7 @@ class UserController {
 			throw new AuthorizationError('User', userId, 'READ')
 		}
 
-		return await ResourceLoader.loadUserWithEmail(userId)
+		return await UserRepository.getUser(userId)
 	}
 
 	static async createUser(values) {
@@ -117,7 +117,7 @@ class UserController {
 		userResource.email = values.email.trim()
 
 		await userResource.save()
-		return await ResourceLoader.loadUserWithEmail(userId)
+		return await UserRepository.getUser(userId)
 	}
 
 	static async initializeVerificationProcess(username) {

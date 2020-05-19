@@ -2,7 +2,6 @@ const { Absence, Participant, GroupMembers, Lunchbreak, Vote, Place, Comment } =
 const { NotFoundError, RequestError, AuthorizationError } = require('../util/errors')
 const { Op } = require('sequelize')
 const { voteEndingTimeReached, dateIsToday } = require('../util/util')
-const LunchbreakController = require('./lunchbreak-controller')
 const VoteController = require('./vote-controller')
 
 class ParticipationLoader {
@@ -100,7 +99,7 @@ class ParticipationController {
 	async deleteParticipation(groupId, date) {
 		const participation = await ParticipationLoader.loadParticipation(groupId, date, this.user.id)
 
-		if (await voteEndingTimeReached(participation.lunchbreak.id)) {
+		if (await voteEndingTimeReached(groupId, date)) {
 			throw new RequestError('The end of voting has been reached, therefore this participation cannot be deleted.')
 		}
 
@@ -142,39 +141,24 @@ class ParticipationController {
 		})
 	}
 
-	async createParticipation(groupId, date, values) {
+	async createParticipation(groupId, date, values, lunchbreakController) {
 		if (!dateIsToday(date)) {
 			throw new RequestError('Participations can only be created for today.')
 		}
 
-		let lunchbreak = await Lunchbreak.findOne({
-			attributes: ['id'],
-			where: {
-				date,
-				groupId
-			}
-		})
-
-		if (lunchbreak === null) {
-			const lunchbreakController = new LunchbreakController(this.user)
-
-			if (dateIsToday(date) === false) {
-				throw new RequestError('The end of voting is reached, therefore you cannot create a new lunchbreak.')
+		let lunchbreak
+		try {
+			lunchbreak = await lunchbreakController.findOrCreateLunchbreak(groupId, date)
+		} catch (error) {
+			if (error instanceof AuthorizationError) {
+				throw new AuthorizationError('Participation', null, 'CREATE')
 			} else {
-				lunchbreak = await lunchbreakController.createLunchbreak(groupId)
-				if (await voteEndingTimeReached(lunchbreak.id)) {
-					await Lunchbreak.destroy({
-						where: {
-							id: lunchbreak.id
-						}
-					})
-					throw new RequestError('The end of voting is reached, therefore you cannot create a new lunchbreak.')
-				}
+				throw error
 			}
 		}
 
-		if (await voteEndingTimeReached(lunchbreak.id)) {
-			throw new RequestError('The end of voting has been reached, therefore you cannot participate anymore.')
+		if (await voteEndingTimeReached(groupId, date)) {
+			throw new RequestError('The end of voting has been reached, therefore you cannot create a new participation.')
 		}
 
 		const member = await GroupMembers.findOne({
@@ -184,10 +168,6 @@ class ParticipationController {
 				userId: this.user.id
 			}
 		})
-
-		if (member === null) {
-			throw new AuthorizationError('Participation', null, 'CREATE')
-		}
 
 		let participation
 
@@ -248,7 +228,7 @@ class ParticipationController {
 
 		await participation.save()
 
-		if (values.votes && !(await voteEndingTimeReached(participation.lunchbreakId))) {
+		if (values.votes && !(await voteEndingTimeReached(groupId, date))) {
 			values.votes.map(vote => {
 				vote.participantId = participation.id
 				vote.placeId = vote.place ? vote.place.id : null

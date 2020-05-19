@@ -7,7 +7,7 @@ process.env.NODE_ENV = 'test'
 /**
  * Disable logging.
  */
-process.env.LOG_LEVEL = 'silent'
+process.env.LOG_LEVEL = 'error'
 
 /**
  * Chai plugins

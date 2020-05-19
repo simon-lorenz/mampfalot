@@ -133,7 +133,7 @@ describe('Absence', () => {
 					.expect(res => {
 						errorHelper.checkRequestError(
 							res.body,
-							'The end of voting is reached, therefore you cannot create a new lunchbreak.'
+							'The end of voting has been reached, therefore you cannot mark yourself as absent.'
 						)
 					})
 
@@ -211,6 +211,20 @@ describe('Absence', () => {
 					.expect(200)
 					.then(res => res.body)
 					.then(lunchbreak => lunchbreak.absent.should.be.an('array').with.lengthOf(0))
+			})
+
+			it('fails if user is no group member', async () => {
+				await request
+					.delete('/groups/1/lunchbreaks/2018-06-25/absence')
+					.set(await TokenHelper.getAuthorizationHeader('alice'))
+					.expect(403)
+					.then(res => {
+						errorHelper.checkAuthorizationError(res.body, {
+							id: null,
+							operation: 'DELETE',
+							resource: 'Absence'
+						})
+					})
 			})
 
 			it('fails if voteEndingTime is reached', async () => {

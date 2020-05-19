@@ -28,8 +28,8 @@ router.route('/:commentId').put(
 router.route('/:commentId').delete(
 	asyncMiddleware(async (req, res, next) => {
 		const { commentId } = req.params
-		const { CommentController } = res.locals.controllers
-		await CommentController.deleteComment(commentId)
+		const { CommentController, LunchbreakController } = res.locals.controllers
+		await CommentController.deleteComment(LunchbreakController, commentId)
 		res.status(204).send()
 	})
 )

@@ -1,6 +1,7 @@
-const ResourceLoader = require('../util/resource-loader')
-const { Lunchbreak } = require('../models')
-const { RequestError } = require('../util/errors')
+const { GroupRepository, LunchbreakRepository } = require('../repositories')
+const { Lunchbreak, Participant, Comment, Absence } = require('../models')
+const { NotFoundError, RequestError, AuthorizationError } = require('../util/errors')
+const { voteEndingTimeReached } = require('../util/util')
 
 class LunchbreakController {
 	constructor(user) {
@@ -71,44 +72,42 @@ class LunchbreakController {
 			throw new RequestError('The query values from and to have to be in the same year.')
 		}
 
-		let lunchbreaks = await ResourceLoader.loadLunchbreaks(groupId, from, to)
-		lunchbreaks = await Promise.all(
-			lunchbreaks.map(async lunchbreak => {
-				const group = await ResourceLoader.loadGroupById(groupId)
-				lunchbreak = lunchbreak.toJSON()
+		let lunchbreaks = await LunchbreakRepository.getLunchbreaks(groupId, from, to)
+		const group = await GroupRepository.getGroup(groupId)
 
-				delete lunchbreak.groupId
-				lunchbreak.comments = lunchbreak.comments.map(comment => this.convertComment(comment))
-				lunchbreak.participants = lunchbreak.participants.map(participant => this.convertParticipant(participant))
-				lunchbreak.absent = lunchbreak.absences.map(absence => {
-					return {
-						username: absence.member.user.username,
-						firstName: absence.member.user.firstName,
-						lastName: absence.member.user.lastName,
-						config: {
-							color: absence.member.color,
-							isAdmin: absence.member.isAdmin
-						}
+		lunchbreaks = lunchbreaks.map(lunchbreak => {
+			lunchbreak.participants = lunchbreak.participants.map(this.convertParticipant)
+			lunchbreak.absent = lunchbreak.absences.map(absence => {
+				return {
+					username: absence.member.user.username,
+					firstName: absence.member.user.firstName,
+					lastName: absence.member.user.lastName,
+					config: {
+						color: absence.member.color,
+						isAdmin: absence.member.isAdmin
 					}
-				})
-				delete lunchbreak.absences
-
-				const allMembers = group.members
-				lunchbreak.responseless = allMembers.filter(member => {
-					const participates = lunchbreak.participants.find(p => p.member.username === member.username)
-					const absent = lunchbreak.absent.find(absent => absent.username === member.username)
-					return !participates && !absent
-				})
-
-				return lunchbreak
+				}
 			})
-		)
+
+			delete lunchbreak.absences
+			delete lunchbreak.groupId
+
+			const allMembers = group.members
+			lunchbreak.responseless = allMembers.filter(member => {
+				const participates = lunchbreak.participants.find(p => p.member.username === member.username)
+				const absent = lunchbreak.absent.find(absent => absent.username === member.username)
+				return !participates && !absent
+			})
+
+			return lunchbreak
+		})
+
 		return lunchbreaks
 	}
 
 	async getLunchbreak(groupId, date) {
-		const group = await ResourceLoader.loadGroupById(groupId)
-		let lunchbreak = await ResourceLoader.loadLunchbreak(groupId, date)
+		const group = await GroupRepository.getGroup(groupId)
+		let lunchbreak = await LunchbreakRepository.getLunchbreak(groupId, date)
 		lunchbreak = lunchbreak.toJSON()
 
 		// Restructuring Comment properties
@@ -134,19 +133,50 @@ class LunchbreakController {
 			return !participates && !absent
 		})
 
-		await this.user.can.readLunchbreak(lunchbreak)
+		if (!this.user.isGroupMember(groupId)) {
+			throw new AuthorizationError('Lunchbreak', lunchbreak.id, 'READ')
+		}
 
 		delete lunchbreak.groupId
 
 		return lunchbreak
 	}
 
-	async createLunchbreak(groupId) {
-		const today = new Date().toISOString().substring(0, 10)
-		const lunchbreak = await Lunchbreak.build({ groupId, date: today })
-		await this.user.can.createLunchbreak(lunchbreak)
-		await lunchbreak.save()
-		return await this.getLunchbreak(groupId, today)
+	async findOrCreateLunchbreak(groupId, date) {
+		try {
+			return await this.getLunchbreak(groupId, date)
+		} catch (err) {
+			if (err instanceof NotFoundError === false) {
+				throw err
+			}
+
+			if (await voteEndingTimeReached(groupId, date)) {
+				throw new RequestError('The end of voting is reached, therefore you cannot create a new lunchbreak.')
+			}
+
+			const lunchbreak = await Lunchbreak.build({ groupId, date })
+
+			if (!this.user.isGroupMember(groupId)) {
+				throw new AuthorizationError('Lunchbreak', null, 'CREATE')
+			}
+
+			await lunchbreak.save()
+			return this.getLunchbreak(groupId, date)
+		}
+	}
+
+	/**
+	 * Deletes a lunchbreak if it has no participants, comments and absences
+	 * @param {number} lunchbreakId
+	 */
+	async checkForAutoDeletion(lunchbreakId) {
+		const lunchbreak = await Lunchbreak.findByPk(lunchbreakId, {
+			include: [Participant, Comment, Absence]
+		})
+
+		if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0 && lunchbreak.absences.length === 0) {
+			await lunchbreak.destroy()
+		}
 	}
 }
 

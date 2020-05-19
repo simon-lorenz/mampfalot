@@ -1,5 +1,6 @@
 const { GroupMembers } = require('../models')
-const ResourceLoader = require('../util/resource-loader')
+const { GroupMemberRepository, UserRepository } = require('../repositories')
+const { AuthorizationError } = require('../util/errors')
 
 class GroupMemberController {
 	constructor(user) {
@@ -7,38 +8,58 @@ class GroupMemberController {
 	}
 
 	async removeMember(groupId, username) {
-		const member = await GroupMembers.findOne({
-			where: {
-				userId: await ResourceLoader.getUserIdByUsername(username),
-				groupId: groupId
-			}
-		})
+		const member = await GroupMemberRepository.getMember(groupId, username)
 
-		await this.user.can.deleteGroupMember(member, username)
-		await member.destroy()
+		if (this.user.username === member.username || this.user.isGroupAdmin(groupId)) {
+			if (member.config.isAdmin) {
+				const admins = await GroupMemberRepository.getAdmins(groupId)
+
+				if (admins.length === 1) {
+					const err = new AuthorizationError('GroupMember', username, 'DELETE')
+					err.message = 'You are the last administrator of this group and cannot leave the group.'
+					throw err
+				}
+			}
+		} else {
+			throw new AuthorizationError('GroupMember', username, 'DELETE')
+		}
+
+		const userId = await UserRepository.getUserIdByUsername(username)
+		await GroupMembers.destroy({
+			where: { groupId, userId }
+		})
 	}
 
 	async updateMember(groupId, username, values) {
-		const member = await GroupMembers.findOne({
-			where: {
-				userId: await ResourceLoader.getUserIdByUsername(username),
-				groupId: groupId
+		const member = await GroupMemberRepository.getMember(groupId, username)
+
+		if (this.user.isGroupAdmin(groupId) === false && username !== this.user.username) {
+			throw new AuthorizationError('GroupMember', username, 'UPDATE')
+		}
+
+		if (Boolean(values.isAdmin) === true && this.user.isGroupAdmin(groupId) === false) {
+			throw new AuthorizationError('GroupMember', username, 'UPDATE')
+		}
+
+		if (values.isAdmin === false) {
+			const admins = await GroupMemberRepository.getAdmins(groupId)
+			if (admins.length === 1) {
+				const err = new AuthorizationError('GroupMember', username, 'UPDATE')
+				err.message = 'This user is the last admin of this group and cannot revoke his rights.'
+				throw err
 			}
-		})
-
-		if (values.isAdmin !== undefined) {
-			member.isAdmin = values.isAdmin
 		}
 
-		if (values.color !== undefined) {
-			member.color = values.color
-		}
+		await GroupMembers.update(
+			{ color: values.color, isAdmin: Boolean(values.isAdmin) },
+			{
+				where: {
+					id: member.id
+				}
+			}
+		)
 
-		await this.user.can.updateGroupMember(member, username)
-
-		await member.save()
-
-		return await ResourceLoader.loadMember(groupId, username)
+		return await GroupMemberRepository.getMemberFormatted(groupId, username)
 	}
 }
 
