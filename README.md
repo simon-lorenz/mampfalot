@@ -13,7 +13,7 @@ An express-based http-api for [mampfalot.app](https://mampfalot.app).
 
 1. Run ```$ npm install``` to install all dependencies.
 2. Create a new postgres database.
-3. In the root directory you'll find a ```.env.example``` file. Copy it and create a new file named ```.env```. Modify the environment variables in it according to your development environment.
+3. In the root directory you'll find a ```.example.env``` file. Copy it and create a new file named ```.env```. Modify the environment variables in it according to your development environment.
 4. Run ```$ npm run start:dev``` to launch the webserver.
 
 ### Testing
