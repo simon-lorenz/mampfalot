@@ -7,8 +7,8 @@ matrix:
   - os: windows
 node_js:
 - 12.16.1
-services:
-- postgresql
+addons:
+  postgresql: '10.13'
 before_install:
 - psql -c 'create database mampfalot;' -U postgres
 before_script:
