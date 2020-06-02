@@ -4,8 +4,8 @@ os:
 if: tag is blank
 node_js:
 - 12.18.0
-addons:
-  postgresql: '10.13'
+services:
+- postgresql
 before_install:
 - psql -c 'create database mampfalot;' -U postgres
 before_script:
