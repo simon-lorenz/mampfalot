@@ -1,33 +1,45 @@
-const router = require('express').Router({ mergeParams: true })
-const { allowMethods } = require('../util/middleware')
-const { asyncMiddleware } = require('../util/util')
+const { InvitationController } = require('../controllers')
 
-router.route('/').all(allowMethods(['GET']))
-router.route('/:username').all(allowMethods(['POST', 'DELETE']))
+module.exports = {
+	name: 'inivitation-router',
+	register: async server => {
+		server.route({
+			method: 'GET',
+			path: '/groups/{groupId}/invitations',
+			options: {
+				auth: {
+					access: {
+						scope: ['member:{params.groupId}', 'admin:{params.groupId}']
+					}
+				}
+			},
+			handler: InvitationController.getInvitations
+		})
 
-router.route('/').get(
-	asyncMiddleware(async (req, res, next) => {
-		const { groupId } = req.params
-		const { InvitationController } = res.locals.controllers
-		res.send(await InvitationController.getInvitations(groupId))
-	})
-)
+		server.route({
+			method: 'POST',
+			path: '/groups/{groupId}/invitations/{username}',
+			options: {
+				auth: {
+					access: {
+						scope: ['admin:{params.groupId}']
+					}
+				}
+			},
+			handler: InvitationController.createInvitation
+		})
 
-router.route('/:username').post(
-	asyncMiddleware(async (req, res, next) => {
-		const { groupId, username } = req.params
-		const { InvitationController } = res.locals.controllers
-		res.status(201).send(await InvitationController.inviteUser(groupId, username))
-	})
-)
-
-router.route('/:username').delete(
-	asyncMiddleware(async (req, res, next) => {
-		const { groupId, username } = req.params
-		const { InvitationController } = res.locals.controllers
-		await InvitationController.withdrawInvitation(groupId, username)
-		res.status(204).send()
-	})
-)
-
-module.exports = router
+		server.route({
+			method: 'DELETE',
+			path: '/groups/{groupId}/invitations/{username}',
+			options: {
+				auth: {
+					access: {
+						scope: ['admin:{params.groupId}']
+					}
+				}
+			},
+			handler: InvitationController.deleteInvitation
+		})
+	}
+}

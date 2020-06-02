@@ -1,6 +1,6 @@
+const Boom = require('@hapi/boom')
 const setupDatabase = require('../utils/scripts/setup-database')
 const testData = require('../utils/scripts/test-data')
-const errorHelper = require('../utils/errors')
 const request = require('supertest')('http://localhost:5001/api')
 const TokenHelper = require('../utils/token-helper')
 
@@ -16,14 +16,7 @@ describe('Invitation', () => {
 					.get('/groups/1/invitations')
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
 					.expect(403)
-					.expect(res => {
-						const errorItem = {
-							resource: 'Group',
-							id: 1,
-							operation: 'READ'
-						}
-						errorHelper.checkAuthorizationError(res.body, errorItem)
-					})
+					.expect(Boom.forbidden('Insufficient scope').output.payload)
 			})
 
 			it('returns a collection of invitations', async () => {
@@ -49,14 +42,7 @@ describe('Invitation', () => {
 					.post('/groups/1/invitations/alice')
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
 					.expect(403)
-					.expect(res => {
-						const errorItem = {
-							resource: 'Invitation',
-							id: null,
-							operation: 'CREATE'
-						}
-						errorHelper.checkAuthorizationError(res.body, errorItem)
-					})
+					.expect(Boom.forbidden('Insufficient scope').output.payload)
 			})
 
 			it('fails if the invited user is already a group member', async () => {
@@ -64,15 +50,7 @@ describe('Invitation', () => {
 					.post('/groups/1/invitations/johndoe1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(400)
-					.expect(res => {
-						const error = res.body
-						const item = {
-							field: 'to',
-							value: 2,
-							message: 'This user is already a member of this group.'
-						}
-						errorHelper.checkValidationError(error, item)
-					})
+					.expect(Boom.badRequest('This user is already a group member').output.payload)
 			})
 
 			it('fails if invited user is not found', async () => {
@@ -80,22 +58,15 @@ describe('Invitation', () => {
 					.post('/groups/1/invitations/unknown-user')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(404)
+					.expect(Boom.notFound().output.payload)
 			})
 
 			it('fails if the user is already invited', async () => {
 				await request
 					.post('/groups/1/invitations/loten')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.expect(res => {
-						const errorItem = {
-							field: 'username',
-							value: 'loten',
-							message: 'This user is already invited.'
-						}
-						errorHelper.checkValidationError(res.body, errorItem)
-						// TODO: Return error only once
-						// res.body.errors.should.be.an('array').with.lengthOf(1)
-					})
+					.expect(400)
+					.expect(Boom.badRequest('This user is already invited').output.payload)
 			})
 
 			it('members cannot invite', async () => {
@@ -103,13 +74,7 @@ describe('Invitation', () => {
 					.post('/groups/1/invitations/alice')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.expect(403)
-					.expect(res => {
-						const expected = {
-							resource: 'Invitation',
-							operation: 'CREATE'
-						}
-						errorHelper.checkAuthorizationError(res.body, expected)
-					})
+					.expect(Boom.forbidden('Insufficient scope').output.payload)
 			})
 
 			it('creates a new invitation successfully', async () => {
@@ -134,14 +99,12 @@ describe('Invitation', () => {
 				await setupDatabase()
 			})
 
-			it('sends NotFoundError', async () => {
+			it('sends 404s', async () => {
 				await request
 					.delete('/groups/1/invitations/alice')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(404)
-					.expect(res => {
-						errorHelper.checkNotFoundError(res.body, 'Invitation', null)
-					})
+					.expect(Boom.notFound().output.payload)
 			})
 
 			it('admins can delete invitations', async () => {
@@ -166,6 +129,7 @@ describe('Invitation', () => {
 					.delete('/groups/1/invitations/loten')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.expect(403)
+					.expect(Boom.forbidden('Insufficient scope').output.payload)
 			})
 
 			it('does not delete the associated users', async () => {
@@ -226,20 +190,24 @@ describe('Invitation', () => {
 					.delete('/users/me/invitations/1')
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
 					.expect(400)
-					.expect(res => {
-						errorHelper.checkRequiredQueryValues(res.body, ['accept'], 'all')
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"accept" is required',
+						validation: {
+							source: 'query',
+							keys: ['accept']
+						}
 					})
 			})
 
-			it('sends NotFoundError', async () => {
+			it('sends 404 if invitation does not exist', async () => {
 				await request
 					.delete('/users/me/invitations/299')
 					.query({ accept: true })
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
 					.expect(404)
-					.expect(res => {
-						errorHelper.checkNotFoundError(res.body, 'Invitation', null)
-					})
+					.expect(Boom.notFound().output.payload)
 			})
 
 			it('successfully accepts an invitation', async () => {

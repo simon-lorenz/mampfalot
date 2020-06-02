@@ -1,224 +1,131 @@
-const { Invitation, User, Group, Place, GroupMembers } = require('../models')
-const GroupController = require('./group-controller')
-const Sequelize = require('sequelize')
-const { NotFoundError } = require('../classes/errors')
-const ResourceLoader = require('../classes/resource-loader')
+const Boom = require('@hapi/boom')
+const { Invitation, GroupMembers } = require('../models')
+const { GroupRepository, InvitationRepository, UserRepository } = require('../repositories')
 
-class InvitationController {
-	constructor(user) {
-		this.user = user
-	}
+async function getInvitations(request, h) {
+	const { groupId } = request.params
 
-	async getInvitations(groupId) {
-		const groupController = new GroupController(this.user)
-		const group = await groupController.getGroupById(groupId)
-		await this.user.can.readInvitationCollection(group)
+	const group = await GroupRepository.getGroup(groupId)
+	const invitations = await InvitationRepository.getInvitationsOfGroup(groupId)
 
-		const invitations = await Invitation.findAll({
-			attributes: [],
-			where: {
-				groupId: group.id
-			},
-			include: [
-				{
-					model: User,
-					as: 'from',
-					attributes: ['username', 'firstName', 'lastName']
-				},
-				{
-					model: User,
-					as: 'to',
-					attributes: ['username', 'firstName', 'lastName']
-				}
-			]
-		})
-
-		return invitations.map(invitation => {
-			const result = invitation.toJSON()
-			result.group = group
-			return result
-		})
-	}
-
-	async getInvitation(groupId, username) {
-		const invitation = await Invitation.findOne({
-			attributes: [],
-			where: {
-				groupId: groupId
-			},
-			include: [
-				{
-					model: User,
-					as: 'from',
-					attributes: ['username', 'firstName', 'lastName']
-				},
-				{
-					model: User,
-					as: 'to',
-					attributes: ['username', 'firstName', 'lastName'],
-					where: {
-						username: username
-					}
-				}
-			]
-		})
-
-		const result = invitation.toJSON()
-		result.group = await ResourceLoader.loadGroupById(groupId)
-		return result
-	}
-
-	async getInvitationsOfCurrentUser() {
-		return await Invitation.findAll({
-			attributes: [],
-			where: {
-				toId: this.user.id
-			},
-			include: [
-				{
-					model: Group,
-					include: [
-						{
-							model: Place,
-							attributes: ['id', 'name', 'foodType']
-						},
-						{
-							model: User,
-							attributes: ['username', 'firstName', 'lastName'],
-							as: 'members',
-							through: {
-								as: 'config',
-								attributes: ['color', 'isAdmin']
-							}
-						}
-					]
-				},
-				{
-					model: User,
-					as: 'from',
-					attributes: ['username', 'firstName', 'lastName']
-				},
-				{
-					model: User,
-					as: 'to',
-					attributes: ['username', 'firstName', 'lastName']
-				}
-			]
-		})
-	}
-
-	async inviteUser(id, username) {
-		const invitedUser = await User.findOne({
-			attributes: ['id'],
-			where: {
-				username: username
-			}
-		})
-
-		if (!invitedUser) {
-			throw new NotFoundError('User', username)
+	return invitations.map(invitation => {
+		return {
+			...invitation.toJSON(),
+			group
 		}
+	})
+}
 
-		const invitation = await Invitation.build({
-			groupId: id,
-			fromId: this.user.id,
-			toId: invitedUser.id
-		})
+async function getInvitationsOfAuthenticatedUser(request, h) {
+	const { id } = request.auth.credentials
+	return InvitationRepository.getInvitationsOfUser(id)
+}
 
-		await this.user.can.createInvitation(invitation)
+async function deleteInvitationOfAuthenticatedUser(request, h) {
+	const { accept } = request.query
+	const { groupId } = request.params
+	const { id } = request.auth.credentials
 
-		try {
-			await invitation.save()
-		} catch (error) {
-			// The invitation model has two internal values, fromId and toId.
-			// For a cleaner api these values are externally simply known as from and to.
-			// Thats why we need to format the "field" values of a possible Validation Error.
-			if (error instanceof Sequelize.ValidationError) {
-				for (const item of error.errors) {
-					if (item.path === 'toId') {
-						item.path = 'to'
-					}
-
-					if (item.path === 'fromId') {
-						item.path = 'from'
-					}
-
-					if (item.message === 'This user is already invited.') {
-						item.path = 'username'
-						item.value = username
-					}
-				}
-			}
-
-			throw error
-		}
-
-		return await this.getInvitation(id, username)
+	if (accept) {
+		await acceptInvitation(id, groupId)
+	} else {
+		await rejectInvitation(id, groupId)
 	}
 
-	async withdrawInvitation(groupId, username) {
-		const invitation = await Invitation.findOne({
-			where: {
-				groupId: groupId
-			},
-			include: [
-				{
-					model: User,
-					as: 'to',
-					where: {
-						username: username
-					}
-				}
-			]
-		})
+	return h.response().code(204)
+}
 
-		if (!invitation) {
-			throw new NotFoundError('Invitation')
-		}
+async function createInvitation(request, h) {
+	const { groupId, username } = request.params
+	const userId = request.auth.credentials.id
 
-		await this.user.can.deleteInvitation(invitation)
-		await invitation.destroy()
+	const invitedUserId = await UserRepository.getUserIdByUsername(username)
+	const group = await GroupRepository.getGroup(groupId)
+
+	if (group.members.find(member => member.username === username)) {
+		throw Boom.badRequest('This user is already a group member')
 	}
 
-	async acceptInvitation(userId, groupId) {
-		const invitation = await Invitation.findOne({
-			where: {
-				groupId: groupId,
-				toId: userId
-			}
-		})
-
-		if (!invitation) {
-			throw new NotFoundError('Invitation')
-		}
-
-		const colors = ['#ffa768', '#e0dbff', '#f5e97d', '#ffa1b7', '#948bf0', '#a8f08d']
-		const randomColor = colors[Math.floor(Math.random() * colors.length)]
-
-		await GroupMembers.create({
-			groupId: groupId,
-			userId: userId,
-			color: randomColor,
-			isAdmin: false
-		})
-
-		await invitation.destroy()
+	if (await Invitation.findOne({ where: { toId: invitedUserId, groupId } })) {
+		throw Boom.badRequest('This user is already invited')
 	}
 
-	async rejectInvitation(userId, groupId) {
-		const invitation = await Invitation.findOne({
-			where: {
-				groupId: groupId,
-				toId: userId
-			}
+	await Invitation.create({
+		groupId,
+		fromId: userId,
+		toId: invitedUserId
+	})
+
+	const createdInvitation = await InvitationRepository.getInvitationOfGroupToUser(groupId, username)
+
+	return h
+		.response({
+			...createdInvitation.toJSON(),
+			group: await GroupRepository.getGroup(groupId)
 		})
+		.code(201)
+}
 
-		if (!invitation) {
-			throw new NotFoundError('Invitation')
+async function deleteInvitation(request, h) {
+	const { groupId, username } = request.params
+
+	const userId = await UserRepository.getUserIdByUsername(username)
+
+	const affectedRows = await Invitation.destroy({
+		where: {
+			groupId,
+			toId: userId
 		}
+	})
 
-		await invitation.destroy()
+	if (affectedRows === 0) {
+		throw Boom.notFound()
+	} else {
+		return h.response().code(204)
 	}
 }
 
-module.exports = InvitationController
+async function acceptInvitation(userId, groupId) {
+	const affectedRows = await Invitation.destroy({
+		where: {
+			groupId,
+			toId: userId
+		}
+	})
+
+	if (affectedRows === 0) {
+		throw Boom.notFound()
+	}
+
+	const colors = ['#ffa768', '#e0dbff', '#f5e97d', '#ffa1b7', '#948bf0', '#a8f08d']
+	const randomColor = colors[Math.floor(Math.random() * colors.length)]
+
+	await GroupMembers.create({
+		groupId: groupId,
+		userId: userId,
+		color: randomColor,
+		isAdmin: false
+	})
+}
+
+async function rejectInvitation(userId, groupId) {
+	const affectedRows = await Invitation.destroy({
+		where: {
+			groupId,
+			toId: userId
+		}
+	})
+
+	if (affectedRows === 0) {
+		throw Boom.notFound()
+	}
+}
+
+module.exports = {
+	getInvitationsOfAuthenticatedUser,
+	deleteInvitationOfAuthenticatedUser,
+
+	getInvitations,
+	createInvitation,
+	deleteInvitation
+}

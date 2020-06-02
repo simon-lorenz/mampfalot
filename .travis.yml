@@ -1,12 +1,9 @@
 language: node_js
 os:
 - linux
-- windows
-matrix:
-  allow_failures:
-  - os: windows
+if: tag is blank
 node_js:
-- 10.15.1
+- 12.18.0
 services:
 - postgresql
 before_install:

@@ -1,29 +1,7 @@
-const testServer = require('../utils/test-server')
+const Boom = require('@hapi/boom')
 const request = require('supertest')('http://localhost:5001/api')
-const TokenHelper = require('../utils/token-helper')
-const errorHelper = require('../utils/errors')
-const { AuthenticationErrorTypes } = require('../utils/errors')
 const SwaggerParser = require('swagger-parser')
 const APIContract = require('../utils/openapi-helper')
-
-describe('The test server', () => {
-	it('mocks date and time correctly', async () => {
-		testServer.start(5001, '09:22:33', '05.02.2019')
-		await require('supertest')('http://localhost:5001')
-			.get('/utc-system-time')
-			.expect(res => {
-				const systemTime = res.body
-				systemTime.should.have.all.keys(['year', 'month', 'day', 'hour', 'minute', 'second'])
-				systemTime.year.should.be.equal(2019)
-				systemTime.month.should.be.equal(1) // UTC-Months are zero based!
-				systemTime.day.should.be.equal(5)
-				systemTime.hour.should.be.equal(9)
-				systemTime.minute.should.be.equal(22)
-				systemTime.second.should.be.equal(33)
-			})
-		testServer.close()
-	})
-})
 
 describe('The mampfalot api', () => {
 	before(() => APIContract.parse())
@@ -32,19 +10,8 @@ describe('The mampfalot api', () => {
 		await SwaggerParser.validate('./docs/mampfalot.oas3.yaml')
 	})
 
-	it('responds to /', async () => {
-		await request.get('/').expect(200)
-	})
-
 	it('404s unkown routes', async () => {
-		await request
-			.get('/foo')
-			.expect(404)
-			.expect(res => {
-				const error = res.body
-				error.should.have.property('type').which.is.equal('NotFoundError')
-				error.should.have.property('message').which.is.equal('This route could not be found.')
-			})
+		await request.get('/foo').expect(404)
 	})
 
 	it('does not send the "x-powered-by" header', async () => {
@@ -70,9 +37,9 @@ describe('The mampfalot api', () => {
 				const testableUrl = APIContract.replaceParams(url)
 
 				try {
-					const res = await request[method](testableUrl)
-					res.status.should.be.eql(401)
-					errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.AUTHENTICTAION_REQUIRED)
+					await request[method](testableUrl)
+						.expect(401)
+						.expect(Boom.unauthorized('Missing authentication').output.payload)
 				} catch (error) {
 					errors.push(`${method} ${testableUrl}: ${error.message}`)
 				}
@@ -87,39 +54,11 @@ describe('The mampfalot api', () => {
 	it('fails if token is invalid', async () => {
 		const invalid =
 			'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6NSwibmFtZSI6Ik1heCBNdXN0ZXJtYW5uIiwiZW1haWwiOiJtdXN0ZXJtYW5uQGdtYWlsLmNvbSIsImlhdCI6MTUzNjc1Njk3MCwiZXhwIjoxNTM2NzYwNTg5LCJqdGkiOiI2YTA5OTY1Ny03MmRlLTQyOGMtOWE2NS00MDQ5N2FmZjY5YjcifQ.Ym0pnoafK1bpBKq_ohqPKyx0mITa_YfkIaHey94wXgQ'
+
 		await request
-			.get('/users/5')
+			.get('/groups/1')
 			.set({ Authorization: invalid })
 			.expect(401)
-			.expect(res => {
-				errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.INVALID_TOKEN)
-			})
-	})
-
-	it('returns correct MethodNotAllowedErrors for all routes', async () => {
-		const urls = APIContract.getUrls()
-		const errors = []
-
-		for (const url of urls) {
-			const methods = APIContract.getMethods(url)
-			await request
-				.patch(url)
-				.set({ Authorization: await TokenHelper.getToken('maxmustermann') })
-				.expect(405)
-				.expect(res => {
-					errorHelper.checkMethodNotAllowedError(
-						res.body,
-						'PATCH',
-						methods.map(method => method.toUpperCase())
-					)
-				})
-				.catch(err => {
-					errors.push(`${url}: ${err.message}`)
-				})
-		}
-
-		if (errors.length > 0) {
-			throw new Error(`\n${errors.join('\n')}`)
-		}
+			.expect(Boom.unauthorized('The provided token is invalid').output.payload)
 	})
 })

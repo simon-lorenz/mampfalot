@@ -12,8 +12,7 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: false,
 				unique: {
 					name: 'uniquePlacePerGroup',
-					args: true,
-					msg: 'A place with this name already exists.'
+					args: true
 				},
 				onDelete: 'CASCADE'
 			},
@@ -22,25 +21,12 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: false,
 				unique: {
 					name: 'uniquePlacePerGroup',
-					args: true,
-					msg: 'A place with this name already exists.'
-				},
-				validate: {
-					notEmpty: {
-						args: true,
-						msg: 'name cannot be empty.'
-					}
+					args: true
 				}
 			},
 			foodType: {
 				type: DataTypes.STRING,
-				allowNull: false,
-				validate: {
-					notEmpty: {
-						args: true,
-						msg: 'foodType cannot be empty.'
-					}
-				}
+				allowNull: false
 			}
 		},
 		{

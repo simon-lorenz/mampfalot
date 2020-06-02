@@ -1,35 +1,103 @@
-const router = require('express').Router({ mergeParams: true })
-const { allowMethods, hasBodyValues } = require('../util/middleware')
-const { asyncMiddleware } = require('../util/util')
+const Joi = require('@hapi/joi')
+const { ParticipationController } = require('../controllers')
 
-router.route('/').all(allowMethods(['POST', 'PUT', 'DELETE']))
-router.post('/', hasBodyValues(['amountSpent', 'result', 'votes'], 'all'))
-router.put('/', hasBodyValues(['amountSpent', 'result', 'votes'], 'atLeastOne'))
+module.exports = {
+	name: 'participation-router',
+	register: async server => {
+		server.route({
+			method: 'POST',
+			path: '/groups/{groupId}/lunchbreaks/{date}/participation',
+			options: {
+				auth: {
+					access: {
+						scope: ['member:{params.groupId}', 'admin:{params.groupId}']
+					}
+				},
+				validate: {
+					payload: Joi.object({
+						amountSpent: Joi.number()
+							.required()
+							.allow(null),
+						votes: Joi.array()
+							.items(
+								Joi.object({
+									place: Joi.object({
+										id: Joi.number().required(),
+										name: Joi.string().required(),
+										foodType: Joi.string().required()
+									}).required(),
+									points: Joi.number()
+										.integer()
+										.required()
+								})
+							)
+							.unique('place.id')
+							.required(),
+						result: Joi.object({
+							id: Joi.number().required(),
+							name: Joi.string(),
+							foodType: Joi.string()
+						})
+							.required()
+							.allow(null)
+					})
+				}
+			},
+			handler: ParticipationController.createParticipation
+		})
 
-router.route('/').post(
-	asyncMiddleware(async (req, res, next) => {
-		const { groupId, date } = req.params
-		const participation = req.body
-		const { ParticipationController } = res.locals.controllers
-		res.status(201).send(await ParticipationController.createParticipation(groupId, date, participation))
-	})
-)
+		server.route({
+			method: 'PUT',
+			path: '/groups/{groupId}/lunchbreaks/{date}/participation',
+			options: {
+				auth: {
+					access: {
+						scope: ['member:{params.groupId}', 'admin:{params.groupId}']
+					}
+				},
+				validate: {
+					payload: Joi.object({
+						amountSpent: Joi.number()
+							.required()
+							.allow(null),
+						votes: Joi.array()
+							.items(
+								Joi.object({
+									place: Joi.object({
+										id: Joi.number().required(),
+										name: Joi.string().required(),
+										foodType: Joi.string().required()
+									}).required(),
+									points: Joi.number()
+										.integer()
+										.required()
+								})
+							)
+							.unique('place.id'),
+						result: Joi.object({
+							id: Joi.number().required(),
+							name: Joi.string(),
+							foodType: Joi.string()
+						})
+							.required()
+							.allow(null)
+					})
+				}
+			},
+			handler: ParticipationController.updateParticipation
+		})
 
-router.route('/').put(
-	asyncMiddleware(async (req, res, next) => {
-		const { groupId, date } = req.params
-		const values = req.body
-		const { ParticipationController } = res.locals.controllers
-		res.send(await ParticipationController.updateParticipation(groupId, date, values))
-	})
-)
-
-router.route('/').delete(
-	asyncMiddleware(async (req, res, next) => {
-		const { groupId, date } = req.params
-		const { ParticipationController } = res.locals.controllers
-		res.status(204).send(await ParticipationController.deleteParticipation(groupId, date))
-	})
-)
-
-module.exports = router
+		server.route({
+			method: 'DELETE',
+			path: '/groups/{groupId}/lunchbreaks/{date}/participation',
+			options: {
+				auth: {
+					access: {
+						scope: ['member:{params.groupId}', 'admin:{params.groupId}']
+					}
+				}
+			},
+			handler: ParticipationController.deleteParticipation
+		})
+	}
+}

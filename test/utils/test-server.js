@@ -1,20 +1,20 @@
-const app = require('../../src/app')
+const { createServer } = require('../../src/server')
 
-class TestServer {
-	start(port, time = '', date = '') {
-		this.close()
+let server = null
+
+module.exports = {
+	async start(port = 5001, time = '', date = '') {
 		process.env.TIME = time
 		process.env.DATE = date
-		this.server = app.listen(port)
-	}
 
-	close() {
-		if (this.server) {
-			this.server.close()
+		await this.stop()
+		server = await createServer(port)
+
+		await server.start()
+	},
+	async stop() {
+		if (server !== null) {
+			await server.stop()
 		}
 	}
 }
-
-const testServer = new TestServer()
-
-module.exports = testServer

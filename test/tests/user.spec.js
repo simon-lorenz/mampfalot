@@ -1,6 +1,5 @@
+const Boom = require('@hapi/boom')
 const setupDatabase = require('../utils/scripts/setup-database')
-const errorHelper = require('../utils/errors')
-const { AuthenticationErrorTypes } = require('../utils/errors')
 const util = require('../utils/util')
 const request = require('supertest')('http://localhost:5001/api')
 const TokenHelper = require('../utils/token-helper')
@@ -35,9 +34,7 @@ describe('User', () => {
 					.get('/authenticate')
 					.auth(newUser.username, newUser.password)
 					.expect(401)
-					.expect(res => {
-						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.NOT_VERIFIED)
-					})
+					.expect(Boom.unauthorized('This account is not verified yet').output.payload)
 			})
 
 			it('inserts a user without firstName and lastName', async () => {
@@ -53,9 +50,7 @@ describe('User', () => {
 					.get('/authenticate')
 					.auth(newUser.username, newUser.password)
 					.expect(401)
-					.expect(res => {
-						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.NOT_VERIFIED)
-					})
+					.expect(Boom.unauthorized('This account is not verified yet').output.payload)
 			})
 
 			it('does not fail if the email is already known', async () => {
@@ -73,9 +68,14 @@ describe('User', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({})
 					.expect(400)
-					.expect(res => {
-						const message = 'This request has to provide all of the following body values: username, email, password'
-						errorHelper.checkRequestError(res.body, message)
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"username" is required. "email" is required. "password" is required',
+						validation: {
+							source: 'payload',
+							keys: ['username', 'email', 'password']
+						}
 					})
 			})
 
@@ -85,13 +85,14 @@ describe('User', () => {
 					.post('/users')
 					.send(newUser)
 					.expect(400)
-					.expect(res => {
-						const expectedErrorItem = {
-							field: 'username',
-							value: null,
-							message: 'username cannot be null'
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"username" must be a string',
+						validation: {
+							source: 'payload',
+							keys: ['username']
 						}
-						errorHelper.checkValidationError(res.body, expectedErrorItem)
 					})
 			})
 
@@ -101,13 +102,14 @@ describe('User', () => {
 					.post('/users')
 					.send(newUser)
 					.expect(400)
-					.expect(res => {
-						const expectedErrorItem = {
-							field: 'username',
-							value: '',
-							message: 'username cannot be empty'
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"username" is not allowed to be empty',
+						validation: {
+							source: 'payload',
+							keys: ['username']
 						}
-						errorHelper.checkValidationError(res.body, expectedErrorItem)
 					})
 			})
 
@@ -120,13 +122,14 @@ describe('User', () => {
 						.post('/users')
 						.send(newUser)
 						.expect(400)
-						.expect(res => {
-							const expectedErrorItem = {
-								field: 'username',
-								value: newUser.username,
-								message: 'username can only contain [a-z-_0-9]'
+						.expect({
+							statusCode: 400,
+							error: 'Bad Request',
+							message: `"username" with value "${name}" fails to match the required pattern: /^[a-z-_0-9]*$/`,
+							validation: {
+								source: 'payload',
+								keys: ['username']
 							}
-							errorHelper.checkValidationError(res.body, expectedErrorItem)
 						})
 				}
 			})
@@ -138,13 +141,14 @@ describe('User', () => {
 					.post('/users')
 					.send(newUser)
 					.expect(400)
-					.expect(res => {
-						const expectedErrorItem = {
-							field: 'username',
-							value: newUser.username,
-							message: 'The username must contain 3-255 characters'
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"username" length must be less than or equal to 255 characters long',
+						validation: {
+							source: 'payload',
+							keys: ['username']
 						}
-						errorHelper.checkValidationError(res.body, expectedErrorItem)
 					})
 			})
 
@@ -155,13 +159,14 @@ describe('User', () => {
 					.post('/users')
 					.send(newUser)
 					.expect(400)
-					.expect(res => {
-						const expectedErrorItem = {
-							field: 'username',
-							value: newUser.username,
-							message: 'The username must contain 3-255 characters'
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"username" length must be at least 3 characters long',
+						validation: {
+							source: 'payload',
+							keys: ['username']
 						}
-						errorHelper.checkValidationError(res.body, expectedErrorItem)
 					})
 			})
 
@@ -172,14 +177,7 @@ describe('User', () => {
 					.post('/users')
 					.send(newUser)
 					.expect(400)
-					.expect(res => {
-						const expectedErrorItem = {
-							field: 'username',
-							value: newUser.username,
-							message: 'This username is already taken'
-						}
-						errorHelper.checkValidationError(res.body, expectedErrorItem)
-					})
+					.expect(Boom.badRequest('This username is already taken').output.payload)
 			})
 
 			it('fails with 400 if password is null', async () => {
@@ -189,13 +187,14 @@ describe('User', () => {
 					.post('/users')
 					.send(newUser)
 					.expect(400)
-					.expect(res => {
-						const expectedErrorItem = {
-							field: 'password',
-							value: null,
-							message: 'Password cannot be null'
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"password" must be a string',
+						validation: {
+							source: 'payload',
+							keys: ['password']
 						}
-						errorHelper.checkValidationError(res.body, expectedErrorItem)
 					})
 			})
 
@@ -205,13 +204,14 @@ describe('User', () => {
 					.post('/users')
 					.send(newUser)
 					.expect(400)
-					.expect(res => {
-						const expectedErrorItem = {
-							field: 'password',
-							value: '',
-							message: 'Password cannot be empty'
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"password" is not allowed to be empty',
+						validation: {
+							source: 'payload',
+							keys: ['password']
 						}
-						errorHelper.checkValidationError(res.body, expectedErrorItem)
 					})
 			})
 
@@ -221,13 +221,14 @@ describe('User', () => {
 					.post('/users')
 					.send(newUser)
 					.expect(400)
-					.expect(res => {
-						const expectedErrorItem = {
-							field: 'password',
-							value: newUser.password,
-							message: 'Password has to be between 8 and 255 characters long'
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"password" length must be at least 8 characters long',
+						validation: {
+							source: 'payload',
+							keys: ['password']
 						}
-						errorHelper.checkValidationError(res.body, expectedErrorItem)
 					})
 			})
 
@@ -243,13 +244,14 @@ describe('User', () => {
 					.post('/users')
 					.send(newUser)
 					.expect(400)
-					.expect(res => {
-						const expectedErrorItem = {
-							field: 'password',
-							value: newUser.password,
-							message: 'Password has to be between 8 and 255 characters long'
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"password" length must be less than or equal to 255 characters long',
+						validation: {
+							source: 'payload',
+							keys: ['password']
 						}
-						errorHelper.checkValidationError(res.body, expectedErrorItem)
 					})
 			})
 
@@ -260,13 +262,14 @@ describe('User', () => {
 					.post('/users')
 					.send(newUser)
 					.expect(400)
-					.expect(res => {
-						const expectedErrorItem = {
-							field: 'email',
-							value: null,
-							message: 'E-Mail cannot be null'
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"email" must be a string',
+						validation: {
+							source: 'payload',
+							keys: ['email']
 						}
-						errorHelper.checkValidationError(res.body, expectedErrorItem)
 					})
 			})
 
@@ -277,13 +280,14 @@ describe('User', () => {
 					.post('/users')
 					.send(newUser)
 					.expect(400)
-					.expect(res => {
-						const expectedErrorItem = {
-							field: 'email',
-							value: '',
-							message: 'E-Mail cannot be empty'
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"email" is not allowed to be empty',
+						validation: {
+							source: 'payload',
+							keys: ['email']
 						}
-						errorHelper.checkValidationError(res.body, expectedErrorItem)
 					})
 			})
 
@@ -296,13 +300,14 @@ describe('User', () => {
 						.post('/users')
 						.send(newUser)
 						.expect(400)
-						.expect(res => {
-							const expectedErrorItem = {
-								field: 'email',
-								value: newUser.email,
-								message: 'This is not a valid e-mail-address'
+						.expect({
+							statusCode: 400,
+							error: 'Bad Request',
+							message: '"email" must be a valid email',
+							validation: {
+								source: 'payload',
+								keys: ['email']
 							}
-							errorHelper.checkValidationError(res.body, expectedErrorItem)
 						})
 				}
 			})
@@ -319,9 +324,7 @@ describe('User', () => {
 				await request
 					.get('/users/non-existent-user/forgot-password')
 					.expect(404)
-					.expect(res => {
-						errorHelper.checkNotFoundError(res.body, 'User', 'non-existent-user')
-					})
+					.expect(Boom.notFound().output.payload)
 			})
 
 			it('sends 204 if username is known', async () => {
@@ -335,7 +338,7 @@ describe('User', () => {
 			})
 
 			it('resets a password successfully', async () => {
-				testServer.start(5001, '14:33:00', '27.01.2020')
+				await testServer.start(5001, '14:33:00', '27.01.2020')
 
 				await request
 					.post('/users/please-change-my-password/forgot-password')
@@ -352,7 +355,7 @@ describe('User', () => {
 			})
 
 			it('fails if the password is too short', async () => {
-				testServer.start(5001, '14:33:00', '27.01.2020')
+				await testServer.start(5001, '14:33:00', '27.01.2020')
 
 				await request
 					.post('/users/please-change-my-password/forgot-password')
@@ -361,17 +364,29 @@ describe('User', () => {
 						newPassword: '123'
 					})
 					.expect(400)
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"newPassword" length must be at least 8 characters long',
+						validation: {
+							source: 'payload',
+							keys: ['newPassword']
+						}
+					})
 			})
 
 			it('fails if the body does not contain a resetToken', async () => {
 				await request
 					.post('/users/maxmustermann/forgot-password')
 					.send({ newPassword: '123456789' })
-					.expect(res => {
-						errorHelper.checkRequestError(
-							res.body,
-							'This request has to provide all of the following body values: token, newPassword'
-						)
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"token" is required',
+						validation: {
+							source: 'payload',
+							keys: ['token']
+						}
 					})
 			})
 
@@ -379,11 +394,14 @@ describe('User', () => {
 				await request
 					.post('/users/maxmustermann/forgot-password')
 					.send({ token: '123' })
-					.expect(res => {
-						errorHelper.checkRequestError(
-							res.body,
-							'This request has to provide all of the following body values: token, newPassword'
-						)
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"newPassword" is required',
+						validation: {
+							source: 'payload',
+							keys: ['newPassword']
+						}
 					})
 			})
 
@@ -391,20 +409,34 @@ describe('User', () => {
 				await request
 					.post('/users/non-existent-user/forgot-password')
 					.send({ token: 'my-invalid-token', newPassword: 'supersafe123456' })
-					.expect(res => {
-						errorHelper.checkNotFoundError(res.body, 'User', 'non-existent-user')
-					})
+					.expect(Boom.notFound('This user does not exist or needs to request a password reset first').output.payload)
 			})
 
-			it('fails on invalid credentials', async () => {
+			it('fails with 404 if no reset was initialized', async () => {
+				await request
+					.post('/users/maxmustermann/forgot-password')
+					.send({ token: '123', newPassword: '123456789' })
+					.expect(Boom.notFound('This user does not exist or needs to request a password reset first').output.payload)
+			})
+
+			it('fails with 404 if token is expired', async () => {
+				await request.get('/users/maxmustermann/forgot-password').expect(204)
+
+				await testServer.start(5001, '00:00:00', '25.06.2199')
+
+				await request
+					.post('/users/maxmustermann/forgot-password')
+					.send({ token: '123', newPassword: '123456789' })
+					.expect(Boom.notFound('This user does not exist or needs to request a password reset first').output.payload)
+			})
+
+			it('fails on invalid token', async () => {
 				await request.get('/users/maxmustermann/forgot-password').expect(204)
 
 				await request
 					.post('/users/maxmustermann/forgot-password')
 					.send({ token: '123', newPassword: '123456789' })
-					.expect(res => {
-						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.INVALID_CREDENTIALS)
-					})
+					.expect(Boom.unauthorized('The provided reset token is incorrect').output.payload)
 			})
 		})
 	})
@@ -419,18 +451,14 @@ describe('User', () => {
 				await request
 					.get('/users/non-existent-user/verify')
 					.expect(404)
-					.expect(res => {
-						errorHelper.checkNotFoundError(res.body, 'User', 'non-existent-user')
-					})
+					.expect(Boom.notFound().output.payload)
 			})
 
 			it('fails if user is already verified', async () => {
 				await request
 					.get('/users/maxmustermann/verify')
 					.expect(400)
-					.expect(res => {
-						errorHelper.checkRequestError(res.body, 'This user is already verified.')
-					})
+					.expect(Boom.badRequest('This user is already verified.').output.payload)
 			})
 
 			it('sends 204 if user is unverified', async () => {
@@ -444,27 +472,32 @@ describe('User', () => {
 			})
 
 			it('fails if the body does not contain a token', async () => {
-				await request.post('/users/maxmustermann/verify').expect(res => {
-					errorHelper.checkRequestError(res.body, 'This request has to provide all of the following body values: token')
-				})
+				await request
+					.post('/users/maxmustermann/verify')
+					.send({})
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"token" is required',
+						validation: {
+							source: 'payload',
+							keys: ['token']
+						}
+					})
 			})
 
-			it('fails with invalid credentials', async () => {
+			it('fails with invalid token', async () => {
 				await request
 					.post('/users/to-be-verified/verify')
 					.send({ token: '123456' })
-					.expect(res => {
-						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.INVALID_CREDENTIALS)
-					})
+					.expect(Boom.unauthorized('The provided verification token is incorrect').output.payload)
 			})
 
 			it('fails with 404 on unknown user', async () => {
 				await request
 					.post('/users/non-existent-user/verify')
 					.send({ token: 'my-invalid-token' })
-					.expect(res => {
-						errorHelper.checkNotFoundError(res.body, 'User', 'non-existent-user')
-					})
+					.expect(Boom.notFound().output.payload)
 			})
 
 			it('verifies a user successfully', async () => {
@@ -472,9 +505,7 @@ describe('User', () => {
 					.get('/authenticate')
 					.auth('to-be-verified', 'verifyme')
 					.expect(401)
-					.expect(res => {
-						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.NOT_VERIFIED)
-					})
+					.expect(Boom.unauthorized('This account is not verified yet').output.payload)
 
 				await request
 					.post('/users/to-be-verified/verify')
@@ -533,12 +564,16 @@ describe('User', () => {
 				await request
 					.put('/users/me')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({})
 					.expect(400)
-					.expect(res => {
-						errorHelper.checkRequestError(
-							res.body,
-							'This request has to provide all of the following body values: username, firstName, lastName, email'
-						)
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"username" is required. "firstName" is required. "lastName" is required. "email" is required',
+						validation: {
+							source: 'payload',
+							keys: ['username', 'firstName', 'lastName', 'email']
+						}
 					})
 			})
 
@@ -550,8 +585,14 @@ describe('User', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(payload)
 					.expect(400)
-					.expect(res => {
-						errorHelper.checkRequestError(res.body, 'You need to provide your current password to change it.')
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"currentPassword" is required',
+						validation: {
+							source: 'payload',
+							keys: ['currentPassword']
+						}
 					})
 			})
 
@@ -564,9 +605,7 @@ describe('User', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(payload)
 					.expect(401)
-					.expect(res => {
-						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.INVALID_CREDENTIALS)
-					})
+					.expect(Boom.unauthorized('The provided credentials are incorrect').output.payload)
 			})
 
 			it('updates a user correctly', async () => {
@@ -601,22 +640,6 @@ describe('User', () => {
 				const payload = testData.getUserWithEmail(1)
 				payload.firstName = null
 				payload.lastName = null
-
-				await request
-					.put('/users/me')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send(payload)
-					.expect(200)
-					.expect(res => {
-						expect(res.body.firstName).to.be.null
-						expect(res.body.lastName).to.be.null
-					})
-			})
-
-			it('converts empty string in first and lastName to null', async () => {
-				const payload = testData.getUserWithEmail(1)
-				payload.firstName = ''
-				payload.lastName = ''
 
 				await request
 					.put('/users/me')

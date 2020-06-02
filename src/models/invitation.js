@@ -20,20 +20,6 @@ module.exports = (sequelize, DataTypes) => {
 				unique: {
 					name: 'inviteOnce',
 					msg: 'This user is already invited.'
-				},
-				validate: {
-					async notMemberOfGroup() {
-						const { GroupMembers } = sequelize.models
-						const member = await GroupMembers.findOne({
-							where: {
-								groupId: this.groupId,
-								userId: this.toId
-							}
-						})
-						if (member) {
-							throw new Error('This user is already a member of this group.')
-						}
-					}
 				}
 			}
 		},

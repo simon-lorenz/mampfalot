@@ -54,6 +54,7 @@ module.exports = {
 			name: 'Group_3',
 			lunchTime: '12:00:00',
 			voteEndingTime: '11:55:00',
+			utcOffset: 60,
 			pointsPerDay: 3,
 			maxPointsPerVote: 1,
 			minPointsPerVote: 1

@@ -1,5 +1,5 @@
+const Boom = require('@hapi/boom')
 const setupDatabase = require('../utils/scripts/setup-database')
-const errorHelper = require('../utils/errors')
 const request = require('supertest')('http://localhost:5001/api')
 const TokenHelper = require('../utils/token-helper')
 const testData = require('../utils/scripts/test-data')
@@ -16,8 +16,14 @@ describe('Lunchbreak', () => {
 					.get('/groups/1/lunchbreaks')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(400)
-					.expect(res => {
-						errorHelper.checkRequiredQueryValues(res.body, ['from', 'to'], true)
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"from" is required. "to" is required',
+						validation: {
+							source: 'query',
+							keys: ['from', 'to']
+						}
 					})
 			})
 
@@ -27,10 +33,7 @@ describe('Lunchbreak', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.query({ from: '2018-01-01', to: '2019-01-01' })
 					.expect(400)
-					.expect(res => {
-						const expectedMessage = 'The query values from and to have to be in the same year.'
-						errorHelper.checkRequestError(res.body, expectedMessage)
-					})
+					.expect(Boom.badRequest('The query values from and to have to be in the same year.').output.payload)
 			})
 
 			it('fails if from is greater than to', async () => {
@@ -39,10 +42,7 @@ describe('Lunchbreak', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.query({ from: '2018-01-02', to: '2018-01-01' })
 					.expect(400)
-					.expect(res => {
-						const expectedMessage = 'The given timespan is invalid.'
-						errorHelper.checkRequestError(res.body, expectedMessage)
-					})
+					.expect(Boom.badRequest('The given timespan is invalid.').output.payload)
 			})
 
 			it('fails if from is equal to', async () => {
@@ -51,10 +51,7 @@ describe('Lunchbreak', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.query({ from: '2018-01-01', to: '2018-01-01' })
 					.expect(400)
-					.expect(res => {
-						const expectedMessage = 'The given timespan is invalid.'
-						errorHelper.checkRequestError(res.body, expectedMessage)
-					})
+					.expect(Boom.badRequest('The given timespan is invalid.').output.payload)
 			})
 
 			it('treats the query dates as inclusive values', async () => {
@@ -87,14 +84,12 @@ describe('Lunchbreak', () => {
 				await setupDatabase()
 			})
 
-			it('returns NotFoundError', async () => {
+			it('returns 404s', async () => {
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-30')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(404)
-					.expect(res => {
-						errorHelper.checkNotFoundError(res.body, 'Lunchbreak', null)
-					})
+					.expect(Boom.notFound().output.payload)
 			})
 
 			it("fails if user isn't a group member", async () => {
@@ -102,15 +97,7 @@ describe('Lunchbreak', () => {
 					.get('/groups/1/lunchbreaks/2018-06-25')
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
 					.expect(403)
-					.expect(res => {
-						const expectedError = {
-							resource: 'Lunchbreak',
-							id: 1,
-							operation: 'READ'
-						}
-
-						errorHelper.checkAuthorizationError(res.body, expectedError)
-					})
+					.expect(Boom.forbidden('Insufficient scope').output.payload)
 			})
 
 			it('sends a correct lunchbreak resource', async () => {

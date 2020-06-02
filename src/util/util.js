@@ -1,16 +1,24 @@
 const crypto = require('crypto')
+const fs = require('fs')
+const moment = require('moment')
+const { GroupRepository } = require('../repositories')
 
 module.exports = {
 	/**
-	 * A wrapper for async middleware.
-	 * Makes it possible to omit a lot try...catch statements inside async
-	 * middleware because it catches every error automatically and routes it
-	 * to the next error handling middleware.
+	 * Promisifies nodes readFile() function.
+	 * Files have to be utf-8 encoded.
+	 * @param {string} path
 	 */
-	asyncMiddleware: fn => {
-		return (req, res, next) => {
-			Promise.resolve(fn(req, res, next)).catch(next)
-		}
+	async readFile(path) {
+		return new Promise((resolve, reject) => {
+			fs.readFile(path, { encoding: 'utf-8' }, (err, content) => {
+				if (err) {
+					reject(err)
+				} else {
+					resolve(content)
+				}
+			})
+		})
 	},
 
 	/**
@@ -35,52 +43,22 @@ module.exports = {
 	 * @param {string} date A date formatted as yyyy-mm-dd
 	 */
 	dateIsToday(date) {
-		const today = new Date().toISOString().substring(0, 10)
-		return date === today
+		// TODO: Check timezone of requesting user/group
+		return date === moment().format('YYYY-MM-DD')
 	},
 
 	/**
 	 * Checks if the voteEndingTime of a lunchbreak
 	 * is reached
-	 * @param {number} lunchbreakId
+	 * @param {number} groupId
+	 * @param {string} date
 	 * @returns {boolean}
 	 */
-	async voteEndingTimeReached(lunchbreakId) {
-		const { Lunchbreak, Group } = require('../models')
-
-		const lunchbreak = await Lunchbreak.findOne({
-			attributes: ['date'],
-			where: {
-				id: lunchbreakId
-			}
-		})
-
-		const config = await Group.findOne({
-			attributes: ['voteEndingTime', 'utcOffset'],
-			include: [
-				{
-					model: Lunchbreak,
-					attributes: [],
-					where: {
-						id: lunchbreakId
-					}
-				}
-			]
-		})
-
-		// Calculate client time
-		const clientTime = new Date()
-		clientTime.setUTCMinutes(clientTime.getUTCMinutes() + config.utcOffset)
-
-		// Lookup the groups voteEndingTime
-		const voteEndingTime = new Date()
-		voteEndingTime.setUTCFullYear(lunchbreak.date.split('-')[0])
-		voteEndingTime.setUTCMonth(Number(lunchbreak.date.split('-')[1]) - 1)
-		voteEndingTime.setUTCDate(lunchbreak.date.split('-')[2])
-		voteEndingTime.setUTCHours(config.voteEndingTime.split(':')[0])
-		voteEndingTime.setUTCMinutes(config.voteEndingTime.split(':')[1])
-		voteEndingTime.setUTCSeconds(config.voteEndingTime.split(':')[2])
-
-		return clientTime > voteEndingTime
+	async voteEndingTimeReached(groupId, date) {
+		const group = await GroupRepository.getGroupConfig(groupId)
+		const requestingTime = moment().utc()
+		const voteEndingTime = moment.utc(`${date} ${group.voteEndingTime}`, 'YYYY-MM-DD hh:mm:ss')
+		requestingTime.add(group.utcOffset, 'minutes')
+		return requestingTime.isAfter(voteEndingTime)
 	}
 }

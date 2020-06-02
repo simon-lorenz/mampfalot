@@ -13,82 +13,27 @@ module.exports = (sequelize, DataTypes) => {
 			},
 			lunchTime: {
 				type: DataTypes.TIME,
-				allowNull: false,
-				defaultValue: '12:30:00'
+				allowNull: false
 			},
 			voteEndingTime: {
 				type: DataTypes.TIME,
-				allowNull: false,
-				defaultValue: '12:20:00'
+				allowNull: false
 			},
 			utcOffset: {
 				type: DataTypes.INTEGER,
-				allowNull: false,
-				defaultValue: 0,
-				validate: {
-					min: {
-						args: -720,
-						msg: 'utcOffset cannot be less than -720'
-					},
-					max: {
-						args: 720,
-						msg: 'utcOffset cannot be greater than 720'
-					},
-					validOffset: value => {
-						if (value % 60 !== 0) {
-							throw new Error('This is not a valid UTC offset.')
-						}
-					}
-				}
+				allowNull: false
 			},
 			pointsPerDay: {
 				type: DataTypes.INTEGER,
-				allowNull: false,
-				defaultValue: 100,
-				validate: {
-					min: 1,
-					equalOrGreaterThanMaxPointsPerVote(value) {
-						if (value < this.maxPointsPerVote) {
-							throw new Error('pointsPerDay has to be equal or greater than maxPointsPerVote.')
-						}
-					}
-				}
+				allowNull: false
 			},
 			maxPointsPerVote: {
 				type: DataTypes.INTEGER,
-				allowNull: false,
-				defaultValue: 100,
-				validate: {
-					min: 1,
-					equalOrGreaterThanMinPointsPerVote(value) {
-						if (value < this.minPointsPerVote) {
-							throw new Error('maxPointsPerVote has to be greater than or equal to minPointsPerVote.')
-						}
-					},
-					equalOrLessThanPointsPerDay(value) {
-						if (value > this.pointsPerDay) {
-							throw new Error('maxPointsPerVote has to be less than or equal to pointsPerDay.')
-						}
-					}
-				}
+				allowNull: false
 			},
 			minPointsPerVote: {
 				type: DataTypes.INTEGER,
-				allowNull: false,
-				defaultValue: 10,
-				validate: {
-					min: 1,
-					equalOrLessThanMaxPointsPerVote(value) {
-						if (value > this.maxPointsPerVote) {
-							throw new Error('minPointsPerVote has to be less than or equal to maxPointsPerVote.')
-						}
-					},
-					equalOrLessThanPointsPerDay(value) {
-						if (value > this.pointsPerDay) {
-							throw new Error('minPointsPerVote has to be less than or equal to pointsPerDay.')
-						}
-					}
-				}
+				allowNull: false
 			}
 		},
 		{
@@ -97,13 +42,6 @@ module.exports = (sequelize, DataTypes) => {
 			name: {
 				singular: 'group',
 				plural: 'groups'
-			},
-			validate: {
-				timeValidator() {
-					if (this.lunchTime < this.voteEndingTime) {
-						throw new Error('voteEndingTime has to be less than lunchTime.')
-					}
-				}
 			}
 		}
 	)

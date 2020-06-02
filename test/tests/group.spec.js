@@ -1,6 +1,6 @@
+const Boom = require('@hapi/boom')
 const setupDatabase = require('../utils/scripts/setup-database')
 const testData = require('../utils/scripts/test-data')
-const errorHelper = require('../utils/errors')
 const request = require('supertest')('http://localhost:5001/api')
 const TokenHelper = require('../utils/token-helper')
 
@@ -25,14 +25,176 @@ describe('Group', () => {
 				await request
 					.post('/groups')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({})
 					.expect(400)
-					.expect(res => {
-						const MESSAGE = 'This request has to provide all of the following body values: name'
-						errorHelper.checkRequestError(res.body, MESSAGE)
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message:
+							'"name" is required. "lunchTime" is required. "voteEndingTime" is required. "utcOffset" is required. "pointsPerDay" is required. "minPointsPerVote" is required. "maxPointsPerVote" is required',
+						validation: {
+							source: 'payload',
+							keys: [
+								'name',
+								'lunchTime',
+								'voteEndingTime',
+								'utcOffset',
+								'pointsPerDay',
+								'minPointsPerVote',
+								'maxPointsPerVote'
+							]
+						}
 					})
 			})
 
-			it('fails if pointsPerDay, maxPointsPerVote or minPointsPerVote is not a number between 1 and 1000')
+			it('fails if pointsPerDay is not a number between 1 and 1000', async () => {
+				await request
+					.post('/groups')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...newGroup,
+						pointsPerDay: 0
+					})
+					.expect(400)
+					.expect(res => {
+						res.body.message.should.contain('"pointsPerDay" must be larger than or equal to 1')
+						res.body.validation.keys.should.contain('pointsPerDay')
+					})
+
+				await request
+					.post('/groups')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...newGroup,
+						pointsPerDay: 1001
+					})
+					.expect(400)
+					.expect(res => {
+						res.body.message.should.contain('"pointsPerDay" must be less than or equal to 1000')
+						res.body.validation.keys.should.contain('pointsPerDay')
+					})
+			})
+
+			it('fails if maxPointsPerVote not a number between minPointsPerVote and pointsPerDay', async () => {
+				await request
+					.post('/groups')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...newGroup,
+						pointsPerDay: 99,
+						maxPointsPerVote: 100,
+						minPointsPerVote: 10
+					})
+					.expect(400)
+					.expect(res => {
+						res.body.message.should.contain('"maxPointsPerVote" must be less than or equal to ref:pointsPerDay')
+						res.body.validation.keys.should.contain('maxPointsPerVote')
+					})
+
+				await request
+					.post('/groups')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...newGroup,
+						pointsPerDay: 100,
+						maxPointsPerVote: 9,
+						minPointsPerVote: 10
+					})
+					.expect(400)
+					.expect(res => {
+						res.body.message.should.contain('"maxPointsPerVote" must be larger than or equal to ref:minPointsPerVote')
+						res.body.validation.keys.should.contain('maxPointsPerVote')
+					})
+			})
+
+			it('fails if minPointsPerVote is not a number between 1 and pointsPerDay', async () => {
+				await request
+					.post('/groups')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...newGroup,
+						pointsPerDay: 100,
+						maxPointsPerVote: 100,
+						minPointsPerVote: 101
+					})
+					.expect(400)
+					.expect(res => {
+						res.body.message.should.contain('"minPointsPerVote" must be less than or equal to ref:pointsPerDay')
+						res.body.validation.keys.should.contain('minPointsPerVote')
+					})
+
+				await request
+					.post('/groups')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...newGroup,
+						pointsPerDay: 100,
+						maxPointsPerVote: 100,
+						minPointsPerVote: 0
+					})
+					.expect(400)
+					.expect(res => {
+						res.body.message.should.contain('"minPointsPerVote" must be larger than or equal to 1')
+						res.body.validation.keys.should.contain('minPointsPerVote')
+					})
+			})
+
+			it('fails if voteEndingTime is greater than lunchTime', async () => {
+				await request
+					.post('/groups')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...newGroup,
+						voteEndingTime: '12:30:01'
+					})
+					.expect(400)
+					.expect(Boom.badRequest('"lunchTime" must be greater than voteEndingTime').output.payload)
+			})
+
+			it('fails if utcOffset is greater than 720', async () => {
+				await request
+					.post('/groups')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...newGroup,
+						utcOffset: 721
+					})
+					.expect(400)
+					.expect(res => {
+						res.body.message.should.include('"utcOffset" must be less than or equal to 720')
+						res.body.validation.keys.should.contain('utcOffset')
+					})
+			})
+
+			it('fails if utcOffset is less than -720', async () => {
+				await request
+					.post('/groups')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...newGroup,
+						utcOffset: -721
+					})
+					.expect(400)
+					.expect(res => {
+						res.body.message.should.include('"utcOffset" must be larger than or equal to -720')
+						res.body.validation.keys.should.contain('utcOffset')
+					})
+			})
+
+			it('fails if utcOffset is not a multiple of 60', async () => {
+				await request
+					.post('/groups')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...newGroup,
+						utcOffset: 61
+					})
+					.expect(400)
+					.expect(res => {
+						res.body.message.should.include('"utcOffset" must be a multiple of 60')
+						res.body.validation.keys.should.contain('utcOffset')
+					})
+			})
 
 			it('sucessfully creates a group', async () => {
 				await request
@@ -73,16 +235,6 @@ describe('Group', () => {
 	})
 
 	describe('/groups/:groupId', () => {
-		it('sends a 404 if the group does not exist', async () => {
-			await request
-				.get('/groups/99')
-				.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-				.expect(404)
-				.expect(res => {
-					errorHelper.checkNotFoundError(res.body, 'Group', 99)
-				})
-		})
-
 		describe('GET', () => {
 			before(async () => {
 				await setupDatabase()
@@ -101,24 +253,7 @@ describe('Group', () => {
 					.get('/groups/2')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(403)
-					.expect(res => {
-						const expectedError = {
-							resource: 'Group',
-							id: 2,
-							operation: 'READ'
-						}
-						errorHelper.checkAuthorizationError(res.body, expectedError)
-					})
-			})
-
-			it("sends 404 if group doesn't exist", async () => {
-				await request
-					.get('/groups/99')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.expect(404)
-					.expect(res => {
-						errorHelper.checkNotFoundError(res.body, 'Group', 99)
-					})
+					.expect(Boom.forbidden('Insufficient scope').output.payload)
 			})
 		})
 
@@ -127,249 +262,210 @@ describe('Group', () => {
 				await setupDatabase()
 			})
 
-			it("fails with 404 if group doesn't exist", async () => {
-				await request
-					.put('/groups/99')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send({ name: 'New name' })
-					.expect(404)
-					.expect(res => {
-						errorHelper.checkNotFoundError(res.body, 'Group', 99)
-					})
-			})
+			const updatedGroup = {
+				name: 'New name',
+				lunchTime: '14:00:00',
+				voteEndingTime: '13:30:00',
+				utcOffset: -120,
+				pointsPerDay: 300,
+				maxPointsPerVote: 100,
+				minPointsPerVote: 50
+			}
 
 			it('fails with 403 if the user is no group admin', async () => {
 				await request
 					.put('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
-					.send({ name: 'New name' })
+					.send(updatedGroup)
 					.expect(403)
-					.expect(res => {
-						const expectedError = {
-							resource: 'Group',
-							id: 1,
-							operation: 'UPDATE'
-						}
-						errorHelper.checkAuthorizationError(res.body, expectedError)
-					})
+					.expect(Boom.forbidden('Insufficient scope').output.payload)
 			})
 
-			it('requires at least one parameter', async () => {
+			it('fails if required values are missing', async () => {
 				await request
-					.put('/groups/1')
+					.post('/groups')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send()
+					.send({})
 					.expect(400)
-					.expect(res => {
-						errorHelper.checkRequestError(res.body)
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message:
+							'"name" is required. "lunchTime" is required. "voteEndingTime" is required. "utcOffset" is required. "pointsPerDay" is required. "minPointsPerVote" is required. "maxPointsPerVote" is required',
+						validation: {
+							source: 'payload',
+							keys: [
+								'name',
+								'lunchTime',
+								'voteEndingTime',
+								'utcOffset',
+								'pointsPerDay',
+								'minPointsPerVote',
+								'maxPointsPerVote'
+							]
+						}
 					})
 			})
 
-			it('fails if pointsPerDay less than maxPointsPerVote', async () => {
+			it('fails if pointsPerDay is not a number between 1 and 1000', async () => {
 				await request
-					.put('/groups/1')
+					.post('/groups')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({
-						pointsPerDay: 69,
-						maxPointsPerVote: 70
+						...updatedGroup,
+						pointsPerDay: 0
 					})
 					.expect(400)
 					.expect(res => {
-						const expectedError = {
-							field: 'pointsPerDay',
-							value: 69,
-							message: 'pointsPerDay has to be equal or greater than maxPointsPerVote.'
-						}
-						errorHelper.checkValidationError(res.body, expectedError)
+						res.body.message.should.contain('"pointsPerDay" must be larger than or equal to 1')
+						res.body.validation.keys.should.contain('pointsPerDay')
+					})
+
+				await request
+					.post('/groups')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...updatedGroup,
+						pointsPerDay: 1001
+					})
+					.expect(400)
+					.expect(res => {
+						res.body.message.should.contain('"pointsPerDay" must be less than or equal to 1000')
+						res.body.validation.keys.should.contain('pointsPerDay')
+					})
+			})
+
+			it('fails if maxPointsPerVote not a number between minPointsPerVote and pointsPerDay', async () => {
+				await request
+					.post('/groups')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...updatedGroup,
+						pointsPerDay: 99,
+						maxPointsPerVote: 100,
+						minPointsPerVote: 10
+					})
+					.expect(400)
+					.expect(res => {
+						res.body.message.should.contain('"maxPointsPerVote" must be less than or equal to ref:pointsPerDay')
+						res.body.validation.keys.should.contain('maxPointsPerVote')
+					})
+
+				await request
+					.post('/groups')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...updatedGroup,
+						pointsPerDay: 100,
+						maxPointsPerVote: 9,
+						minPointsPerVote: 10
+					})
+					.expect(400)
+					.expect(res => {
+						res.body.message.should.contain('"maxPointsPerVote" must be larger than or equal to ref:minPointsPerVote')
+						res.body.validation.keys.should.contain('maxPointsPerVote')
+					})
+			})
+
+			it('fails if minPointsPerVote is not a number between 1 and pointsPerDay', async () => {
+				await request
+					.post('/groups')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...updatedGroup,
+						pointsPerDay: 100,
+						maxPointsPerVote: 100,
+						minPointsPerVote: 101
+					})
+					.expect(400)
+					.expect(res => {
+						res.body.message.should.contain('"minPointsPerVote" must be less than or equal to ref:pointsPerDay')
+						res.body.validation.keys.should.contain('minPointsPerVote')
+					})
+
+				await request
+					.post('/groups')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...updatedGroup,
+						pointsPerDay: 100,
+						maxPointsPerVote: 100,
+						minPointsPerVote: 0
+					})
+					.expect(400)
+					.expect(res => {
+						res.body.message.should.contain('"minPointsPerVote" must be larger than or equal to 1')
+						res.body.validation.keys.should.contain('minPointsPerVote')
 					})
 			})
 
 			it('fails if voteEndingTime is greater than lunchTime', async () => {
 				await request
-					.put('/groups/1')
+					.post('/groups')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({
-						voteEndingTime: '13:00:00',
-						lunchTime: '12:30:00'
+						...updatedGroup,
+						voteEndingTime: '14:00:01' // lunchTime is 14:00:00
 					})
 					.expect(400)
-					.expect(res => {
-						const expectedError = {
-							field: 'timeValidator',
-							value: null,
-							message: 'voteEndingTime has to be less than lunchTime.'
-						}
-						errorHelper.checkValidationError(res.body, expectedError)
-					})
-			})
-
-			it('fails if minPointsPerVote is greater than maxPointsPerVote', async () => {
-				await request
-					.put('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send({
-						minPointsPerVote: 50,
-						maxPointsPerVote: 40
-					})
-					.expect(400)
-					.expect(res => {
-						const expectedError = {
-							field: 'minPointsPerVote',
-							value: 50,
-							message: 'minPointsPerVote has to be less than or equal to maxPointsPerVote.'
-						}
-						errorHelper.checkValidationError(res.body, expectedError)
-					})
-			})
-
-			it('fails if maxPointsPerVote is less than minPointsPerVote', async () => {
-				await request
-					.put('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send({
-						minPointsPerVote: 30,
-						maxPointsPerVote: 29
-					})
-					.expect(400)
-					.expect(res => {
-						const expectedError = {
-							field: 'maxPointsPerVote',
-							value: 29,
-							message: 'maxPointsPerVote has to be greater than or equal to minPointsPerVote.'
-						}
-						errorHelper.checkValidationError(res.body, expectedError)
-					})
-			})
-
-			it('fails if maxPointsPerVote is greater than pointsPerDay', async () => {
-				await request
-					.put('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send({
-						pointsPerDay: 30,
-						maxPointsPerVote: 31
-					})
-					.expect(400)
-					.expect(res => {
-						const expectedError = {
-							field: 'maxPointsPerVote',
-							value: 31,
-							message: 'maxPointsPerVote has to be less than or equal to pointsPerDay.'
-						}
-						errorHelper.checkValidationError(res.body, expectedError)
-					})
-			})
-
-			it('fails if minPointsPerVote is greater than pointsPerDay', async () => {
-				await request
-					.put('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send({
-						minPointsPerVote: 101,
-						pointsPerDay: 100
-					})
-					.expect(400)
-					.expect(res => {
-						const expectedError = {
-							field: 'minPointsPerVote',
-							value: 101,
-							message: 'minPointsPerVote has to be less than or equal to pointsPerDay.'
-						}
-						errorHelper.checkValidationError(res.body, expectedError)
-					})
+					.expect(Boom.badRequest('"lunchTime" must be greater than voteEndingTime').output.payload)
 			})
 
 			it('fails if utcOffset is greater than 720', async () => {
 				await request
-					.put('/groups/1')
+					.post('/groups')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send({ utcOffset: 721 })
+					.send({
+						...updatedGroup,
+						utcOffset: 721
+					})
 					.expect(400)
 					.expect(res => {
-						const expectedError = {
-							field: 'utcOffset',
-							value: 721,
-							message: 'utcOffset cannot be greater than 720'
-						}
-						errorHelper.checkValidationError(res.body, expectedError)
+						res.body.message.should.include('"utcOffset" must be less than or equal to 720')
+						res.body.validation.keys.should.contain('utcOffset')
 					})
 			})
 
 			it('fails if utcOffset is less than -720', async () => {
 				await request
-					.put('/groups/1')
+					.post('/groups')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send({ utcOffset: -721 })
+					.send({
+						...updatedGroup,
+						utcOffset: -721
+					})
 					.expect(400)
 					.expect(res => {
-						const expectedError = {
-							field: 'utcOffset',
-							value: -721,
-							message: 'utcOffset cannot be less than -720'
-						}
-						errorHelper.checkValidationError(res.body, expectedError)
+						res.body.message.should.include('"utcOffset" must be larger than or equal to -720')
+						res.body.validation.keys.should.contain('utcOffset')
 					})
 			})
 
 			it('fails if utcOffset is not a multiple of 60', async () => {
 				await request
-					.put('/groups/1')
+					.post('/groups')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send({ utcOffset: 61 })
+					.send({
+						...updatedGroup,
+						utcOffset: 61
+					})
 					.expect(400)
 					.expect(res => {
-						const expectedError = {
-							field: 'utcOffset',
-							value: 61,
-							message: 'This is not a valid UTC offset.'
-						}
-						errorHelper.checkValidationError(res.body, expectedError)
+						res.body.message.should.include('"utcOffset" must be a multiple of 60')
+						res.body.validation.keys.should.contain('utcOffset')
 					})
 			})
 
 			it('updates a group successfully', async () => {
-				const data = {
-					name: 'New name',
-					lunchTime: '14:00:00',
-					voteEndingTime: '13:30:00',
-					utcOffset: -120,
-					pointsPerDay: 300,
-					maxPointsPerVote: 100,
-					minPointsPerVote: 50
-				}
-
 				await request
 					.put('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send(data)
+					.send(updatedGroup)
 					.expect(200)
 					.expect(res => {
 						const group = res.body
 						group.should.have.all.keys(testData.getGroupKeys())
-						Object.keys(data).forEach(key => group[key].should.be.eql(data[key]))
-					})
-			})
-
-			it('converts string numbers into integers', async () => {
-				await request
-					.put('/groups/1')
-					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send({
-						name: 'New name',
-						lunchTime: '14:00:00',
-						voteEndingTime: '13:30:00',
-						utcOffset: '120',
-						pointsPerDay: '300',
-						maxPointsPerVote: '100',
-						minPointsPerVote: '50'
-					})
-					.expect(200)
-					.expect(res => {
-						const group = res.body
-						group.utcOffset.should.be.eql(120)
-						group.pointsPerDay.should.be.eql(300)
-						group.maxPointsPerVote.should.be.eql(100)
-						group.minPointsPerVote.should.be.eql(50)
+						Object.keys(updatedGroup).forEach(key => group[key].should.be.eql(updatedGroup[key]))
 					})
 			})
 		})
@@ -384,14 +480,7 @@ describe('Group', () => {
 					.delete('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.expect(403)
-					.expect(res => {
-						const expectedError = {
-							resource: 'Group',
-							id: 1,
-							operation: 'DELETE'
-						}
-						errorHelper.checkAuthorizationError(res.body, expectedError)
-					})
+					.expect(Boom.forbidden('Insufficient scope').output.payload)
 			})
 
 			it('deletes a group successfully', async () => {
@@ -403,7 +492,7 @@ describe('Group', () => {
 				await request
 					.get('/groups/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.expect(404)
+					.expect(403)
 			})
 
 			it('deletes all participations associated to this group', async () => {

@@ -1,123 +1,68 @@
-const { Absence, Comment, Lunchbreak, GroupMembers, User, Participant } = require('../models')
-const { NotFoundError, RequestError } = require('../classes/errors')
-const { dateIsToday, voteEndingTimeReached } = require('../util/util')
+const Boom = require('@hapi/boom')
+const { Comment } = require('../models')
+const { CommentRepository, GroupMemberRepository } = require('../repositories')
+const LunchbreakController = require('./lunchbreak-controller')
 
-class CommentController {
-	constructor(user) {
-		this.user = user
-	}
+async function createComment(request, h) {
+	const { groupId, date } = request.params
 
-	async loadComment(id) {
-		const comment = await Comment.findByPk(id, {
-			attributes: ['id', 'lunchbreakId', 'text', 'createdAt', 'updatedAt'],
-			include: [
-				{
-					model: GroupMembers,
-					as: 'author',
-					include: [User]
-				}
-			]
-		})
+	const lunchbreak = await LunchbreakController.findOrCreateLunchbreak(groupId, date)
+	const memberId = await GroupMemberRepository.getMemberId(groupId, request.auth.credentials.username)
 
-		if (comment === null) {
-			throw new NotFoundError('Comment', id)
-		} else {
-			return comment
-		}
-	}
+	const { id } = await Comment.create({
+		lunchbreakId: lunchbreak.id,
+		memberId,
+		text: request.payload.text
+	})
 
-	formatComment(comment) {
-		comment = comment.toJSON()
-		return {
-			id: comment.id,
-			text: comment.text,
-			createdAt: comment.createdAt,
-			updatedAt: comment.updatedAt,
-			author: {
-				username: comment.author.user.username,
-				firstName: comment.author.user.firstName,
-				lastName: comment.author.user.lastName,
-				config: {
-					color: comment.author.color,
-					isAdmin: comment.author.isAdmin
-				}
-			}
-		}
-	}
-
-	async getComment(id) {
-		const comment = await this.loadComment(id)
-		await this.user.can.readComment(comment)
-		return this.formatComment(comment)
-	}
-
-	async createComment(LunchbreakController, groupId, date, values) {
-		let lunchbreak = await Lunchbreak.findOne({
-			attributes: ['id'],
-			where: {
-				groupId,
-				date
-			}
-		})
-
-		if (lunchbreak === null) {
-			if (dateIsToday(date) === false) {
-				throw new RequestError('The end of voting is reached, therefore you cannot create a new lunchbreak.')
-			} else {
-				lunchbreak = await LunchbreakController.createLunchbreak(groupId)
-				if (await voteEndingTimeReached(lunchbreak.id)) {
-					await Lunchbreak.destroy({
-						where: {
-							id: lunchbreak.id
-						}
-					})
-					throw new RequestError('The end of voting is reached, therefore you cannot create a new lunchbreak.')
-				}
-			}
-		}
-
-		const member = await GroupMembers.findOne({
-			attributes: ['id'],
-			where: {
-				groupId,
-				userId: this.user.id
-			}
-		})
-
-		const comment = Comment.build({
-			lunchbreakId: lunchbreak.id,
-			memberId: member.id,
-			text: values.text
-		})
-
-		await this.user.can.createComment(comment)
-
-		const { id } = await comment.save()
-
-		return await this.getComment(id)
-	}
-
-	async updateComment(commentId, values) {
-		const comment = await this.loadComment(commentId)
-		await this.user.can.updateComment(this.formatComment(comment))
-		comment.text = values.text
-		await comment.save()
-		return await this.getComment(commentId)
-	}
-
-	async deleteComment(commentId) {
-		const comment = await this.loadComment(commentId)
-		await this.user.can.deleteComment(this.formatComment(comment))
-		await comment.destroy()
-
-		const lunchbreak = await Lunchbreak.findByPk(comment.lunchbreakId, {
-			include: [Participant, Comment, Absence]
-		})
-
-		if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0 && lunchbreak.absences.length === 0) {
-			await lunchbreak.destroy()
-		}
-	}
+	return h.response(await CommentRepository.getComment(id)).code(201)
 }
 
-module.exports = CommentController
+async function updateComment(request, h) {
+	const { commentId } = request.params
+	const comment = await CommentRepository.getComment(commentId)
+
+	if (comment.author.username !== request.auth.credentials.username) {
+		throw Boom.forbidden()
+	}
+
+	await Comment.update(
+		{
+			text: request.payload.text
+		},
+		{
+			where: {
+				id: commentId
+			}
+		}
+	)
+
+	return CommentRepository.getComment(commentId)
+}
+
+async function deleteComment(request, h) {
+	const { commentId } = request.params
+	const comment = await CommentRepository.getComment(commentId)
+
+	if (comment.author.username !== request.auth.credentials.username) {
+		throw Boom.forbidden()
+	}
+
+	const lunchbreakId = await CommentRepository.getLunchbreakId(commentId)
+
+	await Comment.destroy({
+		where: {
+			id: commentId
+		}
+	})
+
+	await LunchbreakController.checkForAutoDeletion(lunchbreakId)
+
+	return h.response().code(204)
+}
+
+module.exports = {
+	createComment,
+	updateComment,
+	deleteComment
+}

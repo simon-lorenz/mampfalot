@@ -1,147 +1,177 @@
-const router = require('express').Router()
-const {
-	allowMethods,
-	hasQueryValues,
-	hasBodyValues,
-	convertParamToNumber,
-	initializeUser,
-	initializeControllers
-} = require('../util/middleware')
-const { asyncMiddleware } = require('../util/util')
-const UserController = require('../controllers/user-controller')
+const Joi = require('@hapi/joi')
+const { UserController, InvitationController, GroupController, ParticipationController } = require('../controllers')
 
-router.route('/').all(allowMethods(['POST']))
-router.route('/').post(hasBodyValues(['username', 'email', 'password'], 'all'))
-router.route('/:username/verify').all(allowMethods(['GET', 'POST']))
-router.route('/:username/verify').post(hasBodyValues(['token'], 'all'))
-router.route('/:username/forgot-password').all(allowMethods(['GET', 'POST']))
-router.route('/:username/forgot-password').post(hasBodyValues(['token', 'newPassword'], 'all'))
-router.route('/:email/forgot-username').all(allowMethods(['GET']))
+module.exports = {
+	name: 'user-router',
+	register: async server => {
+		server.route({
+			method: 'POST',
+			path: '/users',
+			options: {
+				auth: false,
+				validate: {
+					payload: Joi.object({
+						username: Joi.string()
+							.pattern(/^[a-z-_0-9]*$/)
+							.min(3)
+							.max(255)
+							.required(),
+						firstName: Joi.string(),
+						lastName: Joi.string(),
+						email: Joi.string()
+							.email({ tlds: process.env.NODE_ENV === 'production' })
+							.required(),
+						password: Joi.string()
+							.min(8)
+							.max(255)
+							.required()
+					})
+				}
+			},
+			handler: UserController.createUser
+		})
 
-router.route('/').post(
-	asyncMiddleware(async (req, res, next) => {
-		await UserController.createUser(req.body)
-		res.status(204).send()
-	})
-)
+		server.route({
+			method: 'GET',
+			path: '/users/{username}/forgot-password',
+			options: {
+				auth: false
+			},
+			handler: UserController.initializePasswordResetProcess
+		})
 
-router.route('/:username/verify').get(
-	asyncMiddleware(async (req, res, next) => {
-		const { username } = req.params
-		await UserController.initializeVerificationProcess(username)
-		res.status(204).send()
-	})
-)
+		server.route({
+			method: 'POST',
+			path: '/users/{username}/forgot-password',
+			options: {
+				auth: false,
+				validate: {
+					payload: Joi.object({
+						token: Joi.string().required(),
+						newPassword: Joi.string()
+							.min(8)
+							.max(255)
+							.required()
+					})
+				}
+			},
+			handler: UserController.finalizePasswordResetProcess
+		})
 
-router.route('/:username/verify').post(
-	asyncMiddleware(async (req, res, next) => {
-		const { token } = req.body
-		const { username } = req.params
-		await UserController.finalizeVerificationProcess(username, token)
-		res.status(204).send()
-	})
-)
+		server.route({
+			method: 'GET',
+			path: '/users/{email}/forgot-username',
+			options: {
+				auth: false
+			},
+			handler: UserController.initializeUsernameReminderProcess
+		})
 
-router.route('/:username/forgot-password').get(
-	asyncMiddleware(async (req, res, next) => {
-		const { username } = req.params
-		await UserController.initializePasswordResetProcess(username)
-		res.status(204).send()
-	})
-)
+		server.route({
+			method: 'GET',
+			path: '/users/{username}/verify',
+			options: {
+				auth: false
+			},
+			handler: UserController.initializeVerificationProcess
+		})
 
-router.route('/:username/forgot-password').post(
-	asyncMiddleware(async (req, res, next) => {
-		const { token, newPassword } = req.body
-		const { username } = req.params
-		await UserController.finalizePasswordResetProcess(username, token, newPassword)
-		res.status(204).send()
-	})
-)
+		server.route({
+			method: 'POST',
+			path: '/users/{username}/verify',
+			options: {
+				auth: false,
+				validate: {
+					payload: Joi.object({
+						token: Joi.string().required()
+					})
+				}
+			},
+			handler: UserController.finalizeVerificationProcess
+		})
 
-router.route('/:email/forgot-username').get(async (req, res, next) => {
-	const { email } = req.params
-	await UserController.initializeUsernameReminderProcess(email)
-	res.status(204).send()
-})
+		server.route({
+			method: 'GET',
+			path: '/users/me',
+			handler: UserController.getAuthenticatedUser
+		})
 
-router.use([asyncMiddleware(initializeUser), initializeControllers])
+		server.route({
+			method: 'PUT',
+			path: '/users/me',
+			options: {
+				validate: {
+					payload: Joi.object({
+						username: Joi.string()
+							.pattern(/^[a-z-_0-9]*$/)
+							.min(3)
+							.max(255)
+							.required(),
+						firstName: Joi.string()
+							.allow(null)
+							.required(),
+						lastName: Joi.string()
+							.allow(null)
+							.required(),
+						email: Joi.string()
+							.email({ tlds: process.env.NODE_ENV === 'production' })
+							.required(),
+						password: Joi.string()
+							.min(8)
+							.max(255),
+						currentPassword: Joi.alternatives().conditional('password', {
+							then: Joi.string().required(),
+							otherwise: Joi.string()
+						})
+					})
+				}
+			},
+			handler: UserController.updateAuthenticatedUser
+		})
 
-router.route('/me').all(allowMethods(['GET', 'PUT', 'DELETE']))
-router.route('/me').put(hasBodyValues(['username', 'firstName', 'lastName', 'email'], 'all'))
-router.route('/me/groups').all(allowMethods(['GET']))
-router.route('/me/invitations').all(allowMethods(['GET']))
-router.route('/me/invitations/:groupId').all(allowMethods(['DELETE']))
-router.route('/me/invitations/:groupId').delete(hasQueryValues(['accept'], 'all'))
-router.route('/me/participations/:groupId').all(allowMethods(['GET']))
-router.route('/me/participations/:groupId').get(hasQueryValues(['from', 'to'], 'all'))
+		server.route({
+			method: 'DELETE',
+			path: '/users/me',
+			handler: UserController.deleteAuthenticatedUser
+		})
 
-router.route('/me').get(
-	asyncMiddleware(async (req, res, next) => {
-		const { user } = res.locals
-		const { UserController } = res.locals.controllers
-		res.send(await UserController.getUser(user.id))
-	})
-)
+		server.route({
+			method: 'GET',
+			path: '/users/me/invitations',
+			handler: InvitationController.getInvitationsOfAuthenticatedUser
+		})
 
-router.route('/me').put(
-	asyncMiddleware(async (req, res, next) => {
-		const { user } = res.locals
-		const { UserController } = res.locals.controllers
-		res.send(await UserController.updateUser(user.id, req.body))
-	})
-)
+		server.route({
+			method: 'DELETE',
+			path: '/users/me/invitations/{groupId}',
+			options: {
+				validate: {
+					query: Joi.object({
+						accept: Joi.boolean().required()
+					})
+				}
+			},
+			handler: InvitationController.deleteInvitationOfAuthenticatedUser
+		})
 
-router.route('/me').delete(
-	asyncMiddleware(async (req, res, next) => {
-		const { user } = res.locals
-		const { UserController } = res.locals.controllers
-		await UserController.deleteUser(user.id)
-		res.status(204).send()
-	})
-)
+		server.route({
+			method: 'GET',
+			path: '/users/me/groups',
+			handler: GroupController.getGroupsOfAuthenticatedUser
+		})
 
-router.route('/me/groups').get(
-	asyncMiddleware(async (req, res, next) => {
-		const { user } = res.locals
-		const { GroupController } = res.locals.controllers
-		res.send(await GroupController.getGroupsByUser(user.id))
-	})
-)
-
-router.route('/me/invitations').get(
-	asyncMiddleware(async (req, res, next) => {
-		const { InvitationController } = res.locals.controllers
-		res.send(await InvitationController.getInvitationsOfCurrentUser())
-	})
-)
-
-router.param('groupId', convertParamToNumber('groupId'))
-
-router.route('/me/invitations/:groupId').delete(
-	asyncMiddleware(async (req, res, next) => {
-		const accept = req.query.accept === 'true'
-		const { groupId } = req.params
-		const { user } = res.locals
-		const { InvitationController } = res.locals.controllers
-
-		if (accept) {
-			await InvitationController.acceptInvitation(user.id, groupId)
-		} else {
-			await InvitationController.rejectInvitation(user.id, groupId)
-		}
-
-		res.status(204).send()
-	})
-)
-
-router.route('/me/participations/:groupId').get(
-	asyncMiddleware(async (req, res, next) => {
-		const { from, to } = req.query
-		const { groupId } = req.params
-		const { ParticipationController } = res.locals.controllers
-		res.send(await ParticipationController.getParticipations(groupId, from, to))
-	})
-)
-
-module.exports = router
+		server.route({
+			method: 'GET',
+			path: '/users/me/participations/{groupId}',
+			options: {
+				validate: {
+					query: Joi.object({
+						from: Joi.string().required(),
+						to: Joi.string().required()
+					})
+				}
+			},
+			handler: ParticipationController.getParticipationsOfAuthenticatedUser
+		})
+	}
+}

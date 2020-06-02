@@ -1,117 +1,51 @@
-const cls = require('cls-hooked')
 const pino = require('pino')
-const uuidv4 = require('uuid/v4')
-const morgan = require('morgan')
-
-const logger = pino({
-	redact: ['req.headers.authorization'],
-	serializers: {
-		err: pino.stdSerializers.err
-	},
-	level: process.env.LOG_LEVEL || 'info'
-})
-
-const loggingNamespace = cls.createNamespace('pino-logging')
-
-/**
- * Returns an object with meta data from cls about the current request,
- * containing the request id and the requesters username.
- */
-const getRequestMetaData = () => {
-	return {
-		id: loggingNamespace.get('requestId'),
-		user: loggingNamespace.get('username')
-	}
-}
+const uuid = require('uuid')
 
 module.exports = {
-	// Wrap up the pino logger api in a totally DRY manner to attach request meta data to each log entry.
-	trace(mergingObjectOrMessage, message) {
-		if (message) {
-			logger.trace({ ...getRequestMetaData(), ...mergingObjectOrMessage }, message)
-		} else {
-			logger.trace(getRequestMetaData(), mergingObjectOrMessage)
-		}
-	},
+	name: 'logging',
+	register: async server => {
+		const logger = pino({
+			level: process.env.LOG_LEVEL,
+			redact: ['req.headers.authorization']
+		})
 
-	debug(mergingObjectOrMessage, message) {
-		if (message) {
-			logger.debug({ ...getRequestMetaData(), ...mergingObjectOrMessage }, message)
-		} else {
-			logger.debug(getRequestMetaData(), mergingObjectOrMessage)
-		}
-	},
+		server.decorate('server', 'logger', logger)
 
-	info(mergingObjectOrMessage, message) {
-		if (message) {
-			logger.info({ ...getRequestMetaData(), ...mergingObjectOrMessage }, message)
-		} else {
-			logger.info(getRequestMetaData(), mergingObjectOrMessage)
-		}
-	},
+		server.ext('onRequest', (request, h) => {
+			request.info.id = uuid.v4()
+			request.logger = logger.child({ id: request.info.id })
+			return h.continue
+		})
 
-	warn(mergingObjectOrMessage, message) {
-		if (message) {
-			logger.warn({ ...getRequestMetaData(), ...mergingObjectOrMessage }, message)
-		} else {
-			logger.warn(getRequestMetaData(), mergingObjectOrMessage)
-		}
-	},
+		server.ext('onPostAuth', (request, h) => {
+			const user = request.auth.credentials ? request.auth.credentials.username : undefined
+			request.logger = logger.child({ id: request.info.id, user })
+			return h.continue
+		})
 
-	error(mergingObjectOrMessage, message) {
-		if (message) {
-			logger.error({ ...getRequestMetaData(), ...mergingObjectOrMessage }, message)
-		} else {
-			logger.error(getRequestMetaData(), mergingObjectOrMessage)
-		}
-	},
+		server.ext('onPreResponse', (request, h) => {
+			const response = request.response
 
-	fatal(mergingObjectOrMessage, message) {
-		if (message) {
-			logger.fatal({ ...getRequestMetaData(), ...mergingObjectOrMessage }, message)
-		} else {
-			logger.fatal(getRequestMetaData(), mergingObjectOrMessage)
-		}
-	},
-
-	/**
-	 * Initializing the logger will enable storing meta data like a unique requestId or the requesting users name.
-	 */
-	initialize(req, res, next) {
-		loggingNamespace.bindEmitter(req)
-		loggingNamespace.bindEmitter(res)
-		loggingNamespace.run(() => next())
-	},
-
-	/**
-	 * Attaches a unique requestId to each log entry.
-	 * Logger needs to be initialized first!
-	 */
-	attachRequestId() {
-		loggingNamespace.set('requestId', uuidv4())
-	},
-
-	/**
-	 * Attaches the requesting users name to each log enty.
-	 * Call this method after successful user authentication.
-	 * Logger needs to be initialized first!
-	 * @param {string} username
-	 */
-	attachUsername(username) {
-		loggingNamespace.set('username', username)
-	},
-
-	/**
-	 * Returns a middleware that logs http requests with morgan.
-	 * @returns {function} Middleware
-	 */
-	logHttpRequest() {
-		return morgan('short', {
-			stream: {
-				write: str => {
-					this.info(str.trim())
+			if (response.isBoom) {
+				if (response.output.statusCode === 500) {
+					request.logger.error({ err: response }, 'Server error')
+				} else {
+					request.logger.info({ err: response.output }, 'Request error')
 				}
 			}
+
+			return h.continue
+		})
+
+		server.events.on('response', request => {
+			const remoteAddress = request.info.remoteAddress
+			const method = request.method.toUpperCase()
+			const path = request.path
+			const statusCode = request.response.statusCode
+			const responseTime = request.info.responded - request.info.received
+			const contentLength = request.response.headers['content-length'] || 0
+
+			request.logger.info(`${remoteAddress} - ${method} ${path} ${statusCode} ${contentLength} - ${responseTime} ms`)
 		})
 	}
 }

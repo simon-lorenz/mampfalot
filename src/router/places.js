@@ -1,35 +1,58 @@
-const router = require('express').Router({ mergeParams: true })
-const { allowMethods, hasBodyValues } = require('../util/middleware')
-const { asyncMiddleware } = require('../util/util')
+const Joi = require('@hapi/joi')
+const { PlaceController } = require('../controllers')
 
-router.route('/').all(allowMethods(['POST']))
-router.route('/').post(hasBodyValues(['foodType', 'name'], 'all'))
-router.route('/:placeId').all(allowMethods(['PUT', 'DELETE']))
-router.route('/:placeId').put(hasBodyValues(['foodType', 'name'], 'all'))
+module.exports = {
+	name: 'place-router',
+	register: async server => {
+		server.route({
+			method: 'POST',
+			path: '/groups/{groupId}/places',
+			options: {
+				auth: {
+					access: {
+						scope: ['admin:{params.groupId}']
+					}
+				},
+				validate: {
+					payload: Joi.object({
+						foodType: Joi.string().required(),
+						name: Joi.string().required()
+					})
+				}
+			},
+			handler: PlaceController.createPlace
+		})
 
-router.route('/').post(
-	asyncMiddleware(async (req, res, next) => {
-		const { groupId } = req.params
-		const { PlaceController } = res.locals.controllers
-		res.status(201).send(await PlaceController.createPlace(groupId, req.body))
-	})
-)
+		server.route({
+			method: 'PUT',
+			path: '/groups/{groupId}/places/{placeId}',
+			options: {
+				auth: {
+					access: {
+						scope: ['admin:{params.groupId}']
+					}
+				},
+				validate: {
+					payload: Joi.object({
+						foodType: Joi.string().required(),
+						name: Joi.string().required()
+					})
+				}
+			},
+			handler: PlaceController.updatePlace
+		})
 
-router.route('/:placeId').put(
-	asyncMiddleware(async (req, res, next) => {
-		const { placeId } = req.params
-		const { PlaceController } = res.locals.controllers
-		res.send(await PlaceController.updatePlace(placeId, req.body))
-	})
-)
-
-router.route('/:placeId').delete(
-	asyncMiddleware(async (req, res, next) => {
-		const { placeId } = req.params
-		const { PlaceController } = res.locals.controllers
-		await PlaceController.deletePlace(placeId)
-		res.status(204).send()
-	})
-)
-
-module.exports = router
+		server.route({
+			method: 'DELETE',
+			path: '/groups/{groupId}/places/{placeId}',
+			options: {
+				auth: {
+					access: {
+						scope: ['admin:{params.groupId}']
+					}
+				}
+			},
+			handler: PlaceController.deletePlace
+		})
+	}
+}

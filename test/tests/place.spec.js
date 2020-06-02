@@ -1,5 +1,5 @@
+const Boom = require('@hapi/boom')
 const setupDatabase = require('../utils/scripts/setup-database')
-const errorHelper = require('../utils/errors')
 const request = require('supertest')('http://localhost:5001/api')
 const TokenHelper = require('../utils/token-helper')
 const testData = require('../utils/scripts/test-data')
@@ -10,92 +10,85 @@ describe('Place', () => {
 			let newPlace
 
 			beforeEach(async () => {
-				newPlace = { name: 'new place', groupId: 1, foodType: 'Italian' }
+				newPlace = { name: 'new place', foodType: 'Italian' }
 				await setupDatabase()
 			})
 
 			it('requires group admin rights', async () => {
 				await request
-					.post(`/groups/${newPlace.groupId}/places`)
+					.post(`/groups/1/places`)
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(newPlace)
 					.expect(403)
-					.expect(res => {
-						const expectedError = {
-							resource: 'Place',
-							id: null,
-							operation: 'CREATE'
-						}
-						errorHelper.checkAuthorizationError(res.body, expectedError)
-					})
+					.expect(Boom.forbidden('Insufficient scope').output.payload)
 			})
 
 			it('requires body values', async () => {
 				await request
-					.post(`/groups/${newPlace.groupId}/places`)
+					.post(`/groups/1/places`)
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({})
 					.expect(400)
-					.expect(res => {
-						const message = 'This request has to provide all of the following body values: foodType, name'
-						errorHelper.checkRequestError(res.body, message)
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"foodType" is required. "name" is required',
+						validation: {
+							source: 'payload',
+							keys: ['foodType', 'name']
+						}
 					})
 			})
 
 			it('fails if the foodType is empty', async () => {
 				newPlace.foodType = ''
 				await request
-					.post(`/groups/${newPlace.groupId}/places`)
+					.post(`/groups/1/places`)
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(newPlace)
 					.expect(400)
-					.expect(res => {
-						const expectedError = {
-							field: 'foodType',
-							value: newPlace.foodType,
-							message: 'foodType cannot be empty.'
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"foodType" is not allowed to be empty',
+						validation: {
+							source: 'payload',
+							keys: ['foodType']
 						}
-						errorHelper.checkValidationError(res.body, expectedError)
 					})
 			})
 
 			it('fails if the name is empty', async () => {
 				newPlace.name = ''
 				await request
-					.post(`/groups/${newPlace.groupId}/places`)
+					.post(`/groups/1/places`)
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(newPlace)
 					.expect(400)
-					.expect(res => {
-						const expectedError = {
-							field: 'name',
-							value: newPlace.name,
-							message: 'name cannot be empty.'
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"name" is not allowed to be empty',
+						validation: {
+							source: 'payload',
+							keys: ['name']
 						}
-						errorHelper.checkValidationError(res.body, expectedError)
 					})
 			})
 
 			it('fails if the name is a duplicate', async () => {
 				newPlace.name = 'AsiaFood'
 				await request
-					.post(`/groups/${newPlace.groupId}/places`)
+					.post(`/groups/1/places`)
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(newPlace)
 					.expect(400)
-					.expect(res => {
-						const expectedError = {
-							field: 'name',
-							value: newPlace.name,
-							message: 'A place with this name already exists.'
-						}
-						errorHelper.checkValidationError(res.body, expectedError)
-					})
+					.expect(Boom.badRequest('A place with this name already exists').output.payload)
 			})
 
 			it('inserts new place correctly', async () => {
 				await request
-					.post(`/groups/${newPlace.groupId}/places`)
+					.post(`/groups/1/places`)
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(newPlace)
 					.expect(201)
@@ -128,14 +121,7 @@ describe('Place', () => {
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(updatedPlace)
 					.expect(403)
-					.expect(res => {
-						const expectedError = {
-							resource: 'Place',
-							id: updatedPlace.id,
-							operation: 'UPDATE'
-						}
-						errorHelper.checkAuthorizationError(res.body, expectedError)
-					})
+					.expect(Boom.forbidden('Insufficient scope').output.payload)
 			})
 
 			it('updates a new place correctly', async () => {
@@ -157,10 +143,16 @@ describe('Place', () => {
 				await request
 					.put('/groups/1/places/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({})
 					.expect(400)
-					.expect(res => {
-						const message = 'This request has to provide all of the following body values: foodType, name'
-						errorHelper.checkRequestError(res.body, message)
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"foodType" is required. "name" is required',
+						validation: {
+							source: 'payload',
+							keys: ['foodType', 'name']
+						}
 					})
 			})
 
@@ -171,13 +163,14 @@ describe('Place', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(updatedPlace)
 					.expect(400)
-					.expect(res => {
-						const expectedError = {
-							field: 'foodType',
-							value: updatedPlace.foodType,
-							message: 'foodType cannot be empty.'
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"foodType" is not allowed to be empty',
+						validation: {
+							source: 'payload',
+							keys: ['foodType']
 						}
-						errorHelper.checkValidationError(res.body, expectedError)
 					})
 			})
 
@@ -188,13 +181,14 @@ describe('Place', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(updatedPlace)
 					.expect(400)
-					.expect(res => {
-						const expectedError = {
-							field: 'name',
-							value: updatedPlace.name,
-							message: 'name cannot be empty.'
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"name" is not allowed to be empty',
+						validation: {
+							source: 'payload',
+							keys: ['name']
 						}
-						errorHelper.checkValidationError(res.body, expectedError)
 					})
 			})
 
@@ -205,14 +199,7 @@ describe('Place', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(updatedPlace)
 					.expect(400)
-					.expect(res => {
-						const expectedError = {
-							field: 'name',
-							value: updatedPlace.name,
-							message: 'A place with this name already exists.'
-						}
-						errorHelper.checkValidationError(res.body, expectedError)
-					})
+					.expect(Boom.badRequest('A place with this name already exists').output.payload)
 			})
 		})
 
@@ -226,14 +213,7 @@ describe('Place', () => {
 					.delete('/groups/1/places/1')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.expect(403)
-					.expect(res => {
-						const expectedError = {
-							resource: 'Place',
-							id: 1,
-							operation: 'DELETE'
-						}
-						errorHelper.checkAuthorizationError(res.body, expectedError)
-					})
+					.expect(Boom.forbidden('Insufficient scope').output.payload)
 			})
 
 			it('deletes a place successfully', async () => {
@@ -254,14 +234,32 @@ describe('Place', () => {
 
 			it('deletes all votes associated with this place', async () => {
 				await request
+					.get('/groups/1/lunchbreaks/2018-06-25')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+					.expect(res => {
+						const placeExists = res.body.participants[0].votes.find(vote => vote.place.id === 2)
+
+						if (!placeExists) {
+							throw new Error('Wrong setup, place does not exist.')
+						}
+					})
+
+				await request
 					.delete('/groups/1/places/2')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(204)
 
 				await request
-					.get('/votes/1')
+					.get('/groups/1/lunchbreaks/2018-06-25')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.expect(404)
+					.expect(res => {
+						const placeExists = res.body.participants[0].votes.find(vote => vote.place.id === 2)
+
+						if (placeExists) {
+							throw new Error('Votes were not deleted.')
+						}
+					})
 			})
 
 			it('does not delete the associated group', async () => {
