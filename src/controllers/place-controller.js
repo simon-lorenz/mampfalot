@@ -1,55 +1,67 @@
+const Boom = require('@hapi/boom')
 const { Place } = require('../models')
-const { AuthorizationError } = require('../util/errors')
+const { placeNameExists } = require('../repositories/place-repository')
 
-class PlaceController {
-	constructor(user) {
-		this.user = user
+async function createPlace(request, h) {
+	const { groupId } = request.params
+	const { payload } = request
+
+	if (await placeNameExists(groupId, payload.name)) {
+		throw Boom.badRequest('A place with this name already exists')
 	}
 
-	async createPlace(groupId, values) {
-		const place = Place.build({
-			groupId: groupId,
-			foodType: values.foodType,
-			name: values.name
+	const place = await Place.create({
+		...payload,
+		groupId
+	})
+
+	// TODO: Remove field at model layer (custom toJSON())
+	return h
+		.response({
+			...place.toJSON(),
+			groupId: undefined
 		})
+		.code(201)
+}
 
-		if (!this.user.isGroupAdmin(groupId)) {
-			throw new AuthorizationError('Place', null, 'CREATE')
-		}
+async function updatePlace(request, h) {
+	const { groupId, placeId } = request.params
+	const { payload } = request
 
-		await place.save()
-		return {
-			id: place.id,
-			name: place.name,
-			foodType: place.foodType
-		}
+	if (await placeNameExists(groupId, payload.name)) {
+		throw Boom.badRequest('A place with this name already exists')
 	}
 
-	async updatePlace(id, values) {
-		const place = await Place.findByPk(id)
-		if (!this.user.isGroupAdmin(place.groupId)) {
-			throw new AuthorizationError('Place', place.id, 'UPDATE')
-		}
+	const [affectedRows, [place]] = await Place.update(payload, {
+		where: { id: placeId },
+		returning: true
+	})
 
-		place.foodType = values.foodType
-		place.name = values.name
-		await place.save()
-		return {
-			id: place.id,
-			name: place.name,
-			foodType: place.foodType
-		}
+	if (affectedRows === 0) {
+		throw Boom.notFound()
 	}
 
-	async deletePlace(id) {
-		const place = await Place.findByPk(id)
-
-		if (!this.user.isGroupAdmin(place.groupId)) {
-			throw new AuthorizationError('Place', place.id, 'DELETE')
-		}
-
-		await place.destroy()
+	// TODO: Remove field at model layer (custom toJSON())
+	return {
+		...place.toJSON(),
+		groupId: undefined
 	}
 }
 
-module.exports = PlaceController
+async function deletePlace(request, h) {
+	const { placeId } = request.params
+
+	const affectedRows = await Place.destroy({ where: { id: placeId } })
+
+	if (affectedRows === 0) {
+		throw Boom.notFound()
+	}
+
+	return h.response().code(204)
+}
+
+module.exports = {
+	createPlace,
+	updatePlace,
+	deletePlace
+}

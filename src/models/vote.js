@@ -1,6 +1,4 @@
 module.exports = (sequelize, DataTypes) => {
-	const { Group, Participant, Lunchbreak, Place } = sequelize.models
-
 	const Vote = sequelize.define(
 		'Vote',
 		{
@@ -12,62 +10,16 @@ module.exports = (sequelize, DataTypes) => {
 			participantId: {
 				type: DataTypes.INTEGER,
 				allowNull: false,
-				onDelete: 'CASCADE',
-				validate: {
-					notNull: {
-						msg: 'participantId cannot be null.'
-					}
-				}
+				onDelete: 'CASCADE'
 			},
 			placeId: {
 				type: DataTypes.INTEGER,
 				allowNull: false,
-				onDelete: 'CASCADE',
-				validate: {
-					notNull: {
-						msg: 'placeId cannot be null.'
-					},
-					async belongsToGroup(val) {
-						const group = await Group.findOne({
-							attributes: ['id'],
-							include: [
-								{
-									model: Place,
-									where: {
-										id: val
-									}
-								},
-								{
-									model: Lunchbreak,
-									include: [
-										{
-											model: Participant,
-											where: {
-												id: this.participantId
-											}
-										}
-									]
-								}
-							]
-						})
-
-						if (!group) {
-							throw new Error('This placeId does not belong to the associated group.')
-						}
-					}
-				}
+				onDelete: 'CASCADE'
 			},
 			points: {
 				type: DataTypes.INTEGER,
-				allowNull: false,
-				validate: {
-					notNull: {
-						msg: 'Points cannot be null.'
-					},
-					isInt: {
-						msg: 'Points must be an integer.'
-					}
-				}
+				allowNull: false
 			}
 		},
 		{

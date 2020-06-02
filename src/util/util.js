@@ -1,18 +1,24 @@
 const crypto = require('crypto')
+const fs = require('fs')
 const moment = require('moment')
 const { GroupRepository } = require('../repositories')
 
 module.exports = {
 	/**
-	 * A wrapper for async middleware.
-	 * Makes it possible to omit a lot try...catch statements inside async
-	 * middleware because it catches every error automatically and routes it
-	 * to the next error handling middleware.
+	 * Promisifies nodes readFile() function.
+	 * Files have to be utf-8 encoded.
+	 * @param {string} path
 	 */
-	asyncMiddleware: fn => {
-		return (req, res, next) => {
-			Promise.resolve(fn(req, res, next)).catch(next)
-		}
+	async readFile(path) {
+		return new Promise((resolve, reject) => {
+			fs.readFile(path, { encoding: 'utf-8' }, (err, content) => {
+				if (err) {
+					reject(err)
+				} else {
+					resolve(content)
+				}
+			})
+		})
 	},
 
 	/**

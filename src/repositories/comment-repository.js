@@ -1,5 +1,5 @@
+const Boom = require('@hapi/boom')
 const { Comment, GroupMembers, User, Lunchbreak, Group } = require('../models')
-const { NotFoundError } = require('../util/errors')
 
 class CommentRepository {
 	async getComment(id) {
@@ -15,7 +15,7 @@ class CommentRepository {
 		})
 
 		if (comment === null) {
-			throw new NotFoundError('Comment', id)
+			throw Boom.notFound()
 		} else {
 			return {
 				id: comment.id,

@@ -1,24 +1,35 @@
 const nodemailer = require('nodemailer')
 const handlebars = require('handlebars')
-const fs = require('fs')
-const logger = require('./logger')
+const { readFile } = require('./util')
 
-/**
- * Promisifies nodes readFile() function.
- * Files have to be utf-8 encoded.
- * @param {string} path
- */
-async function readFile(path) {
-	return new Promise((resolve, reject) => {
-		fs.readFile(path, { encoding: 'utf-8' }, (err, content) => {
-			if (err) {
-				reject(err)
-			} else {
-				resolve(content)
+const accounts = [
+	{
+		address: 'support@mampfalot.app',
+		from: 'Mampfalot Support <support@mampfalot.app>',
+		transport: nodemailer.createTransport({
+			host: process.env.MAIL_HOST,
+			port: process.env.MAIL_PORT,
+			secure: true,
+			auth: {
+				user: 'support@mampfalot.app',
+				pass: process.env.MAIL_PASSWORD_SUPPORT
 			}
 		})
-	})
-}
+	},
+	{
+		address: 'hello@mampfalot.app',
+		from: 'Mampfalot <hello@mampfalot.app>',
+		transport: nodemailer.createTransport({
+			host: process.env.MAIL_HOST,
+			port: process.env.MAIL_PORT,
+			secure: true,
+			auth: {
+				user: 'hello@mampfalot.app',
+				pass: process.env.MAIL_PASSWORD_HELLO
+			}
+		})
+	}
+]
 
 /**
  * Compiles a template with handlebars.
@@ -33,114 +44,67 @@ async function compileTemplate(path, values) {
 }
 
 /**
- * This class represents a single mail account.
- * Use it to send mails from this account.
+ * Sends an email.
+ * This function only sends emails if the app runs in production mode,
+ * otherwise the mail gets logged.
+ * @param {string} from The mail address from which the mail should be sent
+ * @param {string} to
+ * @param {string} subject
+ * @param {string} text
+ * @param {string} html
+ * @returns {Promise}
  */
-class MailAccount {
-	/**
-	 * @param {string} address The email address of the account
-	 * @param {*} title The accounts title, used in the "from" field
-	 * @param {*} password
-	 */
-	constructor(address, title, password) {
-		this.address = address
-		this.title = title
-		this.password = password
-		this.transport = nodemailer.createTransport({
-			host: process.env.MAIL_HOST,
-			port: process.env.MAIL_PORT,
-			secure: true,
-			auth: {
-				user: address,
-				pass: password
-			}
-		})
+async function send(from, to, subject, text, html, logger) {
+	const account = getAccount(from)
+
+	const mail = {
+		from: account.from,
+		to,
+		subject,
+		text,
+		html
 	}
 
-	/**
-	 * Tries to establish an smtp connection for this
-	 * mail account.Logs the result to the console.
-	 * @returns Promise
-	 */
-	checkConnection() {
-		return this.transport
-			.verify()
-			.then(() => logger.info(`[Mailer] Successfully established smtp connection for account ${this.address}`))
-			.catch(() => logger.error(`[Mailer] Could not establish smtp connection for account ${this.address}`))
-	}
+	if (process.env.NODE_ENV === 'production') {
+		return new Promise((resolve, reject) => {
+			account.transport.sendMail(mail, (err, info) => {
+				logger.info('[Mailer] - Sending email...')
+				if (err) {
+					return reject(err)
+				}
 
-	/**
-	 * Sends an email from this account.
-	 * This function only sends emails if the app runs in production mode,
-	 * otherwise the mail gets logged.
-	 * @param {string} to
-	 * @param {string} subject
-	 * @param {string} text
-	 * @param {string} html
-	 * @returns {Promise}
-	 */
-	send(to, subject, text, html) {
-		const mail = {
-			from: `"${this.title}" <${this.address}>`,
-			to: to,
-			subject: subject,
-			text: text,
-			html: html
-		}
-
-		if (process.env.NODE_ENV === 'production') {
-			return new Promise((resolve, reject) => {
-				this.transport.sendMail(mail, (err, info) => {
-					logger.info('[Mailer] - Sending email...')
-					if (err) {
-						return reject(err)
-					}
-
-					logger.info('[Mailer] - Mail successfully sent!')
-					resolve(info)
-				})
+				logger.info('[Mailer] - Mail successfully sent!')
+				resolve(info)
 			})
-		} else if (process.env.NODE_ENV === 'development') {
-			logger.info({ email: mail }, 'Would send email in production mode.')
-		}
+		})
+	} else if (process.env.NODE_ENV === 'development') {
+		logger.info({ email: mail }, 'Would send email in production mode.')
 	}
+}
+
+/**
+ * Searches an email account by its email address.
+ * @param {string} address
+ * @throws {Error} If the address is unknown
+ * @returns {Object}
+ */
+function getAccount(address) {
+	const account = accounts.find(a => a.address === address)
+
+	if (!account) {
+		throw new Error(`No account with address "${address}" found!`)
+	}
+
+	return account
 }
 
 /**
  * With this class you can send a set of different emails to users.
  */
 class Mailer {
-	constructor() {
-		this.accounts = new Array()
-		this.accounts.push(new MailAccount('support@mampfalot.app', 'Mampfalot Support', process.env.MAIL_PASSWORD_SUPPORT))
-		this.accounts.push(new MailAccount('hello@mampfalot.app', 'Mampfalot', process.env.MAIL_PASSWORD_HELLO))
+	constructor(logger) {
+		this.logger = logger
 		this.templateFolder = `${__dirname}/../mails`
-	}
-
-	/**
-	 * Checks connections of all known accounts.
-	 * Results are logged to the console.
-	 */
-	async checkConnections() {
-		for (const account of this.accounts) {
-			await account.checkConnection()
-		}
-	}
-
-	/**
-	 * Searches an email account by its email address.
-	 * @param {string} address
-	 * @throws {Error} If the address is unknown
-	 * @returns {MailAccount}
-	 */
-	getAccount(address) {
-		for (const account of this.accounts) {
-			if (account.address === address) {
-				return account
-			}
-		}
-
-		throw new Error(`No account with address "${address}" found!`)
 	}
 
 	/**
@@ -163,7 +127,7 @@ class Mailer {
 
 		// Send
 		const subject = 'Willkommen bei Mampfalot!'
-		this.getAccount('hello@mampfalot.app').send(to, subject, text, html)
+		await send('hello@mampfalot.app', to, subject, text, html, this.logger)
 	}
 
 	/**
@@ -186,7 +150,7 @@ class Mailer {
 
 		// Send
 		const subject = 'Dein neues Passwort für Mampfalot'
-		this.getAccount('support@mampfalot.app').send(to, subject, text, html)
+		await send('support@mampfalot.app', to, subject, text, html, this.logger)
 	}
 
 	/**
@@ -208,7 +172,7 @@ class Mailer {
 
 		// Send
 		const subject = 'Willkommen zurück bei Mampfalot!'
-		this.getAccount('hello@mampfalot.app').send(to, subject, text, html)
+		await send('hello@mampfalot.app', to, subject, text, html, this.logger)
 	}
 
 	/**
@@ -232,7 +196,7 @@ class Mailer {
 
 		// Send
 		const subject = 'Willkommen zurück bei Mampfalot!'
-		this.getAccount('hello@mampfalot.app').send(to, subject, text, html)
+		await send('hello@mampfalot.app', to, subject, text, html, this.logger)
 	}
 
 	/**
@@ -253,8 +217,34 @@ class Mailer {
 
 		// Send
 		const subject = 'Dein Benutzername bei Mampfalot'
-		this.getAccount('hello@mampfalot.app').send(to, subject, text, html)
+		await send('hello@mampfalot.app', to, subject, text, html, this.logger)
+	}
+
+	/**
+	 * Tries to establish an smtp connection for all accounts.
+	 * Logs the result to the console.
+	 * @returns {Promise<void>}
+	 */
+	async checkConnections() {
+		for (const account of accounts) {
+			try {
+				await account.transport.verify()
+				this.logger.info(`[Mailer] Successfully established smtp connection for address ${account.address}`)
+			} catch (error) {
+				this.logger.error(`[Mailer] Could not establish smtp connection for address ${account.address}`)
+			}
+		}
 	}
 }
 
-module.exports = new Mailer()
+module.exports = {
+	name: 'mailer',
+	register: async server => {
+		server.ext('onRequest', (request, h) => {
+			request.mailer = new Mailer(request.logger)
+			return h.continue
+		})
+
+		server.decorate('server', 'mailer', new Mailer(server.logger))
+	}
+}

@@ -1,16 +1,16 @@
 const setupDatabase = require('../utils/scripts/setup-database')
-const errorHelper = require('../utils/errors')
 const request = require('supertest')('http://localhost:5001/api')
 const TokenHelper = require('../utils/token-helper')
 const testData = require('../utils/scripts/test-data')
 const testServer = require('../utils/test-server')
+const Boom = require('@hapi/boom')
 
 describe('Absence', () => {
 	describe('/groups/:id/lunchbreaks/:date/absence', () => {
 		describe('POST', () => {
 			beforeEach(async () => {
 				await setupDatabase()
-				testServer.start(5001, '11:24:59', '25.06.2018')
+				await testServer.start(5001, '11:24:59', '25.06.2018')
 			})
 
 			it('marks a user as absent', async () => {
@@ -29,7 +29,8 @@ describe('Absence', () => {
 			})
 
 			it('creates a lunchbreak if necessary', async () => {
-				testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start(5001, '11:24:59', '01.07.2018')
+
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
@@ -74,13 +75,7 @@ describe('Absence', () => {
 					.post('/groups/1/lunchbreaks/2018-06-25/absence')
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
 					.expect(403)
-					.expect(res => {
-						errorHelper.checkAuthorizationError(res.body, {
-							id: null,
-							operation: 'CREATE',
-							resource: 'Absence'
-						})
-					})
+					.expect(Boom.forbidden('Insufficient scope').output.payload)
 			})
 
 			it('removes a participation', async () => {
@@ -102,40 +97,36 @@ describe('Absence', () => {
 			})
 
 			it('fails if voteEndingTime is reached', async () => {
-				testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start(5001, '11:24:59', '01.07.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/absence')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(201)
 
-				testServer.start(5001, '11:25:01', '01.07.2018')
+				await testServer.start(5001, '11:25:01', '01.07.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/absence')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(400)
-					.expect(res => {
-						errorHelper.checkRequestError(
-							res.body,
-							'The end of voting has been reached, therefore you cannot mark yourself as absent.'
-						)
-					})
+					.expect(
+						Boom.badRequest('The end of voting has been reached, therefore you cannot mark yourself as absent.').output
+							.payload
+					)
 			})
 
 			it('fails if voteEndingTime is reached and no lunchbreak exists', async () => {
-				testServer.start(5001, '11:25:01', '01.07.2018')
+				await testServer.start(5001, '11:25:01', '01.07.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/absence')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(400)
-					.expect(res => {
-						errorHelper.checkRequestError(
-							res.body,
-							'The end of voting has been reached, therefore you cannot mark yourself as absent.'
-						)
-					})
+					.expect(
+						Boom.badRequest('The end of voting has been reached, therefore you cannot mark yourself as absent.').output
+							.payload
+					)
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
@@ -144,15 +135,13 @@ describe('Absence', () => {
 			})
 
 			it('fails if the date lies in the past', async () => {
-				testServer.start(5001, '11:24:59', '02.07.2018')
+				await testServer.start(5001, '11:24:59', '02.07.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/absence')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(400)
-					.expect(res => {
-						errorHelper.checkRequestError(res.body, 'Absences can only be created for today.')
-					})
+					.expect(Boom.badRequest('Absences can only be created for today.').output.payload)
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
@@ -166,15 +155,13 @@ describe('Absence', () => {
 			})
 
 			it('fails if the date lies in the future', async () => {
-				testServer.start(5001, '11:24:59', '30.06.2018')
+				await testServer.start(5001, '11:24:59', '30.06.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/absence')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(400)
-					.expect(res => {
-						errorHelper.checkRequestError(res.body, 'Absences can only be created for today.')
-					})
+					.expect(Boom.badRequest('Absences can only be created for today.').output.payload)
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
@@ -191,7 +178,7 @@ describe('Absence', () => {
 		describe('DELETE', () => {
 			beforeEach(async () => {
 				await setupDatabase()
-				testServer.start(5001, '11:24:59', '25.06.2018')
+				await testServer.start(5001, '11:24:59', '25.06.2018')
 			})
 
 			it('removes an absence', async () => {
@@ -218,13 +205,7 @@ describe('Absence', () => {
 					.delete('/groups/1/lunchbreaks/2018-06-25/absence')
 					.set(await TokenHelper.getAuthorizationHeader('alice'))
 					.expect(403)
-					.then(res => {
-						errorHelper.checkAuthorizationError(res.body, {
-							id: null,
-							operation: 'DELETE',
-							resource: 'Absence'
-						})
-					})
+					.expect(Boom.forbidden('Insufficient scope').output.payload)
 			})
 
 			it('fails if voteEndingTime is reached', async () => {
@@ -233,19 +214,15 @@ describe('Absence', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(201)
 
-				testServer.start(5001, '11:25:01', '25.06.2018')
+				await testServer.start(5001, '11:25:01', '25.06.2018')
 
 				await request
 					.delete('/groups/1/lunchbreaks/2018-06-25/absence')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.expect(400)
-					.then(res => res.body)
-					.then(error => {
-						errorHelper.checkRequestError(
-							error,
-							'The end of voting is reached, therefore you cannot delete this absence.'
-						)
-					})
+					.expect(
+						Boom.badRequest('The end of voting is reached, therefore you cannot delete this absence.').output.payload
+					)
 			})
 
 			it('fails if the date lies in the past', async () => {
@@ -254,20 +231,17 @@ describe('Absence', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(201)
 
-				testServer.start(5001, '11:24:59', '26.06.2018')
+				await testServer.start(5001, '11:24:59', '26.06.2018')
 
 				await request
 					.delete('/groups/1/lunchbreaks/2018-06-25/absence')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.expect(400)
-					.then(res => res.body)
-					.then(error => {
-						errorHelper.checkRequestError(error, 'You can only delete todays absence.')
-					})
+					.expect(Boom.badRequest('You can only delete todays absence.').output.payload)
 			})
 
 			it('deletes the lunchbreak, if no other participants or comments exist', async () => {
-				testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start(5001, '11:24:59', '01.07.2018')
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')

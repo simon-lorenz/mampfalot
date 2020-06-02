@@ -1,86 +1,73 @@
+const Boom = require('@hapi/boom')
 const { Group, GroupMembers } = require('../models')
-const { AuthorizationError } = require('../util/errors')
 const { GroupRepository } = require('../repositories')
+const moment = require('moment')
 
-class GroupController {
-	constructor(user) {
-		this.user = user
-	}
-
-	async getGroupById(id) {
-		const group = await GroupRepository.getGroup(id)
-
-		if (!this.user.isGroupMember(id)) {
-			throw new AuthorizationError('Group', id, 'READ')
-		}
-
-		return group
-	}
-
-	async getGroupsByUser(userId) {
-		if (this.user.id !== userId) {
-			throw new AuthorizationError('GroupCollection', null, 'READ')
-		}
-
-		return GroupRepository.getGroupsOfUser(userId)
-	}
-
-	async createGroup(values) {
-		const { id } = await Group.create({
-			name: values.name,
-			lunchTime: values.lunchTime,
-			voteEndingTime: values.voteEndingTime,
-			utcOffset: Number(values.utcOffset),
-			pointsPerDay: Number(values.pointsPerDay),
-			maxPointsPerVote: Number(values.maxPointsPerVote),
-			minPointsPerVote: Number(values.minPointsPerVote)
-		})
-
-		await GroupMembers.create({
-			groupId: id,
-			userId: this.user.id,
-			isAdmin: true
-		})
-
-		return await GroupRepository.getGroup(id)
-	}
-
-	async updateGroup(id, values) {
-		const group = await GroupRepository.getGroup(id)
-
-		if (!this.user.isGroupAdmin(id)) {
-			throw new AuthorizationError('Group', id, 'UPDATE')
-		}
-
-		await group.update(
-			{
-				name: values.name,
-				voteEndingTime: values.voteEndingTime,
-				lunchTime: values.lunchTime,
-				utcOffset: Number(values.utcOffset),
-				pointsPerDay: Number(values.pointsPerDay),
-				minPointsPerVote: Number(values.minPointsPerVote),
-				maxPointsPerVote: Number(values.maxPointsPerVote)
-			},
-			{
-				where: {
-					id: id
-				}
-			}
-		)
-
-		return GroupRepository.getGroup(id)
-	}
-
-	async deleteGroup(id) {
-		const group = await this.getGroupById(id)
-
-		if (!this.user.isGroupAdmin(id)) {
-			throw new AuthorizationError('Group', id, 'DELETE')
-		}
-
-		await group.destroy()
-	}
+async function getGroup(request, h) {
+	const { groupId } = request.params
+	return GroupRepository.getGroup(groupId)
 }
 
-module.exports = GroupController
+async function getGroupsOfAuthenticatedUser(request, h) {
+	const { id } = request.auth.credentials
+	return GroupRepository.getGroupsOfUser(id)
+}
+
+async function createGroup(request, h) {
+	const { payload } = request
+
+	// TODO: Can this be done with Joi?
+	if (moment(payload.voteEndingTime, 'HH:mm:ss').isAfter(moment(payload.lunchTime, 'HH:mm:ss'))) {
+		throw Boom.badRequest('"lunchTime" must be greater than voteEndingTime')
+	}
+
+	const { id } = await Group.create(payload)
+
+	await GroupMembers.create({
+		groupId: id,
+		userId: request.auth.credentials.id,
+		color: '#80d8ff',
+		isAdmin: true
+	})
+
+	return h.response(await GroupRepository.getGroup(id)).code(201)
+}
+
+async function updateGroup(request, h) {
+	const { groupId } = request.params
+	const { payload } = request
+
+	// TODO: Can this be done with Joi?
+	if (moment(payload.voteEndingTime, 'HH:mm:ss').isAfter(moment(payload.lunchTime, 'HH:mm:ss'))) {
+		throw Boom.badRequest('"lunchTime" must be greater than voteEndingTime')
+	}
+
+	await Group.update(payload, {
+		where: {
+			id: groupId
+		}
+	})
+
+	return GroupRepository.getGroup(groupId)
+}
+
+async function deleteGroup(request, h) {
+	const { groupId } = request.params
+
+	await Group.destroy({
+		where: {
+			id: groupId
+		}
+	})
+
+	return h.response().code(204)
+}
+
+module.exports = {
+	getGroup,
+	createGroup,
+	updateGroup,
+	deleteGroup,
+
+	getGroupsOfAuthenticatedUser
+}

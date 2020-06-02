@@ -1,5 +1,5 @@
+const Boom = require('@hapi/boom')
 const setupDatabase = require('../utils/scripts/setup-database')
-const errorHelper = require('../utils/errors')
 const request = require('supertest')('http://localhost:5001/api')
 const TokenHelper = require('../utils/token-helper')
 const testData = require('../utils/scripts/test-data')
@@ -24,8 +24,14 @@ describe('Comment', () => {
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(newComment)
 					.expect(400)
-					.expect(res => {
-						errorHelper.checkRequestError(res.body)
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"text" is required',
+						validation: {
+							source: 'payload',
+							keys: ['text']
+						}
 					})
 			})
 
@@ -36,13 +42,14 @@ describe('Comment', () => {
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(newComment)
 					.expect(400)
-					.expect(res => {
-						const expectedError = {
-							field: 'text',
-							value: newComment.text,
-							message: 'text cannot be empty.'
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"text" is not allowed to be empty',
+						validation: {
+							source: 'payload',
+							keys: ['text']
 						}
-						errorHelper.checkValidationError(res.body, expectedError)
 					})
 			})
 
@@ -53,13 +60,14 @@ describe('Comment', () => {
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(newComment)
 					.expect(400)
-					.expect(res => {
-						const expectedError = {
-							field: 'text',
-							value: null,
-							message: 'text cannot be null.'
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"text" must be a string',
+						validation: {
+							source: 'payload',
+							keys: ['text']
 						}
-						errorHelper.checkValidationError(res.body, expectedError)
 					})
 			})
 
@@ -69,15 +77,20 @@ describe('Comment', () => {
 					.post('/groups/1/lunchbreaks/2018-06-25/comments')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(newComment)
-					.expect(201)
-					.expect(res => {
-						const comment = res.body
-						comment.author.username.should.be.eql('johndoe1')
+					.expect(400)
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"userId" is not allowed',
+						validation: {
+							source: 'payload',
+							keys: ['userId']
+						}
 					})
 			})
 
 			it('does not create a lunchbreak if voteEndingTime is reached', async () => {
-				testServer.start(5001, '11:25:01', '01.07.2018')
+				await testServer.start(5001, '11:25:01', '01.07.2018')
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
@@ -91,16 +104,14 @@ describe('Comment', () => {
 						text: 'Please create a luchbreak, thanks.'
 					})
 					.expect(400)
-					.expect(res => {
-						errorHelper.checkRequestError(
-							res.body,
-							'The end of voting is reached, therefore you cannot create a new lunchbreak.'
-						)
-					})
+					.expect(
+						Boom.badRequest('The end of voting is reached, therefore you cannot create a new lunchbreak.').output
+							.payload
+					)
 			})
 
 			it('does not create a lunchbreak if the date lies in the past', async () => {
-				testServer.start(5001, '11:25:01', '01.07.2018')
+				await testServer.start(5001, '11:25:01', '01.07.2018')
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-30')
@@ -114,16 +125,14 @@ describe('Comment', () => {
 						text: 'Please create a luchbreak, thanks.'
 					})
 					.expect(400)
-					.expect(res => {
-						errorHelper.checkRequestError(
-							res.body,
-							'The end of voting is reached, therefore you cannot create a new lunchbreak.'
-						)
-					})
+					.expect(
+						Boom.badRequest('The end of voting is reached, therefore you cannot create a new lunchbreak.').output
+							.payload
+					)
 			})
 
 			it('creates a lunchbreak if none exists', async () => {
-				testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start(5001, '11:24:59', '01.07.2018')
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
@@ -176,24 +185,23 @@ describe('Comment', () => {
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send({ text: 'new text!' })
 					.expect(403)
-					.expect(res => {
-						const expectedError = {
-							resource: 'Comment',
-							id: 1,
-							operation: 'UPDATE',
-							message: 'You do not have the necessary permissions for this operation.'
-						}
-						errorHelper.checkAuthorizationError(res.body, expectedError)
-					})
+					.expect(Boom.forbidden().output.payload)
 			})
 
 			it('requires text in body', async () => {
 				await request
 					.put('/groups/1/lunchbreaks/2018-06-25/comments/1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({})
 					.expect(400)
-					.expect(res => {
-						errorHelper.checkRequiredBodyValues(res.body, ['text'], true)
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"text" is required',
+						validation: {
+							source: 'payload',
+							keys: ['text']
+						}
 					})
 			})
 
@@ -203,14 +211,14 @@ describe('Comment', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({ text: null })
 					.expect(400)
-					.expect(res => {
-						const expectedError = {
-							field: 'text',
-							value: null,
-							message: 'text cannot be null.'
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"text" must be a string',
+						validation: {
+							source: 'payload',
+							keys: ['text']
 						}
-
-						errorHelper.checkValidationError(res.body, expectedError)
 					})
 			})
 
@@ -220,13 +228,14 @@ describe('Comment', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({ text: '' })
 					.expect(400)
-					.expect(res => {
-						const expectedError = {
-							field: 'text',
-							value: '',
-							message: 'text cannot be empty.'
+					.expect({
+						statusCode: 400,
+						error: 'Bad Request',
+						message: '"text" is not allowed to be empty',
+						validation: {
+							source: 'payload',
+							keys: ['text']
 						}
-						errorHelper.checkValidationError(res.body, expectedError)
 					})
 			})
 
@@ -236,9 +245,7 @@ describe('Comment', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send({ text: 'new text' })
 					.expect(404)
-					.expect(res => {
-						errorHelper.checkNotFoundError(res.body, 'Comment', 99)
-					})
+					.expect(Boom.notFound().output.payload)
 			})
 
 			it('updates a comment correctly', async () => {
@@ -266,16 +273,7 @@ describe('Comment', () => {
 					.delete('/groups/1/lunchbreaks/2018-06-25/comments/1')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.expect(403)
-					.expect(res => {
-						const expectedError = {
-							resource: 'Comment',
-							id: 1,
-							operation: 'DELETE',
-							message: 'You do not have the necessary permissions for this operation.'
-						}
-
-						errorHelper.checkAuthorizationError(res.body, expectedError)
-					})
+					.expect(Boom.forbidden().output.payload)
 			})
 
 			it('fails if comment does not exist', async () => {
@@ -283,9 +281,7 @@ describe('Comment', () => {
 					.delete('/groups/1/lunchbreaks/2018-06-25/comments/99')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(404)
-					.expect(res => {
-						errorHelper.checkNotFoundError(res.body, 'Comment', 99)
-					})
+					.expect(Boom.notFound().output.payload)
 			})
 
 			it('deletes a comment successfully', async () => {
@@ -318,7 +314,7 @@ describe('Comment', () => {
 			})
 
 			it('does not delete the associated lunchbreak if there are other participants', async () => {
-				testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start(5001, '11:24:59', '01.07.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/participation')
@@ -351,7 +347,7 @@ describe('Comment', () => {
 			})
 
 			it('does not delete the associated lunchbreak if there are absences', async () => {
-				testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start(5001, '11:24:59', '01.07.2018')
 
 				const id = await request
 					.post('/groups/1/lunchbreaks/2018-07-01/comments')
@@ -390,7 +386,7 @@ describe('Comment', () => {
 			})
 
 			it('does not delete the associated lunchbreak if there are other comments', async () => {
-				testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start(5001, '11:24:59', '01.07.2018')
 
 				const id = await request
 					.post('/groups/1/lunchbreaks/2018-07-01/comments')
@@ -421,7 +417,7 @@ describe('Comment', () => {
 			})
 
 			it('does delete the lunchbreak, if there are no other comments or participants', async () => {
-				testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start(5001, '11:24:59', '01.07.2018')
 
 				const id = await request
 					.post('/groups/1/lunchbreaks/2018-07-01/comments')

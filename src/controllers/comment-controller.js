@@ -1,68 +1,68 @@
+const Boom = require('@hapi/boom')
 const { Comment } = require('../models')
 const { CommentRepository, GroupMemberRepository } = require('../repositories')
-const { AuthorizationError } = require('../util/errors')
+const LunchbreakController = require('./lunchbreak-controller')
 
-class CommentController {
-	constructor(user) {
-		this.user = user
+async function createComment(request, h) {
+	const { groupId, date } = request.params
+
+	const lunchbreak = await LunchbreakController.findOrCreateLunchbreak(groupId, date)
+	const memberId = await GroupMemberRepository.getMemberId(groupId, request.auth.credentials.username)
+
+	const { id } = await Comment.create({
+		lunchbreakId: lunchbreak.id,
+		memberId,
+		text: request.payload.text
+	})
+
+	return h.response(await CommentRepository.getComment(id)).code(201)
+}
+
+async function updateComment(request, h) {
+	const { commentId } = request.params
+	const comment = await CommentRepository.getComment(commentId)
+
+	if (comment.author.username !== request.auth.credentials.username) {
+		throw Boom.forbidden()
 	}
 
-	async createComment(LunchbreakController, groupId, date, values) {
-		const lunchbreak = await LunchbreakController.findOrCreateLunchbreak(groupId, date)
-
-		if (!this.user.isGroupMember(groupId)) {
-			throw new AuthorizationError('Comment', null, 'CREATE')
-		}
-
-		const memberId = await GroupMemberRepository.getMemberId(groupId, this.user.username)
-
-		const { id } = await Comment.create({
-			lunchbreakId: lunchbreak.id,
-			memberId,
-			text: values.text
-		})
-
-		return await CommentRepository.getComment(id)
-	}
-
-	async updateComment(commentId, values) {
-		const comment = await CommentRepository.getComment(commentId)
-
-		if (comment.author.username !== this.user.username) {
-			throw new AuthorizationError('Comment', comment.id, 'UPDATE')
-		}
-
-		await Comment.update(
-			{
-				text: values.text
-			},
-			{
-				where: {
-					id: commentId
-				}
-			}
-		)
-
-		return await CommentRepository.getComment(commentId)
-	}
-
-	async deleteComment(lunchbreakController, commentId) {
-		const comment = await CommentRepository.getComment(commentId)
-
-		if (comment.author.username !== this.user.username) {
-			throw new AuthorizationError('Comment', comment.id, 'DELETE')
-		}
-
-		const lunchbreakId = await CommentRepository.getLunchbreakId(commentId)
-
-		await Comment.destroy({
+	await Comment.update(
+		{
+			text: request.payload.text
+		},
+		{
 			where: {
 				id: commentId
 			}
-		})
+		}
+	)
 
-		await lunchbreakController.checkForAutoDeletion(lunchbreakId)
-	}
+	return CommentRepository.getComment(commentId)
 }
 
-module.exports = CommentController
+async function deleteComment(request, h) {
+	const { commentId } = request.params
+	const comment = await CommentRepository.getComment(commentId)
+
+	if (comment.author.username !== request.auth.credentials.username) {
+		throw Boom.forbidden()
+	}
+
+	const lunchbreakId = await CommentRepository.getLunchbreakId(commentId)
+
+	await Comment.destroy({
+		where: {
+			id: commentId
+		}
+	})
+
+	await LunchbreakController.checkForAutoDeletion(lunchbreakId)
+
+	return h.response().code(204)
+}
+
+module.exports = {
+	createComment,
+	updateComment,
+	deleteComment
+}

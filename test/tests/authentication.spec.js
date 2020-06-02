@@ -1,5 +1,4 @@
-const errorHelper = require('../utils/errors')
-const { AuthenticationErrorTypes } = require('../utils/errors')
+const Boom = require('@hapi/boom')
 const request = require('supertest')('http://localhost:5001/api/authenticate')
 
 describe('Authentication', () => {
@@ -45,9 +44,7 @@ describe('Authentication', () => {
 				await request
 					.get('/')
 					.expect(401)
-					.expect(res => {
-						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.AUTHENTICTAION_REQUIRED)
-					})
+					.expect(Boom.unauthorized('Missing authentication').output.payload)
 			})
 
 			it('fails with 401 on wrong password', async () => {
@@ -55,9 +52,7 @@ describe('Authentication', () => {
 					.get('/')
 					.auth('maxmustermann', 'wrongPassword')
 					.expect(401)
-					.expect(res => {
-						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.INVALID_CREDENTIALS)
-					})
+					.expect(Boom.unauthorized('Bad username or password').output.payload)
 			})
 
 			it('fails with 401 on unknown username', async () => {
@@ -65,9 +60,7 @@ describe('Authentication', () => {
 					.get('/')
 					.auth('non-existent-user', 'supersafe')
 					.expect(401)
-					.expect(res => {
-						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.INVALID_CREDENTIALS)
-					})
+					.expect(Boom.unauthorized('Bad username or password').output.payload)
 			})
 
 			it('fails if the user is not verified yet', async () => {
@@ -75,9 +68,7 @@ describe('Authentication', () => {
 					.get('/')
 					.auth('to-be-verified', 'verifyme')
 					.expect(401)
-					.expect(res => {
-						errorHelper.checkAuthenticationError(res.body, AuthenticationErrorTypes.NOT_VERIFIED)
-					})
+					.expect(Boom.unauthorized('This account is not verified yet').output.payload)
 			})
 		})
 	})

@@ -9,29 +9,8 @@ module.exports = (sequelize, DataTypes) => {
 			},
 			username: {
 				type: DataTypes.STRING,
-				unique: {
-					args: true,
-					msg: 'This username is already taken'
-				},
-				allowNull: false,
-				validate: {
-					notEmpty: {
-						msg: 'username cannot be empty'
-					},
-					notNull: {
-						msg: 'username cannot be null'
-					},
-					len: {
-						args: [3, 255],
-						msg: 'The username must contain 3-255 characters'
-					},
-					validChars(value) {
-						const regex = new RegExp('^[a-z-_0-9]*$')
-						if (!regex.test(value)) {
-							throw new Error('username can only contain [a-z-_0-9]')
-						}
-					}
-				}
+				unique: true,
+				allowNull: false
 			},
 			firstName: {
 				type: DataTypes.STRING
@@ -42,37 +21,11 @@ module.exports = (sequelize, DataTypes) => {
 			email: {
 				type: DataTypes.STRING,
 				allowNull: false,
-				unique: {
-					args: true,
-					msg: 'This E-Mail is already taken'
-				},
-				validate: {
-					isEmail: {
-						msg: 'This is not a valid e-mail-address'
-					},
-					notEmpty: {
-						msg: 'E-Mail cannot be empty'
-					},
-					notNull: {
-						msg: 'E-Mail cannot be null'
-					}
-				}
+				unique: true
 			},
 			password: {
 				type: DataTypes.STRING,
-				allowNull: false,
-				validate: {
-					notEmpty: {
-						msg: 'Password cannot be empty'
-					},
-					notNull: {
-						msg: 'Password cannot be null'
-					},
-					len: {
-						args: [8, 255],
-						msg: 'Password has to be between 8 and 255 characters long'
-					}
-				}
+				allowNull: false
 			},
 			verified: {
 				type: DataTypes.BOOLEAN,

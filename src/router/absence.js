@@ -1,25 +1,32 @@
-const router = require('express').Router({ mergeParams: true })
-const { allowMethods } = require('../util/middleware')
-const { asyncMiddleware } = require('../util/util')
+const { AbsenceController } = require('../controllers')
 
-router.route('/').all(allowMethods(['POST', 'DELETE']))
+module.exports = {
+	name: 'absence-router',
+	register: async server => {
+		server.route({
+			method: 'POST',
+			path: '/groups/{groupId}/lunchbreaks/{date}/absence',
+			options: {
+				auth: {
+					access: {
+						scope: ['member:{params.groupId}', 'admin:{params.groupId}']
+					}
+				}
+			},
+			handler: AbsenceController.createAbsence
+		})
 
-router.route('/').post(
-	asyncMiddleware(async (req, res, next) => {
-		const { groupId, date } = req.params
-		const { AbsenceController, LunchbreakController } = res.locals.controllers
-		await AbsenceController.createAbsence(LunchbreakController, groupId, date)
-		res.status(201).send()
-	})
-)
-
-router.route('/').delete(
-	asyncMiddleware(async (req, res, next) => {
-		const { groupId, date } = req.params
-		const { AbsenceController, LunchbreakController } = res.locals.controllers
-		await AbsenceController.deleteAbsence(LunchbreakController, groupId, date)
-		res.status(204).send()
-	})
-)
-
-module.exports = router
+		server.route({
+			method: 'DELETE',
+			path: '/groups/{groupId}/lunchbreaks/{date}/absence',
+			options: {
+				auth: {
+					access: {
+						scope: ['member:{params.groupId}', 'admin:{params.groupId}']
+					}
+				}
+			},
+			handler: AbsenceController.deleteAbsence
+		})
+	}
+}

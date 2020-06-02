@@ -1,62 +1,102 @@
-const router = require('express').Router()
-const { allowMethods, hasBodyValues, convertParamToNumber } = require('../util/middleware')
-const { asyncMiddleware } = require('../util/util')
-const PlaceRouter = require('./places')
-const LunchbreakRouter = require('./lunchbreaks')
-const GroupMemberRouter = require('./group-members')
-const InvitationRouter = require('./invitiations')
+const Joi = require('@hapi/joi')
+const { GroupController } = require('../controllers')
 
-router.use('/:groupId/members', GroupMemberRouter)
-router.use('/:groupId/invitations', InvitationRouter)
-router.use('/:groupId/places', PlaceRouter)
-router.use('/:groupId/lunchbreaks', LunchbreakRouter)
+module.exports = {
+	name: 'group-router',
+	register: async server => {
+		server.route({
+			method: 'POST',
+			path: '/groups',
+			options: {
+				validate: {
+					payload: Joi.object({
+						name: Joi.string().required(),
+						lunchTime: Joi.string().required(),
+						voteEndingTime: Joi.string().required(),
+						utcOffset: Joi.number()
+							.min(-720)
+							.max(720)
+							.multiple(60)
+							.required(),
+						pointsPerDay: Joi.number()
+							.min(1)
+							.max(1000)
+							.required(),
+						maxPointsPerVote: Joi.number()
+							.min(Joi.ref('minPointsPerVote'))
+							.max(Joi.ref('pointsPerDay'))
+							.required(),
+						minPointsPerVote: Joi.number()
+							.min(1)
+							.max(Joi.ref('pointsPerDay'))
+							.required()
+					})
+				}
+			},
+			handler: GroupController.createGroup
+		})
 
-router.route('/').all(allowMethods(['POST']))
-router.route('/').post(hasBodyValues(['name'], 'all'))
-router.route('/:groupId').all(allowMethods(['GET', 'PUT', 'DELETE']))
-router
-	.route('/:groupId')
-	.put(
-		hasBodyValues(
-			['name', 'lunchTime', 'voteEndingTime', 'utcOffset', 'pointsPerDay', 'maxPointsPerVote', 'minPointsPerVote'],
-			'atLeastOne'
-		)
-	)
+		server.route({
+			method: 'GET',
+			path: '/groups/{groupId}',
+			options: {
+				auth: {
+					access: {
+						scope: ['member:{params.groupId}', 'admin:{params.groupId}']
+					}
+				}
+			},
+			handler: GroupController.getGroup
+		})
 
-router.route('/').post(
-	asyncMiddleware(async (req, res, next) => {
-		const values = req.body
-		const { GroupController } = res.locals.controllers
-		res.status(201).send(await GroupController.createGroup(values))
-	})
-)
+		server.route({
+			method: 'PUT',
+			path: '/groups/{groupId}',
+			options: {
+				auth: {
+					access: {
+						scope: ['admin:{params.groupId}']
+					}
+				},
+				validate: {
+					payload: Joi.object({
+						name: Joi.string().required(),
+						lunchTime: Joi.string().required(),
+						voteEndingTime: Joi.string().required(),
+						utcOffset: Joi.number()
+							.min(-720)
+							.max(720)
+							.multiple(60)
+							.required(),
+						pointsPerDay: Joi.number()
+							.min(1)
+							.max(1000)
+							.required(),
+						maxPointsPerVote: Joi.number()
+							.min(Joi.ref('minPointsPerVote'))
+							.max(Joi.ref('pointsPerDay'))
+							.required(),
+						minPointsPerVote: Joi.number()
+							.min(1)
+							.max(Joi.ref('pointsPerDay'))
+							.required()
+					})
+				}
+			},
+			handler: GroupController.updateGroup
+		})
 
-router.param('groupId', convertParamToNumber('groupId'))
-
-router.route('/:groupId').get(
-	asyncMiddleware(async (req, res, next) => {
-		const { groupId } = req.params
-		const { GroupController } = res.locals.controllers
-		res.send(await GroupController.getGroupById(groupId))
-	})
-)
-
-router.route('/:groupId').put(
-	asyncMiddleware(async (req, res, next) => {
-		const { groupId } = req.params
-		const values = req.body
-		const { GroupController } = res.locals.controllers
-		res.send(await GroupController.updateGroup(groupId, values))
-	})
-)
-
-router.route('/:groupId').delete(
-	asyncMiddleware(async (req, res, next) => {
-		const { groupId } = req.params
-		const { GroupController } = res.locals.controllers
-		await GroupController.deleteGroup(groupId)
-		res.status(204).send()
-	})
-)
-
-module.exports = router
+		server.route({
+			method: 'DELETE',
+			path: '/groups/{groupId}',
+			options: {
+				auth: {
+					access: {
+						scope: ['admin:{params.groupId}']
+					}
+				}
+			},
+			handler: GroupController.deleteGroup
+		})
+	}
+}

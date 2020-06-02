@@ -1,10 +1,10 @@
 const { Op } = require('sequelize')
-const { Group, Place, User, GroupMembers } = require('../models')
-const { NotFoundError } = require('../util/errors')
+const Boom = require('@hapi/boom')
+const { Group, Place, User, GroupMembers, Participant, Lunchbreak } = require('../models')
 
 /**
  * @typedef {Object} GroupConfig
- * @property {string} voteEndingTime - The X Coordinate
+ * @property {string} voteEndingTime
  * @property {number} utcOffset
  * @property {number} pointsPerDay
  * @property {number} minPointsPerVote
@@ -34,7 +34,7 @@ class GroupRepository {
 		if (group) {
 			return group
 		} else {
-			throw new NotFoundError('Group', id)
+			throw Boom.notFound()
 		}
 	}
 
@@ -74,6 +74,29 @@ class GroupRepository {
 		})
 	}
 
+	async getGroupMembershipsOfUser(userId) {
+		const { groups } = await User.findByPk(userId, {
+			attributes: [],
+			include: [
+				{
+					model: Group,
+					attributes: ['id'],
+					through: {
+						attributes: ['isAdmin'],
+						as: 'config'
+					}
+				}
+			]
+		})
+
+		return groups.map(group => {
+			return {
+				id: group.id,
+				isAdmin: group.config.isAdmin
+			}
+		})
+	}
+
 	/**
 	 * Retrieve the configuration of a group.
 	 * @param {*} id
@@ -84,11 +107,32 @@ class GroupRepository {
 			attributes: ['voteEndingTime', 'utcOffset', 'pointsPerDay', 'minPointsPerVote', 'maxPointsPerVote']
 		})
 
-		if (config) {
-			return config.toJSON()
-		} else {
-			throw new NotFoundError('Group', id)
-		}
+		return config.toJSON()
+	}
+
+	/**
+	 * Retrieve the configuration of a group.
+	 * @param {*} participantId
+	 * @returns {GroupConfig}
+	 */
+	async getGroupConfigByParticipant(participantId) {
+		const participant = await Participant.findByPk(participantId, {
+			include: [
+				{
+					model: Lunchbreak,
+					attributes: ['id'],
+					include: [
+						{
+							model: Group,
+							attributes: ['voteEndingTime', 'utcOffset', 'pointsPerDay', 'minPointsPerVote', 'maxPointsPerVote'],
+							include: [Place]
+						}
+					]
+				}
+			]
+		})
+
+		return participant.lunchbreak.group
 	}
 }
 

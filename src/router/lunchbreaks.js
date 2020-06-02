@@ -1,33 +1,39 @@
-const router = require('express').Router({ mergeParams: true })
-const { allowMethods, hasQueryValues } = require('../util/middleware')
-const { asyncMiddleware } = require('../util/util')
-const AbsenceRouter = require('./absence')
-const ParticipationRouter = require('./participation')
-const CommentRouter = require('./comments')
+const Joi = require('@hapi/joi')
+const { LunchbreakController } = require('../controllers')
 
-router.route('/').all(allowMethods(['GET']))
-router.route('/').get(hasQueryValues(['from', 'to'], 'all'))
-router.route('/:date').all(allowMethods(['GET']))
+module.exports = {
+	name: 'lunchbreak-router',
+	register: async server => {
+		server.route({
+			method: 'GET',
+			path: '/groups/{groupId}/lunchbreaks',
+			options: {
+				auth: {
+					access: {
+						scope: ['member:{params.groupId}', 'admin:{params.groupId}']
+					}
+				},
+				validate: {
+					query: Joi.object({
+						from: Joi.required(),
+						to: Joi.required()
+					})
+				}
+			},
+			handler: LunchbreakController.getLunchbreaks
+		})
 
-router.route('/').get(
-	asyncMiddleware(async (req, res, next) => {
-		const { from, to } = req.query
-		const { groupId } = req.params
-		const { LunchbreakController } = res.locals.controllers
-		res.send(await LunchbreakController.getLunchbreaks(groupId, from, to))
-	})
-)
-
-router.route('/:date').get(
-	asyncMiddleware(async (req, res, next) => {
-		const { groupId, date } = req.params
-		const { LunchbreakController } = res.locals.controllers
-		res.send(await LunchbreakController.getLunchbreak(groupId, date))
-	})
-)
-
-router.use('/:date/absence', AbsenceRouter)
-router.use('/:date/participation', ParticipationRouter)
-router.use('/:date/comments', CommentRouter)
-
-module.exports = router
+		server.route({
+			method: 'GET',
+			path: '/groups/{groupId}/lunchbreaks/{date}',
+			options: {
+				auth: {
+					access: {
+						scope: ['member:{params.groupId}', 'admin:{params.groupId}']
+					}
+				}
+			},
+			handler: LunchbreakController.getLunchbreak
+		})
+	}
+}

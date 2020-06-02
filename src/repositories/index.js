@@ -5,5 +5,6 @@ module.exports = {
 	GroupMemberRepository: require('./group-member-repository'),
 	InvitationRepository: require('./invitation-repository'),
 	LunchbreakRepository: require('./lunchbreak-repository'),
+	ParticipationRepository: require('./participation-repository'),
 	UserRepository: require('./user-repository')
 }

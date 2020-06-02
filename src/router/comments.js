@@ -1,37 +1,60 @@
-const router = require('express').Router({ mergeParams: true })
-const { allowMethods, hasBodyValues, convertParamToNumber } = require('../util/middleware')
-const { asyncMiddleware } = require('../util/util')
+const Joi = require('@hapi/joi')
+const { CommentController } = require('../controllers')
 
-router.route('/').all(allowMethods(['POST']))
-router.route('/').post(hasBodyValues(['text'], 'all'))
-router.route('/').post(
-	asyncMiddleware(async (req, res, next) => {
-		const { groupId, date } = req.params
-		const { CommentController, LunchbreakController } = res.locals.controllers
-		res.status(201).send(await CommentController.createComment(LunchbreakController, groupId, date, req.body))
-	})
-)
+module.exports = {
+	name: 'comment-router',
+	register: async server => {
+		server.route({
+			method: 'POST',
+			path: '/groups/{groupId}/lunchbreaks/{date}/comments',
+			options: {
+				auth: {
+					access: {
+						scope: ['member:{params.groupId}', 'admin:{params.groupId}']
+					}
+				},
+				validate: {
+					payload: Joi.object({
+						text: Joi.string()
+							.min(1)
+							.required()
+					})
+				}
+			},
+			handler: CommentController.createComment
+		})
 
-router.param('commentId', convertParamToNumber('commentId'))
+		server.route({
+			method: 'PUT',
+			path: '/groups/{groupId}/lunchbreaks/{date}/comments/{commentId}',
+			options: {
+				auth: {
+					access: {
+						scope: ['member:{params.groupId}', 'admin:{params.groupId}']
+					}
+				},
+				validate: {
+					payload: Joi.object({
+						text: Joi.string()
+							.min(1)
+							.required()
+					})
+				}
+			},
+			handler: CommentController.updateComment
+		})
 
-router.route('/:commentId').all(allowMethods(['PUT', 'DELETE']))
-
-router.route('/:commentId').put(hasBodyValues(['text'], 'all'))
-router.route('/:commentId').put(
-	asyncMiddleware(async (req, res, next) => {
-		const { commentId } = req.params
-		const { CommentController } = res.locals.controllers
-		res.send(await CommentController.updateComment(commentId, req.body))
-	})
-)
-
-router.route('/:commentId').delete(
-	asyncMiddleware(async (req, res, next) => {
-		const { commentId } = req.params
-		const { CommentController, LunchbreakController } = res.locals.controllers
-		await CommentController.deleteComment(LunchbreakController, commentId)
-		res.status(204).send()
-	})
-)
-
-module.exports = router
+		server.route({
+			method: 'DELETE',
+			path: '/groups/{groupId}/lunchbreaks/{date}/comments/{commentId}',
+			options: {
+				auth: {
+					access: {
+						scope: ['member:{params.groupId}', 'admin:{params.groupId}']
+					}
+				}
+			},
+			handler: CommentController.deleteComment
+		})
+	}
+}

@@ -1,7 +1,7 @@
+const Boom = require('@hapi/boom')
 const setupDatabase = require('../utils/scripts/setup-database')
 const testData = require('../utils/scripts/test-data')
 const testServer = require('../utils/test-server')
-const errorHelper = require('../utils/errors')
 const request = require('supertest')('http://localhost:5001/api')
 const TokenHelper = require('../utils/token-helper')
 
@@ -11,18 +11,16 @@ describe('Group Member', () => {
 			await request
 				.put('/groups/1/members/unknown-username')
 				.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-				.expect(404)
-				.expect(res => {
-					errorHelper.checkNotFoundError(res.body, 'GroupMember', 'unknown-username')
+				.send({
+					isAdmin: true,
+					color: '#eeeeee'
 				})
+				.expect(404)
 
 			await request
 				.delete('/groups/1/members/unknown-username')
 				.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 				.expect(404)
-				.expect(res => {
-					errorHelper.checkNotFoundError(res.body, 'GroupMember', 'unknown-username')
-				})
 		})
 
 		describe('PUT', () => {
@@ -34,7 +32,10 @@ describe('Group Member', () => {
 				await request
 					.put('/groups/1/members/maxmustermann')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send({ color: '#eeeeee' })
+					.send({
+						isAdmin: true,
+						color: '#eeeeee'
+					})
 					.expect(200)
 					.expect(res => res.body.should.have.all.keys(testData.getGroupMemberKeys()))
 			})
@@ -43,12 +44,30 @@ describe('Group Member', () => {
 				await request
 					.put('/groups/1/members/johndoe1')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
-					.send({ color: '#eeeeee' })
+					.send({ color: '#eeeeee', isAdmin: false })
 					.expect(200)
 					.expect(res => {
 						const member = res.body
 						member.config.color.should.be.eql('#eeeeee')
 					})
+			})
+
+			it('fails if color is invalid', async () => {
+				const invalid = ['ee2345', '#1234567', '#ae123g']
+
+				for (const color of invalid) {
+					await request
+						.put('/groups/1/members/johndoe1')
+						.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+						.send({ color, isAdmin: false })
+						.expect(400)
+						.expect({
+							statusCode: 400,
+							error: 'Bad Request',
+							message: `"color" with value "${color}" fails to match the required pattern: /^#[a-f0-9]{6}$/`,
+							validation: { source: 'payload', keys: ['color'] }
+						})
+				}
 			})
 
 			it('allows an admin to change another member', async () => {
@@ -68,7 +87,7 @@ describe('Group Member', () => {
 				await request
 					.put('/groups/1/members/johndoe1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send({ isAdmin: true })
+					.send({ color: '#24c4ee', isAdmin: true })
 					.expect(200)
 					.expect(res => {
 						const member = res.body
@@ -78,7 +97,7 @@ describe('Group Member', () => {
 				await request
 					.put('/groups/1/members/johndoe1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send({ isAdmin: false })
+					.send({ color: '#24c4ee', isAdmin: false })
 					.expect(200)
 					.expect(res => {
 						const member = res.body
@@ -91,51 +110,25 @@ describe('Group Member', () => {
 					.put('/groups/1/members/maxmustermann')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.expect(403)
-					.expect(res => {
-						const expectedError = {
-							resource: 'GroupMember',
-							id: 'maxmustermann',
-							operation: 'UPDATE'
-						}
-						errorHelper.checkAuthorizationError(res.body, expectedError)
-					})
+					.expect(Boom.forbidden('Insufficient scope').output.payload)
 			})
 
 			it('fails if a non admin tries to get admin rights', async () => {
-				const TRUTHY = [true, 'true', 1, '1']
-
-				for (const val of TRUTHY) {
-					await request
-						.put('/groups/1/members/johndoe1')
-						.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
-						.send({ isAdmin: val })
-						.expect(403)
-						.expect(res => {
-							const expectedError = {
-								resource: 'GroupMember',
-								id: 'johndoe1',
-								operation: 'UPDATE'
-							}
-							errorHelper.checkAuthorizationError(res.body, expectedError)
-						})
-				}
+				await request
+					.put('/groups/1/members/johndoe1')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.send({ color: '#eeeeee', isAdmin: true })
+					.expect(403)
+					.expect(Boom.forbidden('You cannot grant yourself admin rights').output.payload)
 			})
 
 			it('fails if the user is the groups last admin', async () => {
 				await request
 					.put('/groups/1/members/maxmustermann')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send({ isAdmin: false })
+					.send({ color: '#eeeeee', isAdmin: false })
 					.expect(403)
-					.expect(res => {
-						const expectedError = {
-							resource: 'GroupMember',
-							id: 'maxmustermann',
-							operation: 'UPDATE',
-							message: 'This user is the last admin of this group and cannot revoke his rights.'
-						}
-						errorHelper.checkAuthorizationError(res.body, expectedError)
-					})
+					.expect(Boom.forbidden('You are the last admin and cannot revoke your rights').output.payload)
 			})
 		})
 
@@ -149,14 +142,7 @@ describe('Group Member', () => {
 					.delete('/groups/1/members/maxmustermann')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.expect(403)
-					.expect(res => {
-						const expectedError = {
-							resource: 'GroupMember',
-							id: 'maxmustermann',
-							operation: 'DELETE'
-						}
-						errorHelper.checkAuthorizationError(res.body, expectedError)
-					})
+					.expect(Boom.forbidden('Insufficient scope').output.payload)
 			})
 
 			it('lets the admins remove other group members', async () => {
@@ -178,15 +164,9 @@ describe('Group Member', () => {
 					.delete('/groups/1/members/maxmustermann')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(403)
-					.expect(res => {
-						const expectedError = {
-							resource: 'GroupMember',
-							id: 'maxmustermann',
-							operation: 'DELETE',
-							message: 'You are the last administrator of this group and cannot leave the group.'
-						}
-						errorHelper.checkAuthorizationError(res.body, expectedError)
-					})
+					.expect(
+						Boom.forbidden('You are the last administrator of this group and cannot leave the group').output.payload
+					)
 			})
 
 			it('does not delete the associated group', async () => {
@@ -219,11 +199,11 @@ describe('Group Member', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(201)
 
-				// Make john admin so max to leave
+				// Make john admin so max can leave
 				await request
 					.put('/groups/1/members/johndoe1')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
-					.send({ isAdmin: true })
+					.send({ color: '#123456', isAdmin: true })
 					.expect(200)
 
 				await request
@@ -244,7 +224,7 @@ describe('Group Member', () => {
 			})
 
 			it('does not fuck up lunchbreaks where the ex-member is responseless', async () => {
-				testServer.start(5001, '11:24:59', '25.06.2018')
+				await testServer.start(5001, '11:24:59', '25.06.2018')
 				await request
 					.delete('/groups/1/lunchbreaks/2018-06-25/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))

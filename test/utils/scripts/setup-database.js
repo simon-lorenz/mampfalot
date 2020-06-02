@@ -12,12 +12,12 @@ const {
 	Comment,
 	Invitation
 } = require('../../../src/models')
-const db = require('../../../src/models').sequelize
+const { sequelize } = require('../../../src/models')
 const data = require('./test-data')
 const bcrypt = require('bcryptjs')
 
 module.exports = async function resetData() {
-	await db.sync({ force: true })
+	await sequelize.sync({ force: true })
 
 	try {
 		await User.bulkCreate(
@@ -41,16 +41,16 @@ module.exports = async function resetData() {
 		// As a result, the postgres autoincrement/serial won't get incremented and we'll get
 		// conflicts when we try to insert new rows without manually setting the id.
 		// The following lines update the serials sequence value to prevent these conflicts.
-		await db.query('SELECT setval(\'users_id_seq\', (SELECT MAX(id) from "users"));')
-		await db.query('SELECT setval(\'groups_id_seq\', (SELECT MAX(id) from "groups"));')
-		await db.query('SELECT setval(\'group_members_id_seq\', (SELECT MAX(id) from "group_members"));')
-		await db.query('SELECT setval(\'invitations_id_seq\', (SELECT MAX(id) from "invitations"));')
-		await db.query('SELECT setval(\'places_id_seq\', (SELECT MAX(id) from "places"));')
-		await db.query('SELECT setval(\'lunchbreaks_id_seq\', (SELECT MAX(id) from "lunchbreaks"));')
-		await db.query('SELECT setval(\'participants_id_seq\', (SELECT MAX(id) from "participants"));')
-		await db.query('SELECT setval(\'absences_id_seq\', (SELECT MAX(id) from "absences"));')
-		await db.query('SELECT setval(\'votes_id_seq\', (SELECT MAX(id) from "votes"));')
-		await db.query('SELECT setval(\'comments_id_seq\', (SELECT MAX(id) from "comments"));')
+		await sequelize.query('SELECT setval(\'users_id_seq\', (SELECT MAX(id) from "users"));')
+		await sequelize.query('SELECT setval(\'groups_id_seq\', (SELECT MAX(id) from "groups"));')
+		await sequelize.query('SELECT setval(\'group_members_id_seq\', (SELECT MAX(id) from "group_members"));')
+		await sequelize.query('SELECT setval(\'invitations_id_seq\', (SELECT MAX(id) from "invitations"));')
+		await sequelize.query('SELECT setval(\'places_id_seq\', (SELECT MAX(id) from "places"));')
+		await sequelize.query('SELECT setval(\'lunchbreaks_id_seq\', (SELECT MAX(id) from "lunchbreaks"));')
+		await sequelize.query('SELECT setval(\'participants_id_seq\', (SELECT MAX(id) from "participants"));')
+		await sequelize.query('SELECT setval(\'absences_id_seq\', (SELECT MAX(id) from "absences"));')
+		await sequelize.query('SELECT setval(\'votes_id_seq\', (SELECT MAX(id) from "votes"));')
+		await sequelize.query('SELECT setval(\'comments_id_seq\', (SELECT MAX(id) from "comments"));')
 	} catch (error) {
 		console.log(error)
 		throw error

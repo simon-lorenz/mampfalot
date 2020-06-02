@@ -1,5 +1,5 @@
+const Boom = require('@hapi/boom')
 const { User } = require('../models')
-const { NotFoundError } = require('../util/errors')
 
 class UserRepository {
 	async getUser(userId) {
@@ -22,8 +22,22 @@ class UserRepository {
 		if (user) {
 			return user.id
 		} else {
-			throw new NotFoundError('User', username)
+			throw Boom.notFound()
 		}
+	}
+
+	async getUsernameById(userId) {
+		const { username } = await User.findByPk(userId, { attributes: ['username'] })
+		return username
+	}
+
+	async usernameExists(username) {
+		const user = await User.findOne({
+			attributes: ['id'],
+			where: { username }
+		})
+
+		return user ? true : false
 	}
 }
 

@@ -1,6 +1,6 @@
 # Mampfalot - Backend
 
-An express-based http-api for [mampfalot.app](https://mampfalot.app).
+The http-api for [mampfalot.app](https://mampfalot.app) based on [hapi.js](https://hapi.dev).
 
 ## Development Setup
 

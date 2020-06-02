@@ -1,23 +1,25 @@
-const router = require('express').Router()
-const { AuthenticationError } = require('../util/errors')
-const { allowMethods } = require('../util/middleware')
-const { asyncMiddleware } = require('../util/util')
-const { extractBasicCredentialsFromHeader, checkCredentialsAndGenerateToken } = require('../util/authentication')
+const jwt = require('jsonwebtoken')
 
-router.route('/').all(allowMethods(['GET']))
-
-router.route('/').get(
-	asyncMiddleware(async (req, res, next) => {
-		const authorizationHeader = req.headers.authorization
-
-		if (!authorizationHeader) {
-			return next(new AuthenticationError('This request requires authentication.'))
-		}
-
-		const credentials = extractBasicCredentialsFromHeader(authorizationHeader)
-		const token = await checkCredentialsAndGenerateToken(credentials.username, credentials.password)
-		res.send({ token })
-	})
-)
-
-module.exports = router
+module.exports = {
+	name: 'authentication-router',
+	register: async server => {
+		server.route({
+			method: 'GET',
+			path: '/authenticate',
+			options: {
+				auth: 'basic'
+			},
+			handler: async request => {
+				return {
+					token: jwt.sign(
+						{
+							id: request.auth.credentials.id
+						},
+						process.env.SECRET_KEY,
+						{ expiresIn: '10h' }
+					)
+				}
+			}
+		})
+	}
+}

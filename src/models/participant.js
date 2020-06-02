@@ -28,38 +28,7 @@ module.exports = (sequelize, DataTypes) => {
 			resultId: {
 				type: DataTypes.INTEGER,
 				allowNull: true,
-				onDelete: 'SET NULL',
-				validate: {
-					async belongsToGroup() {
-						if (this.resultId === null) {
-							return
-						}
-
-						const { Group, Lunchbreak, Place } = sequelize.models
-
-						const group = await Group.findOne({
-							attributes: ['id'],
-							include: [
-								{
-									model: Lunchbreak,
-									where: {
-										id: this.lunchbreakId
-									}
-								},
-								{
-									model: Place,
-									where: {
-										id: this.resultId
-									}
-								}
-							]
-						})
-
-						if (!group) {
-							throw new Error('This place does not belong to the associated group.')
-						}
-					}
-				}
+				onDelete: 'SET NULL'
 			},
 			amountSpent: {
 				type: DataTypes.DECIMAL(10, 2),

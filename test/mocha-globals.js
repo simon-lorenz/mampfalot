@@ -7,7 +7,9 @@ process.env.NODE_ENV = 'test'
 /**
  * Disable logging.
  */
-process.env.LOG_LEVEL = 'error'
+if (!process.env.LOG_LEVEL) {
+	process.env.LOG_LEVEL = 'silent'
+}
 
 /**
  * Chai plugins
@@ -39,10 +41,10 @@ after(async () => {
 	await setupDatabase()
 })
 
-beforeEach(() => {
-	testServer.start(5001)
+beforeEach(async () => {
+	await testServer.start(5001)
 })
 
-afterEach(() => {
-	testServer.close()
+afterEach(async () => {
+	await testServer.stop()
 })

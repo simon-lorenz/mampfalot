@@ -1015,9 +1015,7 @@ components:
       content:
         application/json:
           schema:
-            oneOf:
-              - $ref: '#/components/schemas/RequestError'
-              - $ref: '#/components/schemas/ValidationError'
+            $ref: '#/components/schemas/RequestError'
 
     NotFoundError:
       description: The requested resource could not be found.
@@ -1041,57 +1039,41 @@ components:
     AuthorizationError:
       type: object
       properties:
-        type:
+        statusCode:
+          type: number
+          example: 401
+        error:
           type: string
-          example: AuthorizationError
-        resource:
-          type: string
-        operation:
-          type: string
+          example: Unauthorized
         message:
           type: string
-          example: You do not have the necessary permissions for this operation.
+          example: Unauthorized
 
     NotFoundError:
       type: object
       properties:
-        type:
+        statusCode:
+          type: number
+          example: 404
+        error:
           type: string
-          example: NotFoundError
+          example: Not Found
         message:
           type: string
-          example: The requested resource could not be found.
+          example: Not Found
 
     RequestError:
       type: object
       properties:
-        type:
+        statusCode:
+          type: number
+          example: 400
+        error:
           type: string
-          example: RequestError
+          example: Bad Request
         message:
           type: string
-
-    ValidationError:
-      type: object
-      properties:
-        type:
-          type: string
-          example: ValidationError
-        errors:
-          type: array
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-                example: name
-              value:
-                oneOf:
-                  - type: string
-                  - type: number
-                  - type: boolean
-              message:
-                type: string
+          example: Bad Request
 
     Comment:
       type: object
@@ -1140,31 +1122,25 @@ components:
         lunchTime:
           type: string
           example: '12:30:00'
-          default: '12:30:00'
         voteEndingTime:
           type: string
           example: '12:25:00'
-          default: '12:25:00'
         utcOffset:
           type: integer
           example: 60
-          default: 0
         pointsPerDay:
           type: integer
           example: 100
-          default: 100
           minimum: 1
           maximum: 1000
         maxPointsPerVote:
           type: integer
           example: 80
-          default: 100
           minimum: 1
           maximum: 1000
         minPointsPerVote:
           type: integer
           example: 20
-          default: 10
           minimum: 1
           maximum: 1000
       required:

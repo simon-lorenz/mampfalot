@@ -10,23 +10,7 @@ module.exports = (sequelize, DataTypes) => {
 			userId: {
 				type: DataTypes.INTEGER,
 				allowNull: false,
-				onDelete: 'CASCADE',
-				validate: {
-					notNull: {
-						msg: 'userId cannot be null.'
-					},
-					isNumeric: {
-						msg: 'userId has to be numeric.'
-					},
-					async exists(val) {
-						const UserModel = sequelize.models.User
-						const user = await UserModel.findByPk(val)
-
-						if (!user) {
-							throw new Error('userId does not exist.')
-						}
-					}
-				}
+				onDelete: 'CASCADE'
 			},
 			groupId: {
 				type: DataTypes.INTEGER,
@@ -35,13 +19,11 @@ module.exports = (sequelize, DataTypes) => {
 			},
 			isAdmin: {
 				type: DataTypes.BOOLEAN,
-				allowNull: false,
-				defaultValue: false
+				allowNull: false
 			},
 			color: {
 				type: DataTypes.STRING,
-				allowNull: true,
-				defaultValue: '#80d8ff'
+				allowNull: true
 			}
 		},
 		{

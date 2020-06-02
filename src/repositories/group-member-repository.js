@@ -1,5 +1,5 @@
+const Boom = require('@hapi/boom')
 const { GroupMembers, User } = require('../models')
-const { NotFoundError } = require('../util/errors')
 
 class GroupMemberRepository {
 	/**
@@ -28,7 +28,7 @@ class GroupMemberRepository {
 		if (member) {
 			return member.toJSON()
 		} else {
-			throw new NotFoundError('GroupMember', username)
+			throw Boom.notFound()
 		}
 	}
 
