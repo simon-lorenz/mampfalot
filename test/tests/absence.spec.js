@@ -1,5 +1,5 @@
 const setupDatabase = require('../utils/scripts/setup-database')
-const request = require('supertest')('http://localhost:5001/api')
+const request = require('supertest')('http://localhost:5001')
 const TokenHelper = require('../utils/token-helper')
 const testData = require('../utils/scripts/test-data')
 const testServer = require('../utils/test-server')

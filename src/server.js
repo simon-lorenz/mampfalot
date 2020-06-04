@@ -35,23 +35,18 @@ async function createServer(port) {
 
 	await server.register(require('./util/mailer'))
 
-	await server.register(
-		[
-			require('./router/authenticate'),
-			require('./router/lunchbreaks'),
-			require('./router/absence'),
-			require('./router/comments'),
-			require('./router/users'),
-			require('./router/places'),
-			require('./router/groups'),
-			require('./router/group-members'),
-			require('./router/participation'),
-			require('./router/invitiations')
-		],
-		{
-			routes: { prefix: '/api' }
-		}
-	)
+	await server.register([
+		require('./router/authenticate'),
+		require('./router/lunchbreaks'),
+		require('./router/absence'),
+		require('./router/comments'),
+		require('./router/users'),
+		require('./router/places'),
+		require('./router/groups'),
+		require('./router/group-members'),
+		require('./router/participation'),
+		require('./router/invitiations')
+	])
 
 	await server.initialize()
 

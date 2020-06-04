@@ -1,5 +1,5 @@
 const Boom = require('@hapi/boom')
-const request = require('supertest')('http://localhost:5001/api')
+const request = require('supertest')('http://localhost:5001')
 const SwaggerParser = require('swagger-parser')
 const APIContract = require('../utils/openapi-helper')
 

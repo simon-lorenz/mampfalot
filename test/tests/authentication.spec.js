@@ -1,5 +1,5 @@
 const Boom = require('@hapi/boom')
-const request = require('supertest')('http://localhost:5001/api/authenticate')
+const request = require('supertest')('http://localhost:5001/authenticate')
 
 describe('Authentication', () => {
 	describe('/authenticate', () => {

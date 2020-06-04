@@ -1,7 +1,7 @@
 const Boom = require('@hapi/boom')
 const setupDatabase = require('../utils/scripts/setup-database')
 const testData = require('../utils/scripts/test-data')
-const request = require('supertest')('http://localhost:5001/api')
+const request = require('supertest')('http://localhost:5001')
 const TokenHelper = require('../utils/token-helper')
 
 describe('Group', () => {
