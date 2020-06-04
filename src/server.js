@@ -27,13 +27,11 @@ async function createServer(port) {
 		}
 	})
 
-	await server.register(require('./util/logger'))
-
 	await server.register([require('./util/authentication/basic'), require('./util/authentication/jwt')])
 
 	server.auth.default('jwt')
 
-	await server.register(require('./util/mailer'))
+	await server.register([require('./util/logger'), require('./util/mailer')])
 
 	await server.register([
 		require('./router/authenticate'),
