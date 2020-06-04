@@ -3,7 +3,6 @@ const Hapi = require('@hapi/hapi')
 async function createServer(port) {
 	const server = Hapi.server({
 		port,
-		host: 'localhost',
 		router: {
 			isCaseSensitive: true,
 			stripTrailingSlash: true

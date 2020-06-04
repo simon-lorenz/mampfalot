@@ -1,5 +1,6 @@
 const dotenv = require('dotenv')
-dotenv.config('../.env')
+
+dotenv.config()
 
 const { createServer } = require('./src/server')
 const { sequelize } = require('./src/models')
