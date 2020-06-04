@@ -3,14 +3,13 @@ const Hapi = require('@hapi/hapi')
 async function createServer(port) {
 	const server = Hapi.server({
 		port,
-		host: 'localhost',
 		router: {
 			isCaseSensitive: true,
 			stripTrailingSlash: true
 		},
 		routes: {
 			cors: {
-				origin: ['http://localhost:4200', 'https://mampfalot.app']
+				origin: ['*']
 			},
 			validate: {
 				options: {
