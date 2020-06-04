@@ -27,28 +27,6 @@ async function createServer(port) {
 		}
 	})
 
-	if (process.env.NODE_ENV === 'test') {
-		const tk = require('timekeeper')
-		tk.reset()
-		if (process.env.TIME !== '') {
-			const simulatedTime = process.env.TIME
-			const newSystemTime = new Date()
-
-			newSystemTime.setUTCHours(simulatedTime.split(':')[0])
-			newSystemTime.setUTCMinutes(simulatedTime.split(':')[1])
-			newSystemTime.setUTCSeconds(simulatedTime.split(':')[2])
-
-			if (process.env.DATE !== '') {
-				const simulatedDate = process.env.DATE
-				newSystemTime.setUTCDate(simulatedDate.split('.')[0])
-				newSystemTime.setUTCMonth(Number(simulatedDate.split('.')[1]) - 1)
-				newSystemTime.setUTCFullYear(simulatedDate.split('.')[2])
-			}
-
-			tk.freeze(newSystemTime)
-		}
-	}
-
 	await server.register(require('./util/logger'))
 
 	await server.register([require('./util/authentication/basic'), require('./util/authentication/jwt')])
