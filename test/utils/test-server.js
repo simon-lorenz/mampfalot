@@ -7,7 +7,9 @@ module.exports = {
 	async start(port = 5001, time = '', date = '') {
 		await this.stop()
 
-		server = await createServer(port)
+		if (server === null) {
+			server = await createServer(port)
+		}
 
 		tk.reset()
 

@@ -53,6 +53,8 @@ async function createServer(port) {
 		}
 	)
 
+	await server.initialize()
+
 	return server
 }
 
