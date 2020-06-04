@@ -10,7 +10,7 @@ describe('Absence', () => {
 		describe('POST', () => {
 			beforeEach(async () => {
 				await setupDatabase()
-				await testServer.start(5001, '11:24:59', '25.06.2018')
+				await testServer.start('11:24:59', '25.06.2018')
 			})
 
 			it('marks a user as absent', async () => {
@@ -29,7 +29,7 @@ describe('Absence', () => {
 			})
 
 			it('creates a lunchbreak if necessary', async () => {
-				await testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start('11:24:59', '01.07.2018')
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
@@ -97,14 +97,14 @@ describe('Absence', () => {
 			})
 
 			it('fails if voteEndingTime is reached', async () => {
-				await testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start('11:24:59', '01.07.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/absence')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(201)
 
-				await testServer.start(5001, '11:25:01', '01.07.2018')
+				await testServer.start('11:25:01', '01.07.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/absence')
@@ -117,7 +117,7 @@ describe('Absence', () => {
 			})
 
 			it('fails if voteEndingTime is reached and no lunchbreak exists', async () => {
-				await testServer.start(5001, '11:25:01', '01.07.2018')
+				await testServer.start('11:25:01', '01.07.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/absence')
@@ -135,7 +135,7 @@ describe('Absence', () => {
 			})
 
 			it('fails if the date lies in the past', async () => {
-				await testServer.start(5001, '11:24:59', '02.07.2018')
+				await testServer.start('11:24:59', '02.07.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/absence')
@@ -155,7 +155,7 @@ describe('Absence', () => {
 			})
 
 			it('fails if the date lies in the future', async () => {
-				await testServer.start(5001, '11:24:59', '30.06.2018')
+				await testServer.start('11:24:59', '30.06.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/absence')
@@ -178,7 +178,7 @@ describe('Absence', () => {
 		describe('DELETE', () => {
 			beforeEach(async () => {
 				await setupDatabase()
-				await testServer.start(5001, '11:24:59', '25.06.2018')
+				await testServer.start('11:24:59', '25.06.2018')
 			})
 
 			it('removes an absence', async () => {
@@ -214,7 +214,7 @@ describe('Absence', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(201)
 
-				await testServer.start(5001, '11:25:01', '25.06.2018')
+				await testServer.start('11:25:01', '25.06.2018')
 
 				await request
 					.delete('/groups/1/lunchbreaks/2018-06-25/absence')
@@ -231,7 +231,7 @@ describe('Absence', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(201)
 
-				await testServer.start(5001, '11:24:59', '26.06.2018')
+				await testServer.start('11:24:59', '26.06.2018')
 
 				await request
 					.delete('/groups/1/lunchbreaks/2018-06-25/absence')
@@ -241,7 +241,7 @@ describe('Absence', () => {
 			})
 
 			it('deletes the lunchbreak, if no other participants or comments exist', async () => {
-				await testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start('11:24:59', '01.07.2018')
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')

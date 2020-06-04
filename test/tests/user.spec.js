@@ -338,7 +338,7 @@ describe('User', () => {
 			})
 
 			it('resets a password successfully', async () => {
-				await testServer.start(5001, '14:33:00', '27.01.2020')
+				await testServer.start('14:33:00', '27.01.2020')
 
 				await request
 					.post('/users/please-change-my-password/forgot-password')
@@ -355,7 +355,7 @@ describe('User', () => {
 			})
 
 			it('fails if the password is too short', async () => {
-				await testServer.start(5001, '14:33:00', '27.01.2020')
+				await testServer.start('14:33:00', '27.01.2020')
 
 				await request
 					.post('/users/please-change-my-password/forgot-password')
@@ -422,7 +422,7 @@ describe('User', () => {
 			it('fails with 404 if token is expired', async () => {
 				await request.get('/users/maxmustermann/forgot-password').expect(204)
 
-				await testServer.start(5001, '00:00:00', '25.06.2199')
+				await testServer.start('00:00:00', '25.06.2199')
 
 				await request
 					.post('/users/maxmustermann/forgot-password')

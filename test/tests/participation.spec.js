@@ -80,7 +80,7 @@ describe('Participation', () => {
 					amountSpent: 12.5
 				}
 
-				await testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start('11:24:59', '01.07.2018')
 				await setupDatabase()
 			})
 
@@ -109,7 +109,7 @@ describe('Participation', () => {
 					.expect(403)
 					.expect(Boom.forbidden('Insufficient scope').output.payload)
 
-				await testServer.start(5001, '11:24:59', '26.02.2020')
+				await testServer.start('11:24:59', '26.02.2020')
 				await request
 					.post('/groups/1/lunchbreaks/2020-02-26/participation')
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
@@ -119,14 +119,14 @@ describe('Participation', () => {
 			})
 
 			it('fails if voteEndingTime is reached and a participation exists already', async () => {
-				await testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start('11:24:59', '01.07.2018')
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
 					.send(payload)
 					.expect(201)
 
-				await testServer.start(5001, '11:25:01', '01.07.2018')
+				await testServer.start('11:25:01', '01.07.2018')
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
@@ -139,7 +139,7 @@ describe('Participation', () => {
 			})
 
 			it('fails if voteEndingTime is reached and no lunchbreak exists yet', async () => {
-				await testServer.start(5001, '11:25:01', '01.07.2018')
+				await testServer.start('11:25:01', '01.07.2018')
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
@@ -157,7 +157,7 @@ describe('Participation', () => {
 			})
 
 			it('does not delete older votes if voteEndingTime is reached', async () => {
-				await testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start('11:24:59', '01.07.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/participation')
@@ -174,7 +174,7 @@ describe('Participation', () => {
 						return participant.votes
 					})
 
-				await testServer.start(5001, '11:25:01', '01.07.2018')
+				await testServer.start('11:25:01', '01.07.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/participation')
@@ -193,7 +193,7 @@ describe('Participation', () => {
 			})
 
 			it('fails if the date lies in the past', async () => {
-				await testServer.start(5001, '11:24:00', '01.07.2018')
+				await testServer.start('11:24:00', '01.07.2018')
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-30/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
@@ -208,7 +208,7 @@ describe('Participation', () => {
 			})
 
 			it('fails if the date lies in the future', async () => {
-				await testServer.start(5001, '11:24:00', '01.07.2018')
+				await testServer.start('11:24:00', '01.07.2018')
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-02/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
@@ -390,7 +390,7 @@ describe('Participation', () => {
 			})
 
 			it('overrides a previous participation', async () => {
-				await testServer.start(5001, '11:24:59', '25.06.2018')
+				await testServer.start('11:24:59', '25.06.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-25/participation')
@@ -418,7 +418,7 @@ describe('Participation', () => {
 			})
 
 			it('removes an absence', async () => {
-				await testServer.start(5001, '11:24:59', '26.06.2018')
+				await testServer.start('11:24:59', '26.06.2018')
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-26')
@@ -449,7 +449,7 @@ describe('Participation', () => {
 			})
 
 			it('successfully creates a participation with lunchbreak existing', async () => {
-				await testServer.start(5001, '11:24:59', '26.06.2018')
+				await testServer.start('11:24:59', '26.06.2018')
 				await request
 					.post('/groups/1/lunchbreaks/2018-06-26/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
@@ -502,7 +502,7 @@ describe('Participation', () => {
 
 		describe('PUT', () => {
 			beforeEach(async () => {
-				await testServer.start(5001, '11:24:59', '25.06.2018')
+				await testServer.start('11:24:59', '25.06.2018')
 				await setupDatabase()
 			})
 
@@ -541,7 +541,7 @@ describe('Participation', () => {
 			})
 
 			it('ignores new votes if the participation lies in the past', async () => {
-				await testServer.start(5001, '11:24:59', '26.06.2018')
+				await testServer.start('11:24:59', '26.06.2018')
 				const newVotes = []
 
 				const votes = await request
@@ -571,7 +571,7 @@ describe('Participation', () => {
 			})
 
 			it('ignores new votes if the voteEndingTime is reached', async () => {
-				await testServer.start(5001, '11:25:01', '25.06.2018')
+				await testServer.start('11:25:01', '25.06.2018')
 				const newVotes = []
 
 				const votes = await request
@@ -631,7 +631,7 @@ describe('Participation', () => {
 			})
 
 			it('successfully updates result and amountSpent of a participation in the past', async () => {
-				await testServer.start(5001, '11:25:01', '26.06.2018')
+				await testServer.start('11:25:01', '26.06.2018')
 
 				const payload = {
 					result: testData.getPlace(2),
@@ -653,12 +653,12 @@ describe('Participation', () => {
 
 		describe('DELETE', () => {
 			beforeEach(async () => {
-				await testServer.start(5001, '11:24:59', '25.06.2018')
+				await testServer.start('11:24:59', '25.06.2018')
 				await setupDatabase()
 			})
 
 			it('fails if the voteEndingTime is reached', async () => {
-				await testServer.start(5001, '11:25:01', '25.06.2018')
+				await testServer.start('11:25:01', '25.06.2018')
 				await request
 					.delete('/groups/1/lunchbreaks/2018-06-25/participation')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
@@ -670,7 +670,7 @@ describe('Participation', () => {
 			})
 
 			it('fails if the participation lies in the past', async () => {
-				await testServer.start(5001, '11:24:59', '26.06.2018')
+				await testServer.start('11:24:59', '26.06.2018')
 				await request
 					.delete('/groups/1/lunchbreaks/2018-06-25/participation')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
@@ -726,7 +726,7 @@ describe('Participation', () => {
 			})
 
 			it('does not delete the associated lunchbreak if other absences exist', async () => {
-				await testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start('11:24:59', '01.07.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/participation')
@@ -766,7 +766,7 @@ describe('Participation', () => {
 			})
 
 			it('does not delete the associated lunchbreak if other comments exist', async () => {
-				await testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start('11:24:59', '01.07.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/participation')
@@ -807,7 +807,7 @@ describe('Participation', () => {
 			})
 
 			it('does delete the associated lunchbreak if no other participants, absences or comments exist', async () => {
-				await testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start('11:24:59', '01.07.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/participation')

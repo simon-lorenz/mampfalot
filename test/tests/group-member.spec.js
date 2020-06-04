@@ -224,7 +224,7 @@ describe('Group Member', () => {
 			})
 
 			it('does not fuck up lunchbreaks where the ex-member is responseless', async () => {
-				await testServer.start(5001, '11:24:59', '25.06.2018')
+				await testServer.start('11:24:59', '25.06.2018')
 				await request
 					.delete('/groups/1/lunchbreaks/2018-06-25/participation')
 					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))

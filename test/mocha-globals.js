@@ -42,7 +42,7 @@ after(async () => {
 })
 
 beforeEach(async () => {
-	await testServer.start(5001)
+	await testServer.start()
 })
 
 afterEach(async () => {

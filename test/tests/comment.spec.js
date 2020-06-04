@@ -90,7 +90,7 @@ describe('Comment', () => {
 			})
 
 			it('does not create a lunchbreak if voteEndingTime is reached', async () => {
-				await testServer.start(5001, '11:25:01', '01.07.2018')
+				await testServer.start('11:25:01', '01.07.2018')
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
@@ -111,7 +111,7 @@ describe('Comment', () => {
 			})
 
 			it('does not create a lunchbreak if the date lies in the past', async () => {
-				await testServer.start(5001, '11:25:01', '01.07.2018')
+				await testServer.start('11:25:01', '01.07.2018')
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-30')
@@ -132,7 +132,7 @@ describe('Comment', () => {
 			})
 
 			it('creates a lunchbreak if none exists', async () => {
-				await testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start('11:24:59', '01.07.2018')
 
 				await request
 					.get('/groups/1/lunchbreaks/2018-07-01')
@@ -314,7 +314,7 @@ describe('Comment', () => {
 			})
 
 			it('does not delete the associated lunchbreak if there are other participants', async () => {
-				await testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start('11:24:59', '01.07.2018')
 
 				await request
 					.post('/groups/1/lunchbreaks/2018-07-01/participation')
@@ -347,7 +347,7 @@ describe('Comment', () => {
 			})
 
 			it('does not delete the associated lunchbreak if there are absences', async () => {
-				await testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start('11:24:59', '01.07.2018')
 
 				const id = await request
 					.post('/groups/1/lunchbreaks/2018-07-01/comments')
@@ -386,7 +386,7 @@ describe('Comment', () => {
 			})
 
 			it('does not delete the associated lunchbreak if there are other comments', async () => {
-				await testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start('11:24:59', '01.07.2018')
 
 				const id = await request
 					.post('/groups/1/lunchbreaks/2018-07-01/comments')
@@ -417,7 +417,7 @@ describe('Comment', () => {
 			})
 
 			it('does delete the lunchbreak, if there are no other comments or participants', async () => {
-				await testServer.start(5001, '11:24:59', '01.07.2018')
+				await testServer.start('11:24:59', '01.07.2018')
 
 				const id = await request
 					.post('/groups/1/lunchbreaks/2018-07-01/comments')

@@ -4,11 +4,11 @@ const { createServer } = require('../../src/server')
 let server = null
 
 module.exports = {
-	async start(port = 5001, time = '', date = '') {
+	async start(time = '', date = '') {
 		await this.stop()
 
 		if (server === null) {
-			server = await createServer(port)
+			server = await createServer(5001)
 		}
 
 		tk.reset()
