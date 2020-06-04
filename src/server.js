@@ -9,7 +9,7 @@ async function createServer(port) {
 		},
 		routes: {
 			cors: {
-				origin: ['http://localhost:4200', 'https://mampfalot.app']
+				origin: ['*']
 			},
 			validate: {
 				options: {
