@@ -3,7 +3,7 @@ const dotenv = require('dotenv')
 dotenv.config()
 
 const { createServer } = require('./src/server')
-const { sequelize } = require('./src/models')
+const { sequelize } = require('./src/sequelize')
 
 start()
 

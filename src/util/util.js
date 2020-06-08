@@ -1,7 +1,7 @@
 const crypto = require('crypto')
 const fs = require('fs')
 const moment = require('moment')
-const { GroupRepository } = require('../repositories')
+const GroupRepository = require('../group/group.repository')
 
 module.exports = {
 	/**

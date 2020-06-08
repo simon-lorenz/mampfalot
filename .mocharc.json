@@ -2,6 +2,6 @@
   "file": "./test/mocha-globals.js",
   "timeout": 10000,
   "require": "mocha-clean",
-  "spec": "test/**/*.spec.js",
+  "spec": "./!(node_modules)/**/*.spec.js",
   "exit": true
 }

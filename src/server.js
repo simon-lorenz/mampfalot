@@ -1,4 +1,5 @@
 const Hapi = require('@hapi/hapi')
+const { sequelize } = require('./sequelize')
 
 async function createServer(port) {
 	const server = Hapi.server({
@@ -27,24 +28,30 @@ async function createServer(port) {
 		}
 	})
 
-	await server.register([require('./util/authentication/basic'), require('./util/authentication/jwt')])
+	await server.register([require('./authentication/basic'), require('./authentication/jwt')])
 
 	server.auth.default('jwt')
 
-	await server.register([require('./util/logger'), require('./util/mailer')])
+	await server.register([require('./util/logger'), require('./mails/mailer')])
 
 	await server.register([
-		require('./router/authenticate'),
-		require('./router/lunchbreaks'),
-		require('./router/absence'),
-		require('./router/comments'),
-		require('./router/users'),
-		require('./router/places'),
-		require('./router/groups'),
-		require('./router/group-members'),
-		require('./router/participation'),
-		require('./router/invitiations')
+		require('./authentication/authentication.router'),
+		require('./lunchbreak/lunchbreaks.router'),
+		require('./absence/absence.router'),
+		require('./comment/comment.router'),
+		require('./user/user.router'),
+		require('./place/place.router'),
+		require('./group/group.router'),
+		require('./group-member/group-member.router'),
+		require('./participant/participant.router'),
+		require('./invitation/invitiation.router')
 	])
+
+	Object.keys(sequelize.models).forEach(modelName => {
+		if (sequelize.models[modelName].associate) {
+			sequelize.models[modelName].associate(sequelize.models)
+		}
+	})
 
 	await server.initialize()
 
