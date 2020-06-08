@@ -21,7 +21,7 @@ tags:
   - name: User (Unauthenticated)
 
 servers:
-  - url: https://mampfalot.herokuapps.com/api
+  - url: https://mampfalot.herokuapps.com
 
 paths:
 

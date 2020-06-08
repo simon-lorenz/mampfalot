@@ -1,18 +1,17 @@
 require('dotenv').config()
 
-const {
-	Absence,
-	User,
-	Group,
-	GroupMembers,
-	Lunchbreak,
-	Place,
-	Participant,
-	Vote,
-	Comment,
-	Invitation
-} = require('../../../src/models')
-const { sequelize } = require('../../../src/models')
+const { sequelize } = require('../../../src/sequelize')
+const AbsenceModel = require('../../../src/absence/absence.model')
+const CommentModel = require('../../../src/comment/comment.model')
+const GroupModel = require('../../../src/group/group.model')
+const GroupMemberModel = require('../../../src/group-member/group-member.model')
+const InvitationModel = require('../../../src/invitation/invitation.model')
+const LunchbreakModel = require('../../../src/lunchbreak/lunchbreak.model')
+const UserModel = require('../../../src/user/user.model')
+const VoteModel = require('../../../src/vote/vote.model')
+const ParticipantModel = require('../../../src/participant/participant.model')
+const PlaceModel = require('../../../src/place/place.model')
+
 const data = require('./test-data')
 const bcrypt = require('bcryptjs')
 
@@ -20,22 +19,22 @@ module.exports = async function resetData() {
 	await sequelize.sync({ force: true })
 
 	try {
-		await User.bulkCreate(
+		await UserModel.bulkCreate(
 			data.users.map(user => {
 				const result = Object.assign({}, user)
 				result.password = bcrypt.hashSync(user.password, 1)
 				return result
 			})
 		)
-		await Group.bulkCreate(data.groups)
-		await GroupMembers.bulkCreate(data.groupMembers)
-		await Invitation.bulkCreate(data.invitations)
-		await Place.bulkCreate(data.places)
-		await Lunchbreak.bulkCreate(data.lunchbreaks)
-		await Participant.bulkCreate(data.participants)
-		await Absence.bulkCreate(data.absences)
-		await Vote.bulkCreate(data.votes)
-		await Comment.bulkCreate(data.comments)
+		await GroupModel.bulkCreate(data.groups)
+		await GroupMemberModel.bulkCreate(data.groupMembers)
+		await InvitationModel.bulkCreate(data.invitations)
+		await PlaceModel.bulkCreate(data.places)
+		await LunchbreakModel.bulkCreate(data.lunchbreaks)
+		await ParticipantModel.bulkCreate(data.participants)
+		await AbsenceModel.bulkCreate(data.absences)
+		await VoteModel.bulkCreate(data.votes)
+		await CommentModel.bulkCreate(data.comments)
 
 		// The test data gets inserted with explicit primary keys.
 		// As a result, the postgres autoincrement/serial won't get incremented and we'll get

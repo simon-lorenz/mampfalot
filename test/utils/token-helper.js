@@ -1,5 +1,5 @@
 const { users } = require('./scripts/test-data')
-const request = require('supertest')('http://localhost:5001/api')
+const request = require('supertest')('http://localhost:5001')
 
 class TokenHelper {
 	async getAuthorizationHeader(username) {
