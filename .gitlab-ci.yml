@@ -14,13 +14,13 @@ lint:
   image: simonlorenz/docker-with-compose
   stage: test
   script:
-    - docker-compose -f docker-compose.test.yml run server-test npm run lint
+    - docker-compose -f docker-compose.ci.yml run server-test npm run lint
 
 test:
   image: simonlorenz/docker-with-compose
   stage: test
   script:
-    - docker-compose -f docker-compose.test.yml run server-test npm run test
+    - docker-compose -f docker-compose.ci.yml run server-test npm run test
 
 production:
   image: docker:latest
