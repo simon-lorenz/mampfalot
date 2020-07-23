@@ -2,11 +2,6 @@ stages:
   - test
   - publish
 
-cache:
-  key: ${CI_COMMIT_REF_SLUG}
-  paths:
-    - node_modules/
-
 services:
   - docker:dind
 
