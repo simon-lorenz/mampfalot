@@ -57,7 +57,10 @@ typings/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
+# environment variables file
 .env
+
+# postgres volume
+.docker/postgres
 
 # End of https://www.gitignore.io/api/node

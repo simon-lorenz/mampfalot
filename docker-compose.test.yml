@@ -1,0 +1,32 @@
+version: '3.6'
+
+services:
+  server-test:
+    build: .
+    container_name: mampfalot-test
+    volumes:
+      - $PWD:/app
+    networks:
+      - app
+    depends_on:
+      - postgres-test
+    command: npm run test
+    environment:
+      - NODE_ENV=test
+      - LOG_LEVEL=error
+      - DATABASE_URL=postgres://postgres:root@postgres-test:5432/mampfalot
+      - SECRET_KEY=123456
+
+  postgres-test:
+    image: postgres:11
+    container_name: mampfalot-postgres-test
+    networks:
+      - app
+    environment:
+      - "POSTGRES_PASSWORD=root"
+      - "POSTGRES_DB=mampfalot"
+
+networks:
+  app:
+    driver: bridge
+

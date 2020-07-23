@@ -1,14 +1,11 @@
-const dotenv = require('dotenv')
-
-dotenv.config()
-
+const { ConnectionError } = require('sequelize')
 const { createServer } = require('./src/server')
 const { sequelize } = require('./src/sequelize')
 
-start()
+const server = start()
 
 async function start() {
-	const server = await createServer(process.env.PORT)
+	const server = await createServer(5000)
 
 	server.logger.info('[Application] Initializing...')
 	server.logger.info(`[Config] Running in ${process.env.NODE_ENV} mode.`)
@@ -16,9 +13,27 @@ async function start() {
 	server.logger.info(`[Config] Frontend URL: ${process.env.FRONTEND_BASE_URL}`)
 
 	try {
-		server.logger.info('[Database] Trying to connect to the database ...')
-		await sequelize.authenticate()
-		server.logger.info('[Database] Connection successfully established.')
+		const max_tries = 5
+		for (let i = 1; i <= max_tries; i++) {
+			try {
+				server.logger.info(`[Database] Trying to connect... (${i}/${max_tries})...`)
+				await sequelize.authenticate()
+				server.logger.info('[Database] Connection successfully established.')
+				break
+			} catch (e) {
+				if (e instanceof ConnectionError) {
+					if (i === max_tries) {
+						server.logger.info('[Database] Connection could not be established.')
+						throw e
+					} else {
+						await new Promise(resolve => setTimeout(resolve, 1000))
+					}
+				} else {
+					throw e
+				}
+			}
+		}
+
 		server.logger.info('[Database] Initializing sync...')
 		await sequelize.sync()
 		server.logger.info('[Database] Sync complete!')
@@ -45,4 +60,13 @@ process.on('unhandledRejection', err => {
 	console.error('The process crashed unexpectedly and will be terminated.')
 	console.error(err)
 	process.exit(1)
+})
+
+process.on('SIGINT', () => {
+	console.log('Stopping server after SIGINT...')
+
+	server.stop({ timeout: 5000 }).then(err => {
+		console.log('Server stopped.')
+		process.exit(err ? 1 : 0)
+	})
 })
