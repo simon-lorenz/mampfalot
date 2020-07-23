@@ -1,5 +1,3 @@
-require('dotenv').config()
-
 const { sequelize } = require('../../../src/sequelize')
 const AbsenceModel = require('../../../src/absence/absence.model')
 const CommentModel = require('../../../src/comment/comment.model')

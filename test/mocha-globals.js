@@ -5,15 +5,6 @@
 process.env.NODE_ENV = 'test'
 
 /**
- * Disable logging.
- */
-if (!process.env.LOG_LEVEL) {
-	process.env.LOG_LEVEL = 'silent'
-}
-
-require('dotenv').config()
-
-/**
  * Chai plugins
  */
 const chai = require('chai')
