@@ -18,7 +18,7 @@ This will start the app, a development database, a test database and a pgAdmin4 
 
 The app will be reachable at `localhost:5000` and reload automatically when code changes.
 
-pgAdmin4 is available at `localhost:5050`. The default password for the postgres database is `root`.
+pgAdmin4 is available at `localhost:5050`. Login as `pgadmin4@pgadmin.org` and password `admin`. The default password for the mampfalot database is `root`.
 
 ### Reading Logs
 
