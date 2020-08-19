@@ -35,7 +35,7 @@ beforeEach(async () => {
 	await testServer.start()
 
 	await knex.seed.run({
-		directory: './src/knex',
+		directory: './src/knex/seeds',
 		specific: 'seeder.js'
 	})
 })

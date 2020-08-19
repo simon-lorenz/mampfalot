@@ -9,6 +9,7 @@
   "scripts": {
     "start": "node app.js",
     "start:dev": "nodemon app.js --quiet",
+    "db:seed": "knex --knexfile=./src/knex/knexfile.js seed:run --specific=seeder.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "mocha"

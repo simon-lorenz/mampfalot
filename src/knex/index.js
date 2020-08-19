@@ -1,13 +1,4 @@
 const Knex = require('knex')
-const { DATABASE_URL } = process.env
+const config = require('./knexfile')
 
-module.exports = Knex({
-	client: 'pg',
-	connection: DATABASE_URL,
-	seeds: {
-		directory: `${__dirname}/seeds`
-	},
-	migrations: {
-		directory: `${__dirname}/migrations`
-	}
-})
+module.exports = Knex(config)

@@ -11,7 +11,7 @@ const {
 	votes,
 	places,
 	users
-} = require('./seeds')
+} = require('.')
 
 exports.seed = async knex => {
 	await knex('votes').del()
