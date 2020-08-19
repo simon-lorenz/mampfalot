@@ -24,18 +24,20 @@ require('chai').should()
  * Global hooks.
  */
 const testServer = require('./utils/test-server')
-const setupDatabase = require('./utils/scripts/setup-database')
+const knex = require('../src/knex')
 
 before(async () => {
-	await setupDatabase()
-})
-
-after(async () => {
-	await setupDatabase()
+	await knex.migrate.rollback(true)
+	await knex.migrate.latest()
 })
 
 beforeEach(async () => {
 	await testServer.start()
+
+	await knex.seed.run({
+		directory: './src/knex',
+		specific: 'seeder.js'
+	})
 })
 
 afterEach(async () => {

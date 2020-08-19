@@ -1,5 +1,4 @@
 const Hapi = require('@hapi/hapi')
-const { sequelize } = require('./sequelize')
 
 async function createServer(port) {
 	const server = Hapi.server({
@@ -32,7 +31,7 @@ async function createServer(port) {
 
 	server.auth.default('jwt')
 
-	await server.register([require('./util/logger'), require('./mails/mailer')])
+	await server.register([require('./util/logger'), require('./mails/mailer'), require('./util/objection')])
 
 	await server.register([
 		require('./authentication/authentication.router'),
@@ -46,12 +45,6 @@ async function createServer(port) {
 		require('./participant/participant.router'),
 		require('./invitation/invitiation.router')
 	])
-
-	Object.keys(sequelize.models).forEach(modelName => {
-		if (sequelize.models[modelName].associate) {
-			sequelize.models[modelName].associate(sequelize.models)
-		}
-	})
 
 	await server.initialize()
 

@@ -1,41 +1,48 @@
-const { DataTypes } = require('sequelize')
-const { sequelize } = require('../sequelize')
+const { Model } = require('objection')
 
-const CommentModel = sequelize.define(
-	'Comment',
-	{
-		id: {
-			type: DataTypes.INTEGER,
-			primaryKey: true,
-			autoIncrement: true
-		},
-		lunchbreakId: {
-			type: DataTypes.INTEGER,
-			allowNull: false,
-			onDelete: 'CASCADE'
-		},
-		memberId: {
-			type: DataTypes.INTEGER,
-			allowNull: true,
-			onDelete: 'SET NULL'
-		},
-		text: {
-			type: DataTypes.TEXT,
-			allowNull: false
-		}
-	},
-	{
-		tableName: 'comments',
-		timestamps: true,
-		name: {
-			singular: 'comment',
-			plural: 'comments'
+class CommentModel extends Model {
+	static get tableName() {
+		return 'comments'
+	}
+
+	static get relationMappings() {
+		const GroupMemberModel = require('../group-member/group-member.model')
+		const LunchbreakModel = require('../lunchbreak/lunchbreak.model')
+
+		return {
+			author: {
+				relation: Model.BelongsToOneRelation,
+				modelClass: GroupMemberModel,
+				join: {
+					from: 'comments.memberId',
+					to: 'group_members.id'
+				}
+			},
+			lunchbreak: {
+				relation: Model.BelongsToOneRelation,
+				modelClass: LunchbreakModel,
+				join: {
+					from: 'comments.lunchbreakId',
+					to: 'lunchbreaks.id'
+				}
+			}
 		}
 	}
-)
 
-CommentModel.associate = models => {
-	models.Comment.belongsTo(models.GroupMembers, { foreignKey: 'memberId', as: 'author' })
+	$beforeInsert() {
+		this.createdAt = new Date()
+	}
+
+	$beforeUpdate() {
+		this.updatedAt = new Date()
+	}
+
+	$formatJson(json) {
+		json = super.$formatJson(json)
+		delete json.memberId
+		delete json.lunchbreakId
+		return json
+	}
 }
 
 module.exports = CommentModel

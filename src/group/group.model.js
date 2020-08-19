@@ -1,62 +1,58 @@
-const { DataTypes } = require('sequelize')
-const { sequelize } = require('../sequelize')
+const { Model } = require('objection')
 
-const GroupModel = sequelize.define(
-	'Group',
-	{
-		id: {
-			type: DataTypes.INTEGER,
-			primaryKey: true,
-			autoIncrement: true
-		},
-		name: {
-			type: DataTypes.STRING,
-			allowNull: false
-		},
-		lunchTime: {
-			type: DataTypes.TIME,
-			allowNull: false
-		},
-		voteEndingTime: {
-			type: DataTypes.TIME,
-			allowNull: false
-		},
-		utcOffset: {
-			type: DataTypes.INTEGER,
-			allowNull: false
-		},
-		pointsPerDay: {
-			type: DataTypes.INTEGER,
-			allowNull: false
-		},
-		maxPointsPerVote: {
-			type: DataTypes.INTEGER,
-			allowNull: false
-		},
-		minPointsPerVote: {
-			type: DataTypes.INTEGER,
-			allowNull: false
-		}
-	},
-	{
-		tableName: 'groups',
-		timestamps: false,
-		name: {
-			singular: 'group',
-			plural: 'groups'
+class GroupModel extends Model {
+	static get tableName() {
+		return 'groups'
+	}
+
+	static get relationMappings() {
+		const UserModel = require('../user/user.model')
+		const PlaceModel = require('../place/place.model')
+
+		return {
+			places: {
+				relation: Model.HasManyRelation,
+				modelClass: PlaceModel,
+				join: {
+					from: 'groups.id',
+					to: 'places.groupId'
+				}
+			},
+			members: {
+				relation: Model.ManyToManyRelation,
+				modelClass: UserModel,
+				join: {
+					from: 'groups.id',
+					through: {
+						from: 'group_members.groupId',
+						to: 'group_members.userId',
+						extra: ['color', 'isAdmin']
+					},
+					to: 'users.id'
+				}
+			}
 		}
 	}
-)
 
-GroupModel.associate = models => {
-	models.Group.hasMany(models.Invitation, { foreignKey: 'groupId' })
-	models.Group.hasMany(models.Place, { foreignKey: 'groupId' })
-	models.Group.hasMany(models.Lunchbreak, { foreignKey: 'groupId' })
-	models.Group.belongsToMany(models.User, {
-		through: models.GroupMembers,
-		as: 'members',
-		foreignKey: 'groupId'
-	})
+	$formatJson(json) {
+		json = super.$formatJson(json)
+
+		if (json.members) {
+			json.members = json.members.map(member => {
+				return {
+					username: member.username,
+					firstName: member.firstName,
+					lastName: member.lastName,
+					config: {
+						color: member.color,
+						isAdmin: member.isAdmin
+					}
+				}
+			})
+		}
+
+		return json
+	}
 }
 
 module.exports = GroupModel

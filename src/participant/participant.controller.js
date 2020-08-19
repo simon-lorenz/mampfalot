@@ -7,6 +7,7 @@ const PlaceModel = require('../place/place.model')
 const { voteEndingTimeReached, dateIsToday } = require('../util/util')
 const LunchbreakController = require('../lunchbreak/lunchbreak.controller')
 const VoteController = require('../vote/vote.controller')
+const { NotFoundError } = require('objection')
 
 async function deleteParticipation(request, h) {
 	const { groupId, date } = request.params
@@ -18,7 +19,9 @@ async function deleteParticipation(request, h) {
 		throw Boom.badRequest('The end of voting has been reached, therefore this participation cannot be deleted')
 	}
 
-	await participation.destroy()
+	await ParticipantModel.query()
+		.delete()
+		.where({ id: participation.id })
 
 	await LunchbreakController.checkForAutoDeletion(participation.lunchbreak.id)
 
@@ -39,19 +42,7 @@ async function getParticipationsOfAuthenticatedUser(request, h) {
 		throw Boom.badRequest('The query values from and to have to be in the same year')
 	}
 
-	const participations = await ParticipationRepository.loadParticipations(groupId, from, to, id)
-	return participations.map(participation => {
-		participation = participation.toJSON()
-		return {
-			date: participation.lunchbreak.date,
-			result: participation.result,
-			amountSpent: participation.amountSpent,
-			votes: participation.votes.map(vote => {
-				delete vote.id
-				return vote
-			})
-		}
-	})
+	return ParticipationRepository.loadParticipations(groupId, from, to, id)
 }
 
 async function createParticipation(request, h) {
@@ -70,47 +61,54 @@ async function createParticipation(request, h) {
 	}
 
 	if (payload.result) {
-		const place = await PlaceModel.findOne({ where: { id: payload.result.id, groupId } })
+		const place = await PlaceModel.query()
+			.where({ id: payload.result.id, groupId })
+			.first()
 
+		// TODO: Foreign key constraint
 		if (!place) {
 			throw Boom.badRequest('The results placeId does not exists or does not belong to this group')
 		}
 	}
 
-	const member = await GroupMemberModel.findOne({
-		attributes: ['id'],
-		where: {
-			groupId,
-			userId
-		}
-	})
+	const member = await GroupMemberModel.query()
+		.select(['id'])
+		.where({ groupId, userId })
+		.first()
 
 	let participation
 	try {
 		participation = await ParticipationRepository.loadParticipation(groupId, date, userId)
-		participation.resultId = payload.result ? payload.result.id : null
-		participation.amountSpent = payload.amountSpent
-	} catch (error) {
-		if (Boom.isBoom(error) && error.output.statusCode === 404) {
-			participation = ParticipantModel.build({
-				lunchbreakId: lunchbreak.id,
-				memberId: member.id,
+
+		await ParticipantModel.query()
+			.update({
 				resultId: payload.result ? payload.result.id : null,
 				amountSpent: payload.amountSpent
 			})
+			.where({ id: participation.id })
+
+		participation = await ParticipationRepository.loadParticipation(groupId, date, userId)
+	} catch (error) {
+		if (error instanceof NotFoundError) {
+			participation = await ParticipantModel.query()
+				.insert({
+					lunchbreakId: lunchbreak.id,
+					memberId: member.id,
+					resultId: payload.result ? payload.result.id : null,
+					amountSpent: payload.amountSpent
+				})
+				.returning('*')
 		} else {
 			throw error
 		}
 	}
 
-	await participation.save()
-
-	await AbsenceModel.destroy({
-		where: {
+	await AbsenceModel.query()
+		.delete()
+		.where({
 			memberId: participation.memberId,
 			lunchbreakId: participation.lunchbreakId
-		}
-	})
+		})
 
 	payload.votes.forEach(vote => {
 		vote.participantId = participation.id
@@ -119,19 +117,7 @@ async function createParticipation(request, h) {
 
 	await VoteController.overrideVotes(payload.votes, participation.id)
 
-	const result = await ParticipationRepository.loadParticipation(groupId, date, userId)
-	return h
-		.response({
-			date: result.lunchbreak.date,
-			votes: result.votes.map(vote => {
-				vote = vote.toJSON()
-				delete vote.id
-				return vote
-			}),
-			result: result.result,
-			amountSpent: result.amountSpent
-		})
-		.code(201)
+	return h.response(await ParticipationRepository.loadParticipation(groupId, date, userId)).code(201)
 }
 
 async function updateParticipation(request, h) {
@@ -141,10 +127,12 @@ async function updateParticipation(request, h) {
 
 	const participation = await ParticipationRepository.loadParticipation(groupId, date, userId)
 
-	participation.amountSpent = payload.amountSpent
-	participation.resultId = payload.result ? payload.result.id : null
-
-	await participation.save()
+	await ParticipantModel.query()
+		.update({
+			amountSpent: payload.amountSpent,
+			resultId: payload.result ? payload.result.id : null
+		})
+		.where({ id: participation.id })
 
 	if (payload.votes && !(await voteEndingTimeReached(groupId, date))) {
 		payload.votes.map(vote => {
@@ -155,18 +143,7 @@ async function updateParticipation(request, h) {
 		await VoteController.overrideVotes(payload.votes, participation.id)
 	}
 
-	const result = await ParticipationRepository.loadParticipation(groupId, date, userId)
-
-	return {
-		date: result.lunchbreak.date,
-		votes: result.votes.map(vote => {
-			vote = vote.toJSON()
-			delete vote.id
-			return vote
-		}),
-		result: result.result,
-		amountSpent: result.amountSpent
-	}
+	return ParticipationRepository.loadParticipation(groupId, date, userId)
 }
 
 module.exports = {

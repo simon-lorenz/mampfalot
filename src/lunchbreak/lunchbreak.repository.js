@@ -1,14 +1,6 @@
-const Boom = require('@hapi/boom')
-const GroupRepository = require('../group/group.repository')
-const AbsenceModel = require('../absence/absence.model')
-const CommentModel = require('../comment/comment.model')
-const GroupMemberModel = require('../group-member/group-member.model')
+const GroupMemberRepository = require('../group-member/group-member.repository')
 const LunchbreakModel = require('./lunchbreak.model')
-const UserModel = require('../user/user.model')
-const ParticipantModel = require('../participant/participant.model')
-const PlaceModel = require('../place/place.model')
-const VoteModel = require('../vote/vote.model')
-const { Op } = require('sequelize')
+const Boom = require('@hapi/boom')
 
 function convertComment(comment) {
 	function getAuthor(comment) {
@@ -55,10 +47,7 @@ function convertParticipant(participant) {
 
 	return {
 		member: getMember(participant),
-		votes: participant.votes.map(vote => {
-			delete vote.id
-			return vote
-		})
+		votes: participant.votes
 	}
 }
 
@@ -74,9 +63,8 @@ function convertAbsence(absence) {
 	}
 }
 
-async function calculateResponseless(lunchbreak, groupId) {
-	const group = await GroupRepository.getGroup(groupId)
-	return group.members.filter(member => {
+function calculateResponseless(lunchbreak, groupMembers) {
+	return groupMembers.filter(member => {
 		const participates = lunchbreak.participants.find(p => p.member !== null && p.member.username === member.username)
 		const absent = lunchbreak.absent.find(absent => absent.username === member.username)
 		return !participates && !absent
@@ -84,199 +72,92 @@ async function calculateResponseless(lunchbreak, groupId) {
 }
 
 class LunchbreakRepository {
-	async getLunchbreak(groupId, date) {
-		let lunchbreak = await LunchbreakModel.findOne({
-			attributes: ['id', 'date'],
-			where: {
-				groupId: groupId,
-				date: date
-			},
-			include: [
-				{
-					model: ParticipantModel,
-					attributes: ['id'],
-					include: [
-						{
-							model: GroupMemberModel,
-							attributes: ['id', 'isAdmin', 'color'],
-							as: 'member',
-							include: [
-								{
-									model: UserModel,
-									attributes: ['username', 'firstName', 'lastName']
-								}
-							]
-						},
-						{
-							model: VoteModel,
-							attributes: ['id', 'points'],
-							include: [
-								{
-									model: PlaceModel,
-									attributes: ['id', 'name', 'foodType']
-								}
-							]
-						}
-					]
-				},
-				{
-					model: AbsenceModel,
-					attributes: ['memberId'],
-					include: [
-						{
-							model: GroupMemberModel,
-							as: 'member',
-							include: [
-								{
-									model: UserModel,
-									attributes: ['username', 'firstName', 'lastName']
-								}
-							]
-						}
-					]
-				},
-				{
-					model: CommentModel,
-					attributes: ['id', 'text', 'createdAt', 'updatedAt'],
-					include: [
-						{
-							model: GroupMemberModel,
-							as: 'author',
-							include: [
-								{
-									model: UserModel,
-									attributes: ['username', 'firstName', 'lastName']
-								}
-							]
-						}
-					]
-				}
-			],
-			order: [[CommentModel, 'createdAt', 'DESC']]
-		})
-
-		if (lunchbreak) {
-			lunchbreak = lunchbreak.toJSON()
-
-			lunchbreak.comments = lunchbreak.comments.map(convertComment)
-			lunchbreak.participants = lunchbreak.participants.map(convertParticipant)
-			lunchbreak.absent = lunchbreak.absences.map(convertAbsence)
-			delete lunchbreak.absences
-
-			lunchbreak.responseless = await calculateResponseless(lunchbreak, groupId)
-
-			return lunchbreak
-		} else {
-			throw Boom.notFound()
+	async getLunchbreak(groupId, date, id) {
+		if (!groupId && !date && !id) {
+			throw Boom.badImplementation('Missing parameter for getLunchbreak')
 		}
+
+		const lunchbreak = await LunchbreakModel.query()
+			.skipUndefined()
+			.throwIfNotFound()
+			.select(['lunchbreaks.id', 'lunchbreaks.groupId', 'lunchbreaks.date'])
+			.withGraphFetched(
+				`[
+						absent.member.user,
+						comments(orderByCreation).author.user,
+						participants.[member.user, votes(voteAttributes).place(placeAttributes)]
+				]`
+			)
+			.modifiers({
+				orderByCreation(builder) {
+					builder.orderBy('createdAt', 'desc')
+				},
+				placeAttributes(builder) {
+					builder.select(['id', 'name', 'foodType'])
+				},
+				voteAttributes(builder) {
+					builder.select(['points'])
+				}
+			})
+			.where('lunchbreaks.groupId', '=', groupId)
+			.where('lunchbreaks.date', '=', date)
+			.where('lunchbreaks.id', '=', id)
+			.first()
+
+		const members = await GroupMemberRepository.getMembers(lunchbreak.groupId)
+
+		lunchbreak.absent = lunchbreak.absent.map(convertAbsence)
+		lunchbreak.comments = lunchbreak.comments.map(convertComment)
+		lunchbreak.participants = lunchbreak.participants.map(convertParticipant)
+		lunchbreak.responseless = await calculateResponseless(lunchbreak, members)
+
+		return lunchbreak
 	}
 
 	async getLunchbreakId(groupId, date) {
-		const lunchbreak = await LunchbreakModel.findOne({
-			attributes: ['id'],
-			where: {
-				groupId,
-				date
-			}
-		})
+		const { id } = await LunchbreakModel.query()
+			.select(['id'])
+			.where({ groupId, date })
+			.first()
 
-		return lunchbreak.id
+		return id
 	}
 
 	async getLunchbreaks(groupId, from, to) {
-		let lunchbreaks = await LunchbreakModel.findAll({
-			attributes: ['id', 'date'],
-			where: {
-				groupId: groupId,
-				date: {
-					[Op.between]: [from, to]
-				}
-			},
-			include: [
-				{
-					model: ParticipantModel,
-					attributes: ['id'],
-					include: [
-						{
-							model: GroupMemberModel,
-							as: 'member',
-							include: [
-								{
-									model: UserModel,
-									attributes: ['username', 'firstName', 'lastName']
-								}
-							]
-						},
-						{
-							model: VoteModel,
-							attributes: ['id', 'points'],
-							include: [
-								{
-									model: PlaceModel,
-									attributes: ['id', 'name', 'foodType']
-								}
-							]
-						}
-					]
+		const lunchbreaks = await LunchbreakModel.query()
+			.throwIfNotFound()
+			.select(['lunchbreaks.id', 'lunchbreaks.date'])
+			.withGraphFetched(
+				`[
+						absent.member.user,
+						comments(orderByCreation).author.user,
+						participants.[member.user, votes(voteAttributes).place(placeAttributes)]
+				]`
+			)
+			.modifiers({
+				orderByCreation(builder) {
+					builder.orderBy('createdAt', 'desc')
 				},
-				{
-					model: AbsenceModel,
-					attributes: ['memberId'],
-					include: [
-						{
-							model: GroupMemberModel,
-							as: 'member',
-							include: [
-								{
-									model: UserModel,
-									attributes: ['username', 'firstName', 'lastName']
-								}
-							]
-						}
-					]
+				placeAttributes(builder) {
+					builder.select(['id', 'name', 'foodType'])
 				},
-				{
-					model: CommentModel,
-					attributes: ['id', 'text', 'createdAt', 'updatedAt'],
-					include: [
-						{
-							model: GroupMemberModel,
-							as: 'author',
-							include: [
-								{
-									model: UserModel,
-									attributes: ['username', 'firstName', 'lastName']
-								}
-							]
-						}
-					]
+				voteAttributes(builder) {
+					builder.select(['points'])
 				}
-			],
-			order: [[CommentModel, 'createdAt', 'DESC']]
-		})
+			})
+			.where('lunchbreaks.groupId', '=', groupId)
+			.whereBetween('lunchbreaks.date', [from, to])
 
-		lunchbreaks = lunchbreaks.map(lunchbreak => lunchbreak.toJSON())
+		const members = await GroupMemberRepository.getMembers(groupId)
 
-		const group = await GroupRepository.getGroup(groupId)
-
-		lunchbreaks = lunchbreaks.map(lunchbreak => {
+		return lunchbreaks.map(lunchbreak => {
+			lunchbreak.absent = lunchbreak.absent.map(convertAbsence)
 			lunchbreak.comments = lunchbreak.comments.map(convertComment)
 			lunchbreak.participants = lunchbreak.participants.map(convertParticipant)
-			lunchbreak.absent = lunchbreak.absences.map(convertAbsence)
-
-			delete lunchbreak.absences
-
-			const allMembers = group.members
-			lunchbreak.responseless = allMembers.filter(member => {
-				const participates = lunchbreak.participants.find(p => p.member.username === member.username)
-				const absent = lunchbreak.absent.find(absent => absent.username === member.username)
-				return !participates && !absent
-			})
+			lunchbreak.responseless = calculateResponseless(lunchbreak, members)
 
 			return lunchbreak
 		})
-
-		return lunchbreaks
 	}
 }
 

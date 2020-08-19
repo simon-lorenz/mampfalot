@@ -1,9 +1,9 @@
 const Boom = require('@hapi/boom')
-const setupDatabase = require('../../test/utils/scripts/setup-database')
-const testData = require('../../test/utils/scripts/test-data')
+const testData = require('../knex/seeds')
 const testServer = require('../../test/utils/test-server')
 const request = require('supertest')('http://localhost:5001')
 const TokenHelper = require('../../test/utils/token-helper')
+const { expect } = require('chai')
 
 describe('Group Member', () => {
 	describe('/groups/:groupId/members/:username', () => {
@@ -24,10 +24,6 @@ describe('Group Member', () => {
 		})
 
 		describe('PUT', () => {
-			beforeEach(async () => {
-				await setupDatabase()
-			})
-
 			it('should return a member resource', async () => {
 				await request
 					.put('/groups/1/members/maxmustermann')
@@ -133,10 +129,6 @@ describe('Group Member', () => {
 		})
 
 		describe('DELETE', () => {
-			beforeEach(async () => {
-				await setupDatabase()
-			})
-
 			it('requires group admin rights to remove other members', async () => {
 				await request
 					.delete('/groups/1/members/maxmustermann')
@@ -220,6 +212,21 @@ describe('Group Member', () => {
 						if (!invitation) {
 							throw new Error('Invitation not found!')
 						}
+					})
+			})
+
+			it('does set the author of all comments of this user to null', async () => {
+				await request
+					.delete('/groups/1/members/johndoe1')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.expect(204)
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-06-25')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+					.expect(res => {
+						expect(res.body.comments.find(c => c.id === 3).author).to.be.null
 					})
 			})
 

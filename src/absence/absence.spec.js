@@ -1,7 +1,6 @@
-const setupDatabase = require('../../test/utils/scripts/setup-database')
 const request = require('supertest')('http://localhost:5001')
 const TokenHelper = require('../../test/utils/token-helper')
-const testData = require('../../test/utils/scripts/test-data')
+const testData = require('../knex/seeds')
 const testServer = require('../../test/utils/test-server')
 const Boom = require('@hapi/boom')
 
@@ -9,7 +8,6 @@ describe('Absence', () => {
 	describe('/groups/:id/lunchbreaks/:date/absence', () => {
 		describe('POST', () => {
 			beforeEach(async () => {
-				await setupDatabase()
 				await testServer.start('11:24:59', '25.06.2018')
 			})
 
@@ -177,7 +175,6 @@ describe('Absence', () => {
 
 		describe('DELETE', () => {
 			beforeEach(async () => {
-				await setupDatabase()
 				await testServer.start('11:24:59', '25.06.2018')
 			})
 

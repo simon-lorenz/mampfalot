@@ -22,9 +22,9 @@ async function createGroup(request, h) {
 		throw Boom.badRequest('"lunchTime" must be greater than voteEndingTime')
 	}
 
-	const { id } = await GroupModel.create(payload)
+	const { id } = await GroupModel.query().insert(payload)
 
-	await GroupMemberModel.create({
+	await GroupMemberModel.query().insert({
 		groupId: id,
 		userId: request.auth.credentials.id,
 		color: '#80d8ff',
@@ -43,11 +43,9 @@ async function updateGroup(request, h) {
 		throw Boom.badRequest('"lunchTime" must be greater than voteEndingTime')
 	}
 
-	await GroupModel.update(payload, {
-		where: {
-			id: groupId
-		}
-	})
+	await GroupModel.query()
+		.update(payload)
+		.where({ id: groupId })
 
 	return GroupRepository.getGroup(groupId)
 }
@@ -55,11 +53,9 @@ async function updateGroup(request, h) {
 async function deleteGroup(request, h) {
 	const { groupId } = request.params
 
-	await GroupModel.destroy({
-		where: {
-			id: groupId
-		}
-	})
+	await GroupModel.query()
+		.delete()
+		.where({ id: groupId })
 
 	return h.response().code(204)
 }

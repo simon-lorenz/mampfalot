@@ -22,18 +22,18 @@ async function createAbsence(request, h) {
 	const member = await GroupMemberRepository.getMember(groupId, request.auth.credentials.username)
 	const absence = await AbsenceRepository.getAbsence(lunchbreak.id, member.id)
 
-	if (absence === null) {
-		await AbsenceModel.create({
+	if (absence === undefined) {
+		await AbsenceModel.query().insert({
 			lunchbreakId: lunchbreak.id,
 			memberId: member.id
 		})
 
-		await ParticipantModel.destroy({
-			where: {
+		await ParticipantModel.query()
+			.delete()
+			.where({
 				lunchbreakId: lunchbreak.id,
 				memberId: member.id
-			}
-		})
+			})
 	}
 
 	return h.response().code(201)
@@ -53,12 +53,12 @@ async function deleteAbsence(request, h) {
 	const lunchbreakId = await LunchbreakRepository.getLunchbreakId(groupId, date)
 	const member = await GroupMemberRepository.getMember(groupId, request.auth.credentials.username)
 
-	await AbsenceModel.destroy({
-		where: {
+	await AbsenceModel.query()
+		.delete()
+		.where({
 			lunchbreakId: lunchbreakId,
 			memberId: member.id
-		}
-	})
+		})
 
 	await LunchbreakController.checkForAutoDeletion(lunchbreakId)
 

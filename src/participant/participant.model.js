@@ -1,61 +1,69 @@
-const { DataTypes } = require('sequelize')
-const { sequelize } = require('../sequelize')
+const { Model } = require('objection')
+const LunchbreakModel = require('../lunchbreak/lunchbreak.model')
 
-const ParticipantModel = sequelize.define(
-	'Participant',
-	{
-		id: {
-			type: DataTypes.INTEGER,
-			primaryKey: true,
-			autoIncrement: true
-		},
-		lunchbreakId: {
-			type: DataTypes.INTEGER,
-			allowNull: false,
-			onDelete: 'CASCADE',
-			unique: {
-				name: 'participateOnceOnly',
-				msg: 'This member already participates.'
+class ParticipantModel extends Model {
+	static get tableName() {
+		return 'participants'
+	}
+
+	static get relationMappings() {
+		const GroupMemberModel = require('../group-member/group-member.model')
+		const VoteModel = require('../vote/vote.model')
+		const PlaceModel = require('../place/place.model')
+
+		return {
+			member: {
+				relation: Model.BelongsToOneRelation,
+				modelClass: GroupMemberModel,
+				join: {
+					from: 'participants.memberId',
+					to: 'group_members.id'
+				}
+			},
+			votes: {
+				relation: Model.HasManyRelation,
+				modelClass: VoteModel,
+				join: {
+					from: 'participants.id',
+					to: 'votes.participantId'
+				}
+			},
+			result: {
+				relation: Model.HasOneRelation,
+				modelClass: PlaceModel,
+				join: {
+					from: 'participants.resultId',
+					to: 'places.id'
+				}
+			},
+			lunchbreak: {
+				relation: Model.HasOneRelation,
+				modelClass: LunchbreakModel,
+				join: {
+					from: 'participants.lunchbreakId',
+					to: 'lunchbreaks.id'
+				}
 			}
-		},
-		memberId: {
-			type: DataTypes.INTEGER,
-			allowNull: true,
-			onDelete: 'SET NULL',
-			unique: {
-				name: 'participateOnceOnly',
-				msg: 'This member already participates.'
-			}
-		},
-		resultId: {
-			type: DataTypes.INTEGER,
-			allowNull: true,
-			onDelete: 'SET NULL'
-		},
-		amountSpent: {
-			type: DataTypes.DECIMAL(10, 2),
-			get() {
-				// Parsing as float, because sequelize would return a string.
-				// See https://github.com/sequelize/sequelize/issues/8019
-				return parseFloat(this.getDataValue('amountSpent'))
-			}
-		}
-	},
-	{
-		tableName: 'participants',
-		timestamps: false,
-		name: {
-			singular: 'participant',
-			plural: 'participants'
 		}
 	}
-)
 
-ParticipantModel.associate = models => {
-	models.Participant.belongsTo(models.GroupMembers, { foreignKey: 'memberId', as: 'member' })
-	models.Participant.belongsTo(models.Lunchbreak, { foreignKey: 'lunchbreakId' })
-	models.Participant.hasMany(models.Vote, { foreignKey: 'participantId' })
-	models.Participant.belongsTo(models.Place, { foreignKey: 'resultId', as: 'result' })
+	$formatJson(json) {
+		json = super.$formatJson(json)
+
+		delete json.id
+		delete json.lunchbreakId
+		delete json.memberId
+		delete json.resultId
+
+		if (json.lunchbreak) {
+			json.date = json.lunchbreak.date
+			delete json.lunchbreak
+		}
+
+		delete json.member
+
+		return json
+	}
 }
 
 module.exports = ParticipantModel

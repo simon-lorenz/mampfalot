@@ -1,6 +1,5 @@
 const Boom = require('@hapi/boom')
-const setupDatabase = require('../../test/utils/scripts/setup-database')
-const testData = require('../../test/utils/scripts/test-data')
+const testData = require('../knex/seeds')
 const request = require('supertest')('http://localhost:5001')
 const TokenHelper = require('../../test/utils/token-helper')
 
@@ -16,10 +15,6 @@ describe('Group', () => {
 				maxPointsPerVote: 10,
 				minPointsPerVote: 5
 			}
-
-			beforeEach(async () => {
-				await setupDatabase()
-			})
 
 			it('fails if required values are missing', async () => {
 				await request
@@ -236,10 +231,6 @@ describe('Group', () => {
 
 	describe('/groups/:groupId', () => {
 		describe('GET', () => {
-			before(async () => {
-				await setupDatabase()
-			})
-
 			it('sends a valid group-resource', async () => {
 				await request
 					.get('/groups/1')
@@ -258,10 +249,6 @@ describe('Group', () => {
 		})
 
 		describe('PUT', () => {
-			beforeEach(async () => {
-				await setupDatabase()
-			})
-
 			const updatedGroup = {
 				name: 'New name',
 				lunchTime: '14:00:00',
@@ -471,10 +458,6 @@ describe('Group', () => {
 		})
 
 		describe('DELETE', () => {
-			beforeEach(async () => {
-				await setupDatabase()
-			})
-
 			it('requires admin rights', async () => {
 				await request
 					.delete('/groups/1')
@@ -561,10 +544,6 @@ describe('Group', () => {
 	})
 
 	describe('/users/me/groups', () => {
-		before(async () => {
-			await setupDatabase()
-		})
-
 		describe('GET', () => {
 			it('sends a correct group collection', async () => {
 				await request

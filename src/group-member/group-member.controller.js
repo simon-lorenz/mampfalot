@@ -3,14 +3,12 @@ const GroupMemberModel = require('./group-member.model')
 const GroupMemberRepository = require('../group-member/group-member.repository')
 const UserRepository = require('../user/user.repository')
 
-// console.log(require('../user/index.js'))
-
 async function deleteMember(request, h) {
 	const { groupId, username } = request.params
 
 	const member = await GroupMemberRepository.getMember(groupId, username)
 
-	if (member.config.isAdmin) {
+	if (member.isAdmin) {
 		const admins = await GroupMemberRepository.getAdmins(groupId)
 		if (admins.length === 1) {
 			throw Boom.forbidden('You are the last administrator of this group and cannot leave the group')
@@ -18,12 +16,13 @@ async function deleteMember(request, h) {
 	}
 
 	const userId = await UserRepository.getUserIdByUsername(username)
-	await GroupMemberModel.destroy({
-		where: {
+
+	await GroupMemberModel.query()
+		.delete()
+		.where({
 			groupId,
 			userId
-		}
-	})
+		})
 
 	return h.response().code(204)
 }
@@ -47,14 +46,14 @@ async function updateMember(request, h) {
 		}
 	}
 
-	await GroupMemberModel.update(payload, {
-		where: {
+	await GroupMemberModel.query()
+		.update(payload)
+		.where({
 			groupId,
 			userId
-		}
-	})
+		})
 
-	return GroupMemberRepository.getMemberFormatted(groupId, username)
+	return GroupMemberRepository.getMember(groupId, username)
 }
 
 module.exports = {

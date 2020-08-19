@@ -1,91 +1,25 @@
-const GroupModel = require('../group/group.model')
 const InvitationModel = require('./invitation.model')
-const UserModel = require('../user/user.model')
-const PlaceModel = require('../place/place.model')
 
 class InvitationRepository {
 	async getInvitationsOfGroup(groupId) {
-		return InvitationModel.findAll({
-			attributes: [],
-			where: {
-				groupId: groupId
-			},
-			include: [
-				{
-					model: UserModel,
-					as: 'from',
-					attributes: ['username', 'firstName', 'lastName']
-				},
-				{
-					model: UserModel,
-					as: 'to',
-					attributes: ['username', 'firstName', 'lastName']
-				}
-			]
-		})
+		return InvitationModel.query()
+			.withGraphFetched('[group.[members, places], from, to]')
+			.where('invitations.groupId', '=', groupId)
 	}
 
 	async getInvitationOfGroupToUser(groupId, username) {
-		return InvitationModel.findOne({
-			attributes: [],
-			where: {
-				groupId: groupId
-			},
-			include: [
-				{
-					model: UserModel,
-					as: 'from',
-					attributes: ['username', 'firstName', 'lastName']
-				},
-				{
-					model: UserModel,
-					as: 'to',
-					attributes: ['username', 'firstName', 'lastName'],
-					where: {
-						username: username
-					}
-				}
-			]
-		})
+		return await InvitationModel.query()
+			.throwIfNotFound()
+			.withGraphJoined('[group.[members, places], from, to]')
+			.where('invitations.groupId', '=', groupId)
+			.where('to.username', '=', username)
+			.first()
 	}
 
 	async getInvitationsOfUser(userId) {
-		return InvitationModel.findAll({
-			attributes: [],
-			where: {
-				toId: userId
-			},
-			include: [
-				{
-					model: GroupModel,
-					include: [
-						{
-							model: PlaceModel,
-							attributes: ['id', 'name', 'foodType']
-						},
-						{
-							model: UserModel,
-							attributes: ['username', 'firstName', 'lastName'],
-							as: 'members',
-							through: {
-								as: 'config',
-								attributes: ['color', 'isAdmin']
-							}
-						}
-					]
-				},
-				{
-					model: UserModel,
-					as: 'from',
-					attributes: ['username', 'firstName', 'lastName']
-				},
-				{
-					model: UserModel,
-					as: 'to',
-					attributes: ['username', 'firstName', 'lastName']
-				}
-			]
-		})
+		return InvitationModel.query()
+			.withGraphFetched('[group.[members, places], from, to]')
+			.where('toId', '=', userId)
 	}
 }
 

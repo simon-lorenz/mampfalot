@@ -10,7 +10,7 @@ async function createComment(request, h) {
 	const lunchbreak = await LunchbreakController.findOrCreateLunchbreak(groupId, date)
 	const memberId = await GroupMemberRepository.getMemberId(groupId, request.auth.credentials.username)
 
-	const { id } = await CommentModel.create({
+	const { id } = await CommentModel.query().insert({
 		lunchbreakId: lunchbreak.id,
 		memberId,
 		text: request.payload.text
@@ -23,20 +23,17 @@ async function updateComment(request, h) {
 	const { commentId } = request.params
 	const comment = await CommentRepository.getComment(commentId)
 
-	if (comment.author.username !== request.auth.credentials.username) {
+	if (comment.author.user.username !== request.auth.credentials.username) {
 		throw Boom.forbidden()
 	}
 
-	await CommentModel.update(
-		{
+	await CommentModel.query()
+		.update({
 			text: request.payload.text
-		},
-		{
-			where: {
-				id: commentId
-			}
-		}
-	)
+		})
+		.where({
+			id: commentId
+		})
 
 	return CommentRepository.getComment(commentId)
 }
@@ -45,17 +42,17 @@ async function deleteComment(request, h) {
 	const { commentId } = request.params
 	const comment = await CommentRepository.getComment(commentId)
 
-	if (comment.author.username !== request.auth.credentials.username) {
+	if (comment.author.user.username !== request.auth.credentials.username) {
 		throw Boom.forbidden()
 	}
 
 	const lunchbreakId = await CommentRepository.getLunchbreakId(commentId)
 
-	await CommentModel.destroy({
-		where: {
+	await CommentModel.query()
+		.delete()
+		.where({
 			id: commentId
-		}
-	})
+		})
 
 	await LunchbreakController.checkForAutoDeletion(lunchbreakId)
 

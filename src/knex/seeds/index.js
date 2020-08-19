@@ -64,7 +64,8 @@ module.exports = {
 		{
 			groupId: 1,
 			fromId: 1,
-			toId: 3
+			toId: 3,
+			createdAt: '2020-02-11 08:45:11.323+02'
 		}
 	],
 	lunchbreaks: [
@@ -91,7 +92,7 @@ module.exports = {
 			memberId: 1,
 			text: 'Dies ist ein erster Kommentar von Max Mustermann',
 			createdAt: '2019-05-27 12:47:23.108+02',
-			updatedAt: '2019-05-27 12:47:23.108+02'
+			updatedAt: null
 		},
 		{
 			id: 2,
@@ -99,7 +100,7 @@ module.exports = {
 			memberId: 1,
 			text: 'Dies ist ein zweiter Kommentar von Max Mustermann',
 			createdAt: '2019-05-27 12:50:23.108+02',
-			updatedAt: '2019-05-27 12:50:23.108+02'
+			updatedAt: null
 		},
 		{
 			id: 3,
@@ -107,7 +108,7 @@ module.exports = {
 			memberId: 2,
 			text: 'Dies der erste Kommentar von John Doe',
 			createdAt: '2019-05-27 12:52:23.108+02',
-			updatedAt: '2019-05-27 12:53:45.108+02'
+			updatedAt: null
 		}
 	],
 	participants: [
@@ -193,7 +194,8 @@ module.exports = {
 			lastName: 'Mustermann',
 			email: 'mustermann@gmail.nonexistenttld',
 			password: '123456',
-			verified: true
+			verified: true,
+			createdAt: '2020-08-09 20:11:37.845+02'
 		},
 		{
 			id: 2,
@@ -202,7 +204,8 @@ module.exports = {
 			lastName: 'Doe',
 			email: 'john.doe@provider.nonexistenttld',
 			password: 'supersafe',
-			verified: true
+			verified: true,
+			createdAt: '2020-08-09 20:11:37.845+02'
 		},
 		{
 			id: 3,
@@ -211,7 +214,8 @@ module.exports = {
 			lastName: 'Loten',
 			email: 'philipp.loten@company.nonexistenttld',
 			password: 'password',
-			verified: true
+			verified: true,
+			createdAt: '2020-08-09 20:11:37.845+02'
 		},
 		{
 			id: 4,
@@ -220,7 +224,8 @@ module.exports = {
 			lastName: 'Tietgen',
 			email: 'björn.tietgen@gmail.nonexistenttld',
 			password: 'test',
-			verified: true
+			verified: true,
+			createdAt: '2020-08-09 20:11:37.845+02'
 		},
 		{
 			id: 5,
@@ -229,7 +234,8 @@ module.exports = {
 			lastName: 'Rogers',
 			email: 'l.rogers@university.nonexistenttld',
 			password: ' !"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~',
-			verified: true
+			verified: true,
+			createdAt: '2020-08-09 20:11:37.845+02'
 		},
 		{
 			id: 6,
@@ -238,7 +244,8 @@ module.exports = {
 			lastName: 'Jones',
 			email: 'alice@jones.nonexistenttld',
 			password: 'letmein',
-			verified: true
+			verified: true,
+			createdAt: '2020-08-09 20:11:37.845+02'
 		},
 		{
 			id: 7,
@@ -248,7 +255,8 @@ module.exports = {
 			email: 'to-be-verified@email.nonexistenttld',
 			password: 'verifyme',
 			verified: false,
-			verificationToken: '$2a$12$1tHI5g0IJm77KrvASnroLeLIHpQGzdCnU2.lZWqDsFCLPVrXTTfkW' // Hash of "valid-token"
+			verificationToken: '$2a$12$1tHI5g0IJm77KrvASnroLeLIHpQGzdCnU2.lZWqDsFCLPVrXTTfkW', // Hash of "valid-token"
+			createdAt: '2020-08-09 20:11:37.845+02'
 		},
 		{
 			id: 8,
@@ -259,7 +267,8 @@ module.exports = {
 			password: 'somepasswordiforgot',
 			verified: true,
 			passwordResetToken: '$2a$12$0YYth34h.nOI2GN707qrzeUucHU7XVtLMrUeGWNph3bv76zAKT2GS', // Hash of cc915e69976263e3464402d24c65df4dbd750b54ca0b96d69f
-			passwordResetExpiration: '2020-01-27 15:35:29.451+01'
+			passwordResetExpiration: '2020-01-27 15:35:29.451+01',
+			createdAt: '2020-08-09 20:11:37.845+02'
 		}
 	],
 	getAbsence(memberId, lunchbreakId) {
@@ -274,15 +283,17 @@ module.exports = {
 	getGroup: function(id) {
 		const group = this.groups.find(group => group.id === id)
 
-		group.members = []
-		const members = this.groupMembers.filter(member => member.groupId === id)
-		members.forEach(member => group.members.push(this.getGroupMember(member.id)))
+		const members = this.groupMembers
+			.filter(member => member.groupId === id)
+			.map(member => this.getGroupMember(member.id))
 
-		group.places = []
-		const places = this.places.filter(place => place.groupId === id)
-		places.forEach(place => group.places.push(this.getPlace(place.id)))
+		const places = this.places.filter(place => place.groupId === id).map(place => this.getPlace(place.id))
 
-		return group
+		return {
+			...group,
+			members,
+			places
+		}
 	},
 	getGroupsOfUser: function(userId) {
 		const memberships = this.groupMembers.filter(member => member.userId === userId)
@@ -417,7 +428,7 @@ module.exports = {
 			text: comment.text,
 			author: this.getGroupMember(comment.memberId),
 			createdAt: new Date(comment.createdAt).toISOString(),
-			updatedAt: new Date(comment.updatedAt).toISOString()
+			updatedAt: comment.updatedAt ? new Date(comment.updatedAt).toISOString() : null
 		}
 	},
 	getCommentKeys: function() {

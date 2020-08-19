@@ -1,61 +1,38 @@
-const Boom = require('@hapi/boom')
 const PlaceModel = require('./place.model')
-const { placeNameExists } = require('./place.repository')
 
 async function createPlace(request, h) {
 	const { groupId } = request.params
 	const { payload } = request
 
-	if (await placeNameExists(groupId, payload.name)) {
-		throw Boom.badRequest('A place with this name already exists')
-	}
-
-	const place = await PlaceModel.create({
-		...payload,
-		groupId
-	})
-
-	// TODO: Remove field at model layer (custom toJSON())
-	return h
-		.response({
-			...place.toJSON(),
-			groupId: undefined
+	const place = await PlaceModel.query()
+		.insert({
+			...payload,
+			groupId
 		})
-		.code(201)
+		.returning('*')
+
+	return h.response(place).code(201)
 }
 
 async function updatePlace(request, h) {
-	const { groupId, placeId } = request.params
+	const { placeId } = request.params
 	const { payload } = request
 
-	if (await placeNameExists(groupId, payload.name)) {
-		throw Boom.badRequest('A place with this name already exists')
-	}
-
-	const [affectedRows, [place]] = await PlaceModel.update(payload, {
-		where: { id: placeId },
-		returning: true
-	})
-
-	if (affectedRows === 0) {
-		throw Boom.notFound()
-	}
-
-	// TODO: Remove field at model layer (custom toJSON())
-	return {
-		...place.toJSON(),
-		groupId: undefined
-	}
+	return PlaceModel.query()
+		.throwIfNotFound()
+		.update(payload)
+		.where({ id: placeId })
+		.returning('*')
+		.first()
 }
 
 async function deletePlace(request, h) {
 	const { placeId } = request.params
 
-	const affectedRows = await PlaceModel.destroy({ where: { id: placeId } })
-
-	if (affectedRows === 0) {
-		throw Boom.notFound()
-	}
+	await PlaceModel.query()
+		.throwIfNotFound()
+		.delete()
+		.where({ id: placeId })
 
 	return h.response().code(204)
 }
