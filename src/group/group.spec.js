@@ -52,7 +52,7 @@ describe('Group', () => {
 					})
 					.expect(400)
 					.expect(res => {
-						res.body.message.should.contain('"pointsPerDay" must be larger than or equal to 1')
+						res.body.message.should.contain('"pointsPerDay" must be greater than or equal to 1')
 						res.body.validation.keys.should.contain('pointsPerDay')
 					})
 
@@ -97,7 +97,7 @@ describe('Group', () => {
 					})
 					.expect(400)
 					.expect(res => {
-						res.body.message.should.contain('"maxPointsPerVote" must be larger than or equal to ref:minPointsPerVote')
+						res.body.message.should.contain('"maxPointsPerVote" must be greater than or equal to ref:minPointsPerVote')
 						res.body.validation.keys.should.contain('maxPointsPerVote')
 					})
 			})
@@ -129,7 +129,7 @@ describe('Group', () => {
 					})
 					.expect(400)
 					.expect(res => {
-						res.body.message.should.contain('"minPointsPerVote" must be larger than or equal to 1')
+						res.body.message.should.contain('"minPointsPerVote" must be greater than or equal to 1')
 						res.body.validation.keys.should.contain('minPointsPerVote')
 					})
 			})
@@ -171,7 +171,7 @@ describe('Group', () => {
 					})
 					.expect(400)
 					.expect(res => {
-						res.body.message.should.include('"utcOffset" must be larger than or equal to -720')
+						res.body.message.should.include('"utcOffset" must be greater than or equal to -720')
 						res.body.validation.keys.should.contain('utcOffset')
 					})
 			})
@@ -304,7 +304,7 @@ describe('Group', () => {
 					})
 					.expect(400)
 					.expect(res => {
-						res.body.message.should.contain('"pointsPerDay" must be larger than or equal to 1')
+						res.body.message.should.contain('"pointsPerDay" must be greater than or equal to 1')
 						res.body.validation.keys.should.contain('pointsPerDay')
 					})
 
@@ -349,7 +349,7 @@ describe('Group', () => {
 					})
 					.expect(400)
 					.expect(res => {
-						res.body.message.should.contain('"maxPointsPerVote" must be larger than or equal to ref:minPointsPerVote')
+						res.body.message.should.contain('"maxPointsPerVote" must be greater than or equal to ref:minPointsPerVote')
 						res.body.validation.keys.should.contain('maxPointsPerVote')
 					})
 			})
@@ -381,7 +381,7 @@ describe('Group', () => {
 					})
 					.expect(400)
 					.expect(res => {
-						res.body.message.should.contain('"minPointsPerVote" must be larger than or equal to 1')
+						res.body.message.should.contain('"minPointsPerVote" must be greater than or equal to 1')
 						res.body.validation.keys.should.contain('minPointsPerVote')
 					})
 			})
@@ -423,7 +423,7 @@ describe('Group', () => {
 					})
 					.expect(400)
 					.expect(res => {
-						res.body.message.should.include('"utcOffset" must be larger than or equal to -720')
+						res.body.message.should.include('"utcOffset" must be greater than or equal to -720')
 						res.body.validation.keys.should.contain('utcOffset')
 					})
 			})
