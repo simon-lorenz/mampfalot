@@ -1,13 +1,15 @@
-FROM node:12-slim
+FROM node:12-alpine
 
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --production && npm cache clean --force
 
-COPY . .
+COPY ./src ./src
+COPY app.js ./
+COPY LICENSE ./
 
 EXPOSE 5000
 
-CMD ["npm", "start"]
+CMD ["node", "app.js"]
