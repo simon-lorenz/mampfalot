@@ -9,21 +9,21 @@ lint:
   image: simonlorenz/docker-with-compose
   stage: test
   script:
-    - docker-compose -f docker-compose.ci.yml run server-test sh -c "npm ci && npm run lint"
+    - docker-compose -f docker-compose.ci.yml run server-test npm run lint
 
 test:
   image: simonlorenz/docker-with-compose
   stage: test
   script:
-    - docker-compose -f docker-compose.ci.yml run server-test sh -c "npm ci && npm run test"
+    - docker-compose -f docker-compose.ci.yml run server-test npm run test
 
 production:
   image: docker:latest
   stage: publish
   script:
     - docker login -u simonlorenz -p $DOCKER_ACCESS_TOKEN
-    - docker build -t simonlorenz/mampfalot:$CI_COMMIT_TAG .
-    - docker build -t simonlorenz/mampfalot:latest .
+    - docker build -t simonlorenz/mampfalot:$CI_COMMIT_TAG -f Dockerfile.prod .
+    - docker build -t simonlorenz/mampfalot:latest -f Dockerfile.prod .
     - docker push simonlorenz/mampfalot:$CI_COMMIT_TAG
     - docker push simonlorenz/mampfalot:latest
   rules:
@@ -34,7 +34,7 @@ dev:
   stage: publish
   script:
     - docker login -u simonlorenz -p $DOCKER_ACCESS_TOKEN
-    - docker build -t simonlorenz/mampfalot:dev .
+    - docker build -t simonlorenz/mampfalot:dev -f Dockerfile.prod .
     - docker push simonlorenz/mampfalot:dev
   rules:
     - if: '$CI_COMMIT_REF_NAME == "dev"'
