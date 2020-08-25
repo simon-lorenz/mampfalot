@@ -26,6 +26,8 @@ module.exports = {
 							.map(group => (group.isAdmin ? `admin:${group.id}` : `member:${group.id}`))
 							.concat(`user:${username}`)
 
+						request.logger.debug({ scope }, 'Calculated scope')
+
 						return h.authenticated({
 							credentials: {
 								id,
@@ -33,7 +35,8 @@ module.exports = {
 								scope
 							}
 						})
-					} catch (error) {
+					} catch (err) {
+						request.logger.debug({ err }, 'Token validation failed')
 						throw Boom.unauthorized('The provided token is invalid')
 					}
 				}
