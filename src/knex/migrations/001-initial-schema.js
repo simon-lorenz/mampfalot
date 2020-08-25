@@ -74,8 +74,11 @@ exports.up = async knex => {
 	})
 
 	await knex.schema.createTable('absences', table => {
+		table.integer('id')
 		table.integer('memberId').notNullable()
 		table.integer('lunchbreakId').notNullable()
+		table.datetime('createdAt').notNullable()
+		table.datetime('updatedAt')
 
 		table.unique(['memberId', 'lunchbreakId'], 'onlyOneAbsencePerLunchbreak')
 

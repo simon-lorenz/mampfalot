@@ -2,7 +2,8 @@ module.exports = {
 	absences: [
 		{
 			memberId: 1,
-			lunchbreakId: 3
+			lunchbreakId: 3,
+			createdAt: '2020-02-11 08:45:11.323+02'
 		}
 	],
 	groupMembers: [
