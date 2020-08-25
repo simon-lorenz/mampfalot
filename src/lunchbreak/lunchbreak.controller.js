@@ -1,11 +1,9 @@
 const Boom = require('@hapi/boom')
-const { voteEndingTimeReached } = require('../util/util')
+const { NotFoundError } = require('objection')
 
 const LunchbreakRepository = require('../lunchbreak/lunchbreak.repository')
-const AbsenceModel = require('../absence/absence.model')
-const CommentModel = require('../comment/comment.model')
 const LunchbreakModel = require('./lunchbreak.model')
-const ParticipantModel = require('../participant/participant.model')
+const { voteEndingTimeReached } = require('../util/util')
 
 async function getLunchbreaks(request, h) {
 	const from = new Date(request.query.from)
@@ -32,7 +30,7 @@ async function findOrCreateLunchbreak(groupId, date) {
 	try {
 		return await LunchbreakRepository.getLunchbreak(groupId, date)
 	} catch (e) {
-		if (Boom.isBoom(e, 404) === false) {
+		if (!(e instanceof NotFoundError)) {
 			throw e
 		}
 
@@ -40,9 +38,8 @@ async function findOrCreateLunchbreak(groupId, date) {
 			throw Boom.badRequest('The end of voting is reached, therefore you cannot create a new lunchbreak.')
 		}
 
-		const lunchbreak = await LunchbreakModel.build({ groupId, date })
+		await LunchbreakModel.query().insert({ groupId, date })
 
-		await lunchbreak.save()
 		return await LunchbreakRepository.getLunchbreak(groupId, date)
 	}
 }
@@ -52,12 +49,12 @@ async function findOrCreateLunchbreak(groupId, date) {
  * @param {number} lunchbreakId
  */
 async function checkForAutoDeletion(lunchbreakId) {
-	const lunchbreak = await LunchbreakModel.findByPk(lunchbreakId, {
-		include: [ParticipantModel, CommentModel, AbsenceModel]
-	})
+	const lunchbreak = await LunchbreakRepository.getLunchbreak(undefined, undefined, lunchbreakId)
 
-	if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0 && lunchbreak.absences.length === 0) {
-		await lunchbreak.destroy()
+	if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0 && lunchbreak.absent.length === 0) {
+		await LunchbreakModel.query()
+			.delete()
+			.where({ id: lunchbreakId })
 	}
 }
 

@@ -1,8 +1,7 @@
 const Boom = require('@hapi/boom')
-const setupDatabase = require('../../test/utils/scripts/setup-database')
 const request = require('supertest')('http://localhost:5001')
 const TokenHelper = require('../../test/utils/token-helper')
-const testData = require('../../test/utils/scripts/test-data')
+const testData = require('../knex/seeds')
 
 describe('Place', () => {
 	describe('/groups/:groupId/places', () => {
@@ -11,7 +10,6 @@ describe('Place', () => {
 
 			beforeEach(async () => {
 				newPlace = { name: 'new place', foodType: 'Italian' }
-				await setupDatabase()
 			})
 
 			it('requires group admin rights', async () => {
@@ -83,7 +81,7 @@ describe('Place', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(newPlace)
 					.expect(400)
-					.expect(Boom.badRequest('A place with this name already exists').output.payload)
+					.expect(Boom.badRequest('Unique constraint violation (uniquePlacePerGroup)').output.payload)
 			})
 
 			it('inserts new place correctly', async () => {
@@ -108,7 +106,6 @@ describe('Place', () => {
 			let updatedPlace
 
 			beforeEach(async () => {
-				await setupDatabase()
 				updatedPlace = {
 					name: 'updated',
 					foodType: 'updatedFoodType'
@@ -156,6 +153,15 @@ describe('Place', () => {
 					})
 			})
 
+			it('sends 404 if place does not exist', async () => {
+				await request
+					.put('/groups/1/places/991')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send(updatedPlace)
+					.expect(404)
+					.expect(Boom.notFound().output.payload)
+			})
+
 			it('fails if the foodType is empty', async () => {
 				updatedPlace.foodType = ''
 				await request
@@ -199,15 +205,11 @@ describe('Place', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.send(updatedPlace)
 					.expect(400)
-					.expect(Boom.badRequest('A place with this name already exists').output.payload)
+					.expect(Boom.badRequest('Unique constraint violation (uniquePlacePerGroup)').output.payload)
 			})
 		})
 
 		describe('DELETE', () => {
-			beforeEach(async () => {
-				await setupDatabase()
-			})
-
 			it('requires group admin rights', async () => {
 				await request
 					.delete('/groups/1/places/1')

@@ -19,18 +19,18 @@ async function overrideVotes(votes, participantId) {
 	checkPlaces(votes, config.places)
 
 	await destroyVotesOfParticipant(participantId)
-	await VoteModel.bulkCreate(votes)
+	await VoteModel.query().insert(votes)
 }
 
 /**
  * @param {number} participantId
  */
 async function destroyVotesOfParticipant(participantId) {
-	await VoteModel.destroy({
-		where: {
+	await VoteModel.query()
+		.delete()
+		.where({
 			participantId: participantId
-		}
-	})
+		})
 }
 
 /**

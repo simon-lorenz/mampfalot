@@ -1,43 +1,38 @@
-const Boom = require('@hapi/boom')
 const UserModel = require('./user.model')
 
 class UserRepository {
 	async getUser(userId) {
-		return await UserModel.findOne({
-			attributes: ['username', 'firstName', 'lastName', 'email'],
-			where: {
-				id: userId
-			}
-		})
+		return await UserModel.query()
+			.modify('private')
+			.where({ id: userId })
+			.first()
 	}
 
 	async getUserIdByUsername(username) {
-		const user = await UserModel.findOne({
-			attributes: ['id'],
-			where: {
-				username
-			}
-		})
+		const { id } = await UserModel.query()
+			.throwIfNotFound()
+			.select('id')
+			.where({ username })
+			.first()
 
-		if (user) {
-			return user.id
-		} else {
-			throw Boom.notFound()
-		}
+		return id
 	}
 
 	async getUsernameById(userId) {
-		const { username } = await UserModel.findByPk(userId, { attributes: ['username'] })
+		const { username } = await UserModel.query()
+			.select('username')
+			.where({ id: userId })
+			.first()
+
 		return username
 	}
 
 	async usernameExists(username) {
-		const user = await UserModel.findOne({
-			attributes: ['id'],
-			where: { username }
-		})
+		const user = await UserModel.query()
+			.select('id')
+			.where({ username })
 
-		return user ? true : false
+		return user.length > 0
 	}
 }
 

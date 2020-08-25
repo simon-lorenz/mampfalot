@@ -1,9 +1,8 @@
 const Boom = require('@hapi/boom')
-const setupDatabase = require('../../test/utils/scripts/setup-database')
 const testServer = require('../../test/utils/test-server')
 const request = require('supertest')('http://localhost:5001')
 const TokenHelper = require('../../test/utils/token-helper')
-const testData = require('../../test/utils/scripts/test-data')
+const testData = require('../knex/seeds')
 
 describe('Participation', () => {
 	describe('/users/me/participations', () => {
@@ -51,6 +50,22 @@ describe('Participation', () => {
 
 			it('from and to should be inclusive')
 
+			it('works if result is null', async () => {
+				await request
+					.delete('/groups/1/places/4')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(204)
+
+				await request
+					.get('/users/me/participations/1')
+					.query({ from: '2018-01-01', to: '2018-12-31' })
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+					.expect(res => {
+						res.body[0].should.have.property('result').eql(null)
+					})
+			})
+
 			it('sends a correct collection of participations', async () => {
 				await request
 					.get('/users/me/participations/1')
@@ -58,7 +73,16 @@ describe('Participation', () => {
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(200)
 					.expect(res => {
-						res.body.should.be.deep.equal(testData.getParticipationsOf('maxmustermann', 1))
+						res.body.should.be.deep.equalInAnyOrder(testData.getParticipationsOf('maxmustermann', 1))
+					})
+
+				await request
+					.get('/users/me/participations/1')
+					.query({ from: '2018-01-01', to: '2018-01-02' })
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+					.expect(res => {
+						res.body.should.be.deep.equal([])
 					})
 			})
 		})
@@ -81,7 +105,6 @@ describe('Participation', () => {
 				}
 
 				await testServer.start('11:24:59', '01.07.2018')
-				await setupDatabase()
 			})
 
 			it('requires body values votes, result and amountSpent', async () => {
@@ -503,7 +526,6 @@ describe('Participation', () => {
 		describe('PUT', () => {
 			beforeEach(async () => {
 				await testServer.start('11:24:59', '25.06.2018')
-				await setupDatabase()
 			})
 
 			it('requires result and amountSpent', async () => {
@@ -566,7 +588,7 @@ describe('Participation', () => {
 					.expect(200)
 					.expect(res => {
 						const participation = res.body
-						participation.votes.should.be.deep.eql(votes)
+						participation.votes.should.be.deep.equalInAnyOrder(votes)
 					})
 			})
 
@@ -596,7 +618,7 @@ describe('Participation', () => {
 					.expect(200)
 					.expect(res => {
 						const participation = res.body
-						participation.votes.should.be.deep.eql(votes)
+						participation.votes.should.be.deep.equalInAnyOrder(votes)
 					})
 			})
 
@@ -654,7 +676,6 @@ describe('Participation', () => {
 		describe('DELETE', () => {
 			beforeEach(async () => {
 				await testServer.start('11:24:59', '25.06.2018')
-				await setupDatabase()
 			})
 
 			it('fails if the voteEndingTime is reached', async () => {

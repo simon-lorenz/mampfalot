@@ -1,44 +1,64 @@
-const { DataTypes } = require('sequelize')
-const { sequelize } = require('../sequelize')
+const moment = require('moment')
+const { Model } = require('objection')
 
-const LunchbreakModel = sequelize.define(
-	'Lunchbreak',
-	{
-		id: {
-			type: DataTypes.INTEGER,
-			primaryKey: true,
-			autoIncrement: true
-		},
-		groupId: {
-			type: DataTypes.INTEGER,
-			allowNull: false,
-			onDelete: 'CASCADE',
-			unique: 'oneLuchbreakPerDayPerGroup'
-		},
-		date: {
-			type: DataTypes.DATEONLY,
-			allowNull: false,
-			unique: {
-				name: 'oneLuchbreakPerDayPerGroup',
-				msg: 'A lunchbreak at this date already exists.'
+class LunchbreakModel extends Model {
+	static get tableName() {
+		return 'lunchbreaks'
+	}
+
+	static get relationMappings() {
+		const AbsenceModel = require('../absence/absence.model')
+		const CommentModel = require('../comment/comment.model')
+		const GroupModel = require('../group/group.model')
+		const ParticipantModel = require('../participant/participant.model')
+
+		return {
+			absent: {
+				relation: Model.HasManyRelation,
+				modelClass: AbsenceModel,
+				join: {
+					from: 'lunchbreaks.id',
+					to: 'absences.lunchbreakId'
+				}
+			},
+			comments: {
+				relation: Model.HasManyRelation,
+				modelClass: CommentModel,
+				join: {
+					from: 'lunchbreaks.id',
+					to: 'comments.lunchbreakId'
+				}
+			},
+			group: {
+				relation: Model.BelongsToOneRelation,
+				modelClass: GroupModel,
+				join: {
+					from: 'lunchbreaks.groupId',
+					to: 'groups.id'
+				}
+			},
+			participants: {
+				relation: Model.HasManyRelation,
+				modelClass: ParticipantModel,
+				join: {
+					from: 'lunchbreaks.id',
+					to: 'participants.lunchbreakId'
+				}
 			}
 		}
-	},
-	{
-		tableName: 'lunchbreaks',
-		timestamps: false,
-		name: {
-			singular: 'lunchbreak',
-			plural: 'lunchbreaks'
-		}
 	}
-)
 
-LunchbreakModel.associate = models => {
-	models.Lunchbreak.belongsTo(models.Group, { foreignKey: 'groupId' })
-	models.Lunchbreak.hasMany(models.Comment, { foreignKey: 'lunchbreakId' })
-	models.Lunchbreak.hasMany(models.Absence, { foreignKey: 'lunchbreakId' })
-	models.Lunchbreak.hasMany(models.Participant, { foreignKey: 'lunchbreakId' })
+	$formatJson(json) {
+		json = super.$formatJson(json)
+
+		if (json.date) {
+			json.date = moment(json.date).format('YYYY-MM-DD')
+		}
+
+		delete json.groupId
+
+		return json
+	}
 }
 
 module.exports = LunchbreakModel

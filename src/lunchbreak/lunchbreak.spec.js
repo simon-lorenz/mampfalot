@@ -1,16 +1,11 @@
 const Boom = require('@hapi/boom')
-const setupDatabase = require('../../test/utils/scripts/setup-database')
 const request = require('supertest')('http://localhost:5001')
 const TokenHelper = require('../../test/utils/token-helper')
-const testData = require('../../test/utils/scripts/test-data')
+const testData = require('../knex/seeds')
 
 describe('Lunchbreak', () => {
 	describe('/groups/:groupId/lunchbreaks', () => {
 		describe('GET', () => {
-			before(async () => {
-				await setupDatabase()
-			})
-
 			it('requires query values from and to', async () => {
 				await request
 					.get('/groups/1/lunchbreaks')
@@ -80,10 +75,6 @@ describe('Lunchbreak', () => {
 
 	describe('/groups/:groupId/lunchbreaks/:date', () => {
 		describe('GET', () => {
-			before(async () => {
-				await setupDatabase()
-			})
-
 			it('returns 404s', async () => {
 				await request
 					.get('/groups/1/lunchbreaks/2018-06-30')
@@ -126,6 +117,29 @@ describe('Lunchbreak', () => {
 					.expect(res => {
 						res.body.should.be.equalInAnyOrder(testData.getLunchbreak(1, '2018-06-26'))
 						res.body.comments.should.be.sortedBy('createdAt', { descending: true })
+					})
+			})
+
+			it('includes participations of deleted members', async () => {
+				await request
+					.get('/groups/1/lunchbreaks/2018-06-25')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+					.expect(res => {
+						res.body.participants.filter(p => p.member === null).should.have.lengthOf(0)
+					})
+
+				await request
+					.delete('/groups/1/members/johndoe1')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(204)
+
+				await request
+					.get('/groups/1/lunchbreaks/2018-06-25')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(200)
+					.expect(res => {
+						res.body.participants.filter(p => p.member === null).should.have.lengthOf(1)
 					})
 			})
 		})

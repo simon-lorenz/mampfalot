@@ -1,9 +1,8 @@
 const Boom = require('@hapi/boom')
-const setupDatabase = require('../../test/utils/scripts/setup-database')
 const util = require('../../test/utils/util')
 const request = require('supertest')('http://localhost:5001')
 const TokenHelper = require('../../test/utils/token-helper')
-const testData = require('../../test/utils/scripts/test-data')
+const testData = require('../knex/seeds')
 const testServer = require('../../test/utils/test-server')
 const { expect } = require('chai')
 
@@ -20,8 +19,6 @@ describe('User', () => {
 					email: 'homer@simpson.nonexistenttld',
 					password: 'springfield'
 				}
-
-				await setupDatabase()
 			})
 
 			it('inserts a user correctly', async () => {
@@ -311,15 +308,21 @@ describe('User', () => {
 						})
 				}
 			})
+
+			it('works if the user is not verified yet', async () => {
+				await request
+					.post('/users')
+					.send({
+						...newUser,
+						email: 'to-be-verified@email.nonexistenttld'
+					})
+					.expect(204)
+			})
 		})
 	})
 
 	describe('/users/:username/forgot-password', () => {
 		describe('GET', () => {
-			before(async () => {
-				await setupDatabase()
-			})
-
 			it('sends 404 if username is unknown', async () => {
 				await request
 					.get('/users/non-existent-user/forgot-password')
@@ -333,10 +336,6 @@ describe('User', () => {
 		})
 
 		describe('POST', () => {
-			beforeEach(async () => {
-				await setupDatabase()
-			})
-
 			it('resets a password successfully', async () => {
 				await testServer.start('14:33:00', '27.01.2020')
 
@@ -443,10 +442,6 @@ describe('User', () => {
 
 	describe('/users/:username/verify', () => {
 		describe('GET', () => {
-			before(async () => {
-				await setupDatabase()
-			})
-
 			it('sends 404 if username is unknown', async () => {
 				await request
 					.get('/users/non-existent-user/verify')
@@ -467,10 +462,6 @@ describe('User', () => {
 		})
 
 		describe('POST', () => {
-			beforeEach(async () => {
-				await setupDatabase()
-			})
-
 			it('fails if the body does not contain a token', async () => {
 				await request
 					.post('/users/maxmustermann/verify')
@@ -556,10 +547,6 @@ describe('User', () => {
 		})
 
 		describe('PUT', () => {
-			beforeEach(async () => {
-				await setupDatabase()
-			})
-
 			it('fails with 400 if not all parameters are provided', async () => {
 				await request
 					.put('/users/me')
@@ -672,10 +659,6 @@ describe('User', () => {
 		})
 
 		describe('DELETE', () => {
-			beforeEach(async () => {
-				await setupDatabase()
-			})
-
 			it('deletes an existing user', async () => {
 				await request
 					.delete('/users/me')
@@ -719,6 +702,27 @@ describe('User', () => {
 						if (invitation) {
 							throw new Error('Invitation was not deleted')
 						}
+					})
+			})
+
+			it('does not delete invitations from this user', async () => {
+				await request
+					.post('/groups/1/invitations/alice')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(201)
+
+				await request
+					.delete('/users/me')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(204)
+
+				await request
+					.get('/groups/1/invitations')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.expect(200)
+					.expect(res => {
+						const invitation = res.body.find(i => i.to.username === 'alice')
+						invitation.should.have.property('from').eql(null)
 					})
 			})
 

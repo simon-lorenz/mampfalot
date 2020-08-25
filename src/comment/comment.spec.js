@@ -1,9 +1,10 @@
 const Boom = require('@hapi/boom')
-const setupDatabase = require('../../test/utils/scripts/setup-database')
 const request = require('supertest')('http://localhost:5001')
 const TokenHelper = require('../../test/utils/token-helper')
-const testData = require('../../test/utils/scripts/test-data')
+const testData = require('../knex/seeds')
 const testServer = require('../../test/utils/test-server')
+const { expectTimestampUpdated } = require('../../test/utils/util')
+const { expect } = require('chai')
 
 describe('Comment', () => {
 	describe('/groups/:groupId/lunchbreaks/:date/comments', () => {
@@ -14,7 +15,6 @@ describe('Comment', () => {
 				newComment = {
 					text: "Hey ho, let's go!"
 				}
-				await setupDatabase()
 			})
 
 			it('fails if no comment is provided', async () => {
@@ -168,6 +168,8 @@ describe('Comment', () => {
 						comment.should.have.all.keys(testData.getCommentKeys())
 						comment.author.should.be.deep.eql(testData.getGroupMember(2))
 						comment.text.should.be.eql(newComment.text)
+						expectTimestampUpdated(comment.createdAt)
+						expect(comment.updatedAt).to.be.null
 					})
 			})
 		})
@@ -175,10 +177,6 @@ describe('Comment', () => {
 
 	describe('/groups/:groupId/lunchbreaks/:date/comments/:commentId', () => {
 		describe('PUT', () => {
-			beforeEach(async () => {
-				await setupDatabase()
-			})
-
 			it('fails if userId does not match', async () => {
 				await request
 					.put('/groups/1/lunchbreaks/2018-06-25/comments/1')
@@ -259,15 +257,12 @@ describe('Comment', () => {
 						comment.should.have.all.keys(testData.getCommentKeys())
 						comment.author.should.be.deep.eql(testData.getGroupMember(1))
 						comment.text.should.be.equal('New comment text!')
+						expectTimestampUpdated(comment.updatedAt)
 					})
 			})
 		})
 
 		describe('DELETE', () => {
-			beforeEach(async () => {
-				await setupDatabase()
-			})
-
 			it('fails if user does not own comment', async () => {
 				await request
 					.delete('/groups/1/lunchbreaks/2018-06-25/comments/1')

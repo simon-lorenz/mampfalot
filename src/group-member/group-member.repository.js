@@ -1,6 +1,4 @@
-const Boom = require('@hapi/boom')
 const GroupMemberModel = require('./group-member.model')
-const UserModel = require('../user/user.model')
 
 class GroupMemberRepository {
 	/**
@@ -9,69 +7,44 @@ class GroupMemberRepository {
 	 * @param {String} username
 	 */
 	async getMember(groupId, username) {
-		const member = await UserModel.findOne({
-			attributes: ['id', 'username', 'firstName', 'lastName'],
-			where: {
-				username
-			},
-			include: [
-				{
-					model: GroupMemberModel,
-					as: 'config',
-					attributes: ['isAdmin', 'color'],
-					where: {
-						groupId
-					}
-				}
-			]
-		})
+		const member = await GroupMemberModel.query()
+			.throwIfNotFound()
+			.withGraphJoined('user')
+			.where({
+				username,
+				groupId
+			})
+			.first()
 
-		if (member) {
-			return member.toJSON()
-		} else {
-			throw Boom.notFound()
-		}
+		return member
+	}
+
+	async getMembers(groupId) {
+		const members = await GroupMemberModel.query()
+			.throwIfNotFound()
+			.withGraphJoined('user')
+			.where({
+				groupId
+			})
+
+		return members.map(member => member.toJSON())
 	}
 
 	async getMemberId(groupId, username) {
-		const member = await GroupMemberModel.findOne({
-			attributes: ['id'],
-			where: {
-				groupId
-			},
-			include: [
-				{
-					model: UserModel,
-					where: {
-						username
-					}
-				}
-			]
-		})
-		return member.id
-	}
+		const { id } = await GroupMemberModel.query()
+			.select(['group_members.id', 'group_members.groupId'])
+			.withGraphJoined('user')
+			.where('group_members.groupId', '=', groupId)
+			.where('user.username', '=', username)
+			.first()
 
-	/**
-	 * Get a member formatted for the api enduser.
-	 * @param {number} groupId
-	 * @param {String} username
-	 */
-	async getMemberFormatted(groupId, username) {
-		const member = await this.getMember(groupId, username)
-		return {
-			username: member.username,
-			firstName: member.firstName,
-			lastName: member.lastName,
-			config: member.config
-		}
+		return id
 	}
 
 	async getAdmins(groupId) {
-		return GroupMemberModel.findAll({
-			where: {
-				groupId: groupId,
-				isAdmin: true
-			}
+		return GroupMemberModel.query().where({
+			groupId,
+			isAdmin: true
 		})
 	}
 }

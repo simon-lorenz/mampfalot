@@ -24,18 +24,40 @@ require('chai').should()
  * Global hooks.
  */
 const testServer = require('./utils/test-server')
-const setupDatabase = require('./utils/scripts/setup-database')
+const knex = require('../src/knex')
 
 before(async () => {
-	await setupDatabase()
-})
+	// Check database connection
+	const max_tries = 5
+	let tries = 1
 
-after(async () => {
-	await setupDatabase()
+	while (tries <= max_tries) {
+		try {
+			await knex.raw('SELECT 1+1 AS result')
+			break
+		} catch (error) {
+			if (tries === max_tries) {
+				console.error(`[Database] Connection could not be established: ${error}`)
+				process.exit(1)
+			} else {
+				console.log(`[Database] Could not connect to database (${tries}/${max_tries}).`)
+				tries++
+				await new Promise(resolve => setTimeout(resolve, 1000))
+			}
+		}
+	}
+
+	await knex.migrate.rollback(true)
+	await knex.migrate.latest()
 })
 
 beforeEach(async () => {
 	await testServer.start()
+
+	await knex.seed.run({
+		directory: './src/knex/seeds',
+		specific: 'seeder.js'
+	})
 })
 
 afterEach(async () => {

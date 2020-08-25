@@ -11,13 +11,10 @@ module.exports = {
 			validate: async (request, username, password) => {
 				request.logger.info(`Attempting basic authentication...`)
 
-				const user = await UserModel.unscoped().findOne({
-					where: {
-						username: username
-					},
-					attributes: ['id', 'username', 'password', 'verified'],
-					raw: true
-				})
+				const user = await UserModel.query()
+					.select(['id', 'username', 'password', 'verified'])
+					.where({ username })
+					.first()
 
 				if (!user) {
 					throw Boom.unauthorized('Bad username or password')

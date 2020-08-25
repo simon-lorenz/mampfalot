@@ -3,7 +3,6 @@ const Boom = require('@hapi/boom')
 const UserRepository = require('./user.repository')
 const UserModel = require('./user.model')
 const { generateRandomToken } = require('../util/util')
-const { Op } = require('sequelize')
 
 async function getAuthenticatedUser(request, h) {
 	const { id } = request.auth.credentials
@@ -19,12 +18,12 @@ async function createUser(request, h) {
 	}
 
 	// Is this email already known?
-	const existingUser = await UserModel.findOne({
-		attributes: ['id', 'email', 'username', 'firstName', 'verified'],
-		where: {
+	const existingUser = await UserModel.query()
+		.select(['id', 'email', 'username', 'firstName', 'verified'])
+		.where({
 			email: values.email
-		}
-	})
+		})
+		.first()
 
 	if (existingUser) {
 		if (existingUser.verified) {
@@ -33,7 +32,7 @@ async function createUser(request, h) {
 			// generate a new verification token, because the stored one is hashed
 			const verificationToken = await generateRandomToken(25)
 			existingUser.verificationToken = await bcrypt.hash(verificationToken, process.env.NODE_ENV === 'test' ? 1 : 12)
-			await existingUser.save()
+			await existingUser.$query().update()
 
 			await mailer.sendUserAlreadyRegisteredButNotVerifiedMail(
 				existingUser.email,
@@ -48,17 +47,14 @@ async function createUser(request, h) {
 
 	const verificationToken = await generateRandomToken(25)
 
-	const user = await UserModel.build({
+	const user = await UserModel.query().insert({
 		username: values.username,
 		firstName: values.firstName,
 		lastName: values.lastName,
 		email: values.email,
-		password: values.password,
+		password: await bcrypt.hash(values.password, 12),
 		verificationToken: await bcrypt.hash(verificationToken, process.env.NODE_ENV === 'test' ? 1 : 12)
 	})
-
-	user.password = await bcrypt.hash(user.password, 12)
-	await user.save()
 
 	await mailer.sendWelcomeMail(user.email, user.username, verificationToken, user.firstName)
 
@@ -67,7 +63,11 @@ async function createUser(request, h) {
 
 async function deleteAuthenticatedUser(request, h) {
 	const { id } = request.auth.credentials
-	await UserModel.destroy({ where: { id } })
+
+	await UserModel.query()
+		.delete()
+		.where({ id })
+
 	return h.response().code(204)
 }
 
@@ -75,12 +75,10 @@ async function updateAuthenticatedUser(request, h) {
 	const { id } = request.auth.credentials
 	const { payload } = request
 
-	const { username } = await UserModel.findOne({
-		attributes: ['username'],
-		where: {
-			id
-		}
-	})
+	const { username } = await UserModel.query()
+		.select('username')
+		.where({ id })
+		.first()
 
 	if (payload.password) {
 		if ((await checkPassword(username, payload.currentPassword)) === false) {
@@ -88,9 +86,13 @@ async function updateAuthenticatedUser(request, h) {
 		} else {
 			payload.password = bcrypt.hashSync(payload.password, 12)
 		}
+
+		delete payload.currentPassword
 	}
 
-	await UserModel.update(payload, { where: { id } })
+	await UserModel.query()
+		.update(payload)
+		.where({ id })
 
 	return await UserRepository.getUser(id)
 }
@@ -99,12 +101,10 @@ async function initializeVerificationProcess(request, h) {
 	const { username } = request.params
 	const { mailer } = request
 
-	const user = await UserModel.findOne({
-		attributes: ['id', 'username', 'firstName', 'lastName', 'email', 'verificationToken', 'verified'],
-		where: {
-			username: username
-		}
-	})
+	const user = await UserModel.query()
+		.select(['id', 'username', 'firstName', 'lastName', 'email', 'verificationToken', 'verified'])
+		.where({ username })
+		.first()
 
 	if (!user) {
 		throw Boom.notFound()
@@ -118,7 +118,8 @@ async function initializeVerificationProcess(request, h) {
 
 	user.verificationToken = await bcrypt.hash(verificationToken, 12)
 
-	await user.save()
+	await user.$query().update()
+
 	await mailer.sendWelcomeMail(user.email, user.username, verificationToken, user.firstName)
 
 	return h.response().code(204)
@@ -128,12 +129,10 @@ async function finalizeVerificationProcess(request, h) {
 	const { token } = request.payload
 	const { username } = request.params
 
-	const user = await UserModel.findOne({
-		attributes: ['id', 'verificationToken', 'verified'],
-		where: {
-			username: username
-		}
-	})
+	const user = await UserModel.query()
+		.select(['id', 'verificationToken', 'verified'])
+		.where({ username })
+		.first()
 
 	if (!user) {
 		throw Boom.notFound()
@@ -154,7 +153,7 @@ async function finalizeVerificationProcess(request, h) {
 	user.verified = true
 	user.verificationToken = null
 
-	await user.save()
+	await user.$query().update()
 
 	return h.response().code(204)
 }
@@ -163,7 +162,9 @@ async function initializePasswordResetProcess(request, h) {
 	const { username } = request.params
 	const { mailer } = request
 
-	const user = await UserModel.findOne({ where: { username } })
+	const user = await UserModel.query()
+		.where({ username })
+		.first()
 
 	if (!user) {
 		throw Boom.notFound()
@@ -176,7 +177,7 @@ async function initializePasswordResetProcess(request, h) {
 
 	user.passwordResetToken = await bcrypt.hash(token, 12)
 	user.passwordResetExpiration = tokenExp
-	await user.save()
+	await user.$query().update()
 
 	await mailer.sendPasswordResetMail(user.email, user.username, token, user.firstName)
 
@@ -187,14 +188,12 @@ async function finalizePasswordResetProcess(request, h) {
 	const { username } = request.params
 	const { token, newPassword } = request.payload
 
-	const user = await UserModel.unscoped().findOne({
-		where: {
-			username: username,
-			passwordResetExpiration: {
-				[Op.gte]: new Date()
-			}
-		}
-	})
+	const user = await UserModel.query()
+		.where({
+			username
+		})
+		.where('passwordResetExpiration', '>=', new Date())
+		.first()
 
 	if (!user) {
 		throw Boom.notFound('This user does not exist or needs to request a password reset first')
@@ -209,7 +208,7 @@ async function finalizePasswordResetProcess(request, h) {
 	user.passwordResetExpiration = null
 	user.password = await bcrypt.hash(user.password, 12)
 
-	await user.save()
+	await user.$query().update()
 
 	return h.response().code(204)
 }
@@ -218,10 +217,10 @@ async function initializeUsernameReminderProcess(request, h) {
 	const { email } = request.params
 	const { mailer } = request
 
-	const user = await UserModel.findOne({
-		attributes: ['email', 'username', 'firstName'],
-		where: { email }
-	})
+	const user = await UserModel.query()
+		.select(['email', 'username', 'firstName'])
+		.where({ email })
+		.first()
 
 	if (user) {
 		await mailer.sendForgotUsernameMail(user.email, user.username, user.firstName)
@@ -231,12 +230,11 @@ async function initializeUsernameReminderProcess(request, h) {
 }
 
 async function checkPassword(username, password) {
-	const user = await UserModel.findOne({
-		attributes: ['password'],
-		where: {
-			username: username
-		}
-	})
+	const user = await UserModel.query()
+		.select('password')
+		.where({ username })
+		.first()
+
 	return await bcrypt.compare(password, user.password)
 }
 

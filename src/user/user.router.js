@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi')
+const Joi = require('joi')
 const UserController = require('./user.controller')
 const GroupController = require('../group/group.controller')
 const InvitationController = require('../invitation/invitation.controller')

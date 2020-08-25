@@ -1,22 +1,38 @@
 const Boom = require('@hapi/boom')
-const setupDatabase = require('../../test/utils/scripts/setup-database')
-const testData = require('../../test/utils/scripts/test-data')
+const testData = require('../knex/seeds')
 const request = require('supertest')('http://localhost:5001')
 const TokenHelper = require('../../test/utils/token-helper')
 
 describe('Invitation', () => {
 	describe('/groups/:groupId/invitations', () => {
 		describe('GET', () => {
-			before(async () => {
-				await setupDatabase()
-			})
-
 			it('fails if the user is no group member', async () => {
 				await request
 					.get('/groups/1/invitations')
 					.set(await TokenHelper.getAuthorizationHeader('loten'))
 					.expect(403)
 					.expect(Boom.forbidden('Insufficient scope').output.payload)
+			})
+
+			it('works if the "from"-user was deleted', async () => {
+				await request
+					.post('/groups/1/invitations/alice')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(201)
+
+				await request
+					.delete('/users/me')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(204)
+
+				await request
+					.get('/groups/1/invitations')
+					.set(await TokenHelper.getAuthorizationHeader('johndoe1'))
+					.expect(200)
+					.expect(res => {
+						const invitation = res.body.find(i => i.to.username === 'alice')
+						invitation.should.have.property('from').eql(null)
+					})
 			})
 
 			it('returns a collection of invitations', async () => {
@@ -33,10 +49,6 @@ describe('Invitation', () => {
 
 	describe('/groups/:groupId/invitations/:username', () => {
 		describe('POST', () => {
-			beforeEach(async () => {
-				await setupDatabase()
-			})
-
 			it('fails if the user is no group member', async () => {
 				await request
 					.post('/groups/1/invitations/alice')
@@ -66,7 +78,7 @@ describe('Invitation', () => {
 					.post('/groups/1/invitations/loten')
 					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
 					.expect(400)
-					.expect(Boom.badRequest('This user is already invited').output.payload)
+					.expect(Boom.badRequest('Unique constraint violation (inviteOnce)').output.payload)
 			})
 
 			it('members cannot invite', async () => {
@@ -95,10 +107,6 @@ describe('Invitation', () => {
 		})
 
 		describe('DELETE', () => {
-			beforeEach(async () => {
-				await setupDatabase()
-			})
-
 			it('sends 404s', async () => {
 				await request
 					.delete('/groups/1/invitations/alice')
@@ -165,8 +173,6 @@ describe('Invitation', () => {
 
 	describe('/users/me/invitations', () => {
 		describe('GET', () => {
-			before(async () => await setupDatabase())
-
 			it('sends a correct collection of invitations', async () => {
 				await request
 					.get('/users/me/invitations')
@@ -176,15 +182,27 @@ describe('Invitation', () => {
 						res.body.should.be.equalInAnyOrder(testData.getInvitationsOfUser(3))
 					})
 			})
+
+			it('works if the "from"-user was deleted', async () => {
+				await request
+					.delete('/users/me')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.expect(204)
+
+				await request
+					.get('/users/me/invitations')
+					.set(await TokenHelper.getAuthorizationHeader('loten'))
+					.expect(200)
+					.expect(res => {
+						const invitation = res.body.find(i => i.group.id === 1)
+						invitation.should.have.property('from').eql(null)
+					})
+			})
 		})
 	})
 
 	describe('/users/me/invitations/:groupId', () => {
 		describe('DELETE', () => {
-			beforeEach(async () => {
-				await setupDatabase()
-			})
-
 			it('requires query value accept', async () => {
 				await request
 					.delete('/users/me/invitations/1')

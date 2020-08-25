@@ -1,41 +1,66 @@
-const { DataTypes } = require('sequelize')
-const { sequelize } = require('../sequelize')
+const Boom = require('@hapi/boom')
+const { Model } = require('objection')
 
-const GroupMemberModel = sequelize.define(
-	'GroupMembers',
-	{
-		id: {
-			type: DataTypes.INTEGER,
-			primaryKey: true,
-			autoIncrement: true
-		},
-		userId: {
-			type: DataTypes.INTEGER,
-			allowNull: false,
-			onDelete: 'CASCADE'
-		},
-		groupId: {
-			type: DataTypes.INTEGER,
-			allowNull: false,
-			onDelete: 'CASCADE'
-		},
-		isAdmin: {
-			type: DataTypes.BOOLEAN,
-			allowNull: false
-		},
-		color: {
-			type: DataTypes.STRING,
-			allowNull: true
-		}
-	},
-	{
-		tableName: 'group_members',
-		timestamps: false
+class GroupMemberModel extends Model {
+	static get tableName() {
+		return 'group_members'
 	}
-)
 
-GroupMemberModel.associate = models => {
-	models.GroupMembers.belongsTo(models.User, { foreignKey: 'userId' })
+	static get relationMappings() {
+		const UserModel = require('../user/user.model')
+		const GroupModel = require('../group/group.model')
+		const ParticipantModel = require('../participant/participant.model')
+
+		return {
+			user: {
+				relation: Model.HasOneRelation,
+				modelClass: UserModel,
+				join: {
+					from: 'group_members.userId',
+					to: 'users.id'
+				}
+			},
+			participations: {
+				relation: Model.HasManyRelation,
+				modelClass: ParticipantModel,
+				join: {
+					from: 'group_members.id',
+					to: 'participants.memberId'
+				}
+			},
+			group: {
+				relation: Model.BelongsToOneRelation,
+				modelClass: GroupModel,
+				join: {
+					from: 'group_members.groupId',
+					to: 'groups.id'
+				}
+			}
+		}
+	}
+
+	$formatJson(json) {
+		json = super.$formatJson(json)
+
+		if (!json.user) {
+			throw Boom.badImplementation('You must join the user.')
+		}
+
+		json.config = {
+			color: json.color,
+			isAdmin: json.isAdmin
+		}
+
+		delete json.color
+		delete json.isAdmin
+
+		return {
+			username: json.user.username,
+			firstName: json.user.firstName,
+			lastName: json.user.lastName,
+			config: json.config
+		}
+	}
 }
 
 module.exports = GroupMemberModel

@@ -1,42 +1,32 @@
-const { DataTypes } = require('sequelize')
-const { sequelize } = require('../sequelize')
+const { Model } = require('objection')
 
-const VoteModel = sequelize.define(
-	'Vote',
-	{
-		id: {
-			type: DataTypes.INTEGER,
-			primaryKey: true,
-			autoIncrement: true
-		},
-		participantId: {
-			type: DataTypes.INTEGER,
-			allowNull: false,
-			onDelete: 'CASCADE'
-		},
-		placeId: {
-			type: DataTypes.INTEGER,
-			allowNull: false,
-			onDelete: 'CASCADE'
-		},
-		points: {
-			type: DataTypes.INTEGER,
-			allowNull: false
-		}
-	},
-	{
-		tableName: 'votes',
-		timestamps: false,
-		name: {
-			singular: 'vote',
-			plural: 'votes'
+class VoteModel extends Model {
+	static get tableName() {
+		return 'votes'
+	}
+
+	static get relationMappings() {
+		const PlaceModel = require('../place/place.model')
+
+		return {
+			place: {
+				relation: Model.BelongsToOneRelation,
+				modelClass: PlaceModel,
+				join: {
+					from: 'votes.placeId',
+					to: 'places.id'
+				}
+			}
 		}
 	}
-)
 
-VoteModel.associate = models => {
-	models.Vote.belongsTo(models.Place, { foreignKey: 'placeId' })
-	models.Vote.belongsTo(models.Participant, { foreignKey: 'participantId' })
+	$formatJson(json) {
+		json = super.$formatJson(json)
+		delete json.id
+		delete json.participantId
+		delete json.placeId
+		return json
+	}
 }
 
 module.exports = VoteModel

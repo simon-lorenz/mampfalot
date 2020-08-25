@@ -1,4 +1,4 @@
-const { users } = require('./scripts/test-data')
+const { users } = require('../../src/knex/seeds')
 const request = require('supertest')('http://localhost:5001')
 
 class TokenHelper {

@@ -1,44 +1,64 @@
-const { DataTypes } = require('sequelize')
-const { sequelize } = require('../sequelize')
+const { Model } = require('objection')
+const GroupModel = require('../group/group.model')
 
-const InvitationModel = sequelize.define(
-	'Invitation',
-	{
-		groupId: {
-			type: DataTypes.INTEGER,
-			allowNull: false,
-			onDelete: 'CASCADE',
-			unique: 'inviteOnce'
-		},
-		fromId: {
-			type: DataTypes.INTEGER,
-			allowNull: true,
-			onDelete: 'SET NULL'
-		},
-		toId: {
-			type: DataTypes.INTEGER,
-			allowNull: false,
-			onDelete: 'CASCADE',
-			unique: {
-				name: 'inviteOnce',
-				msg: 'This user is already invited.'
+class InvitationModel extends Model {
+	static get tableName() {
+		return 'invitations'
+	}
+
+	static get relationMappings() {
+		const UserModel = require('../user/user.model')
+
+		return {
+			group: {
+				relation: Model.BelongsToOneRelation,
+				modelClass: GroupModel,
+				join: {
+					from: 'invitations.groupId',
+					to: 'groups.id'
+				}
+			},
+			from: {
+				relation: Model.BelongsToOneRelation,
+				modelClass: UserModel,
+				modify: 'public',
+				join: {
+					from: 'invitations.fromId',
+					to: 'users.id'
+				}
+			},
+			to: {
+				relation: Model.BelongsToOneRelation,
+				modelClass: UserModel,
+				modify: 'public',
+				join: {
+					from: 'invitations.toId',
+					to: 'users.id'
+				}
 			}
 		}
-	},
-	{
-		tableName: 'invitations',
-		timestamps: true,
-		name: {
-			singular: 'invitation',
-			plural: 'invitations'
-		}
 	}
-)
 
-InvitationModel.associate = models => {
-	models.Invitation.belongsTo(models.Group, { foreignKey: 'groupId' })
-	models.Invitation.belongsTo(models.User, { as: 'from', foreignKey: 'fromId' })
-	models.Invitation.belongsTo(models.User, { as: 'to', foreignKey: 'toId' })
+	$beforeInsert() {
+		this.createdAt = new Date()
+	}
+
+	$beforeUpdate() {
+		this.updatedAt = new Date()
+	}
+
+	$formatJson(json) {
+		json = super.$formatJson(json)
+
+		delete json.id
+		delete json.groupId
+		delete json.fromId
+		delete json.toId
+		delete json.createdAt
+		delete json.updatedAt
+
+		return json
+	}
 }
 
 module.exports = InvitationModel

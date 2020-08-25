@@ -1,11 +1,6 @@
-const { Op } = require('sequelize')
-const Boom = require('@hapi/boom')
 const GroupModel = require('./group.model')
 const GroupMemberModel = require('../group-member/group-member.model')
-const LunchbreakModel = require('../lunchbreak/lunchbreak.model')
 const UserModel = require('../user/user.model')
-const ParticipantModel = require('../participant/participant.model')
-const PlaceModel = require('../place/place.model')
 
 /**
  * @typedef {Object} GroupConfig
@@ -18,86 +13,36 @@ const PlaceModel = require('../place/place.model')
 
 class GroupRepository {
 	async getGroup(id) {
-		const group = await GroupModel.findByPk(id, {
-			include: [
-				{
-					model: PlaceModel,
-					attributes: ['id', 'name', 'foodType']
-				},
-				{
-					model: UserModel,
-					attributes: ['username', 'firstName', 'lastName'],
-					as: 'members',
-					through: {
-						as: 'config',
-						attributes: ['color', 'isAdmin']
-					}
-				}
-			]
-		})
-
-		if (group) {
-			return group
-		} else {
-			throw Boom.notFound()
-		}
+		return GroupModel.query()
+			.throwIfNotFound()
+			.withGraphFetched('[members, places]')
+			.where('groups.id', '=', id)
+			.first()
 	}
 
 	async getGroupsOfUser(userId) {
-		// 1. Get all ids of groups the user is a member of
-		let memberships = await GroupMemberModel.findAll({
-			attributes: ['groupId'],
-			where: {
-				userId: userId
-			}
-		})
+		let memberships = await GroupMemberModel.query()
+			.select('groupId')
+			.withGraphJoined('user')
+			.where('group_members.userId', '=', userId)
 
 		memberships = memberships.map(membership => membership.groupId)
 
-		// 2. Get all groups with those ids
-		return GroupModel.findAll({
-			where: {
-				id: {
-					[Op.in]: memberships
-				}
-			},
-			include: [
-				{
-					model: PlaceModel,
-					attributes: ['id', 'name', 'foodType']
-				},
-				{
-					model: UserModel,
-					attributes: ['username', 'firstName', 'lastName'],
-					as: 'members',
-					through: {
-						as: 'config',
-						attributes: ['color', 'isAdmin']
-					}
-				}
-			]
-		})
+		return GroupModel.query()
+			.withGraphFetched('[members, places]')
+			.whereIn('groups.id', memberships)
 	}
 
 	async getGroupMembershipsOfUser(userId) {
-		const { groups } = await UserModel.findByPk(userId, {
-			attributes: [],
-			include: [
-				{
-					model: GroupModel,
-					attributes: ['id'],
-					through: {
-						attributes: ['isAdmin'],
-						as: 'config'
-					}
-				}
-			]
-		})
+		const user = await UserModel.query()
+			.where('users.id', '=', userId)
+			.withGraphJoined('groups')
+			.first()
 
-		return groups.map(group => {
+		return user.groups.map(group => {
 			return {
 				id: group.id,
-				isAdmin: group.config.isAdmin
+				isAdmin: group.isAdmin
 			}
 		})
 	}
@@ -108,11 +53,10 @@ class GroupRepository {
 	 * @returns {GroupConfig}
 	 */
 	async getGroupConfig(id) {
-		const config = await GroupModel.findByPk(id, {
-			attributes: ['voteEndingTime', 'utcOffset', 'pointsPerDay', 'minPointsPerVote', 'maxPointsPerVote']
-		})
-
-		return config.toJSON()
+		return GroupModel.query()
+			.select(['voteEndingTime', 'utcOffset', 'pointsPerDay', 'minPointsPerVote', 'maxPointsPerVote'])
+			.where({ id })
+			.first()
 	}
 
 	/**
@@ -121,23 +65,12 @@ class GroupRepository {
 	 * @returns {GroupConfig}
 	 */
 	async getGroupConfigByParticipant(participantId) {
-		const participant = await ParticipantModel.findByPk(participantId, {
-			include: [
-				{
-					model: LunchbreakModel,
-					attributes: ['id'],
-					include: [
-						{
-							model: GroupModel,
-							attributes: ['voteEndingTime', 'utcOffset', 'pointsPerDay', 'minPointsPerVote', 'maxPointsPerVote'],
-							include: [PlaceModel]
-						}
-					]
-				}
-			]
-		})
+		const member = await GroupMemberModel.query()
+			.withGraphJoined('[group.places, participations]')
+			.where('participations.id', '=', participantId)
+			.first()
 
-		return participant.lunchbreak.group
+		return member.group
 	}
 }
 

@@ -1,6 +1,5 @@
 const Boom = require('@hapi/boom')
-const setupDatabase = require('../../test/utils/scripts/setup-database')
-const testData = require('../../test/utils/scripts/test-data')
+const testData = require('../knex/seeds')
 const request = require('supertest')('http://localhost:5001')
 const TokenHelper = require('../../test/utils/token-helper')
 
@@ -16,10 +15,6 @@ describe('Group', () => {
 				maxPointsPerVote: 10,
 				minPointsPerVote: 5
 			}
-
-			beforeEach(async () => {
-				await setupDatabase()
-			})
 
 			it('fails if required values are missing', async () => {
 				await request
@@ -57,7 +52,7 @@ describe('Group', () => {
 					})
 					.expect(400)
 					.expect(res => {
-						res.body.message.should.contain('"pointsPerDay" must be larger than or equal to 1')
+						res.body.message.should.contain('"pointsPerDay" must be greater than or equal to 1')
 						res.body.validation.keys.should.contain('pointsPerDay')
 					})
 
@@ -102,7 +97,7 @@ describe('Group', () => {
 					})
 					.expect(400)
 					.expect(res => {
-						res.body.message.should.contain('"maxPointsPerVote" must be larger than or equal to ref:minPointsPerVote')
+						res.body.message.should.contain('"maxPointsPerVote" must be greater than or equal to ref:minPointsPerVote')
 						res.body.validation.keys.should.contain('maxPointsPerVote')
 					})
 			})
@@ -134,7 +129,7 @@ describe('Group', () => {
 					})
 					.expect(400)
 					.expect(res => {
-						res.body.message.should.contain('"minPointsPerVote" must be larger than or equal to 1')
+						res.body.message.should.contain('"minPointsPerVote" must be greater than or equal to 1')
 						res.body.validation.keys.should.contain('minPointsPerVote')
 					})
 			})
@@ -176,7 +171,7 @@ describe('Group', () => {
 					})
 					.expect(400)
 					.expect(res => {
-						res.body.message.should.include('"utcOffset" must be larger than or equal to -720')
+						res.body.message.should.include('"utcOffset" must be greater than or equal to -720')
 						res.body.validation.keys.should.contain('utcOffset')
 					})
 			})
@@ -236,10 +231,6 @@ describe('Group', () => {
 
 	describe('/groups/:groupId', () => {
 		describe('GET', () => {
-			before(async () => {
-				await setupDatabase()
-			})
-
 			it('sends a valid group-resource', async () => {
 				await request
 					.get('/groups/1')
@@ -258,10 +249,6 @@ describe('Group', () => {
 		})
 
 		describe('PUT', () => {
-			beforeEach(async () => {
-				await setupDatabase()
-			})
-
 			const updatedGroup = {
 				name: 'New name',
 				lunchTime: '14:00:00',
@@ -317,7 +304,7 @@ describe('Group', () => {
 					})
 					.expect(400)
 					.expect(res => {
-						res.body.message.should.contain('"pointsPerDay" must be larger than or equal to 1')
+						res.body.message.should.contain('"pointsPerDay" must be greater than or equal to 1')
 						res.body.validation.keys.should.contain('pointsPerDay')
 					})
 
@@ -362,7 +349,7 @@ describe('Group', () => {
 					})
 					.expect(400)
 					.expect(res => {
-						res.body.message.should.contain('"maxPointsPerVote" must be larger than or equal to ref:minPointsPerVote')
+						res.body.message.should.contain('"maxPointsPerVote" must be greater than or equal to ref:minPointsPerVote')
 						res.body.validation.keys.should.contain('maxPointsPerVote')
 					})
 			})
@@ -394,7 +381,7 @@ describe('Group', () => {
 					})
 					.expect(400)
 					.expect(res => {
-						res.body.message.should.contain('"minPointsPerVote" must be larger than or equal to 1')
+						res.body.message.should.contain('"minPointsPerVote" must be greater than or equal to 1')
 						res.body.validation.keys.should.contain('minPointsPerVote')
 					})
 			})
@@ -436,7 +423,7 @@ describe('Group', () => {
 					})
 					.expect(400)
 					.expect(res => {
-						res.body.message.should.include('"utcOffset" must be larger than or equal to -720')
+						res.body.message.should.include('"utcOffset" must be greater than or equal to -720')
 						res.body.validation.keys.should.contain('utcOffset')
 					})
 			})
@@ -471,10 +458,6 @@ describe('Group', () => {
 		})
 
 		describe('DELETE', () => {
-			beforeEach(async () => {
-				await setupDatabase()
-			})
-
 			it('requires admin rights', async () => {
 				await request
 					.delete('/groups/1')
@@ -561,10 +544,6 @@ describe('Group', () => {
 	})
 
 	describe('/users/me/groups', () => {
-		before(async () => {
-			await setupDatabase()
-		})
-
 		describe('GET', () => {
 			it('sends a correct group collection', async () => {
 				await request

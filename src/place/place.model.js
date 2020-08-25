@@ -1,49 +1,15 @@
-const { DataTypes } = require('sequelize')
-const { sequelize } = require('../sequelize')
+const { Model } = require('objection')
 
-const PlaceModel = sequelize.define(
-	'Place',
-	{
-		id: {
-			type: DataTypes.INTEGER,
-			primaryKey: true,
-			autoIncrement: true
-		},
-		groupId: {
-			type: DataTypes.INTEGER,
-			allowNull: false,
-			unique: {
-				name: 'uniquePlacePerGroup',
-				args: true
-			},
-			onDelete: 'CASCADE'
-		},
-		name: {
-			type: DataTypes.STRING,
-			allowNull: false,
-			unique: {
-				name: 'uniquePlacePerGroup',
-				args: true
-			}
-		},
-		foodType: {
-			type: DataTypes.STRING,
-			allowNull: false
-		}
-	},
-	{
-		tableName: 'places',
-		timestamps: false,
-		name: {
-			singular: 'place',
-			plural: 'places'
-		}
+class PlaceModel extends Model {
+	static get tableName() {
+		return 'places'
 	}
-)
 
-PlaceModel.associate = models => {
-	models.Place.hasMany(models.Vote, { foreignKey: 'placeId' })
-	models.Place.belongsTo(models.Group, { foreignKey: 'groupId' })
+	$formatJson(json) {
+		json = super.$formatJson(json)
+		delete json.groupId
+		return json
+	}
 }
 
 module.exports = PlaceModel

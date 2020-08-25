@@ -20,6 +20,8 @@ The app will be reachable at `localhost:5000` and reload automatically when code
 
 pgAdmin4 is available at `localhost:5050`. Login as `pgadmin4@pgadmin.org` and password `admin`. The default password for the mampfalot database is `root`.
 
+To seed the database with test data, run `docker exec -it $(docker-compose ps -q server) npm run db:seed`.
+
 ### Reading Logs
 
 Mampfalot outputs logs as json. You can use tools like [pino-pretty](https://www.npmjs.com/package/pino-pretty) to make them readable for development.

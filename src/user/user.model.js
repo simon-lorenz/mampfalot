@@ -1,71 +1,55 @@
-const { DataTypes } = require('sequelize')
-const { sequelize } = require('../sequelize')
+const { Model } = require('objection')
 
-const UserModel = sequelize.define(
-	'User',
-	{
-		id: {
-			type: DataTypes.INTEGER,
-			primaryKey: true,
-			autoIncrement: true
-		},
-		username: {
-			type: DataTypes.STRING,
-			unique: true,
-			allowNull: false
-		},
-		firstName: {
-			type: DataTypes.STRING
-		},
-		lastName: {
-			type: DataTypes.STRING
-		},
-		email: {
-			type: DataTypes.STRING,
-			allowNull: false,
-			unique: true
-		},
-		password: {
-			type: DataTypes.STRING,
-			allowNull: false
-		},
-		verified: {
-			type: DataTypes.BOOLEAN,
-			defaultValue: false
-		},
-		verificationToken: {
-			type: DataTypes.STRING
-		},
-		passwordResetToken: {
-			type: DataTypes.STRING
-		},
-		passwordResetExpiration: {
-			type: DataTypes.DATE
-		}
-	},
-	{
-		tableName: 'users',
-		timestamps: true,
-		name: {
-			singular: 'user',
-			plural: 'users'
-		},
-		defaultScope: {
-			attributes: {
-				exclude: ['password', 'passwordResetToken', 'passwordResetExpiration', 'verificationToken']
+class UserModel extends Model {
+	static get tableName() {
+		return 'users'
+	}
+
+	static get relationMappings() {
+		const GroupModel = require('../group/group.model')
+
+		return {
+			groups: {
+				relation: Model.ManyToManyRelation,
+				modelClass: GroupModel,
+				join: {
+					from: 'users.id',
+					through: {
+						from: 'group_members.userId',
+						to: 'group_members.groupId',
+						extra: ['color', 'isAdmin']
+					},
+					to: 'groups.id'
+				}
 			}
 		}
 	}
-)
 
-UserModel.associate = models => {
-	models.User.hasMany(models.Invitation, { foreignKey: 'fromId' })
-	models.User.hasMany(models.Invitation, { foreignKey: 'toId' })
-	models.User.hasOne(models.GroupMembers, { as: 'config', foreignKey: 'userId' })
-	models.User.belongsToMany(models.Group, {
-		through: models.GroupMembers,
-		foreignKey: 'userId'
-	})
+	static get modifiers() {
+		return {
+			public(builder) {
+				builder.select(['id', 'username', 'firstName', 'lastName'])
+			},
+
+			private(builder) {
+				builder.select(['id', 'email', 'username', 'firstName', 'lastName'])
+			}
+		}
+	}
+
+	$beforeInsert() {
+		this.createdAt = new Date()
+	}
+
+	$beforeUpdate() {
+		this.updatedAt = new Date()
+	}
+
+	$formatJson(json) {
+		json = super.$formatJson(json)
+		delete json.id
+		return json
+	}
 }
 
 module.exports = UserModel
