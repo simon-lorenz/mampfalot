@@ -1,3 +1,4 @@
+const moment = require('moment')
 const { Model } = require('objection')
 
 class GroupModel extends Model {
@@ -32,6 +33,20 @@ class GroupModel extends Model {
 				}
 			}
 		}
+	}
+
+	$toDatabaseJson(json) {
+		json = super.$toDatabaseJson(json)
+
+		if (json.lunchTime instanceof Date) {
+			json.lunchTime = moment(json.lunchTime).format('HH:mm:ss')
+		}
+
+		if (json.voteEndingTime instanceof Date) {
+			json.voteEndingTime = moment(json.voteEndingTime).format('HH:mm:ss')
+		}
+
+		return json
 	}
 
 	$formatJson(json) {

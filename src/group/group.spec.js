@@ -42,6 +42,34 @@ describe('Group', () => {
 					})
 			})
 
+			it('fails if voteEndingTime is not a valid time', async () => {
+				await request
+					.post('/groups')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...newGroup,
+						voteEndingTime: '25:00:00'
+					})
+					.expect(400)
+					.expect(res => {
+						res.body.message.should.contain('"voteEndingTime" must be in HH:mm:ss format')
+					})
+			})
+
+			it('fails if lunchTime is not a valid time', async () => {
+				await request
+					.post('/groups')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...newGroup,
+						lunchTime: '25:00:00'
+					})
+					.expect(400)
+					.expect(res => {
+						res.body.message.should.contain('"lunchTime" must be in HH:mm:ss format')
+					})
+			})
+
 			it('fails if pointsPerDay is not a number between 1 and 1000', async () => {
 				await request
 					.post('/groups')
@@ -291,6 +319,34 @@ describe('Group', () => {
 								'maxPointsPerVote'
 							]
 						}
+					})
+			})
+
+			it('fails if voteEndingTime is not a valid time', async () => {
+				await request
+					.put('/groups/1')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...updatedGroup,
+						voteEndingTime: '25:00:00'
+					})
+					.expect(400)
+					.expect(res => {
+						res.body.message.should.contain('"voteEndingTime" must be in HH:mm:ss format')
+					})
+			})
+
+			it('fails if lunchTime is not a valid time', async () => {
+				await request
+					.put('/groups/1')
+					.set(await TokenHelper.getAuthorizationHeader('maxmustermann'))
+					.send({
+						...updatedGroup,
+						lunchTime: '25:00:00'
+					})
+					.expect(400)
+					.expect(res => {
+						res.body.message.should.contain('"lunchTime" must be in HH:mm:ss format')
 					})
 			})
 

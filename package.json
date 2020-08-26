@@ -24,6 +24,7 @@
     "@hapi/basic": "6.0.0",
     "@hapi/boom": "9.1.0",
     "@hapi/hapi": "20.0.0",
+    "@hapi/joi-date": "2.0.1",
     "bcryptjs": "2.4.3",
     "handlebars": "4.7.6",
     "joi": "17.2.1",
