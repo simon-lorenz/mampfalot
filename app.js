@@ -36,8 +36,8 @@ async function start() {
 	// Run migrations
 	try {
 		server.logger.info('[Database] Running migrations...')
-		await knex.migrate.latest()
-		server.logger.info('[Database] Migrations complete!')
+		const migrateResult = await knex.migrate.latest()
+		server.logger.info(`[Database] Ran ${migrateResult[1].length} new migrations`)
 	} catch (error) {
 		server.logger.fatal({ error }, '[Database] Migrations failed.')
 		process.exit(1)

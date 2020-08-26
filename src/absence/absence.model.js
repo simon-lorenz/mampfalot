@@ -22,14 +22,6 @@ class AbsenceModel extends Model {
 			}
 		}
 	}
-
-	$beforeInsert() {
-		this.createdAt = new Date()
-	}
-
-	$beforeUpdate() {
-		this.updatedAt = new Date()
-	}
 }
 
 module.exports = AbsenceModel
