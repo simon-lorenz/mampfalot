@@ -1,4 +1,4 @@
-const logger = require('pino')()
+const logger = require('pino')({ level: process.env.LOG_LEVEL })
 const { createServer } = require('./src/server')
 const { connectToDatabase, runMigrations } = require('./src/util/util')
 
