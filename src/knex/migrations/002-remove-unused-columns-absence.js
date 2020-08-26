@@ -7,7 +7,7 @@ exports.up = async knex => {
 exports.down = async knex => {
 	await knex.schema.alterTable('absences', table => {
 		table.integer('id')
-		table.datetime('createdAt').notNullable()
+		table.datetime('createdAt')
 		table.datetime('updatedAt')
 	})
 }
