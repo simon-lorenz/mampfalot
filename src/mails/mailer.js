@@ -231,7 +231,7 @@ class Mailer {
 				await account.transport.verify()
 				this.logger.info(`[Mailer] Successfully established smtp connection for address ${account.address}`)
 			} catch (error) {
-				this.logger.error(`[Mailer] Could not establish smtp connection for address ${account.address}`)
+				this.logger.warn(`[Mailer] Could not establish smtp connection for address ${account.address}`)
 			}
 		}
 	}
