@@ -1,0 +1,49 @@
+<div class="card" [class.has-error]="points > this.max || points < this.min">
+  <div class="card-content" style="padding: 1rem;">
+    <div class="columns">
+      <div class="column">
+        <div class="select is-fullwidth">
+          <select [(ngModel)]="vote.place" [compareWith]='comparePlace'>
+            <option *ngFor="let place of places" [ngValue]="place">{{ place.name }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="columns is-mobile">
+      <div class="column is-4 is-offset-2">
+        <input
+          class="input"
+          type="tel"
+          [(ngModel)]="points"
+          maxlength="4"
+          (keydown.arrowDown)="points = points - 1"
+          (keydown.arrowUp)="points = points + 1">
+      </div>
+      <div class="column is-3 has-vertically-aligned-content">
+        <p>Mampfs</p>
+      </div>
+    </div>
+    <div class="columns" *ngIf="!useSlider && (points < min)">
+      <div class="column is-4 is-offset-2">
+        <p class="help" style="cursor: pointer" (click)="points = min">min. {{ min }}</p>
+      </div>
+    </div>
+    <div class="columns" *ngIf="!useSlider && (points > max)">
+      <div class="column is-4 is-offset-2">
+        <p class="help" style="cursor: pointer" (click)="points = max">max. {{ max }}</p>
+      </div>
+    </div>
+    <div class="columns is-mobile is-marginless" *ngIf="useSlider">
+      <div class="column has-vertically-aligned-content is-2">
+        <p  class="minmax" (click)="points = min">{{ min }}</p>
+      </div>
+      <div class="column is-8">
+        <input class="slider is-fullwidth" step="5" [min]="min" [max]="max" [(ngModel)]="points" type="range">
+      </div>
+      <div class="column has-vertically-aligned-content is-2">
+        <p class="minmax" (click)="points = max">{{ max }}</p>
+      </div>
+    </div>
+    <button class="button is-fullwidth is-text has-text-danger" (click)="delete.emit()">Löschen</button>
+  </div>
+</div>

@@ -1,0 +1,10 @@
+#nav-container {
+  padding: 5px;
+  box-shadow: 0px 3px 2px 0px rgba(173,173,173,0.25);
+}
+
+app-alert {
+  position: fixed;
+  right: 12px;
+  z-index: 999;
+}

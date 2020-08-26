@@ -1,0 +1,13 @@
+.card-add-vote {
+	background: #fafafa;
+	border-style: dashed;
+	border-width: 1px;
+	border-color: gray;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
+.card-add-vote :hover {
+	background: #eeeeee;
+	border-radius: inherit;
+}

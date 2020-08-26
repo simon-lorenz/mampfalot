@@ -4,7 +4,7 @@ services:
   server:
     build:
       context: ./server
-    container_name: mampfalot
+    container_name: mampfalot-server
     command: npm run start:dev
     volumes:
       - ./server:/server
@@ -19,6 +19,17 @@ services:
       - LOG_LEVEL=info
       - DATABASE_URL=postgres://postgres:root@postgres:5432/mampfalot
       - SECRET_KEY=123456
+
+  client:
+    build:
+      context: ./client
+    container_name: mampfalot-client
+    volumes:
+      - ./client:/client
+    networks:
+      - app
+    ports:
+      - "4200:4200"
 
   postgres:
     image: postgres:11

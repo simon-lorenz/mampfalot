@@ -1,0 +1,38 @@
+<form [formGroup]="requestUsernameForm" (ngSubmit)="requestUsername()" class="has-text-left">
+  <div class="field">
+    <div class="control has-icons-left">
+      <input class="input"
+        type="email"
+        formControlName="email"
+        placeholder="E-Mail"
+        autofocus=""
+        [ngClass]="{
+          'is-danger': emailControl.value !== null && emailControl.value !== '' && emailControl.errors,
+          'is-success': !emailControl.errors
+        }"
+        required>
+        <span class="icon is-small is-left">
+          <i class="material-icons">email</i>
+        </span>
+    </div>
+    <p *ngIf="emailControl.hasError('pattern')" class="help is-danger">Diese E-Mail-Adresse ist ungültig.</p>
+  </div>
+
+  <div class="field">
+    <button type="submit" class="button is-info is-fullwidth" [disabled]="!requestUsernameForm.valid">Benutzernamen an mich senden</button>
+  </div>
+
+  <div class="field" *ngIf="success">
+    <div class="notification is-info">
+      <button class="delete" (click)="success = false"></button>
+      <p>Wir haben dir eine E-Mail mit deinem Benutzernamen geschickt.</p>
+    </div>
+  </div>
+
+  <div class="field" *ngIf="error">
+    <div class="notification is-danger">
+      <button class="delete" (click)="error = false"></button>
+      <p>Leider ist ein Fehler aufgetreten. Versuche es später erneut.</p>
+    </div>
+  </div>
+</form>

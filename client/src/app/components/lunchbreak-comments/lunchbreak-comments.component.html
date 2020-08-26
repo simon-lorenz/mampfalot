@@ -1,0 +1,18 @@
+<div id="comments" *ngIf="lunchbreak">
+  <div id="new-comment">
+    <div class="comment-circle" [style.background]="userMember.config.color"></div>
+    <input (keyup.enter)="addComment()" class="input is-fullwidth" [(ngModel)]="newComment.text" type="text" placeholder="Schreibe einen Kommentar...">
+    <button (click)="addComment()" class="button is-primary" style="margin-left: 10px;">Senden</button>
+  </div>
+  <hr>
+  <div class="comment" *ngFor="let comment of lunchbreak.comments">
+    <div class="comment-circle" [style.background]="comment.author.config.color"></div>
+    <div class="comment-body">
+      <div class="comment-heading">
+        <h3>{{ comment.author.label }}</h3>
+        <span>{{ formatTime(comment.createdAt) }}</span>
+      </div>
+      <p style="word-wrap: break-word">{{ comment.text }}</p>
+    </div>
+  </div>
+</div>

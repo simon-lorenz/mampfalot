@@ -1,0 +1,40 @@
+<nav class="navbar is-transparent" role="navigation">
+  <div class="navbar-brand">
+    <a routerLink="/groups" id="brand-link">
+      <img src="assets/logo_without_text.png">
+      <p>Mampfalot</p>
+    </a>
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" [ngClass]="{ 'is-active': navigationExpanded }" (click)="navigationExpanded = ! navigationExpanded">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+
+  <div class="navbar-menu" [ngClass]="{ 'is-active': navigationExpanded }">
+    <div class="navbar-start">
+        <a routerLink="/groups" class="navbar-item" routerLinkActive="active-item" (click)="navigationExpanded = false">Gruppen</a>
+        <a routerLink="/settings" class="navbar-item" routerLinkActive="active-item" (click)="navigationExpanded = false">Einstellungen</a>
+    </div>
+    <div class="navbar-end">
+      <div class="navbar-item">
+        <a class="button has-background-grey" href="https://ko-fi.com/O4O4W4AY" alt="Mampfalot unterstützen">
+          <span class="icon" style="padding: 0rem 0.25rem;">
+            <img src="/assets/cuplogo.svg">
+          </span>
+          <span class="has-text-white-ter" style="font-weight: 600;">Mampfalot unterstützen</span>
+        </a>
+      </div>
+      <div class="navbar-item" *ngIf="dialogVisible">
+        <div class="buttons has-addons">
+          <span class="button is-danger" style="cursor: default">Willst du dich wirklich ausloggen?</span>
+          <span class="button" (click)="logout()">Ja</span>
+          <span class="button" (click)="dialogVisible = false">Nein</span>
+        </div>
+      </div>
+      <div class="navbar-item" *ngIf="dialogVisible === false">
+        <a (click)="dialogVisible = true" class="button is-danger">Log out</a>
+      </div>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,60 @@
+<div *ngIf="group.places.length === 0; else picker">
+  <p class="is-fullwidth has-text-centered has-text-danger is-size-5">
+    Bevor du abstimmen kannst, muss für diese Gruppe mindestens ein Ort hinterlegt worden sein!
+  </p>
+</div>
+
+<ng-template #picker>
+  <div class="columns">
+    <div class="column">
+      <p class="has-text-centered" [ngClass]="{ 'has-text-danger': !sumValid(pointsSum) }" >{{ pointsSum }} von {{ group.pointsPerDay }} Mampfs vergeben</p>
+      <p *ngIf="hasDuplicatePlaces" class="has-text-centered has-text-danger">Du kannst nicht mehrfach für den selben Ort abstimmen.</p>
+    </div>
+  </div>
+  <div class="columns is-multiline">
+    <div class="column is-2-fullhd is-3-desktop is-4-tablet" *ngFor="let vote of participation.votes">
+      <app-place-card
+        [min]="group.minPointsPerVote"
+        [max]="group.maxPointsPerVote"
+        [places]="group.places"
+        [useSlider]="useSlider"
+        [vote]="vote"
+        (delete)="deleteVote(vote)"
+      ></app-place-card>
+    </div>
+    <div class="column is-2-fullhd is-3-desktop is-4-tablet">
+      <div (click)="addVote()" class="card card-add-vote" style="height: 100%; width: 100%; display: table;">
+        <p class="has-text-centered" style="vertical-align: middle; display: table-cell; padding: 2rem; font-size: 16px;">Vote hinzufügen</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="columns">
+    <div class="column">
+      <div class="field is-grouped">
+        <div class="control">
+          <button (click)="saveVotes()" [disabled]="!sumValid(pointsSum) || !allPointsValid() || hasDuplicatePlaces" class="button is-primary">Speichern</button>
+        </div>
+        <div class="control">
+          <button (click)="resetVotes()" class="button is-text">Abbrechen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="columns">
+    <div class="column">
+      <div class="field">
+        <input class="is-checkradio"
+          [(ngModel)]="user.useSlider"
+          (change)="useSlider = !useSlider"
+          id="useSlider"
+          type="checkbox"
+          name="useSlider"
+          checked="checked">
+        <label for="useSlider" class="is-marginless">Benutze Slider</label>
+      </div>
+    </div>
+  </div>
+
+<template>

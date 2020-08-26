@@ -60,7 +60,7 @@ typings/
 # environment variables file
 .env
 
-# postgres volume
-.docker/postgres
+# client builds
+dist/
 
 # End of https://www.gitignore.io/api/node

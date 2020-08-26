@@ -1,0 +1,18 @@
+.avatar {
+  margin-top: -90px;
+  padding-bottom: 20px;
+}
+.avatar img {
+  padding: 5px;
+  background: #fff;
+  border-radius: 50%;
+  -webkit-box-shadow: 0 2px 3px rgba(10,10,10,.1), 0 0 0 1px rgba(10,10,10,.1);
+  box-shadow: 0 2px 3px rgba(10,10,10,.1), 0 0 0 1px rgba(10,10,10,.1);
+  height: 150px;
+}
+input {
+   font-weight: 400;
+}
+.notification {
+    margin-top: 1rem
+}

@@ -1,0 +1,36 @@
+<div style="border: 1px solid #f5f5f5; border-radius: 5px;">
+  <div class="tabs is-centered">
+    <ul>
+      <li [class.is-active]="activeTab === 'poll'" (click)="activeTab = 'poll'">
+        <a>
+          <span class="icon is-small">
+            <i class="material-icons">insert_chart</i>
+          </span>
+          <span>Abstimmung</span>
+        </a>
+      </li>
+      <li [class.is-active]="activeTab === 'comments'" (click)="activeTab = 'comments'">
+        <a>
+          <span class="icon is-small">
+            <i class="material-icons">chat_bubble_outline</i>
+          </span>
+          <span>Kommentare ({{ lunchbreak ? lunchbreak.comments.length : 0 }})</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+  <div *ngIf="activeTab === 'poll'">
+    <app-chart style="margin: 1rem;" [participants]="lunchbreak ? lunchbreak.participants : []" [refreshRequested]="refreshRequested"></app-chart>
+    <hr style="height: 1px; margin: 0;">
+    <app-state-panel [group]="group" [lunchbreak]="lunchbreak" (stateChanged)="onStateChanged()"></app-state-panel>
+    <hr *ngIf="votingAllowed" style="height: 1px; margin: 0;">
+    <section style="margin: 1rem;" *ngIf="votingAllowed">
+      <app-place-picker [group]="group" [lunchbreak]="lunchbreak" (voted)="onVoted()"></app-place-picker>
+    </section>
+  </div>
+  <div *ngIf="activeTab === 'comments'">
+    <section style="margin: 1rem;">
+      <app-lunchbreak-comments [group]="group" [lunchbreak]="lunchbreak"></app-lunchbreak-comments>
+    </section>
+  </div>
+</div>

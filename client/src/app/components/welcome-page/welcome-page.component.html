@@ -1,0 +1,61 @@
+<section class="hero" style="background-image: url('assets/background.jpeg'); height: 300px; background-repeat: no-repeat; overflow: hidden; box-shadow: inset 0px -3px 5px 1px rgba(48, 38, 11, 0.5);">
+  <div class="hero-body">
+    <div class="container">
+      <h1 class="title has-text-weight-bold has-text-white" style="max-width: 450px; padding-top: 50px;">
+        <span style="background: rgb(228, 28, 84);">Willkommen bei <span style="font-family: Lobster;">Mampfalot!</span></span>
+      </h1>
+      <h2 class="subtitle has-text-weight-semibold has-text-white	" style="max-width: 600px">
+        Mampfalot macht es euch einfach, ein gemeinsames Pausenziel abzustimmen.
+      </h2>
+    </div>
+  </div>
+</section>
+
+<main class="container">
+  <div class="columns">
+    <div class="column is-10-mobile is-offset-1-mobile is-6-tablet is-offset-3-tablet is-4-desktop is-offset-4-desktop">
+      <nav class="panel">
+
+        <div class="panel-tabs">
+          <a routerLink="" routerLinkActive="is-active" [routerLinkActiveOptions]= "{exact: true}">Anmelden</a>
+          <a routerLink="/signup" routerLinkActive="is-active">Registrieren</a>
+        </div>
+
+        <div class="panel-block" *ngIf="route.snapshot.queryParams['activation'] === 'success'">
+          <div class="field">
+            <div class="notification is-success">
+              <button class="delete" routerLink=""></button>
+              <p>Du hast deinen Account erfolgreich aktiviert!</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-block" *ngIf="route.snapshot.queryParams['activation'] === 'error'">
+          <div class="field">
+            <div class="notification is-danger">
+              <button class="delete" routerLink=""></button>
+              <p>Bei der Aktivierung deines Accounts ist ein Fehler aufgetreten. Fordere <a routerLink="/request-verification">hier</a> eine neue Aktiverungsmail an.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-block">
+          <router-outlet></router-outlet>
+        </div>
+
+        <div class="panel-block" *ngIf="router.url === '/' || router.url === '/signup'">
+          <p class="has-text-grey" style="text-align: center; width: 100%;">
+            <a routerLink="/request-password-reset">Passwort vergessen</a> &middot;
+            <a routerLink="/request-username">Benutzernamen vergessen</a>
+          </p>
+        </div>
+
+        <div class="panel-block" *ngIf="router.url !== '/' && router.url !== '/signup'">
+          <p class="has-text-grey" style="text-align: center; width: 100%;">
+            <a (click)="location.back()">Zurück</a>
+          </p>
+        </div>
+      </nav>
+    </div>
+  </div>
+</main>

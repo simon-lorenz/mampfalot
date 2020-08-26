@@ -1,0 +1,70 @@
+<div class="state-panel-container">
+  <div
+    class="state-panel"
+    [ngClass]="{ 'state-panel-success': state === 'participating' }"
+    [style.cursor]="votingAllowed ? 'pointer' : 'not-allowed'"
+    (click)="setParticipating()"
+    title="Teilnehmen"
+  >
+    <span class="icon">
+      <i class="material-icons">thumb_up</i>
+    </span>
+  </div>
+  <div
+    class="state-panel"
+    [ngClass]="{ 'state-panel-responseless': state === 'responseless' }"
+    [style.cursor]="votingAllowed ? 'pointer' : 'not-allowed'"
+    (click)="setResponseless()"
+    title="Unentschieden"
+  >
+    <span class="icon">
+      <i class="material-icons">remove</i>
+    </span>
+  </div>
+  <div
+    class="state-panel"
+    [ngClass]="{ 'state-panel-danger': state === 'absent' }"
+    [style.cursor]="votingAllowed ? 'pointer' : 'not-allowed'"
+    (click)="setAbsent()"
+    title="Absagen"
+  >
+    <span class="icon">
+      <i class="material-icons">thumb_down</i>
+    </span>
+  </div>
+</div>
+<hr style="margin: 0; height: 1px;">
+<div class="state-panel-container">
+  <div style="width: 100%; border-right: 1px solid #f5f5f5;">
+    <div class="member-list" *ngIf="lunchbreak">
+      <div *ngFor="let participant of lunchbreak.participants" class="member-panel has-background-light">
+        <div class="member-circle" [style.background]="participant.member.config.color"></div>
+        {{ participant.member.label }}
+      </div>
+    </div>
+  </div>
+  <div style="width: 100%; border-right: 1px solid #f5f5f5;">
+    <div class="member-list" *ngIf="lunchbreak; else no_lunchbreak">
+      <div *ngFor="let member of lunchbreak.responseless" class="member-panel has-background-light">
+        <div class="member-circle" [style.background]="member.config.color || '000000'"></div>
+        {{ member.label }}
+      </div>
+    </div>
+    <ng-template #no_lunchbreak>
+      <div class="member-list">
+        <div *ngFor="let member of group.members" class="member-panel has-background-light">
+          <div class="member-circle" [style.background]="member.config.color || '000000'"></div>
+          {{ member.label }}
+        </div>
+      </div>
+    </ng-template>
+  </div>
+  <div style="width: 100%; overflow: hidden;">
+    <div class="member-list" *ngIf="lunchbreak">
+      <div *ngFor="let member of lunchbreak.absent" class="member-panel has-background-light">
+        <div class="member-circle" [style.background]="member.config.color"></div>
+        {{ member.label }}
+      </div>
+    </div>
+  </div>
+</div>

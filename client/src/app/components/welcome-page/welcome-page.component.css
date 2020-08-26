@@ -1,0 +1,27 @@
+/* Makes inserted components fullwidth */
+:host ::ng-deep router-outlet + * {
+    width: 100%
+}
+
+main {
+    margin-top: 5vh;
+    margin-bottom: 5vh;
+}
+
+.hero {
+    background-image: url('/assets/background.jpeg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    min-height: 25vh;
+}
+
+.hero .title {
+    padding-top: 5vh;
+}
+
+.panel-block > .notification {
+    padding-top: 7px;
+    padding-bottom: 7px;
+    min-width: 100%;
+    transition: visibility 0s 2s, opacity 2s linear;
+}
