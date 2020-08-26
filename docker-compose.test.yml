@@ -2,10 +2,11 @@ version: '3.6'
 
 services:
   server-test:
-    build: .
+    build:
+      context: ./server
     container_name: mampfalot-test
     volumes:
-      - $PWD:/app
+      - ./server:/server
     networks:
       - app
     depends_on:

@@ -1,0 +1,51 @@
+<form [formGroup]="loginForm" (ngSubmit)="login()">
+  <div class="field">
+    <div class="control has-icons-left">
+      <input class="input"
+        type="text"
+        formControlName="username"
+        [class.is-danger]="usernameControl.value !== null && usernameControl.value !== '' && usernameControl.errors"
+        placeholder="Benutzername"
+        autofocus=""
+        required>
+      <span class="icon is-small is-left">
+        <i class="material-icons">account_circle</i>
+      </span>
+    </div>
+    <p *ngIf="usernameControl.hasError('pattern')" class="help is-danger">Erlaubt sind: Kleinbuchstaben, Zahlen, Binde- und Unterstriche</p>
+  </div>
+
+  <div class="field">
+    <div class="control has-icons-left has-icons-right">
+      <input class="input"
+        formControlName="password"
+        [type]="passwordVisible ? 'text' : 'password'"
+        placeholder="Passwort"
+        required
+      >
+      <span class="icon is-left">
+        <i class="material-icons">security</i>
+      </span>
+      <span class="icon is-small is-right" (click)="passwordVisible = !passwordVisible" style="pointer-events: initial; cursor: pointer;">
+        <i class="material-icons" *ngIf="!passwordVisible">visibility</i>
+        <i class="material-icons" *ngIf="passwordVisible">visibility_off</i>
+      </span>
+    </div>
+  </div>
+
+  <div class="field">
+    <button type="submit" class="button is-info is-fullwidth" [ngClass]="{'is-loading': user.pending}">Log in</button>
+  </div>
+
+  <div class="field" *ngIf="loginError">
+    <div class="notification is-danger" *ngIf="loginError === 'invalid'">
+      <button class="delete" (click)="loginError = ''"></button>
+      <p>Diese Kombination aus Benutzernamen und Passwort ist unbekannt. Versuche es erneut oder <a routerLink="/request-password-reset" [queryParams]="{ user: user.credentials.username }">setze dein Passwort zurück</a>.</p>
+    </div>
+
+    <div class="notification is-warning" *ngIf="loginError === 'unverified'">
+      <button class="delete" (click)="loginError = ''"></button>
+      <p>Du hast deinen Account noch nicht aktiviert! <a routerLink="/request-verification" [queryParams]="{ user: user.credentials.username }">Keine E-Mail erhalten?</a></p>
+    </div>
+  </div>
+</form>

@@ -1,6 +1,8 @@
-# Mampfalot - Backend
+# Mampfalot
 
-The http-api for [mampfalot.app](https://mampfalot.app) based on [hapi.js](https://hapi.dev).
+This is [Mampfalot](https://mampfalot.app) - a simple voting tool to decide where to eat.
+
+The project contains a http api based on [hapi.js](https://hapi.dev) and a client written with Angular.
 
 ## Development Setup
 
@@ -10,13 +12,13 @@ You must have [Docker](https://www.docker.com/), [Docker Compose](https://docs.d
 
 ### Setup
 
-Run  `npm install` to install dependencies.
+Run  `npm install --prefix server/ && npm install --prefix client/` to install dependencies.
 
 After that you can bring the project up by running `docker-compose up`.
 
 This will start the app, a development database, a test database and a pgAdmin4 instance.
 
-The app will be reachable at `localhost:5000` and reload automatically when code changes.
+The server will be reachable at `localhost:5000`, and the client at `localhost:4200`. Both reload automatically when code changes.
 
 pgAdmin4 is available at `localhost:5050`. Login as `pgadmin4@pgadmin.org` and password `admin`. The default password for the mampfalot database is `root`.
 

@@ -1,0 +1,133 @@
+<form [formGroup]="signupForm" (ngSubmit)="signup()" class="has-text-left">
+
+  <div class="field">
+    <div class="control has-icons-left">
+      <input class="input"
+        type="text"
+        formControlName="username"
+        placeholder="Benutzername"
+        autofocus=""
+        [ngClass]="{
+          'is-danger': usernameControl.value !== null && usernameControl.value !== '' && usernameControl.errors,
+          'is-success': !usernameControl.errors
+        }"
+        required>
+        <span class="icon is-small is-left">
+          <i class="material-icons">account_circle</i>
+        </span>
+    </div>
+    <p *ngIf="usernameControl.hasError('pattern')" class="help is-danger">Erlaubt sind: Kleinbuchstaben, Zahlen, Binde- und Unterstriche</p>
+  </div>
+
+  <div class="field">
+    <div class="control has-icons-left">
+      <input class="input"
+        type="email"
+        formControlName="email"
+        placeholder="E-Mail"
+        autofocus=""
+        [ngClass]="{
+          'is-danger': emailControl.value !== null && emailControl.value !== '' && emailControl.errors,
+          'is-success': !emailControl.errors
+        }"
+        required>
+        <span class="icon is-small is-left">
+          <i class="material-icons">email</i>
+        </span>
+    </div>
+    <p *ngIf="emailControl.hasError('pattern')" class="help is-danger">Diese E-Mail-Adresse ist ungültig.</p>
+  </div>
+
+  <div class="field">
+    <div class="control has-icons-left has-icons-right">
+      <input
+        class="input"
+        [type]="passwordVisible ? 'text' : 'password'"
+        placeholder="Passwort"
+        formControlName="password"
+        [ngClass]="{
+          'is-danger': passwordControl.value !== null && passwordControl.value !== '' && passwordControl.errors,
+          'is-success': !passwordControl.errors
+        }"
+        autocomplete="new-password"
+        required>
+      <span class="icon is-small is-left">
+        <i class="material-icons">security</i>
+      </span>
+      <span class="icon is-small is-right" (click)="passwordVisible = !passwordVisible" style="pointer-events: initial; cursor: pointer;">
+        <i class="material-icons" *ngIf="!passwordVisible">visibility</i>
+        <i class="material-icons" *ngIf="passwordVisible">visibility_off</i>
+      </span>
+    </div>
+    <p *ngIf="passwordControl.hasError('minlength')" class="help is-danger">Das Passwort muss mindestens 8 Zeichen lang sein.</p>
+    <p *ngIf="passwordControl.hasError('maxlength')" class="help is-danger">Das Passwort darf maximal 255 Zeichen lang sein.</p>
+  </div>
+
+
+  <div class="field is-horizontal">
+
+    <div class="field-body">
+      <div class="field">
+        <div class="control">
+          <input
+            class="input"
+            type="text"
+            placeholder="Vorname (Optional)"
+            autofocus=""
+            formControlName="firstName"
+            [ngClass]="{
+              'is-danger': firstNameControl.value !== null && firstNameControl.value !== '' && firstNameControl.errors,
+              'is-success': firstNameControl.value !== null && firstNameControl.value !== '' && !firstNameControl.errors
+            }">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="control">
+          <input
+            class="input"
+            type="text"
+            placeholder="Nachname (Optional)"
+            autofocus=""
+            formControlName="lastName"
+            [ngClass]="{
+              'is-danger': lastNameControl.value !== null && lastNameControl.value !== '' && lastNameControl.errors,
+              'is-success': lastNameControl.value !== null && lastNameControl.value !== '' && !lastNameControl.errors
+            }">
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="field">
+    <div class="control">
+      <label class="checkbox" for="privacy-policy">
+        <input
+          class="checkbox"
+          type="checkbox"
+          formControlName="policyAccepted"
+          name="privacy-policy"
+          autofocus="">
+        Ich habe die <a routerLink="/privacy-policy">Datenschutzerklärung</a> gelesen und aktzeptiere diese.</label>
+    </div>
+  </div>
+
+  <button type="submit"
+    class="button is-info is-fullwidth"
+    [disabled]="!signupForm.valid"
+    [ngClass]="{'is-loading': signupPending }">Registrieren</button>
+
+  <div class="notification is-danger" *ngIf="showErrorMessage">
+    <button class="delete" (click)="showErrorMessage = false"></button>
+    Bei der Registrierung ist ein Fehler aufgetreten.
+  </div>
+
+  <div class="notification is-info" *ngIf="showSuccessMessage">
+    <button class="delete" (click)="showSuccessMessage = false"></button>
+    Fast geschafft!
+    Wir haben dir einen Link zur Aktivierung deines Accounts an
+    <strong>{{ this.emailControl.value }}</strong> geschickt.
+  </div>
+
+</form>

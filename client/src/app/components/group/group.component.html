@@ -1,0 +1,25 @@
+<div *ngIf="group">
+
+  <div class="level">
+    <div class="level-left">
+      <div class="level-item">
+        <h2 class="title is-5"> {{ group.name }} </h2>
+      </div>
+      <div class="level-item" *ngIf="user.isGroupAdmin(group.id)">
+        <a routerLink="/groups/{{ group.id }}/settings">
+          <button class="button is-small is-secondary">
+            <span class="icon is-small">
+              <i class="material-icons" style="font-size: 16px">edit</i>
+            </span>
+          </button>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="content" *ngIf="dateIsToday()">
+    <app-countdown [futureString]="group.voteEndingTime"></app-countdown>
+  </div>
+
+  <app-lunchbreak [group]="group"></app-lunchbreak>
+</div>

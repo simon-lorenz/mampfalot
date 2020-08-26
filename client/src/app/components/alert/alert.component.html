@@ -1,0 +1,10 @@
+<div class="notification" *ngFor="let alert of alerts"
+  [class.is-success]="alert.type === AlertType.success"
+  [class.is-warning]="alert.type === AlertType.warning"
+  [class.is-danger]="alert.type === AlertType.error"
+  [class.is-info]="alert.type === AlertType.info"
+  (click)="removeAlert(alert)"
+  title="Schließen"
+>
+  <p>{{ alert.message }}</p>
+</div>

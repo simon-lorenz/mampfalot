@@ -1,0 +1,19 @@
+<div style="display: flex; flex-direction: column; min-height: 100vh">
+  <div id="nav-container" *ngIf="user.isLoggedIn()">
+    <div class="container">
+      <app-nav></app-nav>
+    </div>
+  </div>
+
+  <div class="container" style="width: 100%;">
+    <app-alert></app-alert>
+  </div>
+
+  <section [class.section]="user.isLoggedIn()">
+    <main [class.container]="user.isLoggedIn()">
+      <router-outlet></router-outlet>
+    </main>
+  </section>
+
+  <app-footer style="margin-top: auto;"></app-footer>
+</div>

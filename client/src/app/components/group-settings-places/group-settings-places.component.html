@@ -1,0 +1,49 @@
+<table class="table is-striped is-fullwidth" [formGroup]="placesForm">
+	<thead>
+		<th>Bezeichnung</th>
+		<th>Art</th>
+		<th style="width: 15%;"></th>
+	</thead>
+	<tbody>
+		<tr formArrayName="items" *ngFor="let control of items.controls; let i = index;">
+			<td [formGroupName]="i">
+				<div class="control">
+					<input
+						class="input"
+						type="text"
+						formControlName="name"
+						[ngClass]="{
+							'is-danger': getPlaceControls(i, 'name').errors
+						}"
+					>
+				</div>
+			</td>
+			<td [formGroupName]="i">
+				<input
+					class="input"
+					type="text"
+					formControlName="foodType"
+					list="food-types"
+					[ngClass]="{
+						'is-danger': getPlaceControls(i, 'foodType').errors
+					}"
+				>
+				<datalist id="food-types">
+					<option *ngFor="let foodType of foodTypes" [value]="foodType">
+				</datalist>
+			</td>
+			<td>
+				<button class="button is-text is-pulled-right has-text-danger is-fullwidth" (click)="deletePlace(i)">Löschen</button>
+			</td>
+		</tr>
+	</tbody>
+</table>
+<div>
+	<div class="buttons is-pulled-left">
+		<button class="button is-primary" [disabled]="placesForm.pristine || formHasErrors" (click)="saveChanges()">Speichern</button>
+		<button class="button is-text" [disabled]="placesForm.pristine" (click)="resetForm()">Abbrechen</button>
+	</div>
+	<div class="buttons is-pulled-right">
+		<button class="button" (click)="createPlace()">Neuen Ort erstellen</button>
+	</div>
+</div>

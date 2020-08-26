@@ -1,0 +1,42 @@
+<h1 class="title is-5">Gruppen</h1>
+
+<div class="columns is-multiline" style="padding-right: 10px;">
+  <div class="column is-one-third" *ngFor="let group of groups">
+    <a routerLink="/groups/{{ group.id }}">
+      <div class="card group-card">
+        <div class="card-header">
+          <p class="card-header-title"> {{ group.name }} </p>
+        </div>
+        <div class="card-content">
+          <div class="content">
+            <div class="tags">
+              <div class="tag is-primary" *ngFor="let member of group.members" > {{ member.label }} </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="column is-one-third" *ngFor="let invitation of invitations">
+    <div class="card">
+      <div class="card-header">
+        <p class="card-header-title">Einladung: {{ invitation.group.name }}</p>
+      </div>
+      <div class="card-content">
+        <p>Du wurdest von {{ invitation.from.label }} eingeladen.</p>
+      </div>
+      <div class="card-footer">
+        <a class="card-footer-item" (click)="acceptInvitation(invitation)">Annehmen</a>
+        <a class="card-footer-item has-background-danger has-text-white" (click)="rejectInvitation(invitation)">Ablehnen</a>
+      </div>
+    </div>
+  </div>
+  <div class="column is-one-third">
+    <div class="card">
+      <div class="card-content">
+        <input class="input" type="text" name="" placeholder="Gruppenname" [(ngModel)]="newGroup.name" />
+        <button [disabled]="!newGroup.name" class="button is-secondary" style="margin-top: 5px" (click)="addGroup()">Neue Gruppe erstellen</button>
+      </div>
+    </div>
+  </div>
+</div>

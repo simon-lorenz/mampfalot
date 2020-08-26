@@ -1,0 +1,145 @@
+<p class="title is-5">Persönliche Daten</p>
+
+<form [formGroup]="personalDataForm" (ngSubmit)="savePersonalData()">
+  <div class="field is-horizontal">
+    <div class="field-body">
+      <div class="field">
+        <label class="label">Vorname</label>
+        <div class="control">
+          <input class="input" type="text" placeholder="Vorname (Optional)" autofocus="" formControlName="firstName"
+            [ngClass]="{
+                'is-danger': firstNameControl.value !== null && firstNameControl.value !== '' && firstNameControl.errors,
+                'is-success': firstNameControl.value !== null && firstNameControl.value !== '' && !firstNameControl.errors
+              }">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Nachname</label>
+        <div class="control">
+          <input class="input" type="text" placeholder="Nachname (Optional)" autofocus="" formControlName="lastName"
+            [ngClass]="{
+                'is-danger': lastNameControl.value !== null && lastNameControl.value !== '' && lastNameControl.errors,
+                'is-success': lastNameControl.value !== null && lastNameControl.value !== '' && !lastNameControl.errors
+              }">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">E-Mail</label>
+        <div class="control has-icons-left">
+          <input class="input" type="email" formControlName="email" placeholder="E-Mail" autofocus="" [ngClass]="{
+                'is-danger': emailControl.value !== null && emailControl.value !== '' && emailControl.errors,
+                'is-success': !emailControl.errors
+              }"
+            required>
+          <span class="icon is-small is-left">
+            <i class="material-icons">email</i>
+          </span>
+        </div>
+        <p *ngIf="emailControl.hasError('pattern')" class="help is-danger">Diese E-Mail-Adresse ist ungültig.</p>
+      </div>
+
+      <div class="field">
+        <label class="label">Benutzername</label>
+        <div class="control has-icons-left">
+          <input
+            class="input"
+            type="text"
+            formControlName="username"
+            placeholder="Benutzername"
+            autofocus=""
+            [ngClass]="{
+                'is-danger': usernameControl.value !== null && usernameControl.value !== '' && usernameControl.errors,
+                'is-success': !usernameControl.errors
+              }"
+            required
+          >
+          <span class="icon is-small is-left">
+            <i class="material-icons">account_circle</i>
+          </span>
+          <p *ngIf="usernameControl.hasError('pattern')" class="help is-danger">Erlaubt sind: Kleinbuchstaben, Zahlen, Binde- und Unterstriche</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="field is-grouped">
+    <div class="control">
+      <button type="submit" class="button is-primary" [disabled]="!personalDataForm.valid || !personalDataForm.dirty">Speichern</button>
+    </div>
+    <div class="control">
+      <button type="button" class="button is-text" [disabled]="!personalDataForm.dirty" (click)="resetPersonalData()">Abbrechen</button>
+    </div>
+  </div>
+
+</form>
+
+<hr>
+
+<p class="title is-5">Passwort ändern</p>
+
+<form [formGroup]="passwordForm" (ngSubmit)="savePassword()">
+  <div class="field is-horizontal">
+    <div class="field-body">
+      <div class="field">
+        <label class="label">Altes Passwort</label>
+        <div class="control has-icons-left has-icons-right">
+          <input
+            class="input"
+            [type]="oldPasswordVisible ? 'text' : 'password'"
+            placeholder="Altes Passwort"
+            formControlName="oldPassword"
+            [ngClass]="{
+              'is-danger': oldPasswordControl.value !== null && oldPasswordControl.value !== '' && oldPasswordControl.errors,
+              'is-success': !oldPasswordControl.errors
+            }"
+            required>
+          <span class="icon is-small is-left">
+            <i class="material-icons">security</i>
+          </span>
+          <span class="icon is-small is-right" (click)="oldPasswordVisible = !oldPasswordVisible" style="pointer-events: initial; cursor: pointer;">
+            <i class="material-icons" *ngIf="!oldPasswordVisible">visibility</i>
+            <i class="material-icons" *ngIf="oldPasswordVisible">visibility_off</i>
+          </span>
+        </div>
+        <p *ngIf="oldPasswordControl.hasError('minlength')" class="help is-danger">Das Passwort muss mindestens 8 Zeichen lang sein.</p>
+        <p *ngIf="oldPasswordControl.hasError('maxlength')" class="help is-danger">Das Passwort darf maximal 255 Zeichen lang sein.</p>
+      </div>
+
+      <div class="field">
+        <label class="label">Neues Passwort</label>
+        <div class="control has-icons-left has-icons-right">
+          <input
+            class="input"
+            [type]="newPasswordVisible ? 'text' : 'password'"
+            placeholder="Neues Passwort"
+            formControlName="newPassword"
+            [ngClass]="{
+              'is-danger': newPasswordControl.value !== null && newPasswordControl.value !== '' && newPasswordControl.errors,
+              'is-success': !newPasswordControl.errors
+            }"
+            required>
+          <span class="icon is-small is-left">
+            <i class="material-icons">security</i>
+          </span>
+          <span class="icon is-small is-right" (click)="newPasswordVisible = !newPasswordVisible" style="pointer-events: initial; cursor: pointer;">
+            <i class="material-icons" *ngIf="!newPasswordVisible">visibility</i>
+            <i class="material-icons" *ngIf="newPasswordVisible">visibility_off</i>
+          </span>
+        </div>
+        <p *ngIf="newPasswordControl.hasError('minlength')" class="help is-danger">Das Passwort muss mindestens 8 Zeichen lang sein.</p>
+        <p *ngIf="newPasswordControl.hasError('maxlength')" class="help is-danger">Das Passwort darf maximal 255 Zeichen lang sein.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="field is-grouped">
+    <div class="control">
+      <button type="submit" class="button is-primary" [disabled]="!passwordForm.valid || !passwordForm.dirty">Speichern</button>
+    </div>
+    <div class="control">
+      <button type="button" (click)="resetPassword()" [disabled]="!passwordForm.dirty" class="button is-text">Abbrechen</button>
+    </div>
+  </div>
+</form>

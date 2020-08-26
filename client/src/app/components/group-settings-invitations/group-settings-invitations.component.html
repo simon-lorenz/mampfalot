@@ -1,0 +1,31 @@
+<table class="table is-striped is-fullwidth">
+  <thead>
+    <tr>
+      <th style="width: 43%;">Benutzer</th>
+      <th style="width: 42%;">Eingeladen von</th>
+      <th style="width: 15%;"></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let invitation of invitations">
+      <td>{{ invitation.to.username }}</td>
+      <td>{{ invitation.from.username }}</td>
+      <td><button class="button is-text is-pulled-right has-text-danger is-fullwidth" (click)="deleteInvitation(invitation)">Löschen</button> </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="level">
+  <div class="level-left">
+    <div class="level-item">
+      <div class="control">
+        <input [(ngModel)]="username" (keyup.enter)="inviteUser(username)" type="text" class="input" placeholder="Nach Benutzernamen suchen...">
+      </div>
+    </div>
+    <div class="level-item">
+      <div class="control">
+        <button class="button is-primary" (click)="inviteUser(username)">Mitglied einladen</button>
+      </div>
+    </div>
+  </div>
+</div>

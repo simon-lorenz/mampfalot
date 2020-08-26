@@ -1,0 +1,27 @@
+<table class="table is-striped is-fullwidth">
+  <thead>
+    <th>Benutzer</th>
+    <th style="width: 10%">Farbe</th>
+    <th style="width: 15%">Rolle</th>
+    <th style="width: 15%"></th>
+  </thead>
+  <tbody>
+    <tr *ngFor="let member of members">
+      <td>{{ member.username }} {{ member.fullName ? '(' + member.fullName + ')' : '' }}</td>
+      <td>
+        <input class="input" type="color" [(ngModel)]="member.config.color" (change)="updateMemberConfig(member)">
+      </td>
+      <td>
+        <div class="select">
+          <select [(ngModel)]="member.config.isAdmin" (change)="updateMemberConfig(member)">
+            <option [value]="true">Administrator</option>
+            <option [value]="false">Mitglied</option>
+          </select>
+        </div>
+      </td>
+      <td>
+        <button class="button is-text is-pulled-right has-text-danger is-fullwidth" (click)="deleteMember(member)">Löschen</button>
+      </td>
+    </tr>
+  </tbody>
+</table>

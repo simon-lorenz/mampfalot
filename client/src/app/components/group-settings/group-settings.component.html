@@ -1,0 +1,174 @@
+<section *ngIf="group">
+  <h1 class="title is-4">Allgemein</h1>
+  <hr>
+  <form [formGroup]="groupSettingsForm" (ngSubmit)="onSubmit()" (keyup.escape)="resetForm()">
+
+    <div class="field is-horizontal">
+      <div class="field-body">
+        <div class="field">
+          <label class="label">Gruppenname</label>
+          <div class="control">
+            <input
+              type="text"
+              class="input"
+              [ngClass]="{
+                'is-danger': nameControl.errors,
+                'is-success': !nameControl.errors
+              }"
+              placeholder="Gruppenname"
+              formControlName="name"
+            >
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Abstimmungsende</label>
+          <div class="control">
+            <input
+              type="text"
+              class="input"
+              [ngClass]="{
+                'is-danger': voteEndingTimeControl.errors,
+                'is-success': !voteEndingTimeControl.errors
+              }"
+              placeholder="Abstimmungsende"
+              formControlName="voteEndingTime"
+            >
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Pausenzeit</label>
+          <div class="control">
+            <input
+              type="text"
+              class="input"
+              [ngClass]="{
+                'is-danger': lunchTimeControl.errors,
+                'is-success': !lunchTimeControl.errors
+              }"
+              placeholder="Pausenzeit"
+              formControlName="lunchTime"
+            >
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">UTC-Verschiebung</label>
+          <div class="control select is-fullwidth"
+            [ngClass]="{
+            'is-danger': utcOffsetControl.errors,
+            'is-success': !utcOffsetControl.errors
+            }"
+          >
+            <select formControlName="utcOffset">
+              <option value="720">UTC +12</option>
+              <option value="660">UTC +11</option>
+              <option value="600">UTC +10</option>
+              <option value="540">UTC +9</option>
+              <option value="480">UTC +8</option>
+              <option value="420">UTC +7</option>
+              <option value="360">UTC +6</option>
+              <option value="300">UTC +5</option>
+              <option value="240">UTC +4</option>
+              <option value="180">UTC +3</option>
+              <option value="120">UTC +2</option>
+              <option value="60">UTC +1 (Berlin, Rom, Paris)</option>
+              <option value="0">UTC +0</option>
+              <option value="-720">UTC -12</option>
+              <option value="-660">UTC -11</option>
+              <option value="-600">UTC -10</option>
+              <option value="-540">UTC -9</option>
+              <option value="-480">UTC -8</option>
+              <option value="-420">UTC -7</option>
+              <option value="-360">UTC -6</option>
+              <option value="-300">UTC -5</option>
+              <option value="-240">UTC -4</option>
+              <option value="-180">UTC -3</option>
+              <option value="-120">UTC -2</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="field is-horizontal">
+      <div class="field-body">
+        <div class="field">
+          <label class="label" for="pointsPerDay">Mampfs pro Tag</label>
+          <div class="control">
+            <input
+              type="tel"
+              class="input"
+              [ngClass]="{
+                'is-danger': pointsPerDayControl.errors,
+                'is-success': !pointsPerDayControl.errors
+              }"
+              placeholder="Mampfs pro Tag"
+              formControlName="pointsPerDay"
+            >
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="minPointsPerVote">Mindest-Mampfs pro Vote</label>
+          <div class="control">
+            <input
+              type="tel"
+              class="input"
+              [ngClass]="{
+                'is-danger': minPointsPerVoteControl.errors,
+                'is-success': !minPointsPerVoteControl.errors
+              }"
+              placeholder="Mindest-Mampfs pro Vote"
+              formControlName="minPointsPerVote"
+            >
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="maxPointsPerVote">Max-Mampfs pro Vote</label>
+          <div class="control">
+            <input
+              type="tel"
+              class="input"
+              [ngClass]="{
+                'is-danger': maxPointsPerVoteControl.errors,
+                'is-success': !maxPointsPerVoteControl.errors
+              }"
+              placeholder="Max-Mampfs pro Vote"
+              formControlName="maxPointsPerVote"
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field is-grouped">
+      <div class="control">
+        <button class="button is-primary" type="submit" [disabled]="!groupSettingsForm.valid || !groupSettingsForm.dirty">Speichern</button>
+      </div>
+      <div class="control">
+        <button class="button is-text" type="button" [disabled]="!groupSettingsForm.dirty" (click)="resetForm()">Abbrechen</button>
+      </div>
+    </div>
+  </form>
+  <hr>
+  <h1 class="title is-4">Mitglieder</h1>
+  <hr>
+  <app-group-settings-members [(members)]="group.members" [groupId]="group.id"></app-group-settings-members>
+  <hr>
+  <h1 class="title is-4">Einladungen</h1>
+  <app-group-settings-invitations [groupId]="group.id"></app-group-settings-invitations>
+  <hr>
+  <h1 class="title is-4">Orte und Essensarten</h1>
+  <hr>
+  <div class="columns">
+    <div class="column">
+      <app-group-settings-places [(places)]="group.places" [groupId]="group.id"></app-group-settings-places>
+    </div>
+  </div>
+  <hr>
+  <button class="button is-danger" (click)="deleteGroup()">Gruppe löschen</button>
+</section>
