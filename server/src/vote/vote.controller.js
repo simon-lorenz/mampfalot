@@ -1,6 +1,6 @@
 const Boom = require('@hapi/boom')
 const GroupRepository = require('../group/group.repository')
-const VoteModel = require('../vote/vote.model')
+const VoteModel = require('./vote.model')
 
 /**
  * Overrides the votes of a participation, if the provided votes are valid.

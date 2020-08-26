@@ -10,7 +10,7 @@ You must have [Docker](https://www.docker.com/), [Docker Compose](https://docs.d
 
 ### Setup
 
-Run  `npm install` to install dependencies.
+Run  `npm install --prefix server/` to install dependencies.
 
 After that you can bring the project up by running `docker-compose up`.
 

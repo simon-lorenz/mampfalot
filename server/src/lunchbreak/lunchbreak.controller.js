@@ -1,7 +1,7 @@
 const Boom = require('@hapi/boom')
 const { NotFoundError } = require('objection')
 
-const LunchbreakRepository = require('../lunchbreak/lunchbreak.repository')
+const LunchbreakRepository = require('./lunchbreak.repository')
 const LunchbreakModel = require('./lunchbreak.model')
 const { voteEndingTimeReached } = require('../util/util')
 

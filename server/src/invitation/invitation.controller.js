@@ -1,7 +1,7 @@
 const Boom = require('@hapi/boom')
 const GroupMemberModel = require('../group-member/group-member.model')
 const InvitationModel = require('./invitation.model')
-const InvitationRepository = require('../invitation/invitation.repository')
+const InvitationRepository = require('./invitation.repository')
 const UserRepository = require('../user/user.repository')
 const GroupRepository = require('../group/group.repository')
 
