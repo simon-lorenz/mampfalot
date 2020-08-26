@@ -1,9 +1,43 @@
 const crypto = require('crypto')
 const fs = require('fs')
 const moment = require('moment')
+const knex = require('../knex')
 const GroupRepository = require('../group/group.repository')
 
 module.exports = {
+	async connectToDatabase(max_tries, logger) {
+		let currentTry = 1
+
+		while (currentTry <= max_tries) {
+			logger.info(`[Database] Trying to connect (${currentTry}/${max_tries}) ...`)
+
+			try {
+				await knex.raw('SELECT 1+1 AS result')
+				logger.info(`[Database] Connection established!`)
+				return
+			} catch (error) {
+				if (currentTry === max_tries) {
+					logger.fatal({ error }, '[Database] Connection could not be established.')
+					process.exit(1)
+				} else {
+					currentTry++
+					await new Promise(resolve => setTimeout(resolve, 1000))
+				}
+			}
+		}
+	},
+
+	async runMigrations(logger) {
+		try {
+			logger.info('[Database] Running migrations...')
+			const migrateResult = await knex.migrate.latest()
+			logger.info(`[Database] Ran ${migrateResult[1].length} new migrations`)
+		} catch (error) {
+			logger.fatal({ error }, '[Database] Migrations failed.')
+			process.exit(1)
+		}
+	},
+
 	/**
 	 * Promisifies nodes readFile() function.
 	 * Files have to be utf-8 encoded.

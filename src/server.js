@@ -46,6 +46,11 @@ async function createServer(port) {
 		require('./invitation/invitiation.router')
 	])
 
+	await server.ext('onPostStart', async server => {
+		server.logger.info(`[Server] Running on ${server.info.uri}`)
+		server.mailer.checkConnections()
+	})
+
 	await server.initialize()
 
 	return server
