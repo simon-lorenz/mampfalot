@@ -22,8 +22,8 @@ production:
   stage: publish
   script:
     - docker login -u simonlorenz -p $DOCKER_ACCESS_TOKEN
-    - docker build -t simonlorenz/mampfalot:$CI_COMMIT_TAG -f Dockerfile.prod .
-    - docker build -t simonlorenz/mampfalot:latest -f Dockerfile.prod .
+    - docker build -t simonlorenz/mampfalot:$CI_COMMIT_TAG .
+    - docker build -t simonlorenz/mampfalot:latest .
     - docker push simonlorenz/mampfalot:$CI_COMMIT_TAG
     - docker push simonlorenz/mampfalot:latest
   rules:
@@ -34,7 +34,7 @@ dev:
   stage: publish
   script:
     - docker login -u simonlorenz -p $DOCKER_ACCESS_TOKEN
-    - docker build -t simonlorenz/mampfalot:dev -f Dockerfile.prod .
+    - docker build -t simonlorenz/mampfalot:dev .
     - docker push simonlorenz/mampfalot:dev
   rules:
     - if: '$CI_COMMIT_REF_NAME == "dev"'

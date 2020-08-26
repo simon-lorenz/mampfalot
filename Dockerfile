@@ -4,9 +4,11 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --production && npm cache clean --force
 
-COPY . .
+COPY ./src ./src
+COPY app.js ./
+COPY LICENSE ./
 
 EXPOSE 5000
 
