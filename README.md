@@ -56,4 +56,4 @@ ESLint can be run locally with ```npm run lint```.
 
 ### Documentation
 
-See the [OpenAPI Contract](docs/mampfalot.oas3.yaml) for information about all endpoints.
+See the [OpenAPI Contract](server/docs/mampfalot.oas3.yaml) for information about all endpoints.
