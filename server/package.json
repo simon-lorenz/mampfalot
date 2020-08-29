@@ -38,6 +38,7 @@
     "uuid": "8.3.0"
   },
   "devDependencies": {
+    "@simon-lorenz/prettier-config": "1.0.0",
     "chai": "4.2.0",
     "chai-sorted": "0.2.0",
     "deep-equal-in-any-order": "1.0.28",
