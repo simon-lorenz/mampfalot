@@ -1,11 +1,27 @@
 {
-	"plugins": ["prettier"],
+	"plugins": ["prettier", "import"],
 	"extends": "eslint:recommended",
 	"rules": {
 		"curly": ["error"],
 		"eqeqeq": ["error"],
+		"import/newline-after-import": ["error", { "count": 1 }],
+		"import/no-useless-path-segments": ["error", {
+			"commonjs": true,
+			"noUselessIndex": true
+		}],
+		"import/order": [
+			"error",
+			{
+				"alphabetize": {
+					"order": "asc",
+					"caseInsensitive": true
+				},
+				"groups": ["builtin", "external", "sibling", "parent", "index"],
+				"newlines-between": "always"
+			}
+		],
 		"lines-between-class-members": ["error", "always"],
-		"no-console": "off",
+		"no-console": "warn",
 		"no-eval": "error",
 		"no-mixed-spaces-and-tabs": "off",
 		"no-this-before-super": "error",

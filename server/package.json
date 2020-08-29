@@ -42,6 +42,7 @@
     "chai-sorted": "0.2.0",
     "deep-equal-in-any-order": "1.0.28",
     "eslint": "7.7.0",
+    "eslint-plugin-import": "2.22.0",
     "eslint-plugin-prettier": "3.1.4",
     "mocha": "8.1.1",
     "mocha-clean": "1.0.0",

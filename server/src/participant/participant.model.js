@@ -1,4 +1,5 @@
 const { Model } = require('objection')
+
 const LunchbreakModel = require('../lunchbreak/lunchbreak.model')
 
 class ParticipantModel extends Model {

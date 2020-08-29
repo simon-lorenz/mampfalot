@@ -1,4 +1,5 @@
 const Joi = require('joi')
+
 const ParticipantController = require('./participant.controller')
 
 module.exports = {

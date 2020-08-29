@@ -1,10 +1,13 @@
 const Boom = require('@hapi/boom')
-const util = require('../../test/utils/util')
-const request = require('supertest')('http://localhost:5001')
-const TokenHelper = require('../../test/utils/token-helper')
-const testData = require('../knex/seeds')
-const testServer = require('../../test/utils/test-server')
 const { expect } = require('chai')
+const supertest = require('supertest')
+
+const testServer = require('../../test/utils/test-server')
+const TokenHelper = require('../../test/utils/token-helper')
+const util = require('../../test/utils/util')
+const testData = require('../knex/seeds')
+
+const request = supertest('http://localhost:5001')
 
 describe('User', () => {
 	describe('/users', () => {

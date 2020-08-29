@@ -1,4 +1,5 @@
 const Joi = require('joi')
+
 const CommentController = require('./comment.controller')
 
 module.exports = {

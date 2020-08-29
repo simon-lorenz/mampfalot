@@ -1,4 +1,5 @@
 const Joi = require('joi')
+
 const GroupMemberController = require('./group-member.controller')
 
 module.exports = {

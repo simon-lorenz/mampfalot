@@ -1,6 +1,8 @@
-const GroupMemberRepository = require('../group-member/group-member.repository')
-const LunchbreakModel = require('./lunchbreak.model')
 const Boom = require('@hapi/boom')
+
+const LunchbreakModel = require('./lunchbreak.model')
+
+const GroupMemberRepository = require('../group-member/group-member.repository')
 
 function convertComment(comment) {
 	function getAuthor(comment) {

@@ -1,5 +1,7 @@
 const Joi = require('joi')
+
 const UserController = require('./user.controller')
+
 const GroupController = require('../group/group.controller')
 const InvitationController = require('../invitation/invitation.controller')
 const ParticipantController = require('../participant/participant.controller')
