@@ -2,8 +2,7 @@ version: '3.6'
 
 services:
   server-test:
-    build:
-      context: ./server
+    image: simonlorenz/mampfalot:test
     container_name: mampfalot-test
     networks:
       - app

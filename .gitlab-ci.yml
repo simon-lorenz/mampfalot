@@ -1,20 +1,36 @@
 stages:
+  - build
   - test
   - publish
 
 services:
   - docker:dind
 
+test-image:
+  image: docker:latest
+  stage: build
+  script:
+    # This image will be tested (see docker-compose.ci.yml)
+    - docker build -t simonlorenz/mampfalot:test -f ./server/Dockerfile ./server
+    - docker save simonlorenz/mampfalot:test > mampfalot.test.tar
+  artifacts:
+    untracked: false
+    expire_in: 10 mins
+    paths:
+      - mampfalot.test.tar
+
 lint:
   image: simonlorenz/docker-with-compose
   stage: test
   script:
+    - docker load < mampfalot.test.tar
     - docker-compose -f docker-compose.ci.yml run server-test npm run lint
 
 test:
   image: simonlorenz/docker-with-compose
   stage: test
   script:
+    - docker load < mampfalot.test.tar
     - docker-compose -f docker-compose.ci.yml run server-test npm run test
 
 server-production:
