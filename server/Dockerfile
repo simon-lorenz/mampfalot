@@ -4,6 +4,8 @@ WORKDIR /server
 
 COPY package*.json ./
 
+COPY .npmrc .
+
 RUN npm install
 
 COPY . .
