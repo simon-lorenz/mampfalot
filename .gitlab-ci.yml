@@ -6,74 +6,95 @@ stages:
 services:
   - docker:dind
 
-docker:
+test-images:
   image: docker:latest
   stage: build
   script:
-    - docker build -t mampfalot:ci -f ./server/Dockerfile ./server
-    - docker save mampfalot:ci > mampfalot.ci.tar
-    # - docker build -t simonlorenz/mampfalot-client:$CI_COMMIT_REF_SLUG -f ./client/Dockerfile.prod ./client
-    # - docker build -t simonlorenz/mampfalot-client-dev:$CI_COMMIT_REF_SLUG -f ./client/Dockerfile.dev ./client
+    # These images will be tested (see docker-compose.ci.yml)
+    - docker build -t simonlorenz/mampfalot:test -f ./server/Dockerfile ./server
+    - docker save simonlorenz/mampfalot:test > mampfalot.test.tar
   artifacts:
     untracked: false
     expire_in: 10 mins
     paths:
-      - mampfalot.ci.tar
+      - mampfalot.test.tar
+
+dev-images:
+  image: docker:latest
+  stage: build
+  script:
+    - docker build -t simonlorenz/mampfalot-client:dev -f ./client/Dockerfile.dev ./client
+    - docker save simonlorenz/mampfalot-client:dev > mampfalot-client.dev.tar
+  artifacts:
+    untracked: false
+    expire_in: 10 mins
+    paths:
+      - mampfalot-client.dev.tar
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "dev"'
+
+production-images:
+  image: docker:latest
+  stage: build
+  script:
+    - docker build -t simonlorenz/mampfalot:latest -f ./server/Dockerfile.prod ./server
+    - docker build -t simonlorenz/mampfalot-client:latest -f ./client/Dockerfile.prod ./client
+    - docker save simonlorenz/mampfalot:latest > mampfalot.latest.tar
+    - docker save simonlorenz/mampfalot-client:latest > mampfalot-client.latest.tar
+  artifacts:
+    untracked: false
+    expire_in: 10 mins
+    paths:
+      - mampfalot.latest.tar
+      - mampfalot-client.latest.tar
+  rules:
+    - if: '$CI_COMMIT_TAG != null'
 
 lint:
   image: simonlorenz/docker-with-compose
   stage: test
   script:
-    - docker load < mampfalot.ci.tar
+    - docker load < mampfalot.test.tar
     - docker-compose -f docker-compose.ci.yml run server-test npm run lint
 
 test:
   image: simonlorenz/docker-with-compose
   stage: test
   script:
-    - docker load < mampfalot.ci.tar
+    - docker load < mampfalot.test.tar
     - docker-compose -f docker-compose.ci.yml run server-test npm run test
 
-server-production:
+production:
   image: docker:latest
   stage: publish
   script:
+    - docker load < mampfalot.latest.tar
+    - docker load < mampfalot-client.latest.tar
+
     - docker login -u simonlorenz -p $DOCKER_ACCESS_TOKEN
-    - docker build -t simonlorenz/mampfalot:$CI_COMMIT_TAG -f ./server/Dockerfile.prod ./server
-    - docker build -t simonlorenz/mampfalot:latest -f ./server/Dockerfile.prod ./server
+
+    - docker tag simonlorenz/mampfalot:latest simonlorenz/mampfalot:$CI_COMMIT_TAG
+    - docker tag simonlorenz/mampfalot-client:latest simonlorenz/mampfalot-client:$CI_COMMIT_TAG
+
     - docker push simonlorenz/mampfalot:$CI_COMMIT_TAG
     - docker push simonlorenz/mampfalot:latest
-  rules:
-    - if: '$CI_COMMIT_TAG != null'
-
-server-dev:
-  image: docker:latest
-  stage: publish
-  script:
-    - docker login -u simonlorenz -p $DOCKER_ACCESS_TOKEN
-    - docker build -t simonlorenz/mampfalot:dev -f ./server/Dockerfile.prod ./server
-    - docker push simonlorenz/mampfalot:dev
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "dev"'
-
-client-production:
-  image: docker:latest
-  stage: publish
-  script:
-    - docker login -u simonlorenz -p $DOCKER_ACCESS_TOKEN
-    - docker build -t simonlorenz/mampfalot-client:$CI_COMMIT_TAG -f ./client/Dockerfile.prod ./client
-    - docker build -t simonlorenz/mampfalot-client:latest -f ./client/Dockerfile.prod ./client
     - docker push simonlorenz/mampfalot-client:$CI_COMMIT_TAG
     - docker push simonlorenz/mampfalot-client:latest
   rules:
     - if: '$CI_COMMIT_TAG != null'
 
-client-dev:
+dev:
   image: docker:latest
   stage: publish
   script:
+    - docker load < mampfalot.latest.tar
+    - docker load < mampfalot-client.dev.tar
+
     - docker login -u simonlorenz -p $DOCKER_ACCESS_TOKEN
-    - docker build -t simonlorenz/mampfalot-client:dev -f ./client/Dockerfile.dev ./client
+
+    - docker tag simonlorenz/mampfalot:latest simonlorenz/mampfalot:dev
+
+    - docker push simonlorenz/mampfalot:dev
     - docker push simonlorenz/mampfalot-client:dev
   rules:
     - if: '$CI_COMMIT_REF_NAME == "dev"'
