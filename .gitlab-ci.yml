@@ -10,7 +10,7 @@ docker:
   image: docker:latest
   stage: build
   script:
-    - docker build -t simonlorenz/mampfalot:$CI_COMMIT_REF_SLUG -f ./server/Dockerfile.prod ./server
+    - docker build -t simonlorenz/mampfalot:ci -f ./server/Dockerfile.prod ./server
     - docker save simonlorenz/mampfalot:ci > mampfalot.ci.tar
     # - docker build -t simonlorenz/mampfalot-client:$CI_COMMIT_REF_SLUG -f ./client/Dockerfile.prod ./client
     # - docker build -t simonlorenz/mampfalot-client-dev:$CI_COMMIT_REF_SLUG -f ./client/Dockerfile.dev ./client
