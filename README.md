@@ -12,47 +12,35 @@ You must have [Docker](https://www.docker.com/), [Docker Compose](https://docs.d
 
 ### Setup
 
-Run  `npm install --prefix server/ && npm install --prefix client/` to install dependencies.
+Run `npm install` to install dependencies.
 
-After that you can bring the project up by running `docker-compose up`.
+After that you can bring the project up by running `npm start`.
 
-This will start the app, a development database, a test database and a pgAdmin4 instance.
+This will start the app, a development database and a pgAdmin4 instance.
 
 The server will be reachable at `localhost:5000`, and the client at `localhost:4200`. Both reload automatically when code changes.
 
 pgAdmin4 is available at `localhost:5050`. Login as `pgadmin4@pgadmin.org` and password `admin`. The default password for the mampfalot database is `root`.
 
-To seed the database with test data, run `docker exec -it $(docker-compose ps -q server) npm run db:seed`.
+To seed the database with test data, run `npm run db:seed`.
 
 ### Reading Logs
 
 Mampfalot outputs logs as json. You can use tools like [pino-pretty](https://www.npmjs.com/package/pino-pretty) to make them readable for development.
 
 ```bash
-docker logs -f --tail 10 $(docker-compose ps -q server) | pino-pretty
+npm run logs:server | pino-pretty
 ```
 
 ### Testing
 
-This project contains a test suite with integration tests. You can run all of them with
+This project contains a test suite with integration tests. You can run all of them with `npm test`.
 
-```bash
-docker-compose -f docker-compose.test.yml \
-run --rm server-test \
-npm test
-```
-
-It may take some time to run them all, but you can filter with
-
-```bash
-docker-compose -f docker-compose.test.yml \
-run --rm server-test \
-npm test -- -g <RegEx>
-```
+It may take some time to run them all, but you can filter with `npm test -- -g <RegEx>`, e.g. `npm test -- -g Absence`.
 
 ### Linting
 
-ESLint can be run locally with ```npm run lint```.
+ESLint can be run locally with `npm run lint`.
 
 ### Documentation
 
