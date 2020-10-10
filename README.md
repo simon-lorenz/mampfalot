@@ -4,6 +4,12 @@ This is [Mampfalot](https://mampfalot.app) - a simple voting tool to decide wher
 
 The project contains a http api based on [hapi.js](https://hapi.dev) and a client written with Angular.
 
+## About
+
+Mampfalot is a learning project of mine. It was my entry into the world of web development and I sometimes use it as a testing ground for new technologies that I want to try. It does not serve a great purpose otherwise, it has around ten users (including myself) but in times of COVID-19 we barely go out to eat together anymore.
+
+I don't think that I will invest much more work into this project. The client should be rewritten or at least updated to the newest version of Angular, but as of now I think I'd rather start another side-project instead. With that being said, I will still do some basic maintenance if I have the time.
+
 ## Development Setup
 
 ### System Requirements
