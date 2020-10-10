@@ -1,5 +1,6 @@
-const nodemailer = require('nodemailer')
 const handlebars = require('handlebars')
+const nodemailer = require('nodemailer')
+
 const { readFile } = require('../util/util')
 
 const accounts = [

@@ -1,4 +1,5 @@
 const Joi = require('joi')
+
 const PlaceController = require('./place.controller')
 
 module.exports = {

@@ -1,13 +1,15 @@
 const Boom = require('@hapi/boom')
+const { NotFoundError } = require('objection')
+
+const ParticipantModel = require('./participant.model')
 const ParticipationRepository = require('./participant.repository')
+
 const AbsenceModel = require('../absence/absence.model')
 const GroupMemberModel = require('../group-member/group-member.model')
-const ParticipantModel = require('./participant.model')
+const LunchbreakController = require('../lunchbreak/lunchbreak.controller')
 const PlaceModel = require('../place/place.model')
 const { voteEndingTimeReached, dateIsToday } = require('../util/util')
-const LunchbreakController = require('../lunchbreak/lunchbreak.controller')
 const VoteController = require('../vote/vote.controller')
-const { NotFoundError } = require('objection')
 
 async function deleteParticipation(request, h) {
 	const { groupId, date } = request.params

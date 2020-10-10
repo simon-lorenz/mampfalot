@@ -1,8 +1,10 @@
 const Boom = require('@hapi/boom')
-const GroupModel = require('./group.model')
-const GroupMemberModel = require('../group-member/group-member.model')
-const GroupRepository = require('./group.repository')
 const moment = require('moment')
+
+const GroupModel = require('./group.model')
+const GroupRepository = require('./group.repository')
+
+const GroupMemberModel = require('../group-member/group-member.model')
 
 async function getGroup(request, h) {
 	const { groupId } = request.params

@@ -1,4 +1,5 @@
 const SwaggerParser = require('swagger-parser')
+
 const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete']
 
 class OpenAPIHelper {

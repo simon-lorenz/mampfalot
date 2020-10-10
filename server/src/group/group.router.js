@@ -1,4 +1,6 @@
-const Joi = require('joi').extend(require('@hapi/joi-date'))
+const JoiDate = require('@hapi/joi-date')
+const Joi = require('joi').extend(JoiDate)
+
 const GroupController = require('./group.controller')
 
 module.exports = {

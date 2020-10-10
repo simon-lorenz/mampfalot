@@ -1,6 +1,8 @@
 const Boom = require('@hapi/boom')
+
 const CommentModel = require('./comment.model')
-const CommentRepository = require('../comment/comment.repository')
+const CommentRepository = require('./comment.repository')
+
 const GroupMemberRepository = require('../group-member/group-member.repository')
 const LunchbreakController = require('../lunchbreak/lunchbreak.controller')
 

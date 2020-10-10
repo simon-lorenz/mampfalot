@@ -1,7 +1,10 @@
 const Boom = require('@hapi/boom')
-const testData = require('../knex/seeds')
-const request = require('supertest')('http://localhost:5001')
+const supertest = require('supertest')
+
 const TokenHelper = require('../../test/utils/token-helper')
+const testData = require('../knex/seeds')
+
+const request = supertest('http://localhost:5001')
 
 describe('Invitation', () => {
 	describe('/groups/:groupId/invitations', () => {

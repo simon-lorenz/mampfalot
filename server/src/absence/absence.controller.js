@@ -1,11 +1,13 @@
 const Boom = require('@hapi/boom')
+
 const AbsenceModel = require('./absence.model')
+const AbsenceRepository = require('./absence.repository')
+
+const GroupMemberRepository = require('../group-member/group-member.repository')
+const LunchbreakController = require('../lunchbreak/lunchbreak.controller')
+const LunchbreakRepository = require('../lunchbreak/lunchbreak.repository')
 const ParticipantModel = require('../participant/participant.model')
 const { dateIsToday, voteEndingTimeReached } = require('../util/util')
-const LunchbreakRepository = require('../lunchbreak/lunchbreak.repository')
-const AbsenceRepository = require('../absence/absence.repository')
-const LunchbreakController = require('../lunchbreak/lunchbreak.controller')
-const GroupMemberRepository = require('../group-member/group-member.repository')
 
 async function createAbsence(request, h) {
 	const { groupId, date } = request.params

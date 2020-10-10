@@ -1,6 +1,8 @@
 const Boom = require('@hapi/boom')
+
 const GroupMemberModel = require('./group-member.model')
-const GroupMemberRepository = require('../group-member/group-member.repository')
+const GroupMemberRepository = require('./group-member.repository')
+
 const UserRepository = require('../user/user.repository')
 
 async function deleteMember(request, h) {

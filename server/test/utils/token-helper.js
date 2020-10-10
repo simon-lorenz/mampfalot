@@ -1,5 +1,8 @@
+const supertest = require('supertest')
+
 const { users } = require('../../src/knex/seeds')
-const request = require('supertest')('http://localhost:5001')
+
+const request = supertest('http://localhost:5001')
 
 class TokenHelper {
 	async getAuthorizationHeader(username) {

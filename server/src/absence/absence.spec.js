@@ -1,8 +1,11 @@
-const request = require('supertest')('http://localhost:5001')
+const Boom = require('@hapi/boom')
+const supertest = require('supertest')
+
+const testServer = require('../../test/utils/test-server')
 const TokenHelper = require('../../test/utils/token-helper')
 const testData = require('../knex/seeds')
-const testServer = require('../../test/utils/test-server')
-const Boom = require('@hapi/boom')
+
+const request = supertest('http://localhost:5001')
 
 describe('Absence', () => {
 	describe('/groups/:id/lunchbreaks/:date/absence', () => {

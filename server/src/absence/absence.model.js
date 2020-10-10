@@ -1,4 +1,5 @@
 const { Model } = require('objection')
+
 const GroupMemberModel = require('../group-member/group-member.model')
 
 class AbsenceModel extends Model {

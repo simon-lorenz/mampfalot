@@ -1,5 +1,6 @@
-const { Model, initialize, ForeignKeyViolationError, UniqueViolationError, NotFoundError } = require('objection')
 const Boom = require('@hapi/boom')
+const { Model, initialize, ForeignKeyViolationError, UniqueViolationError, NotFoundError } = require('objection')
+
 const knex = require('../knex')
 
 module.exports = {

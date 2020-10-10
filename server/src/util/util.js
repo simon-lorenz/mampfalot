@@ -1,8 +1,10 @@
 const crypto = require('crypto')
 const fs = require('fs')
+
 const moment = require('moment')
-const knex = require('../knex')
+
 const GroupRepository = require('../group/group.repository')
+const knex = require('../knex')
 
 module.exports = {
 	async connectToDatabase(max_tries, logger) {

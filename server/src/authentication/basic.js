@@ -1,6 +1,7 @@
 const Boom = require('@hapi/boom')
-const UserModel = require('../user/user.model')
 const bcrypt = require('bcryptjs')
+
+const UserModel = require('../user/user.model')
 
 module.exports = {
 	name: 'basic',

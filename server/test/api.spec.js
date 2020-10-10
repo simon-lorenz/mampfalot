@@ -1,7 +1,10 @@
 const Boom = require('@hapi/boom')
-const request = require('supertest')('http://localhost:5001')
+const supertest = require('supertest')
 const SwaggerParser = require('swagger-parser')
+
 const APIContract = require('./utils/openapi-helper')
+
+const request = supertest('http://localhost:5001')
 
 describe('The mampfalot api', () => {
 	before(() => APIContract.parse())

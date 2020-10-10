@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "db:seed": "docker-compose exec server npm run db:seed",
+    "install": "npm ci --prefix server && npm ci --prefix client",
+    "logs:client": "docker-compose logs -f client",
+    "logs:server": "docker-compose logs -f server",
+    "restart": "docker-compose restart",
+    "start": "docker-compose up -d",
+    "stop": "docker-compose down",
+    "test": "docker-compose -f docker-compose.test.yml run --rm server-test npm test"
+  }
+}

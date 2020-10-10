@@ -1,7 +1,8 @@
-const jwt = require('jsonwebtoken')
 const Boom = require('@hapi/boom')
-const UserRepository = require('../user/user.repository')
+const jwt = require('jsonwebtoken')
+
 const GroupRepository = require('../group/group.repository')
+const UserRepository = require('../user/user.repository')
 
 module.exports = {
 	name: 'jwt',

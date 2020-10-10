@@ -1,7 +1,9 @@
-const bcrypt = require('bcryptjs')
 const Boom = require('@hapi/boom')
-const UserRepository = require('./user.repository')
+const bcrypt = require('bcryptjs')
+
 const UserModel = require('./user.model')
+const UserRepository = require('./user.repository')
+
 const { generateRandomToken } = require('../util/util')
 
 async function getAuthenticatedUser(request, h) {

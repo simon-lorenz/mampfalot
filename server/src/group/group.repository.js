@@ -1,4 +1,5 @@
 const GroupModel = require('./group.model')
+
 const GroupMemberModel = require('../group-member/group-member.model')
 const UserModel = require('../user/user.model')
 

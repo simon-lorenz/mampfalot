@@ -1,4 +1,5 @@
 const { Model } = require('objection')
+
 const GroupModel = require('../group/group.model')
 
 class InvitationModel extends Model {
