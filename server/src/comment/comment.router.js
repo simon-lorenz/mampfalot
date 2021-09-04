@@ -16,9 +16,7 @@ module.exports = {
 				},
 				validate: {
 					payload: Joi.object({
-						text: Joi.string()
-							.min(1)
-							.required()
+						text: Joi.string().min(1).required()
 					})
 				}
 			},
@@ -36,9 +34,7 @@ module.exports = {
 				},
 				validate: {
 					payload: Joi.object({
-						text: Joi.string()
-							.min(1)
-							.required()
+						text: Joi.string().min(1).required()
 					})
 				}
 			},

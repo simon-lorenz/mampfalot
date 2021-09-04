@@ -26,10 +26,7 @@ module.exports = {
 						email: Joi.string()
 							.email({ tlds: process.env.NODE_ENV === 'production' })
 							.required(),
-						password: Joi.string()
-							.min(8)
-							.max(255)
-							.required()
+						password: Joi.string().min(8).max(255).required()
 					})
 				}
 			},
@@ -53,10 +50,7 @@ module.exports = {
 				validate: {
 					payload: Joi.object({
 						token: Joi.string().required(),
-						newPassword: Joi.string()
-							.min(8)
-							.max(255)
-							.required()
+						newPassword: Joi.string().min(8).max(255).required()
 					})
 				}
 			},
@@ -112,18 +106,12 @@ module.exports = {
 							.min(3)
 							.max(255)
 							.required(),
-						firstName: Joi.string()
-							.allow(null)
-							.required(),
-						lastName: Joi.string()
-							.allow(null)
-							.required(),
+						firstName: Joi.string().allow(null).required(),
+						lastName: Joi.string().allow(null).required(),
 						email: Joi.string()
 							.email({ tlds: process.env.NODE_ENV === 'production' })
 							.required(),
-						password: Joi.string()
-							.min(8)
-							.max(255),
+						password: Joi.string().min(8).max(255),
 						currentPassword: Joi.alternatives().conditional('password', {
 							then: Joi.string().required(),
 							otherwise: Joi.string()

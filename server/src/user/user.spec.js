@@ -25,10 +25,7 @@ describe('User', () => {
 			})
 
 			it('inserts a user correctly', async () => {
-				await request
-					.post('/users')
-					.send(newUser)
-					.expect(204)
+				await request.post('/users').send(newUser).expect(204)
 
 				await request
 					.get('/authenticate')
@@ -41,10 +38,7 @@ describe('User', () => {
 				newUser.firstName = undefined
 				newUser.lastName = undefined
 
-				await request
-					.post('/users')
-					.send(newUser)
-					.expect(204)
+				await request.post('/users').send(newUser).expect(204)
 
 				await request
 					.get('/authenticate')
@@ -56,10 +50,7 @@ describe('User', () => {
 			it('does not fail if the email is already known', async () => {
 				newUser.email = 'mustermann@gmail.nonexistenttld'
 
-				await request
-					.post('/users')
-					.send(newUser)
-					.expect(204)
+				await request.post('/users').send(newUser).expect(204)
 			})
 
 			it('requires body values', async () => {
@@ -327,10 +318,7 @@ describe('User', () => {
 	describe('/users/:username/forgot-password', () => {
 		describe('GET', () => {
 			it('sends 404 if username is unknown', async () => {
-				await request
-					.get('/users/non-existent-user/forgot-password')
-					.expect(404)
-					.expect(Boom.notFound().output.payload)
+				await request.get('/users/non-existent-user/forgot-password').expect(404).expect(Boom.notFound().output.payload)
 			})
 
 			it('sends 204 if username is known', async () => {
@@ -350,10 +338,7 @@ describe('User', () => {
 					})
 					.expect(204)
 
-				await request
-					.get('/authenticate')
-					.auth('please-change-my-password', 'this-is-my-new-password')
-					.expect(200)
+				await request.get('/authenticate').auth('please-change-my-password', 'this-is-my-new-password').expect(200)
 			})
 
 			it('fails if the password is too short', async () => {
@@ -446,10 +431,7 @@ describe('User', () => {
 	describe('/users/:username/verify', () => {
 		describe('GET', () => {
 			it('sends 404 if username is unknown', async () => {
-				await request
-					.get('/users/non-existent-user/verify')
-					.expect(404)
-					.expect(Boom.notFound().output.payload)
+				await request.get('/users/non-existent-user/verify').expect(404).expect(Boom.notFound().output.payload)
 			})
 
 			it('fails if user is already verified', async () => {
@@ -501,15 +483,9 @@ describe('User', () => {
 					.expect(401)
 					.expect(Boom.unauthorized('This account is not verified yet').output.payload)
 
-				await request
-					.post('/users/to-be-verified/verify')
-					.send({ token: 'valid-token' })
-					.expect(204)
+				await request.post('/users/to-be-verified/verify').send({ token: 'valid-token' }).expect(204)
 
-				await request
-					.get('/authenticate')
-					.auth('to-be-verified', 'verifyme')
-					.expect(200)
+				await request.get('/authenticate').auth('to-be-verified', 'verifyme').expect(200)
 			})
 		})
 	})
@@ -618,10 +594,7 @@ describe('User', () => {
 						res.body.email.should.be.equal('neu@mail.nonexistenttld')
 					})
 
-				await request
-					.get('/authenticate')
-					.auth('fancy-new-name', 'hurdurdur')
-					.expect(200)
+				await request.get('/authenticate').auth('fancy-new-name', 'hurdurdur').expect(200)
 			})
 
 			it('requires e-mail verification before change')
@@ -654,10 +627,7 @@ describe('User', () => {
 					})
 					.expect(200)
 
-				await request
-					.get('/authenticate')
-					.auth('fancy-new-name', '123456')
-					.expect(200)
+				await request.get('/authenticate').auth('fancy-new-name', '123456').expect(200)
 			})
 		})
 

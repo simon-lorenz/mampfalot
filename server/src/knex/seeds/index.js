@@ -280,7 +280,7 @@ module.exports = {
 		const absences = this.absences.filter(a => a.lunchbreakId === lunchbreakId)
 		return absences.map(a => this.getAbsence(a.memberId, a.lunchbreakId))
 	},
-	getGroup: function(id) {
+	getGroup: function (id) {
 		const group = this.groups.find(group => group.id === id)
 
 		const members = this.groupMembers
@@ -295,13 +295,13 @@ module.exports = {
 			places
 		}
 	},
-	getGroupsOfUser: function(userId) {
+	getGroupsOfUser: function (userId) {
 		const memberships = this.groupMembers.filter(member => member.userId === userId)
 		const result = []
 		memberships.forEach(membership => result.push(this.getGroup(membership.groupId)))
 		return result
 	},
-	getInvitationsOfUser: function(userId) {
+	getInvitationsOfUser: function (userId) {
 		const invitations = this.invitations.filter(invitation => invitation.toId === userId)
 		return invitations.map(invitation => {
 			return {
@@ -311,28 +311,28 @@ module.exports = {
 			}
 		})
 	},
-	getGroupKeys: function() {
+	getGroupKeys: function () {
 		return Object.keys(this.getGroup(1))
 	},
-	getGroupMemberKeys: function() {
+	getGroupMemberKeys: function () {
 		return Object.keys(this.getGroupMember(1, 1))
 	},
-	getUserKeys: function() {
+	getUserKeys: function () {
 		return Object.keys(this.getUser(1))
 	},
-	getPlaceKeys: function() {
+	getPlaceKeys: function () {
 		return Object.keys(this.getPlace(1))
 	},
-	getUserKeysWithEmail: function() {
+	getUserKeysWithEmail: function () {
 		return Object.keys(this.getUserWithEmail(1))
 	},
-	getLunchbreakKeys: function() {
+	getLunchbreakKeys: function () {
 		return Object.keys(this.getLunchbreak(1, '2018-06-25'))
 	},
 	getPassword(username) {
 		return this.users.find(user => user.username === username).password
 	},
-	getGroupMember: function(memberId) {
+	getGroupMember: function (memberId) {
 		const member = this.groupMembers.find(member => member.id === memberId)
 		const user = this.getUser(member.userId)
 		return {
@@ -345,31 +345,31 @@ module.exports = {
 			}
 		}
 	},
-	getVote: function(voteId) {
+	getVote: function (voteId) {
 		const vote = this.votes.find(vote => vote.id === voteId)
 		return {
 			points: vote.points,
 			place: this.getPlace(vote.placeId)
 		}
 	},
-	getVotesOfParticipant: function(participantId) {
+	getVotesOfParticipant: function (participantId) {
 		const votes = this.votes.filter(vote => vote.participantId === participantId)
 		return votes.map(vote => this.getVote(vote.id))
 	},
-	getAllGroupMembers: function(groupId) {
+	getAllGroupMembers: function (groupId) {
 		const members = this.groupMembers.filter(member => member.groupId === groupId)
 		return members.map(member => {
 			return this.getGroupMember(member.id)
 		})
 	},
-	getLunchbreaks: function(groupId) {
+	getLunchbreaks: function (groupId) {
 		const lunchbreaks = this.lunchbreaks.filter(lunchbreak => lunchbreak.groupId === groupId)
 		return lunchbreaks.map(lunchbreak => this.getLunchbreak(lunchbreak.groupId, lunchbreak.date))
 	},
-	getGroupIdForLunchbreak: function(lunchbreakId) {
+	getGroupIdForLunchbreak: function (lunchbreakId) {
 		return this.lunchbreaks.find(lunchbreak => lunchbreak.id === lunchbreakId).groupId
 	},
-	getParticipant: function(memberId, lunchbreakId) {
+	getParticipant: function (memberId, lunchbreakId) {
 		const participant = this.participants.find(
 			participant => participant.memberId === memberId && participant.lunchbreakId === lunchbreakId
 		)
@@ -378,7 +378,7 @@ module.exports = {
 			votes: this.getVotesOfParticipant(participant.id)
 		}
 	},
-	getParticipationsOf: function(username, groupId) {
+	getParticipationsOf: function (username, groupId) {
 		const userId = this.users.find(user => user.username === username).id
 		const memberId = this.groupMembers.find(member => member.userId === userId && member.groupId === groupId).id
 		const participations = this.participants.filter(participant => participant.memberId === memberId)
@@ -391,14 +391,14 @@ module.exports = {
 			}
 		})
 	},
-	getParticipationKeys: function() {
+	getParticipationKeys: function () {
 		return Object.keys(this.getParticipationsOf('maxmustermann', 1)[0])
 	},
-	getParticipants: function(lunchbreakId) {
+	getParticipants: function (lunchbreakId) {
 		const participants = this.participants.filter(participant => participant.lunchbreakId === lunchbreakId)
 		return participants.map(participant => this.getParticipant(participant.memberId, participant.lunchbreakId))
 	},
-	getLunchbreak: function(groupId, date) {
+	getLunchbreak: function (groupId, date) {
 		const lunchbreak = this.lunchbreaks.find(lunchbreak => lunchbreak.groupId === groupId && lunchbreak.date === date)
 		const participants = this.getParticipants(lunchbreak.id)
 		const absent = this.getAbsences(lunchbreak.id)
@@ -417,11 +417,11 @@ module.exports = {
 			comments: this.getCommentsOfLunchbreak(lunchbreak.id)
 		}
 	},
-	getCommentsOfLunchbreak: function(lunchbreakId) {
+	getCommentsOfLunchbreak: function (lunchbreakId) {
 		const comments = this.comments.filter(comment => comment.lunchbreakId === lunchbreakId)
 		return comments.map(comment => this.getComment(comment.id))
 	},
-	getComment: function(commentId) {
+	getComment: function (commentId) {
 		const comment = this.comments.find(comment => comment.id === commentId)
 		return {
 			id: comment.id,
@@ -431,10 +431,10 @@ module.exports = {
 			updatedAt: comment.updatedAt ? new Date(comment.updatedAt).toISOString() : null
 		}
 	},
-	getCommentKeys: function() {
+	getCommentKeys: function () {
 		return Object.keys(this.getComment(1))
 	},
-	getUser: function(userId) {
+	getUser: function (userId) {
 		const user = this.users.find(user => user.id === userId)
 		return {
 			username: user.username,
@@ -442,7 +442,7 @@ module.exports = {
 			lastName: user.lastName
 		}
 	},
-	getUserWithEmail: function(userId) {
+	getUserWithEmail: function (userId) {
 		const user = this.users.find(user => user.id === userId)
 		return {
 			username: user.username,
@@ -451,7 +451,7 @@ module.exports = {
 			email: user.email
 		}
 	},
-	getPlace: function(placeId) {
+	getPlace: function (placeId) {
 		const place = this.places.find(place => place.id === placeId)
 		return {
 			id: place.id,
@@ -459,7 +459,7 @@ module.exports = {
 			foodType: place.foodType
 		}
 	},
-	getInvitations: function(groupId) {
+	getInvitations: function (groupId) {
 		const invitations = this.invitations.filter(invitation => invitation.groupId === groupId)
 		return invitations.map(invitation => {
 			return {

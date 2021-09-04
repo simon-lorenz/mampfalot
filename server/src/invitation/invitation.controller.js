@@ -56,25 +56,19 @@ async function deleteInvitation(request, h) {
 
 	const userId = await UserRepository.getUserIdByUsername(username)
 
-	await InvitationModel.query()
-		.throwIfNotFound()
-		.delete()
-		.where({
-			groupId,
-			toId: userId
-		})
+	await InvitationModel.query().throwIfNotFound().delete().where({
+		groupId,
+		toId: userId
+	})
 
 	return h.response().code(204)
 }
 
 async function acceptInvitation(userId, groupId) {
-	await InvitationModel.query()
-		.throwIfNotFound()
-		.delete()
-		.where({
-			groupId,
-			toId: userId
-		})
+	await InvitationModel.query().throwIfNotFound().delete().where({
+		groupId,
+		toId: userId
+	})
 
 	const colors = ['#ffa768', '#e0dbff', '#f5e97d', '#ffa1b7', '#948bf0', '#a8f08d']
 	const randomColor = colors[Math.floor(Math.random() * colors.length)]
@@ -88,13 +82,10 @@ async function acceptInvitation(userId, groupId) {
 }
 
 async function rejectInvitation(userId, groupId) {
-	await InvitationModel.query()
-		.throwIfNotFound()
-		.delete()
-		.where({
-			groupId,
-			toId: userId
-		})
+	await InvitationModel.query().throwIfNotFound().delete().where({
+		groupId,
+		toId: userId
+	})
 }
 
 module.exports = {

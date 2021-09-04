@@ -36,10 +36,7 @@ exports.up = async knex => {
 
 		table.unique(['groupId', 'name'], 'uniquePlacePerGroup')
 
-		table
-			.foreign('groupId')
-			.references('groups.id')
-			.onDelete('CASCADE')
+		table.foreign('groupId').references('groups.id').onDelete('CASCADE')
 	})
 
 	await knex.schema.createTable('group_members', table => {
@@ -49,15 +46,9 @@ exports.up = async knex => {
 		table.boolean('isAdmin').notNullable()
 		table.string('color')
 
-		table
-			.foreign('userId')
-			.references('users.id')
-			.onDelete('CASCADE')
+		table.foreign('userId').references('users.id').onDelete('CASCADE')
 
-		table
-			.foreign('groupId')
-			.references('groups.id')
-			.onDelete('CASCADE')
+		table.foreign('groupId').references('groups.id').onDelete('CASCADE')
 	})
 
 	await knex.schema.createTable('lunchbreaks', table => {
@@ -67,10 +58,7 @@ exports.up = async knex => {
 
 		table.unique(['groupId', 'date'], 'oneLunchbreakPerDayPerGroup')
 
-		table
-			.foreign('groupId')
-			.references('groups.id')
-			.onDelete('CASCADE')
+		table.foreign('groupId').references('groups.id').onDelete('CASCADE')
 	})
 
 	await knex.schema.createTable('absences', table => {
@@ -82,15 +70,9 @@ exports.up = async knex => {
 
 		table.unique(['memberId', 'lunchbreakId'], 'onlyOneAbsencePerLunchbreak')
 
-		table
-			.foreign('memberId')
-			.references('group_members.id')
-			.onDelete('CASCADE')
+		table.foreign('memberId').references('group_members.id').onDelete('CASCADE')
 
-		table
-			.foreign('lunchbreakId')
-			.references('lunchbreaks.id')
-			.onDelete('CASCADE')
+		table.foreign('lunchbreakId').references('lunchbreaks.id').onDelete('CASCADE')
 	})
 
 	await knex.schema.createTable('comments', table => {
@@ -101,15 +83,9 @@ exports.up = async knex => {
 		table.datetime('createdAt').notNullable()
 		table.datetime('updatedAt')
 
-		table
-			.foreign('lunchbreakId')
-			.references('lunchbreaks.id')
-			.onDelete('CASCADE')
+		table.foreign('lunchbreakId').references('lunchbreaks.id').onDelete('CASCADE')
 
-		table
-			.foreign('memberId')
-			.references('group_members.id')
-			.onDelete('SET NULL')
+		table.foreign('memberId').references('group_members.id').onDelete('SET NULL')
 	})
 
 	await knex.schema.createTable('invitations', table => {
@@ -122,20 +98,11 @@ exports.up = async knex => {
 
 		table.unique(['groupId', 'toId'], 'inviteOnce')
 
-		table
-			.foreign('groupId')
-			.references('groups.id')
-			.onDelete('CASCADE')
+		table.foreign('groupId').references('groups.id').onDelete('CASCADE')
 
-		table
-			.foreign('fromId')
-			.references('users.id')
-			.onDelete('SET NULL')
+		table.foreign('fromId').references('users.id').onDelete('SET NULL')
 
-		table
-			.foreign('toId ')
-			.references('users.id')
-			.onDelete('CASCADE')
+		table.foreign('toId ').references('users.id').onDelete('CASCADE')
 	})
 
 	await knex.schema.createTable('participants', table => {
@@ -147,20 +114,11 @@ exports.up = async knex => {
 
 		table.unique(['lunchbreakId', 'memberId'], 'participateOnlyOnce')
 
-		table
-			.foreign('lunchbreakId')
-			.references('lunchbreaks.id')
-			.onDelete('CASCADE')
+		table.foreign('lunchbreakId').references('lunchbreaks.id').onDelete('CASCADE')
 
-		table
-			.foreign('memberId')
-			.references('group_members.id')
-			.onDelete('SET NULL')
+		table.foreign('memberId').references('group_members.id').onDelete('SET NULL')
 
-		table
-			.foreign('resultId')
-			.references('places.id')
-			.onDelete('SET NULL')
+		table.foreign('resultId').references('places.id').onDelete('SET NULL')
 	})
 
 	await knex.schema.createTable('votes', table => {
@@ -169,15 +127,9 @@ exports.up = async knex => {
 		table.integer('placeId').notNullable()
 		table.integer('points').notNullable()
 
-		table
-			.foreign('participantId')
-			.references('participants.id')
-			.onDelete('CASCADE')
+		table.foreign('participantId').references('participants.id').onDelete('CASCADE')
 
-		table
-			.foreign('placeId')
-			.references('places.id')
-			.onDelete('CASCADE')
+		table.foreign('placeId').references('places.id').onDelete('CASCADE')
 	})
 }
 

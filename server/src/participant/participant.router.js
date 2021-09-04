@@ -16,9 +16,7 @@ module.exports = {
 				},
 				validate: {
 					payload: Joi.object({
-						amountSpent: Joi.number()
-							.required()
-							.allow(null),
+						amountSpent: Joi.number().required().allow(null),
 						votes: Joi.array()
 							.items(
 								Joi.object({
@@ -27,9 +25,7 @@ module.exports = {
 										name: Joi.string().required(),
 										foodType: Joi.string().required()
 									}).required(),
-									points: Joi.number()
-										.integer()
-										.required()
+									points: Joi.number().integer().required()
 								})
 							)
 							.unique('place.id')
@@ -58,9 +54,7 @@ module.exports = {
 				},
 				validate: {
 					payload: Joi.object({
-						amountSpent: Joi.number()
-							.required()
-							.allow(null),
+						amountSpent: Joi.number().required().allow(null),
 						votes: Joi.array()
 							.items(
 								Joi.object({
@@ -69,9 +63,7 @@ module.exports = {
 										name: Joi.string().required(),
 										foodType: Joi.string().required()
 									}).required(),
-									points: Joi.number()
-										.integer()
-										.required()
+									points: Joi.number().integer().required()
 								})
 							)
 							.unique('place.id'),

@@ -13,29 +13,12 @@ module.exports = {
 				validate: {
 					payload: Joi.object({
 						name: Joi.string().required(),
-						lunchTime: Joi.date()
-							.format('HH:mm:ss')
-							.required(),
-						voteEndingTime: Joi.date()
-							.format('HH:mm:ss')
-							.required(),
-						utcOffset: Joi.number()
-							.min(-720)
-							.max(720)
-							.multiple(60)
-							.required(),
-						pointsPerDay: Joi.number()
-							.min(1)
-							.max(1000)
-							.required(),
-						maxPointsPerVote: Joi.number()
-							.min(Joi.ref('minPointsPerVote'))
-							.max(Joi.ref('pointsPerDay'))
-							.required(),
-						minPointsPerVote: Joi.number()
-							.min(1)
-							.max(Joi.ref('pointsPerDay'))
-							.required()
+						lunchTime: Joi.date().format('HH:mm:ss').required(),
+						voteEndingTime: Joi.date().format('HH:mm:ss').required(),
+						utcOffset: Joi.number().min(-720).max(720).multiple(60).required(),
+						pointsPerDay: Joi.number().min(1).max(1000).required(),
+						maxPointsPerVote: Joi.number().min(Joi.ref('minPointsPerVote')).max(Joi.ref('pointsPerDay')).required(),
+						minPointsPerVote: Joi.number().min(1).max(Joi.ref('pointsPerDay')).required()
 					})
 				}
 			},
@@ -67,29 +50,12 @@ module.exports = {
 				validate: {
 					payload: Joi.object({
 						name: Joi.string().required(),
-						lunchTime: Joi.date()
-							.format('HH:mm:ss')
-							.required(),
-						voteEndingTime: Joi.date()
-							.format('HH:mm:ss')
-							.required(),
-						utcOffset: Joi.number()
-							.min(-720)
-							.max(720)
-							.multiple(60)
-							.required(),
-						pointsPerDay: Joi.number()
-							.min(1)
-							.max(1000)
-							.required(),
-						maxPointsPerVote: Joi.number()
-							.min(Joi.ref('minPointsPerVote'))
-							.max(Joi.ref('pointsPerDay'))
-							.required(),
-						minPointsPerVote: Joi.number()
-							.min(1)
-							.max(Joi.ref('pointsPerDay'))
-							.required()
+						lunchTime: Joi.date().format('HH:mm:ss').required(),
+						voteEndingTime: Joi.date().format('HH:mm:ss').required(),
+						utcOffset: Joi.number().min(-720).max(720).multiple(60).required(),
+						pointsPerDay: Joi.number().min(1).max(1000).required(),
+						maxPointsPerVote: Joi.number().min(Joi.ref('minPointsPerVote')).max(Joi.ref('pointsPerDay')).required(),
+						minPointsPerVote: Joi.number().min(1).max(Joi.ref('pointsPerDay')).required()
 					})
 				}
 			},

@@ -778,14 +778,8 @@ describe('Participation', () => {
 					.expect(200)
 					.expect(res => {
 						const lunchbreak = res.body
-						lunchbreak.should.have
-							.property('absent')
-							.which.is.an('array')
-							.with.lengthOf(1)
-						lunchbreak.should.have
-							.property('participants')
-							.which.is.an('array')
-							.with.lengthOf(0)
+						lunchbreak.should.have.property('absent').which.is.an('array').with.lengthOf(1)
+						lunchbreak.should.have.property('participants').which.is.an('array').with.lengthOf(0)
 					})
 			})
 

@@ -50,11 +50,9 @@ async function deleteComment(request, h) {
 
 	const lunchbreakId = await CommentRepository.getLunchbreakId(commentId)
 
-	await CommentModel.query()
-		.delete()
-		.where({
-			id: commentId
-		})
+	await CommentModel.query().delete().where({
+		id: commentId
+	})
 
 	await LunchbreakController.checkForAutoDeletion(lunchbreakId)
 

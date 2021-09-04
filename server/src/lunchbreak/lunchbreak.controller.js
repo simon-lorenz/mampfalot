@@ -53,9 +53,7 @@ async function checkForAutoDeletion(lunchbreakId) {
 	const lunchbreak = await LunchbreakRepository.getLunchbreak(undefined, undefined, lunchbreakId)
 
 	if (lunchbreak.participants.length === 0 && lunchbreak.comments.length === 0 && lunchbreak.absent.length === 0) {
-		await LunchbreakModel.query()
-			.delete()
-			.where({ id: lunchbreakId })
+		await LunchbreakModel.query().delete().where({ id: lunchbreakId })
 	}
 }
 

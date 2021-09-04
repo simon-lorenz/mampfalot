@@ -117,10 +117,7 @@ class LunchbreakRepository {
 	}
 
 	async getLunchbreakId(groupId, date) {
-		const { id } = await LunchbreakModel.query()
-			.select(['id'])
-			.where({ groupId, date })
-			.first()
+		const { id } = await LunchbreakModel.query().select(['id']).where({ groupId, date }).first()
 
 		return id
 	}

@@ -20,12 +20,9 @@ class GroupMemberRepository {
 	}
 
 	async getMembers(groupId) {
-		const members = await GroupMemberModel.query()
-			.throwIfNotFound()
-			.withGraphJoined('user')
-			.where({
-				groupId
-			})
+		const members = await GroupMemberModel.query().throwIfNotFound().withGraphJoined('user').where({
+			groupId
+		})
 
 		return members.map(member => member.toJSON())
 	}

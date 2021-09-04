@@ -18,21 +18,13 @@ async function updatePlace(request, h) {
 	const { placeId } = request.params
 	const { payload } = request
 
-	return PlaceModel.query()
-		.throwIfNotFound()
-		.update(payload)
-		.where({ id: placeId })
-		.returning('*')
-		.first()
+	return PlaceModel.query().throwIfNotFound().update(payload).where({ id: placeId }).returning('*').first()
 }
 
 async function deletePlace(request, h) {
 	const { placeId } = request.params
 
-	await PlaceModel.query()
-		.throwIfNotFound()
-		.delete()
-		.where({ id: placeId })
+	await PlaceModel.query().throwIfNotFound().delete().where({ id: placeId })
 
 	return h.response().code(204)
 }

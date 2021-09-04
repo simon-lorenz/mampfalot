@@ -19,12 +19,10 @@ async function deleteMember(request, h) {
 
 	const userId = await UserRepository.getUserIdByUsername(username)
 
-	await GroupMemberModel.query()
-		.delete()
-		.where({
-			groupId,
-			userId
-		})
+	await GroupMemberModel.query().delete().where({
+		groupId,
+		userId
+	})
 
 	return h.response().code(204)
 }
@@ -48,12 +46,10 @@ async function updateMember(request, h) {
 		}
 	}
 
-	await GroupMemberModel.query()
-		.update(payload)
-		.where({
-			groupId,
-			userId
-		})
+	await GroupMemberModel.query().update(payload).where({
+		groupId,
+		userId
+	})
 
 	return GroupMemberRepository.getMember(groupId, username)
 }

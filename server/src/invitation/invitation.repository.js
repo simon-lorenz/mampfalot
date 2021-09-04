@@ -17,9 +17,7 @@ class InvitationRepository {
 	}
 
 	async getInvitationsOfUser(userId) {
-		return InvitationModel.query()
-			.withGraphFetched('[group.[members, places], from, to]')
-			.where('toId', '=', userId)
+		return InvitationModel.query().withGraphFetched('[group.[members, places], from, to]').where('toId', '=', userId)
 	}
 }
 

@@ -28,11 +28,9 @@ async function overrideVotes(votes, participantId) {
  * @param {number} participantId
  */
 async function destroyVotesOfParticipant(participantId) {
-	await VoteModel.query()
-		.delete()
-		.where({
-			participantId: participantId
-		})
+	await VoteModel.query().delete().where({
+		participantId: participantId
+	})
 }
 
 /**

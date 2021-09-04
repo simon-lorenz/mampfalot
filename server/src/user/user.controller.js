@@ -66,9 +66,7 @@ async function createUser(request, h) {
 async function deleteAuthenticatedUser(request, h) {
 	const { id } = request.auth.credentials
 
-	await UserModel.query()
-		.delete()
-		.where({ id })
+	await UserModel.query().delete().where({ id })
 
 	return h.response().code(204)
 }
@@ -77,10 +75,7 @@ async function updateAuthenticatedUser(request, h) {
 	const { id } = request.auth.credentials
 	const { payload } = request
 
-	const { username } = await UserModel.query()
-		.select('username')
-		.where({ id })
-		.first()
+	const { username } = await UserModel.query().select('username').where({ id }).first()
 
 	if (payload.password) {
 		if ((await checkPassword(username, payload.currentPassword)) === false) {
@@ -92,9 +87,7 @@ async function updateAuthenticatedUser(request, h) {
 		delete payload.currentPassword
 	}
 
-	await UserModel.query()
-		.update(payload)
-		.where({ id })
+	await UserModel.query().update(payload).where({ id })
 
 	return await UserRepository.getUser(id)
 }
@@ -131,10 +124,7 @@ async function finalizeVerificationProcess(request, h) {
 	const { token } = request.payload
 	const { username } = request.params
 
-	const user = await UserModel.query()
-		.select(['id', 'verificationToken', 'verified'])
-		.where({ username })
-		.first()
+	const user = await UserModel.query().select(['id', 'verificationToken', 'verified']).where({ username }).first()
 
 	if (!user) {
 		throw Boom.notFound()
@@ -164,9 +154,7 @@ async function initializePasswordResetProcess(request, h) {
 	const { username } = request.params
 	const { mailer } = request
 
-	const user = await UserModel.query()
-		.where({ username })
-		.first()
+	const user = await UserModel.query().where({ username }).first()
 
 	if (!user) {
 		throw Boom.notFound()
@@ -219,10 +207,7 @@ async function initializeUsernameReminderProcess(request, h) {
 	const { email } = request.params
 	const { mailer } = request
 
-	const user = await UserModel.query()
-		.select(['email', 'username', 'firstName'])
-		.where({ email })
-		.first()
+	const user = await UserModel.query().select(['email', 'username', 'firstName']).where({ email }).first()
 
 	if (user) {
 		await mailer.sendForgotUsernameMail(user.email, user.username, user.firstName)
@@ -232,10 +217,7 @@ async function initializeUsernameReminderProcess(request, h) {
 }
 
 async function checkPassword(username, password) {
-	const user = await UserModel.query()
-		.select('password')
-		.where({ username })
-		.first()
+	const user = await UserModel.query().select('password').where({ username }).first()
 
 	return await bcrypt.compare(password, user.password)
 }

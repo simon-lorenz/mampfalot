@@ -21,9 +21,7 @@ async function deleteParticipation(request, h) {
 		throw Boom.badRequest('The end of voting has been reached, therefore this participation cannot be deleted')
 	}
 
-	await ParticipantModel.query()
-		.delete()
-		.where({ id: participation.id })
+	await ParticipantModel.query().delete().where({ id: participation.id })
 
 	await LunchbreakController.checkForAutoDeletion(participation.lunchbreak.id)
 
@@ -63,9 +61,7 @@ async function createParticipation(request, h) {
 	}
 
 	if (payload.result) {
-		const place = await PlaceModel.query()
-			.where({ id: payload.result.id, groupId })
-			.first()
+		const place = await PlaceModel.query().where({ id: payload.result.id, groupId }).first()
 
 		// TODO: Foreign key constraint
 		if (!place) {
@@ -73,10 +69,7 @@ async function createParticipation(request, h) {
 		}
 	}
 
-	const member = await GroupMemberModel.query()
-		.select(['id'])
-		.where({ groupId, userId })
-		.first()
+	const member = await GroupMemberModel.query().select(['id']).where({ groupId, userId }).first()
 
 	let participation
 	try {
@@ -105,12 +98,10 @@ async function createParticipation(request, h) {
 		}
 	}
 
-	await AbsenceModel.query()
-		.delete()
-		.where({
-			memberId: participation.memberId,
-			lunchbreakId: participation.lunchbreakId
-		})
+	await AbsenceModel.query().delete().where({
+		memberId: participation.memberId,
+		lunchbreakId: participation.lunchbreakId
+	})
 
 	payload.votes.forEach(vote => {
 		vote.participantId = participation.id

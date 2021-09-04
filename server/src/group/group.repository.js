@@ -29,16 +29,11 @@ class GroupRepository {
 
 		memberships = memberships.map(membership => membership.groupId)
 
-		return GroupModel.query()
-			.withGraphFetched('[members, places]')
-			.whereIn('groups.id', memberships)
+		return GroupModel.query().withGraphFetched('[members, places]').whereIn('groups.id', memberships)
 	}
 
 	async getGroupMembershipsOfUser(userId) {
-		const user = await UserModel.query()
-			.where('users.id', '=', userId)
-			.withGraphJoined('groups')
-			.first()
+		const user = await UserModel.query().where('users.id', '=', userId).withGraphJoined('groups').first()
 
 		return user.groups.map(group => {
 			return {
